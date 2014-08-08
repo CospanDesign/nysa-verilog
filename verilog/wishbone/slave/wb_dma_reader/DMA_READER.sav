@@ -1,0 +1,65 @@
+[*]
+[*] GTKWave Analyzer v3.3.34 (w)1999-2012 BSI
+[*] Tue Dec 10 06:25:55 2013
+[*]
+[dumpfile] "/home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_dma_reader/design.vcd"
+[dumpfile_mtime] "Tue Dec 10 00:58:07 2013"
+[dumpfile_size] 209756173
+[savefile] "/home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_dma_reader/DMA_READER.sav"
+[timestart] 0
+[size] 1596 877
+[pos] -1 -1
+*-25.743279 306490000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] wishbone_master_tb.
+[treeopen] wishbone_master_tb.s1.
+[sst_width] 210
+[signals_width] 204
+[sst_expanded] 1
+[sst_vpaned_height] 249
+@28
+wishbone_master_tb.clk
+wishbone_master_tb.rst
+@22
+wishbone_master_tb.r_in_command[31:0]
+@28
+wishbone_master_tb.execute_command
+wishbone_master_tb.command_finished
+@22
+wishbone_master_tb.s1.r_control[31:0]
+wishbone_master_tb.s1.w_status[31:0]
+@28
+wishbone_master_tb.s1.w_enable
+wishbone_master_tb.s1.w_control_reset
+@22
+wishbone_master_tb.s1.r_memory_1_size[31:0]
+wishbone_master_tb.s1.r_memory_0_size[31:0]
+@28
+wishbone_master_tb.s1.r_memory_1_ready
+wishbone_master_tb.s1.r_memory_0_ready
+wishbone_master_tb.s1.w_memory_0_empty
+wishbone_master_tb.s1.w_memory_0_finished
+@23
+wishbone_master_tb.w_out_data[31:0]
+@200
+-
+@28
+wishbone_master_tb.s1.w_wfifo_ready[1:0]
+wishbone_master_tb.s1.w_wfifo_activate[1:0]
+@22
+wishbone_master_tb.s1.w_wfifo_data[31:0]
+@28
+wishbone_master_tb.s1.w_wfifo_strobe
+@200
+-
+@28
+wishbone_master_tb.s1.w_rfifo_ready
+wishbone_master_tb.s1.w_rfifo_activate
+wishbone_master_tb.s1.w_rfifo_strobe
+@22
+wishbone_master_tb.s1.w_rfifo_data[31:0]
+wishbone_master_tb.s1.p2m.i_memory_0_size[31:0]
+wishbone_master_tb.s1.p2m.i_memory_1_size[31:0]
+wishbone_master_tb.s1.p2m.w_mem_0_ptr[31:0]
+wishbone_master_tb.s1.p2m.w_mem_1_ptr[31:0]
+[pattern_trace] 1
+[pattern_trace] 0

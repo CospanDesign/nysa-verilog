@@ -1,0 +1,23 @@
+#Add other command line options here
++libext+.v
++incdir+${NYSA}/cbuilder/verilog
++incdir+rtl+sim
+
+#Use the NYSA keyword to point to the NYSA base directory
+${NYSA}/cbuilder/verilog/generic/dual_port_bram.v
+${NYSA}/cbuilder/verilog/generic/uart_fifo.v
+${NYSA}/cbuilder/verilog/generic/uart_controller.v
+${NYSA}/cbuilder/verilog/generic/uart_v2.v
+${NYSA}/cbuilder/verilog/generic/cross_clock_enable.v
+
+#${NYSA}/cbuilder/verilog/wishbone/slave/device_rom_table/device_rom_table.v
+
+${NYSA}/cbuilder/verilog/sim/wishbone/interconnect/example_2port_interconnect/wishbone_interconnect.v
+${NYSA}/cbuilder/verilog/wishbone/master/wishbone_master.v
+
+rtl/logic_analyzer.v
+rtl/wb_logic_analyzer.v
+rtl/uart_la_interface.v
+
+sim/tb_wishbone_master.v
+

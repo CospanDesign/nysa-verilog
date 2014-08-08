@@ -1,0 +1,95 @@
+Auto generated slave data
+
+Files:
+1. drt_rom_file.txt: example drt data file (using the DRT in the simulation is
+  not implemented yet)
+2. project_defines.v: a dependency file that is used primarily for DRT (not
+  used right now)
+
+3. tb_wishbone_master.v: main entry point for the code, this is the testbench
+  used to exercise the code, it behaves as both a stimulus and and
+  input/output interface to the wihbone master
+
+4. SConstruct: MAIN CONTROL point
+	-'scons': compiles generated slave files
+	-'scons sim': runs a simulation based on the "master_input_test_data.txt"
+	-'scons wave': opens up GTK wave and loads the current simulation
+	-'make clean': clean everythin up
+
+5. command_file.txt: a list of files that are fed into the Makefile to generate
+  the simulation, some of the files will be the same used in an actual project
+  (example: wishbone_main.v)
+
+6. wave_script.tcl: a TCL script that is fed into gtkwave in order to load up
+  the signals, feel free to modify this in order to add your own signals at
+  start up
+
+7. master_input_test_data.txt: this is the bus stimulus, it will behave
+  similar to a real design input/output handler, you can ping the master,
+  send data to/from peripheral or memory slaves. Example of the commands
+  available are written below
+
+Simulation notes:
+
+-Sometimes you need to view waveforms but you don't want to have to keep
+  reloading 'make wave' because you may have manually added signals, the best
+  practice I've found is to always have the gtkwave window open, and in the
+  command window run 'make' then 'make sim' and then in your gtkwave press
+  <ctrl + shift + r> and the signals will be reloaded
+
+-iVerilog is amazing, but it does have its flaws, I've found that iVerilog
+  will let a lot of errors go that are caught by Xilinx's PlanAhead but this
+  will get your code VERY far
+
+
+Examples:
+  Ping:
+    00000000:00000000:XXXXXXXX:XXXXXXXX
+      -Number of 32-bit values: 00000000 + 1 = 1
+      -Command: Ping (0):       00000000
+      -Device:  Don't Care:     XX
+      -Address: Don't Care:     XXXXXX
+      -Data:    Don't Care:     XXXXXXXX
+
+  Write 1 32-bit value (01234567) to device 1 address 0:
+    00000000:00000001:01000000:01234567
+      -Number of 32-bit values: 00000000 + 1 = 1
+      -Command: Write (1):      00000001
+      -Device:  01              01
+      -Address: 0x04            000000
+      -Data:                    01234567
+
+  Write 4 32-bit values (1's, 2's, 3's, 4's) to device 2 start address 4
+    (will auto increment the address to 7)
+    00000003:00000001:02000004:11111111
+    22222222
+    33333333
+    44444444
+
+      -Number of 32-bit values: 00000003 + 1 = 4
+      -Command: Write (1):      00000001
+      -Device:  02              02
+      -Address: 0x04            000004
+      -Data:                    11111111 22222222 33333333 44444444
+
+  Read 1 32-bit value from device 3 address 2
+    00000000:00000002:03000002:00000000
+
+      -Number of 32-bit values: 00000000 + 1 = 1
+      -Command: Read (2):       00000002
+      -Device:  03              03
+      -Address: 0x02            000002
+      -Command Padding          00000000
+
+  Read 8 32-bit values from device 4 address 6
+    00000007:00000002:04000006:00000000
+
+      -Number of 32-bit values: 00000007 + 1 = 8
+      -command: Read (2):       00000002
+      -Device:  04              04
+      -Address: 0x06            000006
+      -Command Padding          00000000
+
+  SLEEP
+    00000008
+      -Sleep for 8 clock cycles

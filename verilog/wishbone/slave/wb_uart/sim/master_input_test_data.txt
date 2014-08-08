@@ -1,0 +1,27 @@
+#Command Format:
+#[Data Count]:[Flags,Command]:[Periph Device, Address]:[Data(ignored for reads)]
+
+#Ping
+00000000:00000000:12345678:FEDCBA98
+
+#Write a Reset to the control, then clear and it and setup the read/write interrupt
+00000000:00000001:01000000:00000001
+00000000:00000001:01000000:00000018
+
+#Read the status for the hell of it
+00000000:00000002:01000001:00000000
+
+#Write one byte to the UART:
+00000003:00000001:01000005:0007A050
+44332211
+F0000000
+
+#Sleep
+00008000
+
+00000000:00000002:01000006:00000000
+00000000:00000001:01000006:00000004
+00000002:00000002:01000007:00000000
+
+#Read one (1 and 0 are the same for data count) from peripheral 1 address 0
+00000001:00000002:01000000:00000000

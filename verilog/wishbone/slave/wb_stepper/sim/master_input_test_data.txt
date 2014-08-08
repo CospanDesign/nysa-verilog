@@ -1,0 +1,47 @@
+#Command Format:
+#[Data Count]:[Flags,Command]:[Periph Device, Address]:[Data(ignored for reads)]
+
+#Ping
+00000000:00000000:12345678:FEDCBA98
+
+#Setup Bipolar Stepper as the one to control
+0000000:00000001:01000000:000000002
+
+#Setup Max Steps
+0000000:00000001:0100000C:000019000
+
+#Setup the control to enable direction
+#0: Direction
+#1: Continuous Rotation
+#2:
+#3:
+#[6:4]:
+#   1: Full Step
+#   2: Half Step
+#   3: Micro Step
+00000000:00000001:01000001:00000031
+
+#Setup the walking period
+00000000:00000001:01000006:00001000
+
+#Setup the running period
+00000000:00000001:01000007:00000100
+
+#Setup the number of steps
+00000000:00000001:01000005:00001000
+
+#Setup the Accelleration
+00000000:00000001:01000008:00000400
+
+#Setup the micro step hold time
+00000000:00000001:01000009:00000000
+
+#Initiate a transaction
+00000000:00000001:01000002:00000001
+
+#Sleep
+00020000
+
+#Ping
+00000000:00000000:12345678:FEDCBA98
+

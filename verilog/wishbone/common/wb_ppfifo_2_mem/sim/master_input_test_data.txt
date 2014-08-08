@@ -1,0 +1,64 @@
+#Command Format:
+#[Data Count]:[Flags,Command]:[Periph Device, Address]:[Data(ignored for reads)]
+
+#Ping
+00000001:00000000:12345678:FEDCBA98
+
+#Write one peice of data to the peripheral device 1, address 0, data 1
+00000001:00000001:01000000:00000000
+
+
+#Write 0x000 into Address 0x00 (Control) [Disable]
+00000001:00000001:01000000:00000000
+
+#Write 0x000 into Address 0x02 (Mem 0 Base)
+00000001:00000001:01000002:00000000
+
+#Write 0x040 into Address 0x03 (Mem 0 Size)
+00000001:00000001:01000003:00000008
+
+#Write 0x040 into Address 0x04 (Mem 1 Base)
+00000001:00000001:01000004:00000008
+
+#Write 0x040 into Address 0x05 (Mem 1 Size)
+00000001:00000001:01000005:00000008
+
+#Set the sim clock to a slower value to exercise the system filling the mem and reading at the same time
+#00000001:00000001:01000006:00000010
+00000001:00000001:01000006:00000000
+
+#Write 0x003 into Address 0x00 (Control) [Enble, Enable Interrupts]
+00000001:00000001:01000000:00000001
+
+#Sleep
+#00000400
+
+#Read data from the memory
+0000000A:00010002:00000000:00000000
+
+#Sleep
+00000400
+
+#Write 0x008 into Address 0x03 (Mem 0 Size)
+00000001:00000001:01000003:00000008
+
+#Sleep
+00000400
+
+#Write 0x008 into Address 0x05 (Mem 1 Size)
+00000001:00000001:01000005:00000008
+
+
+
+#Read data from the memory
+00000010:00010002:00000000:00000000
+
+
+#Sleep
+00001000
+
+
+#Ping
+00000000:00000000:12345678:FEDCBA98
+
+

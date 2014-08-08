@@ -1,0 +1,46 @@
+#Command Format:
+#[Data Count]:[Flags,Command]:[Periph Device, Address]:[Data(ignored for reads)]
+
+#Ping
+00000000:00000000:12345678:FEDCBA98
+
+# Set Control
+# Auto Slave Select (bit 13 -> 1)
+# Interrupt Enable  (bit 12 -> 1)
+# Least Sig Bit     (bit 11 -> 1)
+# tx neg edge       (bit 10 -> 0)
+# rx neg edge       (bit 9  -> 0)
+# go                (bit 8  -> 0) Don't go yet
+# char_len          (bit 6:0 -> 0) Nothing yet
+00000001:00000001:01000000:00000060
+00000001:00000001:01000003:00000001
+00000001:00000001:01000004:00000010
+
+# Set Write Data
+00000010:00000001:0100000E:81FF0000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+01234567
+
+00000001:00000001:01000000:00000061
+
+
+#Sleep
+00010000
+
+#Ping
+00000000:00000000:12345678:FEDCBA98
+
+

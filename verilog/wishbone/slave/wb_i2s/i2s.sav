@@ -1,0 +1,215 @@
+[*]
+[*] GTKWave Analyzer v3.3.34 (w)1999-2012 BSI
+[*] Tue Oct  1 17:37:28 2013
+[*]
+[dumpfile] "/home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_i2s/design.vcd"
+[dumpfile_mtime] "Tue Oct  1 17:29:29 2013"
+[dumpfile_size] 222669189
+[savefile] "/home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_i2s/i2s.sav"
+[timestart] 127738000
+[size] 1596 877
+[pos] -1 -1
+*-19.731157 129990000 129990000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] wishbone_master_tb.
+[treeopen] wishbone_master_tb.m0.
+[treeopen] wishbone_master_tb.m0.ram.
+[treeopen] wishbone_master_tb.s1.controller.
+[treeopen] wishbone_master_tb.s1.controller.mcontroller.
+[sst_width] 223
+[signals_width] 306
+[sst_expanded] 1
+[sst_vpaned_height] 250
+@28
+wishbone_master_tb.clk
+wishbone_master_tb.rst
+wishbone_master_tb.execute_command
+wishbone_master_tb.command_finished
+@22
+wishbone_master_tb.r_in_command[31:0]
+wishbone_master_tb.r_in_address[31:0]
+wishbone_master_tb.r_in_data[31:0]
+@200
+-
+@28
+wishbone_master_tb.sdram_ready
+@200
+-
+@c00200
+-I2S
+-Wishbone Bus
+@28
+wishbone_master_tb.s1.i_wbs_cyc
+wishbone_master_tb.s1.i_wbs_stb
+wishbone_master_tb.s1.i_wbs_we
+wishbone_master_tb.s1.o_wbs_ack
+wishbone_master_tb.s1.o_wbs_int
+@22
+wishbone_master_tb.s1.i_wbs_adr[31:0]
+wishbone_master_tb.s1.i_wbs_dat[31:0]
+wishbone_master_tb.s1.o_wbs_dat[31:0]
+@1401200
+-Wishbone Bus
+@200
+-
+@28
+wishbone_master_tb.s1.enable
+@200
+-
+@28
+wishbone_master_tb.s1.wfifo_ready[1:0]
+wishbone_master_tb.s1.wfifo_activate[1:0]
+@22
+wishbone_master_tb.s1.wfifo_size[23:0]
+@200
+-
+@28
+wishbone_master_tb.s1.controller.mcontroller.clk
+wishbone_master_tb.s1.controller.mcontroller.i2s_clock
+wishbone_master_tb.s1.controller.mcontroller.rst
+wishbone_master_tb.s1.controller.mcontroller.wfifo_ready[1:0]
+@200
+-
+@c00200
+-Memory Bus
+@28
+wishbone_master_tb.s1.mem_o_cyc
+wishbone_master_tb.s1.mem_o_stb
+wishbone_master_tb.s1.mem_i_ack
+@22
+wishbone_master_tb.s1.mem_o_adr[31:0]
+wishbone_master_tb.s1.mem_i_dat[31:0]
+@1401200
+-Memory Bus
+@200
+-
+@28
+wishbone_master_tb.s1.controller.writer.audio_data_request
+wishbone_master_tb.s1.controller.mcontroller.read_ready
+wishbone_master_tb.s1.controller.mcontroller.read_activate
+@22
+wishbone_master_tb.s1.controller.mcontroller.read_count[23:0]
+@200
+-
+@28
+wishbone_master_tb.s1.controller.writer.i2s_lr
+@22
+wishbone_master_tb.s1.controller.writer.audio_data[23:0]
+@1401200
+-I2S
+@200
+-
+@c00200
+-Memory Interconnect
+@28
+wishbone_master_tb.wmi.i_m_cyc
+wishbone_master_tb.wmi.i_m_stb
+wishbone_master_tb.wmi.i_m_we
+wishbone_master_tb.wmi.o_m_ack
+@22
+wishbone_master_tb.wmi.i_m_adr[31:0]
+wishbone_master_tb.wmi.i_m_dat[31:0]
+wishbone_master_tb.wmi.o_m_dat[31:0]
+wishbone_master_tb.wmi.mem_select[31:0]
+@200
+-
+@28
+wishbone_master_tb.wmi.o_s0_cyc
+wishbone_master_tb.wmi.o_s0_stb
+wishbone_master_tb.wmi.o_s0_we
+wishbone_master_tb.wmi.i_s0_ack
+@22
+wishbone_master_tb.wmi.o_s0_adr[31:0]
+wishbone_master_tb.wmi.o_s0_dat[31:0]
+wishbone_master_tb.wmi.i_s0_dat[31:0]
+@1401200
+-Memory Interconnect
+@200
+-
+@800200
+-SDRAM
+-SDRAM Write
+@22
+wishbone_master_tb.m0.ram.write_path.state[3:0]
+wishbone_master_tb.m0.ram.write_path.fifo_data[35:0]
+@28
+wishbone_master_tb.m0.ram.write_path.fifo_ready
+wishbone_master_tb.m0.ram.write_path.fifo_activate
+wishbone_master_tb.m0.ram.write_path.fifo_read
+@23
+wishbone_master_tb.m0.ram.write_path.write_address[21:0]
+@1000200
+-SDRAM Write
+@c00200
+-Wishbone
+@28
+wishbone_master_tb.m0.i_wbs_cyc
+wishbone_master_tb.m0.i_wbs_stb
+wishbone_master_tb.m0.i_wbs_we
+wishbone_master_tb.m0.o_wbs_ack
+@22
+wishbone_master_tb.m0.o_wbs_dat[31:0]
+wishbone_master_tb.m0.i_wbs_adr[31:0]
+@28
+wishbone_master_tb.m0.first_exchange
+@22
+wishbone_master_tb.m0.i_wbs_dat[31:0]
+@1401200
+-Wishbone
+@28
+wishbone_master_tb.m0.ram.read_enable
+wishbone_master_tb.m0.ram.of_fifo_reset
+wishbone_master_tb.m0.clk
+wishbone_master_tb.m0.of_wb_reset
+@200
+-
+@22
+wishbone_master_tb.m0.ram.write_path.state[3:0]
+@c00200
+-Read FIFO
+@200
+-
+@22
+wishbone_master_tb.m0.ram.read_path.fifo_data[31:0]
+@1401200
+-Read FIFO
+@2022
+^1 /tmp/../home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_i2s/../../../../../../../../../../tmp/../home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_i2s/../../../../../../../../../../tmp/../home/cospan/Projects/verilog/wb_sdram/sim/sdram_commands.txt
+wishbone_master_tb.m0.ram.read_path.command[2:0]
+@22
+wishbone_master_tb.m0.ram.read_path.read_address[21:0]
+wishbone_master_tb.m0.i_wbs_adr[31:0]
+wishbone_master_tb.m0.ram.read_path.read_address[21:0]
+wishbone_master_tb.m0.ram.read_path.app_address[21:0]
+@200
+-
+@c00200
+>65000
+-SDRAM PHY
+@28
+>65000
+wishbone_master_tb.m0.o_ext_sdram_clk
+@22
+>65000
+wishbone_master_tb.m0.io_sdram_data[15:0]
+>65000
+wishbone_master_tb.m0.o_sdram_addr[11:0]
+@2022
+>65000
+^1 /tmp/../home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_i2s/../../../../../../../../../../tmp/../home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_i2s/../../../../../../../../../../tmp/../home/cospan/Projects/verilog/wb_sdram/sim/sdram_commands.txt
+wishbone_master_tb.m0.ram.write_command[2:0]
+@1401200
+>65000
+-SDRAM PHY
+@1000200
+>0
+-SDRAM
+@200
+-
+@28
+wishbone_master_tb.wm.o_mem_cyc
+wishbone_master_tb.wm.o_mem_stb
+wishbone_master_tb.wm.i_mem_ack
+@22
+wishbone_master_tb.wm.o_mem_adr[31:0]
+[pattern_trace] 1
+[pattern_trace] 0

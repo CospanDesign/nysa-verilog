@@ -1,0 +1,50 @@
+#Add other command line options here
++libext+.v
++incdir+rtl+sim
++incdir+${NYSA}/cbuilder/verilog
++incdir+${NYSA}/cbuilder/verilog/wishbone/slave/wb_sdram/rtl
++incdir+/opt/Xilinx/14.5/ISE_DS/ISE/verilog/src
+
+#Use the NYSA keyword to point to the NYSA base directory
+
+${NYSA}/cbuilder/verilog/sim/wishbone/interconnect/example_2port_interconnect/wishbone_interconnect.v
+#${NYSA}/cbuilder/verilog/wishbone/slave/device_rom_table/device_rom_table.v
+${NYSA}/cbuilder/verilog/wishbone/master/wishbone_master.v
+
+#The generic directory contains a lot of non-platform specific verilog code
+#${NYSA}/cbuilder/verilog/generic/<some name here>.v
+
+${NYSA}/cbuilder/verilog/wishbone/common/wb_ppfifo_2_mem/rtl/wb_ppfifo_2_mem.v
+
+/opt/Xilinx/14.5/ISE_DS/ISE/verilog/src/glbl.v
+/opt/Xilinx/14.5/ISE_DS/ISE/verilog/src/unisims/STARTUP_SPARTAN6.v
+/opt/Xilinx/14.5/ISE_DS/ISE/verilog/src/unisims/BUFG.v
+/opt/Xilinx/14.5/ISE_DS/ISE/verilog/src/unisims/ODDR2.v
+/opt/Xilinx/14.5/ISE_DS/ISE/verilog/src/unisims/PLL_BASE.v
+/opt/Xilinx/14.5/ISE_DS/ISE/verilog/src/unisims/PLL_ADV.v
+/opt/Xilinx/14.5/ISE_DS/ISE/verilog/src/unisims/DCM_SP.v
+
+#SDRAM
+${NYSA}/cbuilder/verilog/wishbone/slave/wb_sdram/rtl/sdram.v
+${NYSA}/cbuilder/verilog/wishbone/slave/wb_sdram/rtl/sdram_clkgen.v
+${NYSA}/cbuilder/verilog/wishbone/slave/wb_sdram/sim/mt48lc4m16.v
+${NYSA}/cbuilder/verilog/wishbone/slave/wb_sdram/rtl/sdram_include.v
+${NYSA}/cbuilder/verilog/wishbone/slave/wb_sdram/rtl/sdram_read.v
+${NYSA}/cbuilder/verilog/wishbone/slave/wb_sdram/rtl/sdram_write.v
+${NYSA}/cbuilder/verilog/wishbone/slave/wb_sdram/rtl/wb_sdram.v
+
+#The generic directory contains a lot of non-platform specific verilog code
+#${NYSA}/cbuilder/verilog/generic/<some name here>.v
+
+${NYSA}/cbuilder/verilog/generic/ppfifo.v
+${NYSA}/cbuilder/verilog/generic/blk_mem.v
+${NYSA}/cbuilder/verilog/generic/cross_clock_enable.v
+${NYSA}/cbuilder/verilog/generic/cross_clock_strobe.v
+
+rtl/i2s_reader_defines.v
+rtl/i2s_reader_phy.v
+rtl/wb_i2s_reader.v
+sim/arbitor_2_masters.v
+sim/wishbone_mem_interconnect.v
+sim/tb_wishbone_master.v
+

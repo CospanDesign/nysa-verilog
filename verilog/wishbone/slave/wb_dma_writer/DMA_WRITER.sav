@@ -1,0 +1,105 @@
+[*]
+[*] GTKWave Analyzer v3.3.34 (w)1999-2012 BSI
+[*] Tue Dec 10 07:41:10 2013
+[*]
+[dumpfile] "/home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_dma_writer/design.vcd"
+[dumpfile_mtime] "Tue Dec 10 07:40:19 2013"
+[dumpfile_size] 122931586
+[savefile] "/home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_dma_writer/DMA_WRITER.sav"
+[timestart] 0
+[size] 1596 877
+[pos] -1 -1
+*-24.957329 137540000 125850000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] wishbone_master_tb.
+[sst_width] 210
+[signals_width] 174
+[sst_expanded] 1
+[sst_vpaned_height] 249
+@28
+wishbone_master_tb.clk
+wishbone_master_tb.rst
+wishbone_master_tb.execute_command
+wishbone_master_tb.command_finished
+@200
+-
+@22
+wishbone_master_tb.s1.r_control[31:0]
+wishbone_master_tb.s1.w_status[31:0]
+@28
+wishbone_master_tb.s1.w_memory_0_empty
+wishbone_master_tb.s1.w_memory_1_empty
+@200
+-
+@c00200
+-PPFIFO Write
+@28
+wishbone_master_tb.s1.w_wfifo_ready[1:0]
+wishbone_master_tb.s1.w_wfifo_activate[1:0]
+@22
+wishbone_master_tb.s1.w_wfifo_size[23:0]
+@28
+wishbone_master_tb.s1.w_wfifo_strobe
+@22
+wishbone_master_tb.s1.w_wfifo_data[31:0]
+@1401200
+-PPFIFO Write
+@200
+-
+@800200
+-PPFIFO Read
+@28
+wishbone_master_tb.s1.w_rfifo_ready
+@22
+wishbone_master_tb.s1.w_rfifo_size[23:0]
+@28
+wishbone_master_tb.s1.w_rfifo_activate
+wishbone_master_tb.s1.w_rfifo_strobe
+@23
+wishbone_master_tb.s1.w_rfifo_data[31:0]
+@1000200
+-PPFIFO Read
+@200
+-
+@c00200
+-M2P
+@28
+wishbone_master_tb.s1.w_enable
+wishbone_master_tb.s1.w_enable_interrupt
+wishbone_master_tb.s1.w_control_reset
+@22
+wishbone_master_tb.s1.r_memory_0_base[31:0]
+wishbone_master_tb.s1.r_memory_0_size[31:0]
+@28
+wishbone_master_tb.s1.r_memory_0_new_data
+@22
+wishbone_master_tb.s1.r_memory_1_base[31:0]
+wishbone_master_tb.s1.r_memory_1_size[31:0]
+@28
+wishbone_master_tb.s1.r_memory_1_new_data
+@1401200
+-M2P
+@200
+-
+@c00200
+-M2P Mem Bus
+@28
+wishbone_master_tb.s1.m2p.o_mem_we
+wishbone_master_tb.s1.m2p.o_mem_stb
+wishbone_master_tb.s1.m2p.o_mem_cyc
+wishbone_master_tb.s1.m2p.i_mem_ack
+@22
+wishbone_master_tb.s1.m2p.i_mem_dat[31:0]
+wishbone_master_tb.s1.m2p.o_mem_dat[31:0]
+@1401200
+-M2P Mem Bus
+@200
+-
+@28
+wishbone_master_tb.m0.i_wbs_we
+wishbone_master_tb.m0.i_wbs_stb
+@22
+wishbone_master_tb.m0.i_wbs_adr[31:0]
+wishbone_master_tb.m0.i_wbs_dat[31:0]
+wishbone_master_tb.m0.o_wbs_dat[31:0]
+[pattern_trace] 1
+[pattern_trace] 0
