@@ -1,4 +1,5 @@
 nysa-verilog
 ============
 
-Verilog Repository for GIT
+Verilog Repository for Nysa
+
