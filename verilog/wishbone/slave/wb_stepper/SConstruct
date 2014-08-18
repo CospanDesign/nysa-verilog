@@ -2,9 +2,12 @@ import os
 import sys
 import json
 import SCons
+import site
 
 from string import Template
 
+SITE_PATH = os.path.join(site.getuserbase(), "nysa")
+PATHS_PATH = os.path.join(SITE_PATH, "paths.json")
 
 verilog_builder = Builder ( action = 'iverilog -o$TARGET -c$SOURCE', 
                             suffix = '.sim')
@@ -25,21 +28,16 @@ AlwaysBuild('design.sim')
 AlwaysBuild('design.vcd')
 
 def fix_verilog_paths():
-  nysa_config = None
-  path = os.path.expanduser('~')
-  path = os.path.join(path, ".config", "nysa", "nysa.json")
-  #The user should know about errors... or I should handle them gracefully o_0
   #Open the configuration file from the default location
   try:
-    f = open(path)
-    s = f.read()
-    nysa_config = json.loads(s)
+    f = open(PATHS_PATH, "r")
+    #print "file: %s" % f.read()
+    paths_dict = json.load(f)
     f.close()
     #print "Opened up the configuration file"
 
   except IOError:
-    print ("Error user has not set up configuration file, \
-    run 'init_settings.py' in nysa base directory")
+    print ("Error user has not set up configuration file run 'nysa-update'")
 
   #Open the user command file
   f = open('command_file.txt')
@@ -49,8 +47,10 @@ def fix_verilog_paths():
 
   #Apply the configuration directory
   buf = template.safe_substitute(
-    NYSA=nysa_config["dir"]
+    NYSA=paths_dict["verilog"]["nysa-verilog"]["path"]
   )
+  
+  buf = buf.replace('/', os.path.sep) 
 
   #Write the output file
   #print "Opened up the temp file"

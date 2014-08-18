@@ -5,7 +5,7 @@ import site
 
 PATH = os.path.abspath(os.path.dirname(__file__))
 NYSA_NAME = "nysa"
-PATH_DICT_NAME = "path.json"
+PATH_DICT_NAME = "paths.json"
 PATH_ENTRY_NAME = "nysa-verilog"
 
 SITE_NYSA = os.path.abspath(os.path.join(site.getuserbase(), NYSA_NAME))

@@ -1,18 +1,18 @@
 #Add other command line options here
 +libext+.v
 +incdir+rtl+sim
-+incdir+${NYSA}/cbuilder/verilog
-+incdir+${NYSA}/cbuilder/verilog/wishbone/slave/wb_sdram/rtl
++incdir+${NYSA}/verilog
++incdir+${NYSA}/verilog/wishbone/slave/wb_sdram/rtl
 +incdir+/opt/Xilinx/14.5/ISE_DS/ISE/verilog/src
 
 #Use the NYSA keyword to point to the NYSA base directory
 
-${NYSA}/cbuilder/verilog/sim/wishbone/interconnect/example_2port_interconnect/wishbone_interconnect.v
-#${NYSA}/cbuilder/verilog/wishbone/slave/device_rom_table/device_rom_table.v
-${NYSA}/cbuilder/verilog/wishbone/master/wishbone_master.v
+${NYSA}/verilog/sim/wishbone/interconnect/example_2port_interconnect/wishbone_interconnect.v
+#${NYSA}/verilog/wishbone/slave/device_rom_table/device_rom_table.v
+${NYSA}/verilog/wishbone/master/wishbone_master.v
 
 #The generic directory contains a lot of non-platform specific verilog code
-#${NYSA}/cbuilder/verilog/generic/<some name here>.v
+#${NYSA}/verilog/generic/<some name here>.v
 
 ../../common/wb_ppfifo_2_mem/rtl/wb_ppfifo_2_mem.v
 
@@ -34,12 +34,12 @@ ${NYSA}/cbuilder/verilog/wishbone/master/wishbone_master.v
 ../wb_sdram/rtl/wb_sdram.v
 
 #The generic directory contains a lot of non-platform specific verilog code
-#${NYSA}/cbuilder/verilog/generic/<some name here>.v
+#${NYSA}/verilog/generic/<some name here>.v
 
-${NYSA}/cbuilder/verilog/generic/ppfifo.v
-${NYSA}/cbuilder/verilog/generic/blk_mem.v
-${NYSA}/cbuilder/verilog/generic/cross_clock_enable.v
-${NYSA}/cbuilder/verilog/generic/cross_clock_strobe.v
+${NYSA}/verilog/generic/ppfifo.v
+${NYSA}/verilog/generic/blk_mem.v
+${NYSA}/verilog/generic/cross_clock_enable.v
+${NYSA}/verilog/generic/cross_clock_strobe.v
 
 
 rtl/ppfifo_data_generator.v

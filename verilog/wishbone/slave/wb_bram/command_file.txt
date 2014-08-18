@@ -1,16 +1,16 @@
 #Add other command line options here
 +libext+.v
-+incdir+${NYSA}/cbuilder/verilog
++incdir+${NYSA}/verilog
 
 #Use the NYSA keyword to point to the NYSA base directory
 
 #The generic directory contains a lot of non-platform specific verilog code
-${NYSA}/cbuilder/verilog/generic/bram.v
+${NYSA}/verilog/generic/bram.v
 
 
-${NYSA}/cbuilder/verilog/sim/wishbone/interconnect/example_2port_interconnect/wishbone_interconnect.v
-#${NYSA}/cbuilder/verilog/wishbone/slave/device_rom_table/device_rom_table.v
-${NYSA}/cbuilder/verilog/wishbone/master/wishbone_master.v
+${NYSA}/verilog/sim/wishbone/interconnect/example_2port_interconnect/wishbone_interconnect.v
+#${NYSA}/verilog/wishbone/slave/device_rom_table/device_rom_table.v
+${NYSA}/verilog/wishbone/master/wishbone_master.v
 
 rtl/wb_bram.v
 sim/tb_wishbone_master.v
