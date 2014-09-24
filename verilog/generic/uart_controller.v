@@ -41,73 +41,43 @@ SOFTWARE.
 
 `define PRESCALER_DIV           8
 
-module uart_controller (
-  clk,
-  rst,
+module uart_controller #(
+    parameter DEFAULT_BAUDRATE  = 115200
+  )(
+  input               clk,
+  input               rst,
 
-  rx,
-  tx,
+  input               rx,
+  output              tx,
 
-  cts,
-  rts,
+  //I need to verify flow control is correct
+  output  reg         cts,
+  input               rts,
 
-  control_reset,
-  cts_rts_flowcontrol,
+  input               control_reset,
+  input               cts_rts_flowcontrol,
 
-  prescaler,
-  set_clock_div,
-  clock_div,
-  default_clock_div,
+  output      [31:0]  prescaler,
+  input               set_clock_div,
+  input       [31:0]  clock_div,
+  output      [31:0]  default_clock_div,
 
-  write_strobe,
-  write_data,
+  input               write_strobe,
+  input       [7:0]   write_data,
 
-  write_full,
-  write_available,
-  write_size,
-  write_overflow,
+  output              write_full,
+  output      [31:0]  write_available,
+  output wire [31:0]  write_size,
+  output wire         write_overflow,
 
-  read_strobe,
-  read_empty,
-  read_data,
-  read_count,
-  read_size,
-  read_overflow
+  output      [7:0]   read_data,
+  input               read_strobe,
+  output              read_empty,
+  output wire [31:0]  read_count,
+  output wire [31:0]  read_size,
+  output wire         read_overflow
 );
 
-
-input               clk;
-input               rst;
-
-input               rx;
-output              tx;
-
-//I need to verify flow control is correct
-output  reg         cts;
-input               rts;
-
-input               control_reset;
-input               cts_rts_flowcontrol;
-
-output      [31:0]  prescaler;
-input               set_clock_div;
-input       [31:0]  clock_div;
-output      [31:0]  default_clock_div;
-
-input               write_strobe;
-input       [7:0]   write_data;
-
-output              write_full;
-output      [31:0]  write_available;
-output wire [31:0]  write_size;
-output wire         write_overflow;
-
-output      [7:0]   read_data;
-input               read_strobe;
-output              read_empty;
-output wire [31:0]  read_count;
-output wire [31:0]  read_size;
-output wire         read_overflow;
 
 
 //FIFO Registers
@@ -185,22 +155,24 @@ uart_fifo uf_rx (
 );
 
 //Low Level UART
-uart_v3 u (
-  .clk               (clk                  ),
-  .rst               (rst || control_reset ),
-  .rx                (rx                   ),
-  .tx                (tx                   ),
-  .transmit          (transmit             ),
-  .tx_byte           (tx_byte              ),
-  .received          (received             ),
-  .rx_byte           (rx_byte              ),
-  .is_receiving      (is_receiving         ),
-  .is_transmitting   (is_transmitting      ),
-  .rx_error          (rx_error             ),
-  .set_clock_div     (set_clock_div        ),
-  .user_clock_div    (clock_div            ),
-  .default_clock_div (default_clock_div    ),
-  .prescaler         (prescaler            )
+uart_v3 #(
+  .DEFAULT_BAUDRATE   (DEFAULT_BAUDRATE     )
+) u(
+  .clk                (clk                  ),
+  .rst                (rst || control_reset ),
+  .rx                 (rx                   ),
+  .tx                 (tx                   ),
+  .transmit           (transmit             ),
+  .tx_byte            (tx_byte              ),
+  .received           (received             ),
+  .rx_byte            (rx_byte              ),
+  .is_receiving       (is_receiving         ),
+  .is_transmitting    (is_transmitting      ),
+  .rx_error           (rx_error             ),
+  .set_clock_div      (set_clock_div        ),
+  .user_clock_div     (clock_div            ),
+  .default_clock_div  (default_clock_div    ),
+  .prescaler          (prescaler            )
 );
 
 
