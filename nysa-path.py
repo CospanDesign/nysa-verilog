@@ -26,12 +26,12 @@ if __name__ == "__main__":
     f.close()
 
     pentry = PATH
-    if "nysa-verilog" in path_dict and type(path_dict["nysa-verilog"]) is list:
-        if pentry not in path_dict["nysa-verilog"]:
-            path_dict["nysa-verilog"].insert(0, pentry)
-    else:
-        path_dict["nysa-verilog"] = [PATH]
+    if "verilog" not in path_dict:
+        path_dict["verilog"] = {}
+
+    path_dict["verilog"]["nysa-verilog"] = {}
+    path_dict["verilog"]["nysa-verilog"]["path"] = PATH
 
     f = open(SITE_PATH, "w")
-    f.write(json.dumps(path_dict))
+    f.write(json.dumps(path_dict, sort_keys = True, indent = 2, separators=(",", ": ")))
     f.close()
