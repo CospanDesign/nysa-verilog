@@ -154,7 +154,10 @@ wire  [31:0]                w_uart_start_pos;
 wire                        w_uart_la_reset;
 
 //submodule
-uart_la_interface ulac (
+uart_la_interface #(
+  .DEFAULT_BAUDRATE     (`LA_DEFAULT_BAUDRATE     )
+  
+)ulac (
   .rst                  (reset                    ),
   .clk                  (clk                      ),
 

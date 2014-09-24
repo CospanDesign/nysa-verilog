@@ -255,7 +255,7 @@ wishbone_interconnect wi (
   .i_s1_int         (w_wbs1_int           )
 );
 
-uart_v2  u_test (
+uart_v3  u_test (
   .clk              (clk                  ),
   .rst              (rst                  ),
   .rx               (la_uart_tx           ),

@@ -23,7 +23,9 @@ SOFTWARE.
 
 `include "logic_analyzer_defines.v"
 
-module uart_la_interface (
+module uart_la_interface #(
+    parameter DEFAULT_BAUDRATE  = 115200
+)(
 
   input                       rst,
   input                       clk,
@@ -115,33 +117,35 @@ reg   [3:0]                 sleep;
 
 
 //submodules
-uart_controller uc (
-  .clk(clk),
+uart_controller #(
+  .DEFAULT_BAUDRATE             (DEFAULT_BAUDRATE)
+) uc (
+  .clk                          (clk             ),
   //should this be reset here?
-  .rst(rst),
-  .rx(phy_rx),
-  .tx(phy_tx),
-  .rts(0),
+  .rst                          (rst             ),
+  .rx                           (phy_rx          ),
+  .tx                           (phy_tx          ),
+  .rts                          (0               ),
 
-  .control_reset(rst),
-  .cts_rts_flowcontrol(0),
-  .read_overflow(read_overflow),
-  .set_clock_div(0),
-  .clock_div(0),
+  .control_reset                (rst             ),
+  .cts_rts_flowcontrol          (0               ),
+  .read_overflow                (read_overflow   ),
+  .set_clock_div                (0               ),
+  .clock_div                    (0               ),
 
   //Data in
-  .write_strobe(write_strobe),
-  .write_data(write_data),
-  .write_full(write_full),
-  .write_available(write_available),
-  .write_size(write_size),
+  .write_strobe                 (write_strobe    ),
+  .write_data                   (write_data      ),
+  .write_full                   (write_full      ),
+  .write_available              (write_available ),
+  .write_size                   (write_size      ),
 
   //Data Out
-  .read_strobe(read_strobe),
-  .read_data(read_data),
-  .read_empty(read_empty),
-  .read_count(uart_read_count),
-  .read_size(read_size)
+  .read_strobe                  (read_strobe     ),
+  .read_data                    (read_data       ),
+  .read_empty                   (read_empty      ),
+  .read_count                   (uart_read_count ),
+  .read_size                    (read_size       )
 );
 
 

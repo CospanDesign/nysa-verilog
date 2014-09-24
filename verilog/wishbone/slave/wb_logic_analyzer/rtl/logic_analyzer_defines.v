@@ -1,9 +1,11 @@
 `ifndef __LA_DEFINES__
 `define __LA_DEFINES__
 
-`define CAP_DAT_WIDTH 32
-`define CAP_MEM_SIZE  11
-`define TRIG          32'h00000000
+`define CAP_DAT_WIDTH         32
+`define CAP_MEM_SIZE          11
+`define TRIG                  32'h00000000
+
+`define LA_DEFAULT_BAUDRATE   115200
 
 //UART Interface
 `define HEX_0                 8'h30
