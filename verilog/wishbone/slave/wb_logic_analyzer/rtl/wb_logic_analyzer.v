@@ -151,59 +151,61 @@ wire  [31:0]                w_la_data_out;
 wire  [DEPTH - 1: 0]        w_start;
 
 wire  [31:0]                w_uart_start_pos;
+wire                        w_uart_la_reset;
 
 //submodule
 uart_la_interface ulac (
-  .rst                  (reset                  ),
-  .clk                  (clk                    ),
+  .rst                  (reset                    ),
+  .clk                  (clk                      ),
 
-  .trigger              (uart_trigger           ),
-  .trigger_mask         (uart_trigger_mask      ),
-  .trigger_after        (uart_trigger_after     ),
-  .trigger_edge         (uart_trigger_edge      ),
-  .both_edges           (uart_both_edges        ),
-  .repeat_count         (uart_repeat_count      ),
-  .set_strobe           (uart_set_strobe        ),
-  .disable_uart         (disable_uart           ),
-  .enable               (uart_enable            ),
-  .finished             (finished               ),
-  .start                (w_uart_start_pos       ),
+  .trigger              (uart_trigger             ),
+  .trigger_mask         (uart_trigger_mask        ),
+  .trigger_after        (uart_trigger_after       ),
+  .trigger_edge         (uart_trigger_edge        ),
+  .both_edges           (uart_both_edges          ),
+  .repeat_count         (uart_repeat_count        ),
+  .set_strobe           (uart_set_strobe          ),
+  .disable_uart         (disable_uart             ),
+  .enable               (uart_enable              ),
+  .finished             (finished                 ),
+  .start                (w_uart_start_pos         ),
+  .la_reset             (w_uart_la_reset          ),
 
-  .data_read_strobe     (udata_read_strobe      ),
-  .data_read_size       (w_la_data_read_size    ),
-  .data                 (w_la_data_out          ),
+  .data_read_strobe     (udata_read_strobe        ),
+  .data_read_size       (w_la_data_read_size      ),
+  .data                 (w_la_data_out            ),
 
-  .phy_rx               (i_la_uart_rx           ),
-  .phy_tx               (o_la_uart_tx           )
+  .phy_rx               (i_la_uart_rx             ),
+  .phy_tx               (o_la_uart_tx             )
 );
 
 logic_analyzer #(
-  .CAPTURE_WIDTH        (`CAP_DAT_WIDTH         ),
-  .CAPTURE_DEPTH        (DEPTH                  )
+  .CAPTURE_WIDTH        (`CAP_DAT_WIDTH           ),
+  .CAPTURE_DEPTH        (DEPTH                    )
 )la (
-  .clk                  (clk                    ),
-  .rst                  (reset                  ),
+  .clk                  (clk                      ),
+  .rst                  (reset                    ),
 
-  .cap_clk              (i_la_clk               ),
-  .cap_external_trigger (i_la_ext_trig          ),
-  .cap_data             (i_la_data              ),
-  .clk_div              (clock_divider          ),
+  .cap_clk              (i_la_clk                 ),
+  .cap_external_trigger (i_la_ext_trig            ),
+  .cap_data             (i_la_data                ),
+  .clk_div              (clock_divider            ),
 
-  .trigger              (trigger                ),
-  .trigger_mask         (trigger_mask           ),
-  .trigger_after        (trigger_after          ),
-  .trigger_edge         (trigger_edge           ),
-  .both_edges           (both_edges             ),
-  .repeat_count         (repeat_count           ),
-  .set_strobe           (set_strobe             ),
-  .enable               (enable                 ),
-  .restart              (control_restart_la     ),
-  .capture_start        (w_start                ),
-  .finished             (finished               ),
+  .trigger              (trigger                  ),
+  .trigger_mask         (trigger_mask             ),
+  .trigger_after        (trigger_after            ),
+  .trigger_edge         (trigger_edge             ),
+  .both_edges           (both_edges               ),
+  .repeat_count         (repeat_count             ),
+  .set_strobe           (set_strobe               ),
+  .enable               (enable                   ),
+  .restart              (control_restart_la       ),
+  .capture_start        (w_start                  ),
+  .finished             (finished                 ),
 
-  .data_out_read_strobe (w_la_data_read_strobe  ),
-  .data_out_read_size   (w_la_data_read_size    ),
-  .data_out             (w_la_data_out          )
+  .data_out_read_strobe (w_la_data_read_strobe    ),
+  .data_out_read_size   (w_la_data_read_size      ),
+  .data_out             (w_la_data_out            )
 
 );
 
@@ -232,7 +234,7 @@ end
 
 //extended reset logic
 always @ (posedge clk) begin
-  if (control_reset) begin
+  if (control_reset | w_uart_la_reset) begin
     reset                   <=  1;
     read_history            <=  0;
   end
@@ -257,7 +259,7 @@ always @ (posedge clk) begin
     disable_uart            <=  0;
   end
 
-  else if (control_reset) begin
+  else if (control_reset | w_uart_la_reset) begin
     //reset the rest flag
     control[`CONTROL_RESET] <=  0;
 

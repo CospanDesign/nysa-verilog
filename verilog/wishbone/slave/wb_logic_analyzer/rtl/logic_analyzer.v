@@ -249,7 +249,7 @@ always @ (posedge clk) begin
     read_state                  <=  IDLE;
   end
   else begin
-    
+
     case (read_state)
       IDLE: begin
         if (finished) begin

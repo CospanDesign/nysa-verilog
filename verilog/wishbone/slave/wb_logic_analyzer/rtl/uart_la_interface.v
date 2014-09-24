@@ -38,6 +38,7 @@ module uart_la_interface (
   output reg                  set_strobe,
   input                       disable_uart,
   output reg                  enable,
+  output reg                  la_reset,
   input                       finished,
   input       [31:0]          start,
 
@@ -190,16 +191,23 @@ always @ (posedge clk) begin
     command                 <=  0;
     response_status         <=  0;
     write_status            <=  0;
+    la_reset                <=  0;
   end
   else begin
-    if (disable_uart) begin
-      enable                <=  0;
-    end
     //read commands from the host computer
+
+
+    //De-assert strobes
     read_strobe             <=  0;
     process_byte            <=  0;
     write_status            <=  0;
     set_strobe              <=  0;
+    la_reset                <=  0;
+
+    if (disable_uart) begin
+      enable                <=  0;
+    end
+
 
     if (ready && !read_empty && !read_strobe) begin
       //new command data to process
@@ -240,6 +248,11 @@ always @ (posedge clk) begin
           command                 <=  read_data;
           case (read_data)
             `LA_PING: begin
+              command_response    <=  `RESPONSE_SUCCESS;
+              read_state          <=  READ_LINE_FEED;
+            end
+            `LA_RESET: begin
+              la_reset            <=  1;
               command_response    <=  `RESPONSE_SUCCESS;
               read_state          <=  READ_LINE_FEED;
             end
