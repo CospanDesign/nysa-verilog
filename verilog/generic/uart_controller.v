@@ -4,21 +4,21 @@ Distributed under the MIT license.
 Copyright (c) 2011 Dave McCoy (dave.mccoy@cospandesign.com)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in 
-the Software without restriction, including without limitation the rights to 
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies 
-of the Software, and to permit persons to whom the Software is furnished to do 
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
 so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all 
+The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
@@ -29,7 +29,7 @@ SOFTWARE.
   07/30/2012
     -Attached Flow control for CTS RTS
     -Removed DTR DSR for this initial version
-*/ 
+*/
 `timescale 1ns/1ps
 
 //Status Flag Defines
@@ -121,7 +121,7 @@ uart_fifo uf_tx (
   .rst(rst || control_reset),
 
   .size(write_size),
-  
+
   .write_strobe(write_strobe),
   .write_available(write_available),
   .write_data(write_data),
@@ -182,7 +182,7 @@ parameter     READ  = 3'h2;
 
 
 //asynchronous logic
-assign  write_full  = tx_full; 
+assign  write_full  = tx_full;
 
 
 //synchronous logic
@@ -217,7 +217,7 @@ always @ (posedge clk) begin
     if (!tx_empty && !is_transmitting && !transmit && !tx_read_strobe && !write_strobe) begin
       if (cts_rts_flowcontrol) begin
         if (~rts) begin
-          $display ("WB_UC (%g): RTS is low", $time); 
+          $display ("WB_UC (%g): RTS is low", $time);
           //device is ready to receive data
           tx_read_strobe    <=  1;
         end
@@ -230,7 +230,7 @@ always @ (posedge clk) begin
 
     if (rx_full && cts_rts_flowcontrol) begin
       //deassert hardware flow control
-      $display ("WB_UC (%g): CTS high", $time); 
+      $display ("WB_UC (%g): CTS high", $time);
       cts                   <=  1;
     end
   end

@@ -240,6 +240,7 @@ wishbone_interconnect wi (
 
 assign  w_wbs0_ack              = 0;
 assign  w_wbs0_dat_o            = 0;
+assign  w_wbs0_int              = 0;
 assign  start                   = 1;
 
 always #`CLK_HALF_PERIOD        clk = ~clk;

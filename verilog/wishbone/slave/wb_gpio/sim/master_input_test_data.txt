@@ -4,32 +4,39 @@
 #Ping
 00000000:00000000:12345678:FEDCBA98
 
-#Write three peices of data to the peripheral device 1, address 1, data A, B, C
-00000005:00000001:01000000:0000000F
+#Write 6 places setting up GPIO output, OUTPUT enable, Interrupt enable, interrupt edge and interrupt on pos edge
+00000006:00000001:01000000:0000000F
 FFFFFF7F
 00000000
 00000080
 00000080
+00000000
 
-
-#Sleep
-00000008
-
-#Read one (1 and 0 are the same for data count) from peripheral 1 address 0
-00000001:00000002:01000002:00000000
 
 #Sleep
 00000100
-
-#Read one (1 and 0 are the same for data count) from peripheral 1 address 0
+#Read the interrupts, this will clear the interrupts as well
 00000001:00000002:01000002:00000000
+
+
+
+#Negative interrupt edge test
 
 #Set the interrupt edge to negative
 00000001:00000001:01000004:00000000
-
 #Sleep
 00000100
+#Read the interrupts, this will clear the interrupts as well
+00000001:00000002:01000002:00000000
 
+
+
+#Interrupts on both edges
+
+#Set the interrupts to both edges
+00000001:00000001:01000005:00000080
+#Sleep
+00000100
 #Read one (1 and 0 are the same for data count) from peripheral 1 address 0
 00000001:00000002:01000002:00000000
 

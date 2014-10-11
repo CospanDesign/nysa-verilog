@@ -133,12 +133,12 @@ endgenerate
 //blocks
 always @ (posedge clk) begin
 	if (rst) begin
-		o_wbs_dat	          <= 32'h00000000;
-		o_wbs_ack	          <= 0;
+		o_wbs_dat	              <= 32'h00000000;
+		o_wbs_ack	              <= 0;
 
 		//reset gpio's
-		gpio_out			      <= 32'h00000000;
-		gpio_direction			<= 32'h00000000;
+		gpio_out			          <= 32'h00000000;
+		gpio_direction		 		  <= 32'h00000000;
 
 		//reset interrupts
 		interrupt_enable		    <= DEFAULT_INTERRUPT_MASK;
@@ -148,7 +148,7 @@ always @ (posedge clk) begin
 	  clear_interrupts 	      <= 0;
 	end
 	else begin
-	  clear_interrupts 	  <= 0;
+	  clear_interrupts 	      <= 0;
 		//when the master acks our ack, then put our ack down
 		if (o_wbs_ack & ~ i_wbs_stb)begin
 			o_wbs_ack <= 0;
@@ -174,14 +174,17 @@ always @ (posedge clk) begin
 					INTERRUPT_ENABLE: begin
 						$display("%h -> interrupt enable", i_wbs_dat);
 						interrupt_enable	            <= i_wbs_dat;
+            clear_interrupts              <=  1;
 					end
 					INTERRUPT_EDGE: begin
 						$display("%h -> interrupt_edge", i_wbs_dat);
 						interrupt_edge	              <= i_wbs_dat;
+            clear_interrupts              <=  1;
 					end
           INTERRUPT_BOTH_EDGE: begin
 						$display("%h -> interrupt_both_edge", i_wbs_dat);
             interrupt_both_edge           <= i_wbs_dat;
+            clear_interrupts              <=  1;
           end
           INTERRUPT_TIMEOUT: begin
             interrupt_timeout_count       <=  i_wbs_dat;
@@ -197,6 +200,7 @@ always @ (posedge clk) begin
 			  		GPIO: begin
 			  			$display("user read %h", i_wbs_adr);
 			  			o_wbs_dat                   <= gpio;
+			  			clear_interrupts	          <= 1;
 			  		end
 			  		GPIO_OUTPUT_ENABLE: begin
 			  			$display("user read %h", i_wbs_adr);
@@ -266,13 +270,13 @@ assign  debug[7]  = prev_gpio_in[3];
 assign  debug[8]  = pos_gpio_edge[2];
 assign  debug[9]  = pos_gpio_edge[3];
 
-assign  debug[10]  = neg_gpio_edge[2];
-assign  debug[11]  = neg_gpio_edge[3];
+assign  debug[10] = neg_gpio_edge[2];
+assign  debug[11] = neg_gpio_edge[3];
 
-assign  debug[12]  = interrupts[2];
-assign  debug[13]  = interrupts[3];
+assign  debug[12] = interrupts[2];
+assign  debug[13] = interrupts[3];
 
-assign  debug[14]  = clear_interrupts;
+assign  debug[14] = clear_interrupts;
 
 
 always @ (posedge clk) begin
@@ -282,7 +286,6 @@ always @ (posedge clk) begin
 		o_wbs_int	      <= 0;
 	end
 	else begin
-
 
     //user requests to clear the interrupts
 		if (clear_interrupts) begin
