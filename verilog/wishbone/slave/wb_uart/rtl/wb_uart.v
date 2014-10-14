@@ -193,10 +193,18 @@ integer         i;
 assign          reading   = ((i_wbs_cyc && !i_wbs_we && (read_count > 0) && (i_wbs_adr == REG_READ)) || read_en);
 assign          writing   = (i_wbs_cyc && i_wbs_we && ((write_count > 0) || (i_wbs_adr == REG_WRITE)));
 
+/*
 assign          interrupt_ready = (!o_wbs_ack && !i_wbs_cyc && !write_en && !read_en) &&
                       (user_read_count == 0) &&
                         ((control[`CONTROL_READ_INTERRUPT] && !read_empty) ||
                          (control[`CONTROL_WRITE_INTERRUPT] && !write_full));
+
+*/
+assign          interrupt_ready =   (user_read_count == 0) &&
+                                    ((control[`CONTROL_READ_INTERRUPT] && !read_empty) ||
+                                    (control[`CONTROL_WRITE_INTERRUPT] && !write_full));
+
+
 
 
 
@@ -261,6 +269,7 @@ always @ (posedge clk) begin
       o_wbs_int         <=  0;
     end
 
+    //Get rid of spurious toggling of interrupts
     if (o_wbs_int) begin
       interrupt_sleep   <=  0;
     end
