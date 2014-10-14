@@ -23,6 +23,11 @@ SOFTWARE.
 */
 
 /*
+  10/14/2014
+    -Made sure the interrupt data was getting the correct interrupt
+      values from the peripheral bus
+    -Added a way to resend interrupts in the case that a user transaction
+      inadvertently deletes the pervious interrupt
   05/06/2013
     -Changed mg_defines to cbuilder_defines
   06/24/2012
@@ -277,7 +282,8 @@ always @ (posedge clk) begin
         o_debug[4]  <= ~o_debug[4];
         $display ("WBM: Timed out");
         //timeout occured, send a nack and go back to IDLE
-        state         <= IDLE;
+        state       <= IDLE;
+        prev_int    <= 0;
         o_status    <= `NACK_TIMEOUT;
         o_address   <= 32'h00000000;
         o_data      <= 32'h00000000;
@@ -312,9 +318,10 @@ always @ (posedge clk) begin
             end
             else begin
               //finished all the reads de-assert the cycle
-              o_debug[10]  <=  ~o_debug[10];
-              o_mem_cyc   <=  0;
-              state       <=  IDLE;
+              o_debug[10]         <=  ~o_debug[10];
+              o_mem_cyc           <=  0;
+              state               <=  IDLE;
+              prev_int            <=  0;
             end
           end
         end
@@ -326,25 +333,26 @@ always @ (posedge clk) begin
           else if (~o_per_stb && i_out_ready) begin
             $display("WBM: local_data_count = %h", local_data_count);
            //put the data in the otput
-           o_data    <= i_per_dat;
+           o_data                 <= i_per_dat;
            //tell the io_handler to send data
-           o_en    <= 1;
+           o_en                   <= 1;
 
             if (local_data_count > 1) begin
-              o_debug[8]  <=  ~o_debug[8];
+              o_debug[8]          <=  ~o_debug[8];
 //the nack count might need to be reset outside of these conditionals becuase
 //at this point we are waiting on the io handler
-              nack_count    <= nack_timeout;
-              local_data_count  <= local_data_count - 1;
+              nack_count          <= nack_timeout;
+              local_data_count    <= local_data_count - 1;
               $display ("WBM: (burst mode) reading double word from peripheral");
-              o_per_adr    <= o_per_adr + 1;
-              o_per_stb    <= 1;
+              o_per_adr           <= o_per_adr + 1;
+              o_per_stb           <= 1;
             end
             else begin
               //finished all the reads, put de-assert the cycle
-              o_debug[7]  <= ~o_debug[7];
-              o_per_cyc    <= 0;
-              state       <= IDLE;
+              o_debug[7]          <= ~o_debug[7];
+              o_per_cyc           <= 0;
+              state               <= IDLE;
+              prev_int            <= 0;
             end
           end
         end
@@ -362,6 +370,7 @@ always @ (posedge clk) begin
               o_debug[12]           <= ~o_debug[12];
               o_mem_cyc             <= 0;
               state                 <= IDLE;
+              prev_int              <= 0;
               o_en                  <= 1;
               o_mem_we              <= 0;
             end
@@ -385,6 +394,7 @@ always @ (posedge clk) begin
               $display ("WBM: i_data_count == 0");
               o_per_cyc             <= 0;
               state                 <= IDLE;
+              prev_int              <= 0;
               o_en                  <= 1;
               o_per_we              <= 0;
             end
@@ -457,6 +467,7 @@ always @ (posedge clk) begin
            end
            else begin
             state                  <=  IDLE;
+            prev_int               <=  0;
            end
            o_status                <=  ~i_command;
            o_address               <=  0;
@@ -488,6 +499,7 @@ always @ (posedge clk) begin
               o_data               <= S_PING_RESP;
               o_en                 <= 1;
               state                <= IDLE;
+              prev_int             <= 0;
             end
             `COMMAND_WRITE: begin
               o_status             <= ~i_command;
@@ -569,6 +581,7 @@ always @ (posedge clk) begin
               endcase
               o_en                <=  1;
               state               <=  IDLE;
+              prev_int            <=  0;
             end
             `COMMAND_CORE_DUMP: begin
               local_data_count    <=  DUMP_COUNT + 1;
@@ -589,7 +602,7 @@ always @ (posedge clk) begin
             local_address         <= 32'hFFFFFFFF;
           //check if there is an interrupt
           //if the i_per_int goes positive then send a nortifiction to the user
-          if ((~prev_int) & i_per_int) begin
+          if (((~prev_int) & i_per_int) && (o_per_adr == 32'hFFFFFFFF)) begin
             o_debug[11]           <= ~o_debug[11];
             $display("WBM: found an interrupt!");
             o_status              <= `PERIPH_INTERRUPT;
@@ -597,12 +610,13 @@ always @ (posedge clk) begin
             o_address             <= 32'h00000000;
             o_data                <= i_per_dat;
             o_en                  <= 1;
+            prev_int              <= i_per_int;
           end
-          prev_int  <= i_per_int;
         end
       end
       default: begin
-      state <= IDLE;
+      state                       <= IDLE;
+      prev_int                    <= 0;
       end
     endcase
     if (!i_per_int) begin
