@@ -300,35 +300,41 @@ always @ (posedge clk) begin
         if (write_en) begin
           if (!o_wbs_ack) begin
             $display ("Writing a byte write_count == %d, dw_countdown == %d", write_count, dw_countdown);
-            case (dw_countdown)
-              0: begin
-                write_data            <=  i_wbs_dat[7:0];
+            if (write_count > 0) begin
+              case (dw_countdown)
+                0: begin
+                  write_data            <=  i_wbs_dat[7:0];
+                end
+                1: begin
+                  write_data            <=  i_wbs_dat[15:8];
+                end
+                2: begin
+                  write_data            <=  i_wbs_dat[23:16];
+                end
+                3: begin
+                  write_data            <=  i_wbs_dat[31:24];
+                end
+              endcase
+              write_strobe              <=  1;
+              if (dw_countdown == 0) begin
+                o_wbs_ack               <=  1;
+                //I KNOW this code is redundant but it is more readible
+                dw_countdown            <=  3;
               end
-              1: begin
-                write_data            <=  i_wbs_dat[15:8];
+              else begin
+                dw_countdown            <=  dw_countdown - 1;
               end
-              2: begin
-                write_data            <=  i_wbs_dat[23:16];
+              if (write_count <= 1) begin
+                o_wbs_ack               <=  1;
+                write_en                <=  0;
+                //Consumed all data from the user
               end
-              3: begin
-                write_data            <=  i_wbs_dat[31:24];
+              else begin
+                write_count             <=  write_count - 1;
               end
-            endcase
-            write_strobe              <=  1;
-            if (dw_countdown == 0) begin
-              o_wbs_ack               <=  1;
-              //I KNOW this code is redundant but it is more readible
-              dw_countdown            <=  3;
             end
             else begin
-              dw_countdown            <=  dw_countdown - 1;
-            end
-            if (write_count == 0) begin
               o_wbs_ack               <=  1;
-              //Consumed all data from the user
-            end
-            else begin
-              write_count             <=  write_count - 1;
             end
           end
         end
@@ -373,7 +379,7 @@ always @ (posedge clk) begin
                     write_en              <=  0;
                   end
                   else begin
-                    write_count           <=  i_wbs_dat[31:16] - 1;
+                    write_count           <=  i_wbs_dat[31:16];
                   end
                 end
               end
