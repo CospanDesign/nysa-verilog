@@ -602,7 +602,7 @@ always @ (posedge clk) begin
             local_address         <= 32'hFFFFFFFF;
           //check if there is an interrupt
           //if the i_per_int goes positive then send a nortifiction to the user
-          if (((~prev_int) & i_per_int) && (o_per_adr == 32'hFFFFFFFF)) begin
+          if (((~prev_int) & i_per_int) && (i_per_int != 0) && (o_per_adr == 32'hFFFFFFFF) && (!mem_bus_select)) begin
             o_debug[11]           <= ~o_debug[11];
             $display("WBM: found an interrupt!");
             o_status              <= `PERIPH_INTERRUPT;
