@@ -8,10 +8,14 @@
 +integer-width+32
 +define+SIMULATION=1
 
+#Use the NYSA keyword to point to the nysa-verilog base directory
 
 ${NYSA}/verilog/sim/wishbone/interconnect/example_2port_interconnect/wishbone_interconnect.v
+#${NYSA}/verilog/wishbone/slave/device_rom_table/device_rom_table.v
 ${NYSA}/verilog/wishbone/master/wishbone_master.v
 
+#The generic directory contains a lot of non-platform specific verilog code
+#${NYSA}/verilog/generic/<some name here>.v
 
 /opt/Xilinx/14.7/ISE_DS/ISE/verilog/src/glbl.v
 /opt/Xilinx/14.7/ISE_DS/ISE/verilog/src/unisims/STARTUP_SPARTAN6.v
@@ -36,10 +40,10 @@ ${NYSA}/verilog/generic/cross_clock_enable.v
 ../wb_sdram/rtl/sdram_write.v
 ../wb_sdram/rtl/wb_sdram.v
 
-rtl/nh_lcd_data_writer.v
-rtl/nh_lcd_command.v
-rtl/nh_lcd.v
-rtl/wb_nh_lcd.v
+rtl/seeed_tft_data_writer.v
+rtl/seeed_tft_command.v
+rtl/seeed_tft.v
+rtl/wb_seeed_tft.v
 sim/tb_wishbone_master.v
 
 sim/arbitor_2_masters.v
