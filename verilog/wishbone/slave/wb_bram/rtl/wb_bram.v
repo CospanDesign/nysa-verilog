@@ -58,6 +58,7 @@ Log
   parameters
   DRT_SIZE:  1024
 
+  USER_PARAMETER: ADDR_WIDTH
 */
 
 
