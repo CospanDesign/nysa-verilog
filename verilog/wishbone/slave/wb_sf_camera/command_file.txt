@@ -4,7 +4,7 @@
 +incdir+${NYSA}/verilog
 +incdir+${NYSA}/verilog/wishbone/slave/wb_sdram/rtl
 #Point to the Xilinx Unisims dir
-+incdir+/opt/Xilinx/14.5/ISE_DS/ISE/verilog/src
++incdir+/opt/Xilinx/14.7/ISE_DS/ISE/verilog/src
 
 #Use the NYSA keyword to point to the NYSA base directory
 
@@ -19,13 +19,13 @@ ${NYSA}/verilog/wishbone/master/wishbone_master.v
 
 ../../common/wb_ppfifo_2_mem/rtl/wb_ppfifo_2_mem.v
 
-/opt/Xilinx/14.5/ISE_DS/ISE/verilog/src/glbl.v
-/opt/Xilinx/14.5/ISE_DS/ISE/verilog/src/unisims/STARTUP_SPARTAN6.v
-/opt/Xilinx/14.5/ISE_DS/ISE/verilog/src/unisims/BUFG.v
-/opt/Xilinx/14.5/ISE_DS/ISE/verilog/src/unisims/ODDR2.v
-/opt/Xilinx/14.5/ISE_DS/ISE/verilog/src/unisims/PLL_BASE.v
-/opt/Xilinx/14.5/ISE_DS/ISE/verilog/src/unisims/PLL_ADV.v
-/opt/Xilinx/14.5/ISE_DS/ISE/verilog/src/unisims/DCM_SP.v
+/opt/Xilinx/14.7/ISE_DS/ISE/verilog/src/glbl.v
+/opt/Xilinx/14.7/ISE_DS/ISE/verilog/src/unisims/STARTUP_SPARTAN6.v
+/opt/Xilinx/14.7/ISE_DS/ISE/verilog/src/unisims/BUFG.v
+/opt/Xilinx/14.7/ISE_DS/ISE/verilog/src/unisims/ODDR2.v
+/opt/Xilinx/14.7/ISE_DS/ISE/verilog/src/unisims/PLL_BASE.v
+/opt/Xilinx/14.7/ISE_DS/ISE/verilog/src/unisims/PLL_ADV.v
+/opt/Xilinx/14.7/ISE_DS/ISE/verilog/src/unisims/DCM_SP.v
 
 
 ${NYSA}/verilog/generic/ppfifo.v
