@@ -444,7 +444,7 @@ wb_sdram m0 (
   .o_sdram_ready       (sdram_ready         )
 );
 
-arbitor_2_masters arb0 (
+arbiter_2_masters arb0 (
   .clk                 (clk                 ),
   .rst                 (rst                 ),
 

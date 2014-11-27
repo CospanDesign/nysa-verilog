@@ -46,6 +46,6 @@ rtl/seeed_tft.v
 rtl/wb_seeed_tft.v
 sim/tb_wishbone_master.v
 
-sim/arbitor_2_masters.v
+sim/arbiter_2_masters.v
 sim/wishbone_mem_interconnect.v
 

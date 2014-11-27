@@ -368,7 +368,7 @@ wb_bram m0 (
   .o_wbs_int           (w_arb0_o_wbs_int    )
 );
 
-arbitor_2_masters arb0 (
+arbiter_2_masters arb0 (
   .clk                 (clk                 ),
   .rst                 (rst                 ),
 

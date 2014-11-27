@@ -480,7 +480,7 @@ wb_sdram m0 (
 
 );
 
-arbitor_2_masters arb0 (
+arbiter_2_masters arb0 (
   .clk                 (clk                 ),
   .rst                 (rst                 ),
 

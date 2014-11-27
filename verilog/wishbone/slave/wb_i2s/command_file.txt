@@ -47,7 +47,7 @@ rtl/i2s_mem_controller.v
 rtl/i2s_1khz_wave.v
 rtl/i2s_writer.v
 rtl/wb_i2s.v
-sim/arbitor_2_masters.v
+sim/arbiter_2_masters.v
 sim/wishbone_mem_interconnect.v
 sim/tb_wishbone_master.v
 

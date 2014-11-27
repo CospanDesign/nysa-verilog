@@ -1,4 +1,4 @@
-//wishbone_arbitor.v
+//wishbone_arbiter.v
 /*
 Distributed under the MIT licesnse.
 Copyright (c) 2011 Dave McCoy (dave.mccoy@cospandesign.com)
@@ -25,7 +25,7 @@ SOFTWARE.
 
 `timescale 1 ns/1 ps
 
-module ${ARBITOR_NAME} (
+module ${ARBITER_NAME} (
   //control signals
   input           clk,
   input           rst,

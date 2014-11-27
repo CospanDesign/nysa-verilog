@@ -44,7 +44,7 @@ ${NYSA}/verilog/generic/cross_clock_strobe.v
 
 rtl/ppfifo_data_generator.v
 rtl/wb_dma_reader.v
-sim/arbitor_2_masters.v
+sim/arbiter_2_masters.v
 sim/wishbone_mem_interconnect.v
 sim/tb_wishbone_master.v
 
