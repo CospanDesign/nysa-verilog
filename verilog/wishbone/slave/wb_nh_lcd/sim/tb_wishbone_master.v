@@ -242,7 +242,7 @@ reg               start = 0;
 
 wire              w_backlight_enable;
 wire              w_register_data_sel;
-//reg               r_tearing_effect;
+reg               r_tearing_effect;
 wire              w_write_n;
 wire              w_read_n;
 wire  [7:0]       w_data;
@@ -324,7 +324,7 @@ wb_nh_lcd s1 (
   .mem_i_int           (lcd_mem_i_int       ),
 
   .o_backlight_enable  (w_backlight_enable  ),
-//  .i_tearing_effect    (r_tearing_effect    ),
+  .i_tearing_effect    (r_tearing_effect    ),
   .o_register_data_sel (w_register_data_sel ),
   .o_write_n           (w_write_n           ),
   .o_read_n            (w_read_n            ),
@@ -848,24 +848,26 @@ end
 
 always @ (posedge clk) begin
   if (rst) begin
-    r_tear_count      <=  0;
-    r_tear_status   <=  8'h00;
+    r_tear_count            <=  0;
+    r_tear_status           <=  8'h00;
+    r_tearing_effect        <=  0;
   end
   else begin
-    if (r_tear_count < 100) begin
-      r_tear_count    <=  r_tear_count + 1;
+    if (r_tear_count < 800) begin
+      r_tear_count          <=  r_tear_count + 1;
     end
     else begin
       if (r_tear_status == 8'h00) begin
-        r_tear_status   <=  8'h80;
+        r_tear_status       <=  8'h80;
+        r_tearing_effect    <=  1;
       end
       else begin
-        r_tear_status   <=  8'h00;
+        r_tear_status       <=  8'h00;
+        r_tearing_effect    <=  0;
       end
-      r_tear_count    <= 0;
+      r_tear_count          <= 0;
     end
   end
 end
-
 
 endmodule

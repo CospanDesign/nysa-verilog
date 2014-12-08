@@ -41,7 +41,7 @@ module nh_lcd #(
   inout       [7:0]   io_data,
   output              o_cs_n,
   output              o_reset_n,
-//  input               i_tearing_effect,
+  input               i_tearing_effect,
   output              o_display_on
 );
 
@@ -113,7 +113,8 @@ nh_lcd_data_writer #(
   .i_data_in            (w_data_in            ),
   .o_write              (w_data_write         ),
   .o_read               (w_data_read          ),
-  .o_data_out_en        (w_data_data_out_en   )
+  .o_data_out_en        (w_data_data_out_en   ),
+  .i_tearing_effect     (i_tearing_effect     )
 );
 
 //Asynchronous Logic

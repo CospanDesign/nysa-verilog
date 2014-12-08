@@ -112,7 +112,7 @@ module wb_nh_lcd #(
   inout       [7:0]   io_data,
   output              o_cs_n,
   output              o_reset_n,
-//  input               i_tearing_effect,
+  input               i_tearing_effect,
   output              o_display_on
 );
 
@@ -235,7 +235,7 @@ nh_lcd #(
   .io_data             (io_data             ),
   .o_cs_n              (o_cs_n              ),
   .o_reset_n           (o_reset_n           ),
-//  .i_tearing_effect    (i_tearing_effect    ),
+  .i_tearing_effect    (i_tearing_effect    ),
   .o_display_on        (o_display_on        )
 );
 

@@ -26,7 +26,8 @@ module nh_lcd_data_writer#(
   input       [7:0]   i_data_in,
   output              o_write,
   output              o_read,
-  output              o_data_out_en
+  output              o_data_out_en,
+  input               i_tearing_effect
 );
 
 //Local Parameters
@@ -38,12 +39,6 @@ localparam  WRITE_GREEN_START   = 4'h4;
 localparam  WRITE_GREEN         = 4'h5;
 localparam  WRITE_BLUE_START    = 4'h6;
 localparam  WRITE_BLUE          = 4'h7;
-
-localparam  TEARING_WRITE_DELAY = 4'h1;
-localparam  GET_TEARING         = 4'h2;
-//localparam  TEARING_READ_DELAY  = 4'h3;
-localparam  READ_TEAR_STATUS    = 4'h3;
-localparam  TEARING_FINISHED    = 4'h4;
 
 //Registers/Wires
 reg           [3:0]   state;
@@ -63,23 +58,11 @@ reg           [31:0]  r_pixel_count;
 
 
 //Tear Mode select
-reg           [3:0]   tstate;
-reg                   r_tmode;
-
 reg                   r_write;
 reg                   r_read;
 reg                   r_cmd_mode;
 reg                   r_data_out_en;
 reg           [7:0]   r_data_out;
-
-reg                   r_twrite;
-reg                   r_tdata_out_en;
-reg                   r_tread;
-reg                   r_tcmd_mode;
-reg           [7:0]   r_tdata_out;
-
-reg                   r_finished_image;
-
 
 //Tear control
 
@@ -125,27 +108,20 @@ assign  w_red   = w_read_data[31:24];
 assign  w_green = w_read_data[23:16];
 assign  w_blue  = w_read_data[15:8];
 
-
-
-
-assign  o_cmd_mode      = (r_tmode) ? r_tcmd_mode     : r_cmd_mode;
-assign  o_data_out      = (r_tmode) ? r_tdata_out     : r_data_out;
-assign  o_write         = (r_tmode) ? r_twrite        : r_write;
-assign  o_read          = (r_tmode) ? r_tread         : r_read;
-assign  o_data_out_en   = (r_tmode) ? r_tdata_out_en  : r_data_out_en;
+assign  o_cmd_mode      = r_cmd_mode;
+assign  o_data_out      = r_data_out;
+assign  o_write         = r_write;
+assign  o_read          = r_read;
+assign  o_data_out_en   = r_data_out_en;
 
 assign  debug[0]        = i_enable;
 assign  debug[1]        = o_cmd_mode;
 assign  debug[2]        = o_write;
 assign  debug[3]        = o_read;
 assign  debug[11:4]     = o_data_out_en ? o_data_out : i_data_in;
-assign  debug[12]       = r_tmode;
 assign  debug[16:13]    = state;
-assign  debug[20:17]    = tstate;
 assign  debug[21]       = o_data_out_en;
 assign  debug[31:22]    = 10'b0;
-
-
 
 //Synchronous Logic
 always @ (posedge clk) begin
@@ -163,14 +139,12 @@ always @ (posedge clk) begin
     r_read_stb          <=  0;
     r_read_act          <=  0;
     r_pixel_count       <=  0;
-    r_finished_image    <=  0;
   end
   else begin
     //Strobes
     r_write             <=  0;
     r_read_stb          <=  0;
     r_cmd_mode          <=  1;
-    r_finished_image    <=  0;
 
     //Get a ping pong FIFO
     if (w_read_rdy && !r_read_act) begin
@@ -180,24 +154,30 @@ always @ (posedge clk) begin
 
     case (state)
       IDLE: begin
-        //Is there going to be some weird behavior with the state machine
-        if ((r_pixel_count >= i_num_pixels) || !i_enable) begin
-          r_pixel_count     <=  0;
-          r_finished_image  <=  1;
+        if (i_enable) begin
+          if (r_read_act) begin
+            if (r_pixel_count >= i_num_pixels) begin
+                r_pixel_count   <=  0;
+            end
+            else if (r_pixel_count == 0) begin
+              //Start a transaction
+              //we are at the start of an image transaction
+              if (i_tearing_effect) begin
+                //We are at the beginning of a Frame, need to start writing to the
+                //first address
+                r_cmd_mode      <=  0;
+                r_write         <=  1;
+                r_data_out      <=  `CMD_START_MEM_WRITE;
+                state           <=  WRITE_ADDRESS;
+              end
+            end
+            else begin
+                state           <=  WRITE_RED_START;
+            end
+          end
         end
-        //Start a transaction
-        if (i_enable && r_read_act && !r_tmode) begin
-          if (r_pixel_count == 0) begin
-            //We are at the beginning of a Frame, need to start writing to the
-            //first address
-            r_cmd_mode      <=  0;
-            r_write         <=  1;
-            r_data_out      <=  `CMD_START_MEM_WRITE;
-            state           <=  WRITE_ADDRESS;
-          end
-          else begin
-            state           <=  WRITE_RED_START;
-          end
+        else begin
+            r_pixel_count       <= 0;
         end
       end
       WRITE_ADDRESS: begin
@@ -205,7 +185,7 @@ always @ (posedge clk) begin
       end
       WRITE_RED_START: begin
         r_write             <=  1;
-        r_data_out          <=  {w_red[7:2], 2'b00};
+        r_data_out          <=  w_red[7:0];
         state               <=  WRITE_RED;
       end
       WRITE_RED: begin
@@ -213,7 +193,7 @@ always @ (posedge clk) begin
       end
       WRITE_GREEN_START: begin
         r_write             <=  1;
-        r_data_out          <=  {w_green[7:2], 2'b00};
+        r_data_out          <=  w_green[7:0];
         state               <=  WRITE_GREEN;
       end
       WRITE_GREEN: begin
@@ -223,16 +203,14 @@ always @ (posedge clk) begin
         if (r_read_count < w_read_size - 1) begin
           r_read_stb        <=  1;
         end
-  
         r_write             <=  1;
-        r_data_out          <=  {w_blue[7:2], 2'b00};
+        r_data_out          <=  w_blue[7:0];
         state               <=  WRITE_BLUE;
       end
       WRITE_BLUE: begin
         r_pixel_count       <=  r_pixel_count + 1;
         if (r_read_count < w_read_size - 1) begin
           r_read_count      <=  r_read_count + 1;
-          //r_read_stb        <=  1;
           state             <=  WRITE_RED_START;
         end
         else begin
@@ -243,73 +221,4 @@ always @ (posedge clk) begin
     endcase
   end
 end
-
-
-always @ (posedge clk) begin
-  if (rst || !i_enable) begin
-    tstate                  <=  IDLE;
-
-    if (i_enable_tearing) begin
-      r_tmode               <=  1;
-    end
-    else begin
-      r_tmode               <=  0;
-    end
-    r_tcmd_mode             <=  0;
-    r_tdata_out             <=  `CMD_GET_TEAR_STATUS;
-    r_twrite                <=  0;
-    r_tread                 <=  0;
-    r_tdata_out_en          <=  0;
-  end
-  else begin
-    r_twrite                <=  0;
-    r_tcmd_mode             <=  1;    //Default to data mode
-    r_tdata_out_en          <=  0;
-    case (tstate)
-      IDLE: begin
-        if (i_enable_tearing) begin
-          r_tmode           <=  1;
-        end
-        else begin
-          r_tmode           <=  0;
-        end
-        r_tread             <=  0;
-        if (i_enable && r_read_act) begin
-          r_tcmd_mode       <=  0;
-          r_tdata_out_en    <=  1;
-          tstate            <=  TEARING_WRITE_DELAY;
-          //Output is always to get the tear status
-          r_twrite          <=  1;
-        end
-      end
-      TEARING_WRITE_DELAY: begin
-        tstate              <=  GET_TEARING;
-      end
-      GET_TEARING: begin
-        //tstate              <=  TEARING_READ_DELAY;
-        tstate              <=  READ_TEAR_STATUS;
-        r_tread             <=  1;
-      end
-      //TEARING_READ_DELAY: begin
-      //  tstate              <=  READ_TEAR_STATUS;
-      //end
-      READ_TEAR_STATUS: begin
-        r_tread             <=  0;
-        if (i_data_in > 0) begin
-          tstate            <=  TEARING_FINISHED;
-        end
-        else begin
-          tstate            <=  IDLE;
-        end
-      end
-      TEARING_FINISHED: begin
-        r_tmode             <=  0;
-        if(r_finished_image) begin
-          tstate            <=  IDLE;
-        end
-      end
-    endcase
-  end
-end
-
 endmodule

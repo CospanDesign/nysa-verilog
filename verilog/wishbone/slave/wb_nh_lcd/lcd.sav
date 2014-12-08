@@ -1,20 +1,20 @@
 [*]
-[*] GTKWave Analyzer v3.3.34 (w)1999-2012 BSI
-[*] Tue Oct 22 06:03:47 2013
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Sun Dec  7 04:17:28 2014
 [*]
-[dumpfile] "/home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_nh_lcd/design.vcd"
-[dumpfile_mtime] "Mon Oct 21 00:51:17 2013"
-[dumpfile_size] 106124419
-[savefile] "/home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_nh_lcd/lcd.sav"
-[timestart] 146665100
-[size] 1596 877
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_nh_lcd/design.vcd"
+[dumpfile_mtime] "Sun Dec  7 03:48:14 2014"
+[dumpfile_size] 106158098
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_nh_lcd/lcd.sav"
+[timestart] 140735000
+[size] 1918 1059
 [pos] -1 -1
-*-16.778364 146990000 149670000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-20.425882 146045000 149670000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] wishbone_master_tb.
 [treeopen] wishbone_master_tb.s1.
 [treeopen] wishbone_master_tb.s1.lcd.
 [treeopen] wishbone_master_tb.s1.lcd.lcd_data_writer.
-[sst_width] 210
+[sst_width] 213
 [signals_width] 198
 [sst_expanded] 1
 [sst_vpaned_height] 249
@@ -33,39 +33,41 @@ wishbone_master_tb.w_read_n
 wishbone_master_tb.s1.io_data[7:0]
 @200
 -
-@800201
+@c00200
 -wb_nh_lcd
-@29
+@28
 wishbone_master_tb.s1.lcd.w_data_dir
-@23
-wishbone_master_tb.s1.lcd.w_data_out[7:0]
+@22
 wishbone_master_tb.s1.control[31:0]
-@29
+@28
 wishbone_master_tb.s1.o_reset_n
 wishbone_master_tb.s1.o_backlight_enable
 wishbone_master_tb.s1.o_display_on
 wishbone_master_tb.s1.o_register_data_sel
-@201
+@200
 -
-@29
+@28
 wishbone_master_tb.s1.o_cs_n
 wishbone_master_tb.s1.o_read_n
 wishbone_master_tb.s1.o_write_n
-@23
+@22
 wishbone_master_tb.s1.io_data[7:0]
-@201
+@200
 -
-@29
+@28
 wishbone_master_tb.s1.w_cmd_write_stb
-@23
+@22
 wishbone_master_tb.s1.r_cmd_data_out[7:0]
-@201
+@200
 -
-@29
+@28
 wishbone_master_tb.s1.w_cmd_read_stb
-@23
+@22
 wishbone_master_tb.s1.w_cmd_data_in[7:0]
-@1000201
+@28
+[color] 6
+wishbone_master_tb.s1.lcd.lcd_data_writer.i_tearing_effect
+@1401200
 -wb_nh_lcd
 @200
 -
@@ -77,7 +79,6 @@ wishbone_master_tb.s1.lcd.lcd_commander.o_write
 wishbone_master_tb.s1.lcd.lcd_commander.o_data_out[7:0]
 wishbone_master_tb.s1.lcd.w_data_in[7:0]
 @28
-wishbone_master_tb.s1.lcd.w_cmd_en_write
 wishbone_master_tb.s1.lcd.i_data_command_mode
 @1401200
 -commander
@@ -125,30 +126,16 @@ wishbone_master_tb.s1.lcd.lcd_data_writer.w_blue[7:0]
 @28
 wishbone_master_tb.s1.lcd.lcd_data_writer.clk
 wishbone_master_tb.s1.lcd.lcd_data_writer.o_write
-@22
-wishbone_master_tb.s1.lcd.lcd_data_writer.o_data[7:0]
 @1401200
 -LCD
 @200
 -
+@22
+wishbone_master_tb.s1.lcd.lcd_data_writer.state[3:0]
 @28
+wishbone_master_tb.s1.lcd.lcd_data_writer.i_tearing_effect
+wishbone_master_tb.s1.lcd.lcd_data_writer.i_enable
+@29
 wishbone_master_tb.s1.lcd.lcd_data_writer.r_read_act
-@22
-wishbone_master_tb.s1.lcd.lcd_data_writer.r_read_count[23:0]
-@200
--
-@28
-wishbone_master_tb.s1.m2p.i_enable
-wishbone_master_tb.s1.m2p.i_memory_0_new_data
-@22
-wishbone_master_tb.s1.m2p.i_memory_0_base[31:0]
-wishbone_master_tb.s1.m2p.i_memory_0_size[31:0]
-@200
--
-@28
-wishbone_master_tb.s1.m2p.i_memory_1_new_data
-@22
-wishbone_master_tb.s1.m2p.i_memory_1_base[31:0]
-wishbone_master_tb.s1.m2p.i_memory_1_base[31:0]
 [pattern_trace] 1
 [pattern_trace] 0
