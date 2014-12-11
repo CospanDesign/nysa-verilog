@@ -57,6 +57,9 @@ SOFTWARE.
     -removed the stream commands, future versions will use flags instead of
       separate commands
 */
+
+//`define MASTER_VERBOSE
+
 `include "cbuilder_defines.v"
 
 module wishbone_master (
@@ -303,7 +306,7 @@ always @ (posedge clk) begin
             o_mem_stb <= 0;
           end
           else if (~o_mem_stb && i_out_ready) begin
-            $display("WBM: local_data_count = %h", local_data_count);
+            `ifdef MASTER_VERBOSE $display("WBM: local_data_count = %h", local_data_count); `endif
             o_data    <= i_mem_dat;
             o_en      <= 1;
             if (local_data_count > 1) begin
@@ -311,8 +314,10 @@ always @ (posedge clk) begin
               //finished the next double word
               nack_count    <= nack_timeout;
               local_data_count  <= local_data_count - 1;
-              $display ("WBM: (burst mode) reading double word from memory");
-              o_mem_adr   <= o_mem_adr + 1;
+              `ifdef MASTER_VERBOSE $display ("WBM: (burst mode) reading double word from memory"); `endif
+              if ((command_flags & `FLAG_DISABLE_AUTO_INC) == 0) begin
+                o_mem_adr   <= o_mem_adr + 1;
+              end
               o_mem_stb   <= 1;
               //initiate an output transfer
             end
@@ -331,7 +336,7 @@ always @ (posedge clk) begin
             o_per_stb    <= 0;
           end
           else if (~o_per_stb && i_out_ready) begin
-            $display("WBM: local_data_count = %h", local_data_count);
+            `ifdef MASTER_VERBOSE $display("WBM: local_data_count = %h", local_data_count); `endif
            //put the data in the otput
            o_data                 <= i_per_dat;
            //tell the io_handler to send data
@@ -343,8 +348,10 @@ always @ (posedge clk) begin
 //at this point we are waiting on the io handler
               nack_count          <= nack_timeout;
               local_data_count    <= local_data_count - 1;
-              $display ("WBM: (burst mode) reading double word from peripheral");
-              o_per_adr           <= o_per_adr + 1;
+              `ifdef MASTER_VERBOSE $display ("WBM: (burst mode) reading double word from peripheral"); `endif
+              if ((command_flags & `FLAG_DISABLE_AUTO_INC) == 0) begin
+                o_per_adr           <= o_per_adr + 1;
+              end
               o_per_stb           <= 1;
             end
             else begin
@@ -362,11 +369,13 @@ always @ (posedge clk) begin
           if (i_mem_ack) begin
             o_mem_stb               <= 0;
             if (o_mem_stb) begin
-              o_mem_adr               <= o_mem_adr + 1;
+              if ((command_flags & `FLAG_DISABLE_AUTO_INC) == 0) begin
+                o_mem_adr               <= o_mem_adr + 1;
+              end
             end
             if (local_data_count <= 1) begin
               //finished all writes
-              $display ("WBM: i_data_count == 0");
+              `ifdef MASTER_VERBOSE $display ("WBM: i_data_count == 0"); `endif
               o_debug[12]           <= ~o_debug[12];
               o_mem_cyc             <= 0;
               state                 <= IDLE;
@@ -379,7 +388,7 @@ always @ (posedge clk) begin
           end
           else if ((local_data_count > 1) && i_ready && (o_mem_stb == 0)) begin
             local_data_count        <= local_data_count - 1;
-            $display ("WBM: (burst mode) writing another double word to memory");
+            `ifdef MASTER_VERBOSE $display ("WBM: (burst mode) writing another double word to memory"); `endif
             o_master_ready          <= 0;
             o_mem_stb               <= 1;
             o_mem_dat               <= i_data;
@@ -391,7 +400,7 @@ always @ (posedge clk) begin
           if (i_per_ack) begin
             o_per_stb               <= 0;
             if (local_data_count    <= 1) begin
-              $display ("WBM: i_data_count == 0");
+              `ifdef MASTER_VERBOSE $display ("WBM: i_data_count == 0"); `endif
               o_per_cyc             <= 0;
               state                 <= IDLE;
               prev_int              <= 0;
@@ -404,10 +413,12 @@ always @ (posedge clk) begin
           else if ((local_data_count > 1) && i_ready && (o_per_stb == 0)) begin
             local_data_count        <= local_data_count - 1;
             o_debug[5]              <= ~o_debug[5];
-            $display ("WBM: (burst mode) writing another double word to peripheral");
+            `ifdef MASTER_VERBOSE $display ("WBM: (burst mode) writing another double word to peripheral"); `endif
             o_master_ready          <=  0;
             o_per_stb               <= 1;
-            o_per_adr               <= o_per_adr + 1;
+            if ((command_flags & `FLAG_DISABLE_AUTO_INC) == 0) begin
+              o_per_adr             <= o_per_adr + 1;
+            end
             o_per_dat               <= i_data;
             nack_count              <= nack_timeout;
           end
@@ -491,7 +502,7 @@ always @ (posedge clk) begin
           case (real_command)
 
             `COMMAND_PING: begin
-              $display ("WBM: ping");
+              `ifdef MASTER_VERBOSE $display ("WBM: ping"); `endif
               o_master_ready       <= 0;
               o_debug[0]           <= ~o_debug[0];
               o_status             <= ~i_command;
@@ -527,7 +538,7 @@ always @ (posedge clk) begin
               state                <= WRITE;
             end
             `COMMAND_READ:  begin
-              $display ("WBM: Received Read Command");
+              `ifdef MASTER_VERBOSE $display ("WBM: Received Read Command"); `endif
               local_data_count    <=  i_data_count;
               o_debug[2]          <= ~o_debug[2];
               if (command_flags & `FLAG_MEM_BUS) begin
@@ -563,7 +574,7 @@ always @ (posedge clk) begin
                 `MADDR_WR_INT_EN: begin
                   interrupt_mask  <= i_data;
                   o_data          <=  i_data;
-                  $display("WBM: setting interrupt enable to: %h", i_data);
+                  `ifdef MASTER_VERBOSE $display("WBM: setting interrupt enable to: %h", i_data); `endif
                 end
                 `MADDR_RD_INT_EN: begin
                   o_data          <= interrupt_mask;
@@ -604,7 +615,7 @@ always @ (posedge clk) begin
           //if the i_per_int goes positive then send a nortifiction to the user
           if (((~prev_int) & i_per_int) && (i_per_int != 0) && (o_per_adr == 32'hFFFFFFFF) && (!mem_bus_select)) begin
             o_debug[11]           <= ~o_debug[11];
-            $display("WBM: found an interrupt!");
+            `ifdef MASTER_VERBOSE $display("WBM: found an interrupt!"); `endif
             o_status              <= `PERIPH_INTERRUPT;
             //only supporting interrupts on slave 0 - 31
             o_address             <= 32'h00000000;
