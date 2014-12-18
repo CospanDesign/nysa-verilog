@@ -47,6 +47,9 @@ SOFTWARE.
 `include "i2s_defines.v"
 `timescale 1 ns/1 ps
 
+
+
+
 `define DEFAULT_CLOCK_DIVISOR (`CLOCK_RATE / (`AUDIO_RATE * `AUDIO_BITS * `AUDIO_CHANNELS)) / 2
 
 module wb_i2s (
@@ -98,6 +101,20 @@ localparam           REG_MEM_0_BASE     = 32'h00000004;
 localparam           REG_MEM_0_SIZE     = 32'h00000005;
 localparam           REG_MEM_1_BASE     = 32'h00000006;
 localparam           REG_MEM_1_SIZE     = 32'h00000007;
+
+
+//control bit definition
+localparam          CONTROL_ENABLE            = 0;
+localparam          CONTROL_ENABLE_INTERRUPT  = 1;
+localparam          CONTROL_POST_FIFO_WAVE    = 2;
+localparam          CONTROL_PRE_FIFO_WAVE     = 3;
+
+
+//status bit definition
+localparam          STATUS_MEMORY_0_EMPTY     = 0;
+localparam          STATUS_MEMORY_1_EMPTY     = 1;
+
+
 
 //Reg/Wire
 wire                timeout_elapsed;
@@ -233,13 +250,13 @@ wb_mem_2_ppfifo m2p(
 
 
 //Asynchronous Logic
-assign        enable                = control[`CONTROL_ENABLE];
-assign        enable_interrupt      = control[`CONTROL_ENABLE_INTERRUPT];
-assign        post_fifo_wave_en     = control[`CONTROL_POST_FIFO_WAVE];
-assign        pre_fifo_wave_en      = control[`CONTROL_PRE_FIFO_WAVE];
+assign        enable                = control[CONTROL_ENABLE];
+assign        enable_interrupt      = control[CONTROL_ENABLE_INTERRUPT];
+assign        post_fifo_wave_en     = control[CONTROL_POST_FIFO_WAVE];
+assign        pre_fifo_wave_en      = control[CONTROL_PRE_FIFO_WAVE];
 
-assign        status[`STATUS_MEMORY_0_EMPTY]  = w_memory_0_empty;
-assign        status[`STATUS_MEMORY_1_EMPTY]  = w_memory_1_empty;
+assign        status[STATUS_MEMORY_0_EMPTY]  = w_memory_0_empty;
+assign        status[STATUS_MEMORY_1_EMPTY]  = w_memory_1_empty;
 assign        status[31:2]          = 0;
 
 //assign        debug[1:0]            = wfifo_ready;
@@ -291,7 +308,7 @@ always @ (posedge clk) begin
         case (i_wbs_adr)
           REG_CONTROL: begin
             control           <=  i_wbs_dat;
-            if (i_wbs_dat[`CONTROL_ENABLE]) begin
+            if (i_wbs_dat[CONTROL_ENABLE]) begin
               $display ("-----------------------------------------------------------");
               $display ("WB_I2S: Core Enable");
               $display ("-----------------------------------------------------------");
