@@ -29,15 +29,15 @@ SOFTWARE.
   META DATA
 
   identification of your device 0 - 65536
-  DRT_ID:0
+  DRT_ID:13
 
   flags (read drt.txt in the slave/device_rom_table directory 1 means
   a standard device
-  DRT_FLAGS:1
+  DRT_FLAGS:10
 
   number of registers this should be equal to the nubmer of ADDR_???
   parameters
-  DRT_SIZE:0
+  DRT_SIZE:14
 
 */
 
@@ -69,7 +69,6 @@ module wb_fpga_nes (
   input               mem_i_ack,
   input               mem_i_int,
 
-
   //This interrupt can be controlled from this module or a submodule
   output  reg         o_wbs_int
 
@@ -89,8 +88,8 @@ localparam      REG_MEM_0_BASE     = 32'h00000008;
 localparam      REG_MEM_0_SIZE     = 32'h00000009;
 localparam      REG_MEM_1_BASE     = 32'h0000000A;
 localparam      REG_MEM_1_SIZE     = 32'h0000000B;
-
-
+localparam      REG_IMAGE_WIDTH    = 32'h0000000C;
+localparam      REG_IMAGE_HEIGHT   = 32'h0000000D;
 
 //Control
 localparam      CONTROL_HCI_RESET             = 0;
@@ -100,7 +99,7 @@ localparam      CONTROL_ENABLE_DMA            = 2;
 //Status
 localparam      STATUS_CLOCK_LOCKED           = 0;
 localparam      STATUS_HCI_READY              = 1;
-localparam      STATUS_HCI_NEW_STATUS         = 3;
+localparam      STATUS_HCI_NEW_STATUS         = 2;
 localparam      STATUS_HCI_S_BOT              = 16;
 localparam      STATUS_HCI_S_TOP              = STATUS_HCI_S_BOT + 15;
 
@@ -141,15 +140,8 @@ wire        [31:0]  w_rfifo_data;
 wire        [23:0]  w_rfifo_size;
 wire                w_captured;
 wire                w_busy;
-wire                w_locked;
-
-
 //NES Wires
 wire                  w_console_reset;
-
-//Host Communication Interface (Temporary before I replace with wishbone interface)
-wire                  rx;
-wire                  tx;
 
 //NES Controls
 wire          [3:0]   w_mute_control;
@@ -162,11 +154,14 @@ reg           [7:0]   r_jp2_state;     //State of joypad 2
 wire                  w_audio;
 
 //Video Interface
-wire                  w_vga_hsync;
-wire                  w_vga_vsync;
-wire          [2:0]   w_vga_red;
-wire          [2:0]   w_vga_green;
-wire          [1:0]   w_vga_blue;
+wire          [9:0]   w_image_width;
+wire          [9:0]   w_image_height;
+
+wire                  w_hsync;
+wire                  w_vsync;
+wire          [2:0]   w_red;
+wire          [2:0]   w_green;
+wire          [1:0]   w_blue;
 
 //HCI Interface
 wire                  w_hci_reset;
@@ -189,30 +184,31 @@ wire                  w_hci_dout_strobe;
 reg                   r_hci_host_ready;
 wire          [7:0]   w_hci_dout;
 
+wire                  w_flush_memory;
+wire                  w_memory_ready;
+
 
 //Submodules
 
-vga_to_ppfifo vga_proc (
+image_to_ppfifo proc (
   .clk                  (clk                      ),
-  .rst                  (rst  || !w_console_reset ),
+  .rst                  (rst                      ),
   .i_enable             (w_enable_dma             ),
-                                                  
-  .i_vga_hsync          (w_vga_hsync              ),
-  .i_vga_vsync          (w_vga_vsync              ),
-  .i_vga_red            (w_vga_red                ),
-  .i_vga_green          (w_vga_green              ),
-  .i_vga_blue           (w_vga_blue               ),
-                                                  
+
+  .i_hsync              (w_hsync                  ),
+  .i_vsync              (w_vsync                  ),
+  .i_red                (w_red                    ),
+  .i_green              (w_green                  ),
+  .i_blue               (w_blue                   ),
+
   .o_frame_finished     (w_flush_memory           ),
-                                                  
+
   .o_rfifo_ready        (w_rfifo_ready            ),
   .i_rfifo_activate     (w_rfifo_activate         ),
   .i_rfifo_strobe       (w_rfifo_strobe           ),
   .o_rfifo_data         (w_rfifo_data             ),
   .o_rfifo_size         (w_rfifo_size             )
 );
-
-
 
 wb_ppfifo_2_mem p2m(
 
@@ -288,11 +284,14 @@ nes_top nes(
   .i_jp2_state          (r_jp2_state         ),
 
   .o_audio              (w_audio             ),
-  .o_vga_hsync          (w_vga_hsync         ),
-  .o_vga_vsync          (w_vga_vsync         ),
-  .o_vga_red            (w_vga_red           ),
-  .o_vga_green          (w_vga_green         ),
-  .o_vga_blue           (w_vga_blue          ),
+
+  .o_image_width        (w_image_width       ),
+  .o_image_height       (w_image_height      ),
+  .o_hsync              (w_hsync             ),
+  .o_vsync              (w_vsync             ),
+  .o_red                (w_red               ),
+  .o_green              (w_green             ),
+  .o_blue               (w_blue              ),
 
   //HCI Interface
   .i_hci_reset          (w_hci_reset         ),
@@ -320,7 +319,7 @@ assign  status[STATUS_CLOCK_LOCKED]               = 1'b0;
 assign  status[STATUS_HCI_READY]                  = w_hci_sm_ready;
 assign  status[STATUS_HCI_NEW_STATUS]             = r_hci_opcode_new_status;
 assign  status[STATUS_HCI_S_TOP:STATUS_HCI_S_BOT] = r_hci_opcode_status;
-assign  status[15:2]                              = 0;
+assign  status[15:3]                              = 0;
 
 assign  dma_status[3:0]                           = {
                                                       (r_memory_1_size == 0),
@@ -335,8 +334,6 @@ assign  w_hci_reset                               = control[CONTROL_HCI_RESET];
 assign  w_console_reset                           = control[CONTROL_CONSOLE_RESET];
 assign  w_enable_dma                              = control[CONTROL_ENABLE_DMA];
 assign  w_mute_control                            = 4'h0;
-assign  w_nes_joypqd_data1                        = 1'h0;
-assign  w_nes_joypqd_data2                        = 1'h0;
 
 //Synchronous Logic
 always @ (posedge clk) begin
@@ -532,6 +529,14 @@ always @ (posedge clk) begin
             end
             REG_MEM_1_SIZE: begin
               o_wbs_dat <=  w_memory_1_count;
+              o_wbs_ack             <= 1;
+            end
+            REG_IMAGE_WIDTH: begin
+              o_wbs_dat <=  w_image_width;
+              o_wbs_ack             <= 1;
+            end
+            REG_IMAGE_HEIGHT: begin
+              o_wbs_dat <=  w_image_height;
               o_wbs_ack             <= 1;
             end
 

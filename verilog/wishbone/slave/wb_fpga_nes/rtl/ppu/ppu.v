@@ -27,33 +27,42 @@
 
 module ppu
 (
-  input  wire        clk_in,        // 100MHz system clock signal
-  input  wire        rst_in,        // reset signal
-  input  wire [ 2:0] ri_sel_in,     // register interface reg select
-  input  wire        ri_ncs_in,     // register interface enable
-  input  wire        ri_r_nw_in,    // register interface read/write select
-  input  wire [ 7:0] ri_d_in,       // register interface data in
-  input  wire [ 7:0] vram_d_in,     // video memory data bus (input)
-  output wire [ 7:0] ri_d_out,      // register interface data out
+  input              clk_in,        // 100MHz system clock signal
+  input              rst_in,        // reset signal
+  input       [ 2:0] ri_sel_in,     // register interface reg select
+  input              ri_ncs_in,     // register interface enable
+  input              ri_r_nw_in,    // register interface read/write select
+  input       [ 7:0] ri_d_in,       // register interface data in
+  input       [ 7:0] vram_d_in,     // video memory data bus (input)
+  output      [ 7:0] ri_d_out,      // register interface data out
 
   //VGA
-  output wire        hsync_out,     // vga hsync signal
-  output wire        vsync_out,     // vga vsync signal
-  output wire [ 2:0] r_out,         // vga red signal
-  output wire [ 2:0] g_out,         // vga green signal
-  output wire [ 1:0] b_out,         // vga blue signal
+  output      [9:0]  o_image_width, // width of the generated image
+  output      [9:0]  o_image_height,// height of the generated image
+  output             hsync_out,     // vga hsync signal
+  output             vsync_out,     // vga vsync signal
+  output      [ 2:0] r_out,         // vga red signal
+  output      [ 2:0] g_out,         // vga green signal
+  output      [ 1:0] b_out,         // vga blue signal
 
   //Register Interface
-  output wire        nvbl_out,      // /VBL (low during vertical blank)
-  output wire [13:0] vram_a_out,    // video memory address bus
-  output wire [ 7:0] vram_d_out,    // video memory data bus (output)
-  output wire        vram_wr_out    // video memory read/write select
+  output             nvbl_out,      // /VBL (low during vertical blank)
+  output      [13:0] vram_a_out,    // video memory address bus
+  output      [ 7:0] vram_d_out,    // video memory data bus (output)
+  output             vram_wr_out    // video memory read/write select
 );
 
 //
 // PPU_VGA: VGA output block.
 //
-wire [5:0] vga_sys_palette_idx;
+
+wire  [9:0] nes_x;
+wire  [9:0] nes_y;
+wire  [9:0] nes_y_next;
+wire        pix_pulse;
+wire        vblank;
+
+wire [5:0] sys_palette_idx;
 wire [9:0] vga_nes_x;
 wire [9:0] vga_nes_y;
 wire [9:0] vga_nes_y_next;
@@ -63,7 +72,6 @@ wire       vga_vblank;
 ppu_vga ppu_vga_blk(
   .clk_in             (clk_in              ),
   .rst_in             (rst_in              ),
-  .sys_palette_idx_in (vga_sys_palette_idx ),
 
   //Video Output
   .hsync_out          (hsync_out           ),
@@ -72,11 +80,17 @@ ppu_vga ppu_vga_blk(
   .g_out              (g_out               ),
   .b_out              (b_out               ),
 
-  .nes_x_out          (vga_nes_x           ),
-  .nes_y_out          (vga_nes_y           ),
-  .nes_y_next_out     (vga_nes_y_next      ),
-  .pix_pulse_out      (vga_pix_pulse       ),
-  .vblank_out         (vga_vblank          )
+  //PPU Control
+
+  //Input from the PPU
+  .sys_palette_idx_in (sys_palette_idx     ),
+
+  //Signals to control PPU
+  .nes_x_out          (vga_nes_x           ), //Fed into both the background and sprite controller
+  .nes_y_out          (vga_nes_y           ), //Fed into both the background and sprite controller
+  .nes_y_next_out     (vga_nes_y_next      ), //Fed into both the background and sprite controller as well as a column control
+  .pix_pulse_out      (vga_pix_pulse       ), //Fed into both the background and sprite controller
+  .vblank_out         (vga_vblank          )  //Fed into register control (For the CPU to write to here)
 );
 
 //
@@ -89,30 +103,48 @@ wire  [2:0]   gen_r_out;
 wire  [2:0]   gen_g_out;
 wire  [1:0]   gen_b_out;
 
-wire  [9:0]   gen_nes_x_out;
-wire  [9:0]   gen_nes_y_out;
-wire  [9:0]   gen_nes_y_next_out;
-wire          gen_pix_pulse_out;
-wire          gen_vblank_out;
+wire  [9:0]   gen_nes_x;
+wire  [9:0]   gen_nes_y;
+wire  [9:0]   gen_nes_y_next;
+wire          gen_pix_pulse;
+wire          gen_vblank;
 
 
 rgb_generator gen(
-  .clk                (clk_in              ),
-  .rst                (rst_in              ),
+  .clk                  (clk_in             ),
+  .rst                  (rst_in             ),
 
-  .vsync              (gen_vsync           ),
-  .hsync              (gen_hsync           ),
-  .r_out              (gen_r_out           ),
-  .g_out              (gen_g_out           ),
-  .b_out              (gen_b_out           ),
+  .o_image_width        (o_image_width      ),
+  .o_image_height       (o_image_height     ),
+  .o_vsync              (gen_vsync          ),
+  .o_hsync              (gen_hsync          ),
+  .o_r_out              (gen_r_out          ),
+  .o_g_out              (gen_g_out          ),
+  .o_b_out              (gen_b_out          ),
 
-  .sys_palette_idx_in (vga_sys_palette_idx  ),
-  .nes_x_out          (gen_nes_x_out       ),
-  .nes_y_out          (gen_nes_y_out       ),
-  .nes_y_next_out     (gen_nes_y_next_out  ),
-  .pix_pulse_out      (gen_pix_pulse_out   ),
-  .vblank_out         (gen_vblank_out      )
+  .i_sys_palette_idx_in (sys_palette_idx    ),
+  .o_nes_x_out          (gen_nes_x          ),
+  .o_nes_y_out          (gen_nes_y          ),
+  .o_nes_y_next_out     (gen_nes_y_next     ),
+  .o_pix_pulse_out      (gen_pix_pulse      ),
+  .o_vblank             (gen_vblank         )
 );
+
+
+//assign  nes_x         = vga_nes_x;
+//assign  nes_y         = vga_nes_y;
+//assign  nes_y_next    = vga_nes_y_next;
+//assign  pix_pulse     = vga_pix_pulse;
+//assign  vblank        = vga_vblank;
+
+assign  nes_x         = gen_nes_x;
+assign  nes_y         = gen_nes_y;
+assign  nes_y_next    = gen_nes_y_next;
+assign  pix_pulse     = gen_pix_pulse;
+assign  vblank        = gen_vblank;
+
+
+
 
 //
 // PPU_RI: PPU register interface block.
@@ -157,7 +189,7 @@ ppu_ri ppu_ri_blk(
   .vram_a_in        (vram_a_out      ),
   .vram_d_in        (ri_vram_din     ),
   .pram_d_in        (ri_pram_din     ),
-  .vblank_in        (vga_vblank      ),
+  .vblank_in        (vblank          ),
   .spr_ram_d_in     (ri_spr_ram_din  ),
   .spr_overflow_in  (ri_spr_overflow ),
   .spr_pri_col_in   (ri_spr_pri_col  ),
@@ -206,10 +238,10 @@ ppu_bg ppu_bg_blk(
   .ht_in              (ri_ht           ),
   .h_in               (ri_h            ),
   .s_in               (ri_s            ),
-  .nes_x_in           (vga_nes_x       ),
-  .nes_y_in           (vga_nes_y       ),
-  .nes_y_next_in      (vga_nes_y_next  ),
-  .pix_pulse_in       (vga_pix_pulse   ),
+  .nes_x_in           (nes_x           ),
+  .nes_y_in           (nes_y           ),
+  .nes_y_next_in      (nes_y_next      ),
+  .pix_pulse_in       (pix_pulse       ),
   .vram_d_in          (vram_d_in       ),
   .ri_upd_cntrs_in    (ri_upd_cntrs    ),
   .ri_inc_addr_in     (ri_inc_addr     ),
@@ -237,10 +269,10 @@ ppu_spr ppu_spr_blk(
   .oam_a_in        (ri_spr_ram_a    ),
   .oam_d_in        (ri_spr_ram_dout ),
   .oam_wr_in       (ri_spr_ram_wr   ),
-  .nes_x_in        (vga_nes_x       ),
-  .nes_y_in        (vga_nes_y       ),
-  .nes_y_next_in   (vga_nes_y_next  ),
-  .pix_pulse_in    (vga_pix_pulse   ),
+  .nes_x_in        (nes_x           ),
+  .nes_y_in        (nes_y           ),
+  .nes_y_next_in   (nes_y_next      ),
+  .pix_pulse_in    (pix_pulse       ),
   .vram_d_in       (vram_d_in       ),
   .oam_d_out       (ri_spr_ram_din  ),
   .overflow_out    (ri_spr_overflow ),
@@ -327,7 +359,7 @@ assign bg_trans        = ~|bg_palette_idx[1:0];
 assign d_pri_obj_col = (vga_nes_y_next == 0)                    ? 1'b0 :
                        (spr_primary && !spr_trans && !bg_trans) ? 1'b1 : q_pri_obj_col;
 
-assign vga_sys_palette_idx =
+assign sys_palette_idx =
   ((spr_foreground || bg_trans) && !spr_trans) ? palette_ram[{ 1'b1, spr_palette_idx }] :
   (!bg_trans)                                  ? palette_ram[{ 1'b0, bg_palette_idx }]  :
                                                  palette_ram[5'h00];

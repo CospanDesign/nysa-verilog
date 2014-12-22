@@ -25,6 +25,11 @@
 *  VGA output PPU sub-block.
 ***************************************************************************************************/
 
+/*
+ * One thing to note about this code is that the image doubles each pixel, so the normal
+ *  resolution of the nes: 256x240 gets scaled up to 512x480, this uses more of the screen on a VGA
+ */
+
 module ppu_vga
 (
   input         clk_in,              // 100MHz system clock signal
@@ -107,7 +112,16 @@ end
 wire [9:0] nes_x_next;  // nes x coordinate for next clock
 wire       border;      // indicates we are displaying a vga pixel outside the nes extents
 
-//Why subtract 64 and divide by two
+/* Why subtract 64 and divide by two
+ * because each pixel takes up to blocks on a VGA because thye are doubling the pixels then
+ * we add an offset of 32 to the pixel values (64 / 2) so the image coming out on the VGA
+ * screen is really 32 pixels shifted to the right, so there is 32 x double pixels before the
+ * x image (64 real pixels) and 32 after, so this make the 256 bit wide image right in the
+ * center of the 320 image, or completely expanded out:
+ * |--------------------| = Image = (320 *2) = 640 pixels wide
+ * |32|-----256------|32| = 320
+ * |64|-----512------|64| = 640
+ */
 assign nes_x_out      = (sync_x - 10'h040) >> 1;
 assign nes_y_out      = sync_y >> 1;
 assign nes_x_next     = (sync_x_next - 10'h040) >> 1;

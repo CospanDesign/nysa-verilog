@@ -1,4 +1,4 @@
-module vga_to_ppfifo #(
+module image_to_ppfifo #(
     parameter BUFFER_SIZE = 10
 )(
 input               clk,
@@ -6,11 +6,11 @@ input               rst,
 
 input               i_enable,
 
-input               i_vga_hsync,          // vga hsync signal
-input               i_vga_vsync,          // vga vsync signal
-input       [2:0]   i_vga_red,            // vga red signal
-input       [2:0]   i_vga_green,          // vga green signal
-input       [1:0]   i_vga_blue,           // vga blue signal
+input               i_hsync,          // vga hsync signal
+input               i_vsync,          // vga vsync signal
+input       [2:0]   i_red,            // vga red signal
+input       [2:0]   i_green,          // vga green signal
+input       [1:0]   i_blue,           // vga blue signal
 
 output  reg         o_frame_finished,
 
@@ -42,7 +42,7 @@ reg   [31:0]        r_write_data;
 ppfifo # (
   .DATA_WIDTH       (32                 ),
   .ADDRESS_WIDTH    (BUFFER_SIZE        )
-)vga_fifo        (
+)fifo        (
 
   //universal input
   .reset            (rst                ),
@@ -55,7 +55,7 @@ ppfifo # (
   .write_strobe     (r_write_strobe     ),
   .write_data       (r_write_data       ),
 
-  .inactive          (w_inactive          ),
+//  .inactive          (w_inactive          ),
 
   //read side
   .read_clock       (clk                ),
@@ -67,7 +67,7 @@ ppfifo # (
 );
 
 //Asynchronous Logic
-assign  w_neg_edge_vsync            = (r_prev_vsync & !i_vga_vsync);
+assign  w_neg_edge_vsync            = (r_prev_vsync & !i_vsync);
 //Synchronous Logic
 always @ (posedge clk) begin
   if (rst) begin
@@ -75,41 +75,41 @@ always @ (posedge clk) begin
     r_write_strobe                  <=  0;
     r_write_count                   <=  0;
     r_write_data                    <=  0;
-                                    
+
     o_frame_finished                <=  0;
     r_prev_vsync                    <=  0;
-  end                             
-  else begin                      
+  end
+  else begin
     o_frame_finished                <=  0;
     r_write_strobe                  <=  0;
 
     if (i_enable && (r_write_activate == 0) && (w_write_ready > 0)) begin
       r_write_count                 <=  0;
       if (w_write_ready[0]) begin
-          r_write_activate[1]       <=  1;
+          r_write_activate[0]       <=  1;
       end
       else begin
           r_write_activate[1]       <=  1;
       end
     end
-    if (i_enable) begin
-      if (i_vga_hsync) begin
-        r_write_data                <=  {24'h000000, i_vga_red, i_vga_green, i_vga_blue};
+    if (i_enable && (r_write_activate > 0)) begin
+      if (i_hsync) begin
+        r_write_data                <=  {24'h000000, i_red, i_green, i_blue};
         r_write_strobe              <=  1;
         r_write_count               <=  r_write_count + 1;
         if (r_write_count >= w_write_fifo_size - 1) begin
           r_write_activate          <=  0;
         end
-      end                         
-      else if (!i_vga_hsync && (r_write_activate > 0) && r_write_count) begin
+      end
+      else if (!i_hsync) begin
         r_write_activate            <=  0;
       end
-     
+
       if (w_neg_edge_vsync) begin
         o_frame_finished            <=  1;
       end
     end
-    r_prev_vsync                    <=  i_vga_vsync;
+    r_prev_vsync                    <=  i_vsync;
   end
 end
-endmodule 
+endmodule

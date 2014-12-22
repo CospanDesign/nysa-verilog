@@ -36,7 +36,8 @@ ${NYSA}/verilog/wishbone/common/wb_ppfifo_2_mem/rtl/wb_ppfifo_2_mem.v
 rtl/nes_hci.v
 rtl/cart/cart.v
 
-rtl/cmn/block_ram/block_ram.v
+rtl/cmn/block_ram/dual_port_ram_sync.v
+rtl/cmn/block_ram/single_port_ram_sync.v
 
 rtl/cmn/fifo/fifo.v
 
@@ -47,7 +48,7 @@ rtl/cmn/fifo/fifo.v
 
 rtl/cmn/vga_sync/vga_sync.v
 
-rtl/vga_to_ppfifo.v
+rtl/image_to_ppfifo.v
 rtl/cpu/apu/apu.v
 rtl/cpu/apu/apu_div.v
 rtl/cpu/apu/apu_envelope_generator.v

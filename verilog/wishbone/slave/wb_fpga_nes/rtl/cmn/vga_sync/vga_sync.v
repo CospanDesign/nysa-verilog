@@ -56,15 +56,15 @@ localparam V_FP    = 10;   // Vertical front porch in lines
 localparam V_RT    = 2;    // Vertical retrace (vsync pulse) in lines
 localparam V_BP    = 29;   // Vertical back porch in lines
 
+//localparam H_DISP  = 4;  // Number of displayable columns
+//localparam H_FP    = 10;   // Horizontal front porch in pixel clocks
+//localparam H_RT    = 2;   // Horizontal retrace (hsync pulse) in pixel clocks
+//localparam H_BP    = 20;   // Horizontal back porch in pixel clocks
+//localparam V_DISP  = 2;  // Number of displayable rows
+//localparam V_FP    = 1;   // Vertical front porch in lines
 /*
-localparam H_DISP  = 4;  // Number of displayable columns
-localparam H_FP    = 0;   // Horizontal front porch in pixel clocks
-localparam H_RT    = 1;   // Horizontal retrace (hsync pulse) in pixel clocks
-localparam H_BP    = 0;   // Horizontal back porch in pixel clocks
-localparam V_DISP  = 4;  // Number of displayable rows
-localparam V_FP    = 0;   // Vertical front porch in lines
-localparam V_RT    = 1;    // Vertical retrace (vsync pulse) in lines
-localparam V_BP    = 0;   // Vertical back porch in lines
+localparam V_RT    = 3;    // Vertical retrace (vsync pulse) in lines
+localparam V_BP    = 2;   // Vertical back porch in lines
 */
 
 
@@ -122,10 +122,10 @@ always @ (*) begin
     d_mod4_cnt  = q_mod4_cnt + 2'h1;
     d_hcnt      = (line_pulse)   ? 10'h000 : ((pix_pulse)  ? q_hcnt + 10'h001 : q_hcnt);
     d_vcnt      = (screen_pulse) ? 10'h000 : ((line_pulse) ? q_vcnt + 10'h001 : q_vcnt);
-                                                                                    
+
     d_hsync     = (q_hcnt >= (H_DISP + H_FP)) && (q_hcnt < (H_DISP + H_FP + H_RT));
     d_vsync     = (q_vcnt >= (V_DISP + V_FP)) && (q_vcnt < (V_DISP + V_FP + V_RT));
-                                                                                    
+
     d_en        = (q_hcnt < H_DISP) && (q_vcnt < V_DISP);
   end
 end

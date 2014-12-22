@@ -266,6 +266,9 @@ wire [7:0] sb_in,    // SB bus
 // Internal control signals.  These names are all taken directly from the original 6502 block
 // diagram.
 //
+wire      zero_adl0;
+wire      zero_adl1;
+wire      zero_adl2;
 
 // ADL bus drive enables.
 wire       add_adl;     // output adder hold register to adl bus

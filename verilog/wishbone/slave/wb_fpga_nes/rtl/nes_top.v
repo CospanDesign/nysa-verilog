@@ -31,11 +31,14 @@ module nes_top (
   input               rst,                  // reset push button
   input               i_console_reset,      // console reset
   input       [3:0]   i_mute_control,       // switches
-  output              o_vga_hsync,          // vga hsync signal
-  output              o_vga_vsync,          // vga vsync signal
-  output      [2:0]   o_vga_red,            // vga red signal
-  output      [2:0]   o_vga_green,          // vga green signal
-  output      [1:0]   o_vga_blue,           // vga blue signal
+
+  output      [9:0]   o_image_width,        // width of the generated image
+  output      [9:0]   o_image_height,       // height of the generated image
+  output              o_hsync,              // vga hsync signal
+  output              o_vsync,              // vga vsync signal
+  output      [2:0]   o_red,                // vga red signal
+  output      [2:0]   o_green,              // vga green signal
+  output      [1:0]   o_blue,               // vga blue signal
 
   // Joypad signals.
   input       [7:0]   i_jp1_state,          //State of joypad 1
@@ -205,14 +208,17 @@ ppu ppu_blk(
   .ri_ncs_in   (ppu_ri_ncs    ),
   .ri_r_nw_in  (ppu_ri_r_nw   ),
   .ri_d_in     (ppu_ri_din    ),
-  
+
   //VGA
+  .o_image_width  (o_image_width), // width of the generated image
+  .o_image_height (o_image_height),// height of the generated image
+
   .vram_d_in   (ppu_vram_din  ),
-  .hsync_out   (o_vga_hsync   ),
-  .vsync_out   (o_vga_vsync   ),
-  .r_out       (o_vga_red     ),
-  .g_out       (o_vga_green   ),
-  .b_out       (o_vga_blue    ),
+  .hsync_out   (o_hsync   ),
+  .vsync_out   (o_vsync   ),
+  .r_out       (o_red     ),
+  .g_out       (o_green   ),
+  .b_out       (o_blue    ),
 
   //VRAM
   .ri_d_out    (ppu_ri_dout   ),
