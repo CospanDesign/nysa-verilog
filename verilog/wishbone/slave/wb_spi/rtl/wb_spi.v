@@ -84,7 +84,8 @@ parameter SPI_CHAR_LEN_BITS = 8
   output reg			        o_wbs_int,
 
   // SPI signals
-  output          [31:0]  ss_pad_o,         // slave select
+  //output          [31:0]  ss_pad_o,         // slave select
+  output                  ss_pad_o,         // slave select
   output                  sclk_pad_o,       // serial clock
   output                  mosi_pad_o,       // master out slave in
   input                   miso_pad_i        // master in slave out
@@ -107,7 +108,7 @@ localparam SPI_TX_DATA          = ((SPI_RX_DATA) + (SPI_MAX_REG_SIZE));
 //Registers/Wires
 reg       [31:0]                divider = 100;    // Divider register
 reg       [31:0]                ctrl    = 0;      // Control and status register
-reg       [31:0]                ss      = 0;      // Slave select register
+reg                             ss      = 0;      // Slave select register
 reg       [31:0]                char_len= 8;      // char len
 wire      [SPI_MAX_CHAR - 1:0]  rx_data;          // Rx register
 wire      [SPI_MAX_CHAR - 1:0]  tx_data;
@@ -195,7 +196,8 @@ assign ie                   = ctrl[`SPI_CTRL_IE];
 assign ass                  = ctrl[`SPI_CTRL_ASS];
 assign inv_clk              = ctrl[`SPI_CTRL_INV_CLK];
 
-assign ss_pad_o             = ~((ss & {32{tip & ass}}) | (ss & {32{!ass}}));
+//assign ss_pad_o             = ~((ss & {32{tip & ass}}) | (ss & {32{!ass}}));
+assign ss_pad_o             = !ss;
 
 assign  sclk_pad_o          = inv_clk ? ~sclk : sclk;
 
@@ -246,7 +248,7 @@ always @ (posedge clk) begin
             divider                     <= i_wbs_dat;
 					end
 					SPI_SS: begin
-            ss                          <= i_wbs_dat;
+            ss                          <= i_wbs_dat[0];
 					end
 					default: begin
 					end
@@ -262,21 +264,21 @@ always @ (posedge clk) begin
 				case (i_wbs_adr)
 					SPI_CTRL: begin
             o_wbs_dat                   <=  ctrl;
-					end                           
-          SPI_BIT_COUNT: begin          
+					end
+          SPI_BIT_COUNT: begin
             o_wbs_dat                   <=  char_len;
-          end                           
-                                        
-					SPI_DIVIDER: begin            
+          end
+
+					SPI_DIVIDER: begin
             o_wbs_dat                   <=  divider;
-					end                           
-					SPI_SS: begin                 
-            o_wbs_dat                   <=  ss;
-					end                           
-          SPI_CLOCK_RATE: begin         
+					end
+					SPI_SS: begin
+            o_wbs_dat                   <=  {31'h0, ss};
+					end
+          SPI_CLOCK_RATE: begin
             o_wbs_dat                   <= `CLOCK_RATE;
-          end                           
-          SPI_MAX_BITSIZE: begin        
+          end
+          SPI_MAX_BITSIZE: begin
             o_wbs_dat                   <=  SPI_MAX_CHAR;
           end
 					default: begin

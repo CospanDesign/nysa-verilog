@@ -1,0 +1,1 @@
+There should be multiple spi slave select but due to an issue with the constraint editor bug where a vector cannot be bound to a scalar it was changed temporarily for a demo. This should be fixed and the ss_pad_o should be changed back to a vector
