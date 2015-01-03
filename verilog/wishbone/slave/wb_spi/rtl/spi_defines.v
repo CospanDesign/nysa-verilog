@@ -38,11 +38,11 @@
 ////                                                              ////
 //////////////////////////////////////////////////////////////////////
 
-`define SPI_CTRL_INV_CLK        6
-`define SPI_CTRL_ASS            5
-`define SPI_CTRL_LSB            4
-`define SPI_CTRL_TX_NEGEDGE     3
-`define SPI_CTRL_RX_NEGEDGE     2
-`define SPI_CTRL_IE             1
 `define SPI_CTRL_GO             0
+`define SPI_CTRL_IE             1
+`define SPI_CTRL_RX_NEGEDGE     2
+`define SPI_CTRL_TX_NEGEDGE     3
+`define SPI_CTRL_LSB            4
+`define SPI_CTRL_ASS            5
+`define SPI_CTRL_INV_CLK        6
 

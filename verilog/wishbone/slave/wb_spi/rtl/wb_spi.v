@@ -43,21 +43,21 @@
 
 
 /*
-	Use this to tell sycamore how to populate the Device ROM table
-	so that users can interact with your slave
+        Use this to tell sycamore how to populate the Device ROM table
+        so that users can interact with your slave
 
-	META DATA
+        META DATA
 
-	identification of your device 0 - 65536
-	DRT_ID:  4
+        identification of your device 0 - 65536
+        DRT_ID:  4
   DRT_SUB_ID: 1
 
-	flags (read drt.txt in the slave/device_rom_table directory 1 means
-	a standard device
-	DRT_FLAGS:  1
+        flags (read drt.txt in the slave/device_rom_table directory 1 means
+        a standard device
+        DRT_FLAGS:  1
 
-	parameters
-	DRT_SIZE:  12
+        parameters
+        DRT_SIZE:  12
 
 */
 
@@ -70,25 +70,25 @@
 module wb_spi #(
 parameter SPI_CHAR_LEN_BITS = 8
 )(
-  input 				          clk,
-  input 				          rst,
+  input                         clk,
+  input                         rst,
 
   //wishbone slave signals
-  input 				          i_wbs_we,
-  input 				          i_wbs_stb,
-  input 				          i_wbs_cyc,
-  input		        [31:0]	i_wbs_adr,
-  input  		      [31:0]	i_wbs_dat,
-  output reg      [31:0]	o_wbs_dat,
-  output reg			        o_wbs_ack,
-  output reg			        o_wbs_int,
+  input                         i_wbs_we,
+  input                         i_wbs_stb,
+  input                         i_wbs_cyc,
+  input                 [31:0]  i_wbs_adr,
+  input                 [31:0]  i_wbs_dat,
+  output reg            [31:0]  o_wbs_dat,
+  output reg                    o_wbs_ack,
+  output reg                    o_wbs_int,
 
   // SPI signals
-  //output          [31:0]  ss_pad_o,         // slave select
-  output                  ss_pad_o,         // slave select
-  output                  sclk_pad_o,       // serial clock
-  output                  mosi_pad_o,       // master out slave in
-  input                   miso_pad_i        // master in slave out
+  //output              [31:0]  ss_pad_o,         // slave select
+  output                        ss_pad_o,         // slave select
+  output                        sclk_pad_o,       // serial clock
+  output                        mosi_pad_o,       // master out slave in
+  input                         miso_pad_i        // master in slave out
 );
 
 localparam  SPI_MAX_CHAR        = 2 ** SPI_CHAR_LEN_BITS;
@@ -108,6 +108,7 @@ localparam SPI_TX_DATA          = ((SPI_RX_DATA) + (SPI_MAX_REG_SIZE));
 //Registers/Wires
 reg       [31:0]                divider = 100;    // Divider register
 reg       [31:0]                ctrl    = 0;      // Control and status register
+//reg       [31:0]                ss      = 0;      // Slave select register
 reg                             ss      = 0;      // Slave select register
 reg       [31:0]                char_len= 8;      // char len
 wire      [SPI_MAX_CHAR - 1:0]  rx_data;          // Rx register
@@ -197,103 +198,103 @@ assign ass                  = ctrl[`SPI_CTRL_ASS];
 assign inv_clk              = ctrl[`SPI_CTRL_INV_CLK];
 
 //assign ss_pad_o             = ~((ss & {32{tip & ass}}) | (ss & {32{!ass}}));
-assign ss_pad_o             = !ss;
+assign ss_pad_o             = ~((ss & tip & ass) | (ss & !ass));
+//assign ss_pad_o             = !ss;
 
 assign  sclk_pad_o          = inv_clk ? ~sclk : sclk;
 
 //Synchronous Logic
 always @ (posedge clk) begin
-	if (rst) begin
-		o_wbs_dat	        <=  32'h00000000;
-		o_wbs_ack	        <=  0;
-    char_len          <=  0;
-    ctrl              <=  0;
-    divider           <=  100;
-    ss                <=  0;
+    if (rst) begin
+        o_wbs_dat         <=  32'h00000000;
+        o_wbs_ack         <=  0;
+        char_len          <=  0;
+        ctrl              <=  0;
+        divider           <=  100;
+        ss                <=  0;
 
-    for (i = 0; i < SPI_MAX_REG_SIZE; i = i + 1) begin
-      tx_data_array[i]  <=  i;
-    end
-	end
-
-	else begin
-    //interrupts
-    if (ie && tip && last_bit && pos_edge) begin
-      o_wbs_int               <=  1;
-    end
-    else if (o_wbs_ack) begin
-      o_wbs_int               <=  0;
-    end
-		//when the master acks our ack, then put our ack down
-		if (o_wbs_ack & ~ i_wbs_stb)begin
-			o_wbs_ack               <= 0;
-		end
-
-    if (go && last_bit && pos_edge) begin
-      ctrl[`SPI_CTRL_GO]      <=  0;
+        for (i = 0; i < SPI_MAX_REG_SIZE; i = i + 1) begin
+            tx_data_array[i]  <=  i;
+        end
     end
 
-		if (i_wbs_stb & i_wbs_cyc & !o_wbs_ack) begin
-			//master is requesting somethign
-			if (i_wbs_we && !tip) begin
-				//write request
-				case (i_wbs_adr)
-					SPI_CTRL: begin
-            ctrl                        <= i_wbs_dat;
-					end
-          SPI_BIT_COUNT: begin
-            char_len                    <= i_wbs_dat;
-          end
-					SPI_DIVIDER: begin
-            divider                     <= i_wbs_dat;
-					end
-					SPI_SS: begin
-            ss                          <= i_wbs_dat[0];
-					end
-					default: begin
-					end
-				endcase
-
-        if (write_reg_valid) begin
-          tx_data_array[write_reg_pos]  <=  i_wbs_dat;
+    else begin
+        //interrupts
+        if (ie && tip && last_bit && pos_edge) begin
+            o_wbs_int               <=  1;
+        end
+        else if (o_wbs_ack) begin
+            o_wbs_int               <=  0;
+        end
+        //when the master acks our ack, then put our ack down
+        if (o_wbs_ack & ~ i_wbs_stb)begin
+            o_wbs_ack               <= 0;
+        end
+ 
+        if (go && last_bit && pos_edge) begin
+            ctrl[`SPI_CTRL_GO]      <=  0;
         end
 
-			end
-			else begin
-				//read request
-				case (i_wbs_adr)
-					SPI_CTRL: begin
-            o_wbs_dat                   <=  ctrl;
-					end
-          SPI_BIT_COUNT: begin
-            o_wbs_dat                   <=  char_len;
-          end
+        if (i_wbs_stb & i_wbs_cyc & !o_wbs_ack) begin
+            //master is requesting somethign
+            if (i_wbs_we && !tip) begin
+                //write request
+                case (i_wbs_adr)
+                    SPI_CTRL: begin
+                        ctrl                        <= i_wbs_dat;
+                    end
+                    SPI_BIT_COUNT: begin
+                        char_len                    <= i_wbs_dat;
+                    end
+                    SPI_DIVIDER: begin
+                        divider                     <= i_wbs_dat;
+                    end
+                    SPI_SS: begin
+                        ss                          <= i_wbs_dat[0];
+                    end
+                    default: begin
+                    end
+                endcase
 
-					SPI_DIVIDER: begin
-            o_wbs_dat                   <=  divider;
-					end
-					SPI_SS: begin
-            o_wbs_dat                   <=  {31'h0, ss};
-					end
-          SPI_CLOCK_RATE: begin
-            o_wbs_dat                   <= `CLOCK_RATE;
-          end
-          SPI_MAX_BITSIZE: begin
-            o_wbs_dat                   <=  SPI_MAX_CHAR;
-          end
-					default: begin
-            o_wbs_dat                   <=  32'bx;
-					end
-				endcase
+                if (write_reg_valid) begin
+                    tx_data_array[write_reg_pos]  <=  i_wbs_dat;
+                end
 
-        if (read_reg_valid) begin
-            o_wbs_dat                   <=  rx_data_array[read_reg_pos];
+            end
+            else begin
+                //read request
+                case (i_wbs_adr)
+                    SPI_CTRL: begin
+                        o_wbs_dat                   <=  ctrl;
+                    end
+                    SPI_BIT_COUNT: begin
+                        o_wbs_dat                   <=  char_len;
+                    end
+                    SPI_DIVIDER: begin
+                        o_wbs_dat                   <=  divider;
+                    end
+                    SPI_SS: begin
+                        o_wbs_dat                   <=  {31'h0, ss};
+                    end
+                    SPI_CLOCK_RATE: begin
+                        o_wbs_dat                   <= `CLOCK_RATE;
+                    end
+                    SPI_MAX_BITSIZE: begin
+                        o_wbs_dat                   <=  SPI_MAX_CHAR;
+                    end
+                    default: begin
+                        o_wbs_dat                   <=  32'bx;
+                    end
+                endcase
+
+                if (read_reg_valid) begin
+                    o_wbs_dat                   <=  rx_data_array[read_reg_pos];
+                end
+
+            end
+            o_wbs_ack                         <=  1;
         end
-
-			end
-			o_wbs_ack                         <=  1;
-		end
-	end
+    end
 end
 
 
