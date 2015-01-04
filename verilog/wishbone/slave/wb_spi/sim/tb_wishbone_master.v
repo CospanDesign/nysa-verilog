@@ -151,8 +151,8 @@ reg     [27:0]    data_read_count;
 
 
 //Spi Stuff
-//wire  [31:0]      ss_pad_o;
-wire              ss_pad_o;
+wire  [31:0]      ss_pad_o;
+//wire              ss_pad_o;
 wire              sclk_pad_o;
 wire              mosi_pad_o;
 reg               miso_pad_i;
@@ -596,8 +596,8 @@ always @ (posedge clk) begin
     index               <=  0;
   end
   else begin
-    //if (~ss_pad_o[0]) begin
-    if (~ss_pad_o) begin
+    if (~ss_pad_o[0]) begin
+    //if (~ss_pad_o) begin
       index     <=  0;
     end
     if (pos_edge_sclk) begin
