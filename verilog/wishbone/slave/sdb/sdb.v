@@ -22,28 +22,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
-/*
-  META DATA
-
-  DRT_ID:0004C594
-  version info 0.0.04
-  ID: C594
-*/
-
-
 /*
  *use defparam in the instantiating module in order to set the
  * number of items in the ROM
- * defparam DRT_NUM_OF_DEVICES = 2;
+ * defparam SDB_NRECS = 2;
  */
 
 `timescale 1 ns/1 ps
 
 `include "project_defines.v"
-//`define DRT_NUM_OF_DEVICES 1
-`define DRT_SIZE_OF_HEADER  8
-`define DRT_SIZE_OF_DEV   8
+//`define SDB_NRECS 1
+`define SDB_ROM_SIZE_OF_HEADER  16
+`define SDB_ROM_SIZE_OF_DEV     16
 
 
 module device_rom_table (
@@ -62,43 +52,12 @@ output reg          o_wbs_ack,
 output reg          o_wbs_int
 );
 
-//parameter DRT_NUM_OF_DEVICES = 1;
-
-parameter DRT_ID_ADR      = 32'h00000000;
-parameter DRT_NUM_DEV_ADR = 32'h00000001;
-parameter DRT_RFU_1_ADR   = 32'h00000002;
-parameter DRT_RFU_2_ADR   = 32'h00000003;
-parameter DRT_RFU_3_ADR   = 32'h00000004;
-parameter DRT_RFU_4_ADR   = 32'h00000005;
-parameter DRT_RFU_5_ADR   = 32'h00000006;
-parameter DRT_RFU_6_ADR   = 32'h00000007;
-
-//parameters that go into the ROM
-parameter DRT_ID          = 16'h0001;
-parameter DRT_VERSION     = 16'h0001;
-parameter DRT_RFU_1       = 32'h00000000;
-parameter DRT_RFU_2       = 32'h00000000;
-parameter DRT_RFU_3       = 32'h00000000;
-parameter DRT_RFU_4       = 32'h00000000;
-parameter DRT_RFU_5       = 32'h00000000;
-parameter DRT_RFU_6       = 32'h00000000;
-parameter DRT_RFU_7       = 32'h00000000;
-
-parameter DRT_DEV_OFF_ADR = 32'h00000004;
-parameter DRT_DEV_SIZE    = 4'h4;
-
-parameter DEV_ID_OFF      = 4'h0;
-parameter DEV_INFO_OFF    = 4'h1;
-parameter DEV_MEM_OFF_OFF = 4'h2;
-parameter DEV_SIZE_OFF    = 4'h3;
-
 //registers
-parameter DRT_SIZE        = `DRT_SIZE_OF_HEADER + (`DRT_NUM_OF_DEVICES * `DRT_SIZE_OF_DEV);
-//reg [DRT_SIZE:0][31:0] drt;
-reg [31:0] drt [(DRT_SIZE - 1):0];
+parameter SDB_ROM_SIZE        = `SDB_ROM_SIZE_OF_HEADER + (`SDB_NRECS * `SDB_ROM_SIZE_OF_DEV);
+reg [31:0] sdb [(SDB_ROM_SIZE - 1):0];
 
 initial begin
-  $readmemh(`DRT_INPUT_FILE, drt, 0, DRT_SIZE - 1);
+  $readmemh(`SDB_INPUT_FILE, sdb, 0, SDB_ROM_SIZE - 1);
 end
 
 always @ (posedge clk) begin
@@ -119,7 +78,7 @@ always @ (posedge clk) begin
       end
       else begin
         //read request
-        o_wbs_dat <= drt[i_wbs_adr];
+        o_wbs_dat <= sdb[i_wbs_adr];
       end
       o_wbs_ack <= 1;
     end

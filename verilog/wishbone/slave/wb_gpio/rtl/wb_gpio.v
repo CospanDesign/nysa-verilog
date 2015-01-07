@@ -23,47 +23,53 @@ SOFTWARE.
 */
 
 /*
-  8/31/2012
-    -Changed some of the naming for clarity
-        10/29/2011
-                -added an 'else' statement that so either the
-                reset HDL will be executed or the actual code
-                not both
-        10/23/2011
-                -fixed the wbs_ack_i to o_wbs_ack
-                -added the default entries for read and write
-                        to illustrate the method of communication
-                -added license
-        9/10/2011
-                -removed the duplicate wbs_dat_i
-                -added the wbs_sel_i port
+  Self Defining Bus (SDB)
+
+  Set the Vendor ID (Hexidecimal 64-bit Number)
+  SDB_VENDOR_ID:0x800000000000C594
+
+  Set the Device ID (Hexcidecimal 32-bit Number)
+  SDB_DEVICE_ID:0x00000000
+
+  Set the version of the Core XX.XXX.XXX Example: 01.000.000
+  SDB_CORE_VERSION:00.000.001
+
+  Set the Device Name: (19 UNICODE characters)
+  SDB_NAME:wb_gpio
+
+  Set the class of the device (16 bits) Set as 0
+  SDB_ABI_CLASS:0
+
+  Set the ABI Major Version: (8-bits)
+  SDB_ABI_VERSION_MAJOR:0x01
+
+  Set the ABI Minor Version (8-bits)
+  SDB_ABI_VERSION_MINOR:0x01
+
+  Set the Module URL (63 Unicode Characters)
+  SDB_MODULE_URL:http://www.example.com
+
+  Set the date of module YYYY/MM/DD
+  SDB_DATE:2015/01/07
+
+  Device is executable (True/False)
+  SDB_EXECUTABLE:True
+
+  Device is readable (True/False)
+  SDB_READABLE:True
+
+  Device is writeable (True/False)
+  SDB_WRITEABLE:True
+
+  Device Size: Number of Registers
+  SDB_SIZE:8
+
+  USER_PARAMETER: DEFAULT_INTERRUPT_MASK
+  USER_PARAMETER: DEFAULT_INTERRUPT_EDGE
+  USER_PARAMETER: DEFAULT_INTERRUPT_BOTH_EDGE
+  USER_PARAMETER: DEFAULT_INTERRUPT_TIMEOUT
 */
 
-/*
-        Use this to tell sycamore how to populate the Device ROM table
-        so that users can interact with your slave
-
-        META DATA
-
-        identification of your device 0 - 65536
-        DRT_ID:  1
-
-  DRT_SUB_ID: 1
-
-        flags (read drt.txt in the slave/device_rom_table directory 1 means
-        a standard device
-        DRT_FLAGS:  1
-
-        number of registers this should be equal to the nubmer of ???
-        parameters
-        DRT_SIZE:  7
-
-        USER_PARAMETER: DEFAULT_INTERRUPT_MASK
-        USER_PARAMETER: DEFAULT_INTERRUPT_EDGE
-        USER_PARAMETER: DEFAULT_INTERRUPT_BOTH_EDGE
-        USER_PARAMETER: DEFAULT_INTERRUPT_TIMEOUT
-
-*/
 `include "project_defines.v"
 
 module wb_gpio#(
@@ -97,8 +103,6 @@ module wb_gpio#(
 
 );
 
-
-
 localparam      GPIO                  = 32'h00000000;
 localparam      GPIO_OUTPUT_ENABLE    = 32'h00000001;
 localparam      INTERRUPTS            = 32'h00000002;
@@ -107,7 +111,6 @@ localparam      INTERRUPT_EDGE        = 32'h00000004;
 localparam      INTERRUPT_BOTH_EDGE   = 32'h00000005;
 localparam      INTERRUPT_TIMEOUT     = 32'h00000006;
 localparam      READ_CLOCK_RATE       = 32'h00000007;
-
 
 //gpio registers
 reg     [31:0]  gpio_direction;

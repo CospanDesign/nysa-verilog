@@ -22,35 +22,51 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+
 /*
-  Use this to tell sycamore how to populate the Device ROM table
-  so that users can interact with your slave
+  Self Defining Bus (SDB)
 
-  META DATA
+  Set the Vendor ID (Hexidecimal 64-bit Number)
+  SDB_VENDOR_ID:0x800000000000C594
 
-  identification of your device 0 - 65536
-  DRT_ID:  5
+  Set the Device ID (Hexcidecimal 32-bit Number)
+  SDB_DEVICE_ID:0x00000000
 
-  sub-identification of the device
-  for example
-      ID = 1    : GPIO
-      sub-id 1  : Cospan Design Implementation
+  Set the version of the Core XX.XXX.XXX Example: 01.000.000
+  SDB_CORE_VERSION:00.000.001
 
-  DRT_SUB_ID: 1
+  Set the Device Name: (19 UNICODE characters)
+  SDB_NAME:wb_sdram
 
+  Set the class of the device (16 bits) Set as 0
+  SDB_ABI_CLASS:0
 
+  Set the ABI Major Version: (8-bits)
+  SDB_ABI_VERSION_MAJOR:5
 
-  flags (read drt.txt in the slave/device_rom_table directory 1 means
-  a standard device
-  DRT_FLAGS:  3
+  Set the ABI Minor Version (8-bits)
+  SDB_ABI_VERSION_MINOR:2
 
-  number of registers this should be equal to the nubmer of ADDR_???
-  parameters
-  DRT_SIZE:  8388608
+  Set the Module URL (63 Unicode Characters)
+  SDB_MODULE_URL:http://www.example.com
 
+  Set the date of module YYYY/MM/DD
+  SDB_DATE:2015/01/07
+
+  Device is executable (True/False)
+  SDB_EXECUTABLE:True
+
+  Device is readable (True/False)
+  SDB_READABLE:True
+
+  Device is writeable (True/False)
+  SDB_WRITEABLE:True
+
+  Device Size: Number of Registers
+  SDB_SIZE:0x800000
 */
-`timescale 1 ns/1 ps
 
+`timescale 1 ns/1 ps
 
 module wb_sdram (
   input               clk,

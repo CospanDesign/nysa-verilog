@@ -21,7 +21,48 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+/*
+  Self Defining Bus (SDB)
 
+  Set the Vendor ID (Hexidecimal 64-bit Number)
+  SDB_VENDOR_ID:0x800000000000C594
+
+  Set the Device ID (Hexcidecimal 32-bit Number)
+  SDB_DEVICE_ID:0x00000000
+
+  Set the version of the Core XX.XXX.XXX Example: 01.000.000
+  SDB_CORE_VERSION:00.000.001
+
+  Set the Device Name: (19 UNICODE characters)
+  SDB_NAME:wb_stepper
+
+  Set the class of the device (16 bits) Set as 0
+  SDB_ABI_CLASS:0
+
+  Set the ABI Major Version: (8-bits)
+  SDB_ABI_VERSION_MAJOR:0x10
+
+  Set the ABI Minor Version (8-bits)
+  SDB_ABI_VERSION_MINOR:0x01
+
+  Set the Module URL (63 Unicode Characters)
+  SDB_MODULE_URL:http://www.example.com
+
+  Set the date of module YYYY/MM/DD
+  SDB_DATE:2015/01/07
+
+  Device is executable (True/False)
+  SDB_EXECUTABLE:True
+
+  Device is readable (True/False)
+  SDB_READABLE:True
+
+  Device is writeable (True/False)
+  SDB_WRITEABLE:True
+
+  Device Size: Number of Registers
+  SDB_SIZE:13
+*/
 
 /*
 *
@@ -59,24 +100,6 @@ SOFTWARE.
 * STEP_ACCELLERATION:
 */
 
-/*
-  Use this to tell Nysa how to populate the Device ROM table
-  so that users can interact with your slave
-
-  META DATA
-
-  identification of your device 0 - 65536
-  DRT_ID:16
-  DRT_SUB_ID:1
-
-  flags (read drt.txt in the slave/device_rom_table directory 1 means
-  a standard device
-  DRT_FLAGS:1
-
-  number of registers this should be equal to the nubmer of ADDR_???
-  parameters
-  DRT_SIZE:3
-*/
 `include "project_defines.v"
 
 module wb_stepper #(
