@@ -42,10 +42,10 @@ SOFTWARE.
   SDB_ABI_CLASS:0
 
   Set the ABI Major Version: (8-bits)
-  SDB_ABI_VERSION_MAJOR:5
+  SDB_ABI_VERSION_MAJOR:0x06
 
   Set the ABI Minor Version (8-bits)
-  SDB_ABI_VERSION_MINOR:2
+  SDB_ABI_VERSION_MINOR:0x02
 
   Set the Module URL (63 Unicode Characters)
   SDB_MODULE_URL:http://www.example.com

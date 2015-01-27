@@ -62,7 +62,7 @@
   SDB_ABI_CLASS:0
 
   Set the ABI Major Version: (8-bits)
-  SDB_ABI_VERSION_MAJOR:0x03
+  SDB_ABI_VERSION_MAJOR:0x04
 
   Set the ABI Minor Version (8-bits)
   SDB_ABI_VERSION_MINOR:0x01
