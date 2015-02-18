@@ -28,7 +28,7 @@ SOFTWARE.
   SDB_VENDOR_ID:0x800000000000C594
 
   Set the Device ID (Hexcidecimal 32-bit Number)
-  SDB_DEVICE_ID:0x00000000
+  SDB_DEVICE_ID:0x00000009
 
   Set the version of the Core XX.XXX.XXX Example: 01.000.000
   SDB_CORE_VERSION:00.000.001

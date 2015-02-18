@@ -29,7 +29,7 @@ SOFTWARE.
   SDB_VENDOR_ID:0x800000000000C594
 
   Set the Device ID (Hexcidecimal 32-bit Number)
-  SDB_DEVICE_ID:0x00000000
+  SDB_DEVICE_ID:0x00000002
 
   Set the version of the Core XX.XXX.XXX Example: 01.000.000
   SDB_CORE_VERSION:00.000.001
@@ -47,7 +47,7 @@ SOFTWARE.
   SDB_ABI_VERSION_MINOR:0x01
 
   Set the Module URL (63 Unicode Characters)
-  SDB_MODULE_URL:http://www.example.com
+  SDB_MODULE_URL:http://www.cospandesign.com
 
   Set the date of module YYYY/MM/DD
   SDB_DATE:2015/01/07
