@@ -316,10 +316,10 @@ assign src1_status[`DMA_BUSY] = src_dma_busy[1];
 assign src2_status[`DMA_BUSY] = src_dma_busy[2];
 assign src3_status[`DMA_BUSY] = src_dma_busy[3];
 
-assign src_snk_addr[0]        = src0_control[`SINK_ADDR_TOP:`SNK_ADDR_BOT];
-assign src_snk_addr[1]        = src1_control[`SINK_ADDR_TOP:`SNK_ADDR_BOT];
-assign src_snk_addr[2]        = src2_control[`SINK_ADDR_TOP:`SNK_ADDR_BOT];
-assign src_snk_addr[3]        = src3_control[`SINK_ADDR_TOP:`SNK_ADDR_BOT];
+assign src_snk_addr[0]        = src0_control[`SINK_ADDR_TOP:`SINK_ADDR_BOT];
+assign src_snk_addr[1]        = src1_control[`SINK_ADDR_TOP:`SINK_ADDR_BOT];
+assign src_snk_addr[2]        = src2_control[`SINK_ADDR_TOP:`SINK_ADDR_BOT];
+assign src_snk_addr[3]        = src3_control[`SINK_ADDR_TOP:`SINK_ADDR_BOT];
 
 
 
@@ -332,6 +332,7 @@ generate
 for (i = 0; i < 4; i = i + 1) begin: gen_paths
 
 //Sink Controllers
+/*
 always @ (posedge clk) begin
   if (rst) begin
       snk_address[i]  <=  0;
@@ -350,6 +351,7 @@ always @ (posedge clk) begin
     endcase
   end
 end
+*/
 
 //Source Controllers
 always @ (posedge clk) begin
@@ -361,8 +363,6 @@ always @ (posedge clk) begin
   else begin
     case (src_state[i])
       IDLE: begin
-      end
-      READY: begin
       end
       ACTIVE: begin
       end
