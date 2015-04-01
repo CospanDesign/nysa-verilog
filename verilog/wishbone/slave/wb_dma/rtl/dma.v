@@ -219,7 +219,7 @@ localparam          FINISHED              = 4'h8;
 wire        [31:0]  src_control         [3:0];
 wire        [31:0]  src_status          [3:0];
 
-reg                 inst_src_empty      [`INST_COUNT - 1:0];
+reg                 inst_ready          [`INST_COUNT - 1:0];
 reg                 inst_snk_full       [`INST_COUNT - 1:0];
 reg                 inst_busy           [`INST_COUNT - 1:0];
 reg                 inst_wait           [`INST_COUNT - 1:0];
@@ -517,117 +517,117 @@ integer i;
 always @ (posedge clk) begin
   if (rst) begin
     for (i = 0; i < `INST_COUNT; i = i + 1) begin
-      inst_src_empty[i]       <=  0;
-      inst_snk_full[i]        <=  0;
-      inst_wait[i]            <=  0;
-      inst_busy[i]            <=  0;
+      inst_ready[i]                          <=  0;
+      inst_snk_full[i]                       <=  0;
+      inst_wait[i]                           <=  0;
+      inst_busy[i]                           <=  0;
     end
     for (i = 0; i < `SOURCE_COUNT; i = i + 1) begin
-      src_dma_finished[i]     <=  0;
-      state[i]                <=  IDLE;
-      src_count[i]            <=  0;
-      src_strobe[i]           <=  0;
-      src_activate[i]         <=  0;
-      ip[i]                   <=  0;
-      snka[i]                 <=  0;
+      src_dma_finished[i]                    <=  0;
+      state[i]                               <=  IDLE;
+      src_count[i]                           <=  0;
+      src_strobe[i]                          <=  0;
+      src_activate[i]                        <=  0;
+      ip[i]                                  <=  0;
+      snka[i]                                <=  0;
 
     end
     for (i = 0; i < `SINK_COUNT; i = i + 1) begin
-      snk_address[i]          <=  0;
-      snk_count[i]            <=  0;
-      snk_valid[i]            <=  0;
-      snk_activate[i]         <=  0;
-      snk_in_use[i]           <=  0;
+      snk_address[i]                         <=  0;
+      snk_count[i]                           <=  0;
+      snk_valid[i]                           <=  0;
+      snk_activate[i]                        <=  0;
+      snk_in_use[i]                          <=  0;
     end
   end
   else begin
     for (i = 0; i < `SOURCE_COUNT; i = i + 1) begin
 
-      src_strobe[i]       <=  0;
-      snk_strobe[i]       <=  0;
-      snk_in_use[snka[i]] <=  dma_enable[i];
+      src_strobe[i]                          <=  0;
+      snk_strobe[i]                          <=  0;
+      snk_in_use[snka[i]]                    <=  dma_enable[i];
 
       case (state[i])
         IDLE: begin
           if (dma_enable[i]) begin
-            state[i]                    <= SETUP_CHANNEL;
-            ip[i]                       <= src_control[i][`CTRL_IP_ADDR_TOP:`CTRL_IP_ADDR_BOT];
-            snka[i]                     <= src_control[i][`CTRL_SINK_ADDR_TOP:`CTRL_SINK_ADDR_BOT];
+            state[i]                         <= SETUP_CHANNEL;
+            ip[i]                            <= src_control[i][`CTRL_IP_ADDR_TOP:`CTRL_IP_ADDR_BOT];
+            snka[i]                          <= src_control[i][`CTRL_SINK_ADDR_TOP:`CTRL_SINK_ADDR_BOT];
           end
           //Flush Anything within the sink FIFO
           if (!snk_in_use[i]) begin
             if (snk_activate[i] && (snk_count[i] < snk_size[i])) begin
-              snk_strobe[i]             <=  1;
-              snk_data[i]               <=  0;
-              snk_count[i]              <=  snk_count[i] + 1;
+              snk_strobe[i]                   <=  1;
+              snk_data[i]                     <=  0;
+              snk_count[i]                    <=  snk_count[i] + 1;
             end
             else begin
-              snk_activate[i]           <=  0;
+              snk_activate[i]                 <=  0;
             end
           end
         end
         SETUP_CHANNEL: begin
           //Setup only one time
-          curr_src_address[i]           <=  cmd_src_address[ip[i]];   //  Mutable, Copy to channel specific value
-          curr_dest_address[i]          <=  cmd_dest_address[ip[i]];  //  Mutable, Copy to channel specific value
+          curr_src_address[i]                 <=  cmd_src_address[ip[i]];   //  Mutable, Copy to channel specific value
+          curr_dest_address[i]                <=  cmd_dest_address[ip[i]];  //  Mutable, Copy to channel specific value
 
           //Initial Flag Configuration
-          inst_src_empty[ip[i]]         <=  1;
-          inst_snk_full[ip[i]]          <=  0;
+          inst_ready[ip[i]]                   <=  1;
+          inst_snk_full[ip[i]]                <=  0;
 
-          state[i]                      <=  SETUP_COMMAND;
+          state[i]                            <=  SETUP_COMMAND;
         end
         SETUP_COMMAND: begin
           //The command from the memory should be set from the 'instruction pointer' now we can make a decision
           if (flag_dest_addr_rst_on_cmd[ip[i]]) begin
             //Reset the address when processing a new command
-            curr_dest_address[i]        <=  cmd_dest_address[ip[i]];
+            curr_dest_address[i]              <=  cmd_dest_address[ip[i]];
           end
           if (flag_src_addr_rst_on_cmd[ip[i]]) begin
-            curr_src_address[i]         <=  cmd_src_address[ip[i]];
+            curr_src_address[i]               <=  cmd_src_address[ip[i]];
           end
-          curr_count[i]                 <=  cmd_count[ip[i]];
-          channel_count[i]              <=  0;
+          curr_count[i]                       <=  cmd_count[ip[i]];
+          channel_count[i]                    <=  0;
 
-          inst_busy[ip[i]]              <=  0;
+          inst_busy[ip[i]]                    <=  0;
           //Bonded to another Instruction/Channel
           if (flag_egress_bond[i]) begin
-            inst_wait[ip[i]]            <=  1;
-            state[i]                    <=  EGRESS_WAIT;
+            inst_wait[ip[i]]                  <=  1;
+            state[i]                          <=  EGRESS_WAIT;
           end
           else if (flag_ingress_bond[i]) begin
-            inst_wait[ip[i]]            <=  1;
-            state[i]                    <=  INGRESS_WAIT;
+            inst_wait[ip[i]]                  <=  1;
+            state[i]                          <=  INGRESS_WAIT;
           end
           else begin
-            inst_wait[ip[i]]            <=  0;
-            state[i]                    <=  ACTIVE;
+            inst_wait[ip[i]]                  <=  0;
+            state[i]                          <=  ACTIVE;
           end
         end
 
         EGRESS_WAIT: begin
-          inst_wait[ip[i]]              <=  1;
+          inst_wait[ip[i]]                    <=  1;
           //Egress waits for the remote channel to be full
           if (inst_snk_full[bond_addr]) begin
             //Reset the other full so we don't make a decision from of it later on
-            inst_snk_full[bond_addr]    <=  0;
-            state[i]                    <=  ACTIVE;
+            inst_snk_full[bond_addr]          <=  0;
+            state[i]                          <=  ACTIVE;
           end
         end
         INGRESS_WAIT: begin
-          inst_wait[ip[i]]              <=  1;
+          inst_wait[ip[i]]                    <=  1;
           //Ingress waits for the remote channel to be empty
-          if (inst_src_empty[bond_addr]) begin
+          if (inst_ready[bond_addr]) begin
             //Reset the other empty so we don't make a decision from of it later on
-            inst_src_empty[bond_addr]   <=  0;
-            state[i]                    <=  ACTIVE;
+            inst_ready[bond_addr]             <=  0;
+            state[i]                          <=  ACTIVE;
           end
         end
         ACTIVE: begin
           inst_wait[ip[i]]                    <=  0;
           inst_busy[ip[i]]                    <=  0;
           inst_snk_full[ip[i]]                <=  0;
-          inst_src_empty[ip[i]]               <=  0;
+          inst_ready[ip[i]]                   <=  0;
           if (dma_enable[i]) begin
             //Activate the source FIFO
             if (!src_activate[i] && src_ready[i]) begin
@@ -673,7 +673,6 @@ always @ (posedge clk) begin
               if (src_activate[i] && (src_count[i] >= src_size[i])) begin
                 src_activate[i]               <=  0;
                 o_src_address[i]              <=  curr_src_address[i]
-                
               end
               if (snk_activate[snka[i]] && (snk_count[snka[i]] >= snk_size[snka[i]])) begin
                 snk_activate[snka[i]]         <=  0;
@@ -691,14 +690,13 @@ always @ (posedge clk) begin
         END_COMMAND: begin
           if (!flag_dest_data_quantum[i] && (snk_count[snka[i]] > 0)) begin
             snk_activate[snka[i]]             <=  0;
+            o_snk_address[i]                  <=  curr_snk_address[i]
           end
-
           inst_busy[ip[i]]                    <=  0;
-          inst_src_empty[ip[i]]               <=  1;
+          inst_ready[ip[i]]                   <=  1;
           inst_snk_full[ip[i]]                <=  1;
-          ip[i]                               <=  cmd_next[i];
-          state                               <=  SETUP_COMMAND;
-
+          ip[i]                               <=  cmd_next[ip[i]];
+          state[i]                            <=  SETUP_COMMAND;
         end
         FLUSH: begin
           if (src_activate[i] && (src_count[i] < src_size[i]))begin
