@@ -655,23 +655,24 @@ always @ (posedge clk) begin
               channel_count[i]                <=  channel_count[i] + 1;
 
               //Increment or decrement the addresses
-              if (flag_src_addr_inc) begin
-                curr_src_address              <=  curr_src_address + 4;
+              if (flag_src_addr_inc[ip[i]]) begin
+                curr_src_address[i]           <=  curr_src_address[i] + 4;
               end
-              else if (flag_src_addr_dec) begin
-                curr_src_address              <=  curr_src_address - 4;
+              else if (flag_src_addr_dec[ip[i]]) begin
+                curr_src_address[i]           <=  curr_src_address[i] - 4;
               end
-              if (flag_dest_addr_inc) begin
-                curr_dest_address             <=  curr_dest_address + 4;
+              if (flag_dest_addr_inc[ip[i]]) begin
+                curr_dest_address[i]          <=  curr_dest_address[i] + 4;
               end
-              else if (flag_dest_addr_dec) begin
-                curr_dest_address             <=  curr_dest_address - 4;
+              else if (flag_dest_addr_dec[ip[i]]) begin
+                curr_dest_address[i]          <=  curr_dest_address[i] - 4;
               end
 
             end
             else begin
               if (src_activate[i] && (src_count[i] >= src_size[i])) begin
                 src_activate[i]               <=  0;
+                o_src_address[i]              <=  curr_src_address[i]
                 
               end
               if (snk_activate[snka[i]] && (snk_count[snka[i]] >= snk_size[snka[i]])) begin
