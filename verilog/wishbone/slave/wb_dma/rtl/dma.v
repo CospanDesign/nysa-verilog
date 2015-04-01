@@ -35,8 +35,8 @@ module dma #(
 
 
   //Source 0
-  input       [31:0]  i_src0_address,
-  input               i_src0_start,
+  output  reg [31:0]  o_src0_address,
+  output  reg         o_src0_start,
   output              o_src0_finished,
   output              o_src0_busy,
 
@@ -48,8 +48,8 @@ module dma #(
   input               i_src0_starved,
 
   //Source 1
-  input       [31:0]  i_src1_address,
-  input               i_src1_start,
+  output  reg [31:0]  o_src1_address,
+  output  reg         o_src1_start,
   output              o_src1_finished,
   output              o_src1_busy,
 
@@ -61,8 +61,8 @@ module dma #(
   input               i_src1_starved,
 
   //Source 2
-  input       [31:0]  i_src2_address,
-  input               i_src2_start,
+  output  reg [31:0]  o_src2_address,
+  output  reg         o_src2_start,
   output              o_src2_finished,
   output              o_src2_busy,
 
@@ -74,8 +74,8 @@ module dma #(
   input               i_src2_starved,
 
   //Source 3
-  input       [31:0]  i_src3_address,
-  input               i_src3_start,
+  output  reg [31:0]  o_src3_address,
+  output  reg         o_src3_start,
   output              o_src3_finished,
   output              o_src3_busy,
 
@@ -87,8 +87,8 @@ module dma #(
   input               i_src3_starved,
 
   //Sink 0
-  output              o_snk0_address,
-  output              o_snk0_valid,
+  output  reg [31:0]  o_snk0_address,
+  output  reg         o_snk0_valid,
 
   output              o_snk0_strobe,
   input       [1:0]   i_snk0_ready,
@@ -97,8 +97,8 @@ module dma #(
   output      [31:0]  o_snk0_data,
 
   //Sink 1
-  output              o_snk1_address,
-  output              o_snk1_valid,
+  output  reg [31:0]  o_snk1_address,
+  output  reg         o_snk1_valid,
 
   output              o_snk1_strobe,
   input       [1:0]   i_snk1_ready,
@@ -107,8 +107,8 @@ module dma #(
   output      [31:0]  o_snk1_data,
 
   //Sink 2
-  output              o_snk2_address,
-  output              o_snk2_valid,
+  output  reg [31:0]  o_snk2_address,
+  output  reg         o_snk2_valid,
 
   output              o_snk2_strobe,
   input       [1:0]   i_snk2_ready,
@@ -117,8 +117,8 @@ module dma #(
   output      [31:0]  o_snk2_data,
 
   //Sink 3
-  output              o_snk3_address,
-  output              o_snk3_valid,
+  output  reg [31:0]  o_snk3_address,
+  output  reg         o_snk3_valid,
 
   output              o_snk3_strobe,
   input       [1:0]   i_snk3_ready,
@@ -206,19 +206,23 @@ module dma #(
 
 //Local Parameters
 localparam          IDLE                  = 4'h0;
-localparam          SETUP                 = 4'h1;
-localparam          ACTIVE                = 4'h2;
-localparam          FLUSH                 = 4'h3;
-localparam          FINISHED              = 4'h4;
+localparam          SETUP_CHANNEL         = 4'h1;
+localparam          SETUP_COMMAND         = 4'h2;
+localparam          EGRESS_WAIT           = 4'h3;
+localparam          INGRESS_WAIT          = 4'h4;
+localparam          ACTIVE                = 4'h5;
+localparam          END_COMMAND           = 4'h6;
+localparam          FLUSH                 = 4'h7;
+localparam          FINISHED              = 4'h8;
 
 //Registers/Wires
 wire        [31:0]  src_control         [3:0];
 wire        [31:0]  src_status          [3:0];
 
-reg                 inst_ready          [`INST_COUNT - 1:0];
+reg                 inst_src_empty      [`INST_COUNT - 1:0];
+reg                 inst_snk_full       [`INST_COUNT - 1:0];
 reg                 inst_busy           [`INST_COUNT - 1:0];
-reg                 inst_finished       [`INST_COUNT - 1:0];
-reg                 inst_idle           [`INST_COUNT - 1:0];
+reg                 inst_wait           [`INST_COUNT - 1:0];
 
 wire        [31:0]  snk_control         [3:0];
 wire        [31:0]  snk_status          [3:0];
@@ -262,6 +266,7 @@ wire        [63:0]  cmd_src_address     [7:0];
 wire        [63:0]  cmd_dest_address    [7:0];
 wire        [31:0]  cmd_count           [7:0];
 wire        [15:0]  cmd_flags           [7:0];
+wire        [2:0]   bond_addr           [7:0];
 wire        [1:0]   cmd_cross_src_port  [7:0];
 wire        [1:0]   cmd_cross_dest_port [7:0];
 wire        [2:0]   cmd_next            [7:0];
@@ -280,6 +285,16 @@ wire        [1:0]   channel_sink        [3:0];
 
 reg         [31:0]  data_out;
 reg         [ROM_SIZE - 1:0]   addr_out;
+
+wire                flag_egress_bond                [`INST_COUNT - 1: 0];
+wire                flag_ingress_bond               [`INST_COUNT - 1: 0];
+wire                flag_dest_addr_rst_on_cmd       [`INST_COUNT - 1: 0];
+wire                flag_dest_data_quantum          [`INST_COUNT - 1: 0];
+wire                flag_dest_addr_inc              [`INST_COUNT - 1: 0];
+wire                flag_dest_addr_dec              [`INST_COUNT - 1: 0];
+wire                flag_src_addr_rst_on_cmd        [`INST_COUNT - 1: 0];
+wire                flag_src_addr_inc               [`INST_COUNT - 1: 0];
+wire                flag_src_addr_dec               [`INST_COUNT - 1: 0];
 
 //Submodules
 //Asynchronous Logic
@@ -479,6 +494,21 @@ for (g = 0; g < `SOURCE_COUNT; g = g + 1) begin
 end
 endgenerate
 
+genvar h;
+generate
+for (h = 0; h < `INST_COUNT; h = h + 1) begin
+  assign  flag_egress_bond[h]          = cmd_flags[h][`CMD_EGRESS_BOND];
+  assign  flag_ingress_bond[h]         = cmd_flags[h][`CMD_INGRESS_BOND];
+  assign  flag_dest_addr_rst_on_cmd[h] = cmd_flags[h][`CMD_DEST_ADDR_RST_ON_CMD];
+  assign  flag_dest_data_quantum[h]    = cmd_flags[h][`CMD_DEST_DATA_QUANTUM];
+  assign  flag_dest_addr_inc[h]        = cmd_flags[h][`CMD_DEST_ADDR_INC];
+  assign  flag_dest_addr_dec[h]        = cmd_flags[h][`CMD_DEST_ADDR_DEC];
+  assign  flag_src_addr_rst_on_cmd[h]  = cmd_flags[h][`CMD_SRC_ADDR_RST_ON_CMD];
+  assign  flag_src_addr_inc[h]         = cmd_flags[h][`CMD_SRC_INC];
+  assign  flag_src_addr_dec[h]         = cmd_flags[h][`CMD_SRC_DEC];
+  assign  bond_addr                    = cmd_flags[h][`CMD_BOND_ADDR_TOP:CMD_BOND_ADDR_BOT];
+end
+endgenerate
 
 //Synchronous Logic
 integer i;
@@ -487,10 +517,10 @@ integer i;
 always @ (posedge clk) begin
   if (rst) begin
     for (i = 0; i < `INST_COUNT; i = i + 1) begin
-      inst_ready[i]           <=  0;
+      inst_src_empty[i]       <=  0;
+      inst_snk_full[i]        <=  0;
+      inst_wait[i]            <=  0;
       inst_busy[i]            <=  0;
-      inst_idle[i]            <=  0;
-      inst_finished[i]        <=  0;
     end
     for (i = 0; i < `SOURCE_COUNT; i = i + 1) begin
       src_dma_finished[i]     <=  0;
@@ -520,7 +550,7 @@ always @ (posedge clk) begin
       case (state[i])
         IDLE: begin
           if (dma_enable[i]) begin
-            state[i]                    <= SETUP;
+            state[i]                    <= SETUP_CHANNEL;
             ip[i]                       <= src_control[i][`CTRL_IP_ADDR_TOP:`CTRL_IP_ADDR_BOT];
             snka[i]                     <= src_control[i][`CTRL_SINK_ADDR_TOP:`CTRL_SINK_ADDR_BOT];
           end
@@ -536,24 +566,73 @@ always @ (posedge clk) begin
             end
           end
         end
-        SETUP: begin
-          //The command from the memory should be set from the 'instruction pointer' now we can make a decision
+        SETUP_CHANNEL: begin
+          //Setup only one time
           curr_src_address[i]           <=  cmd_src_address[ip[i]];   //  Mutable, Copy to channel specific value
           curr_dest_address[i]          <=  cmd_dest_address[ip[i]];  //  Mutable, Copy to channel specific value
-          curr_count[i]                 <=  cmd_count[ip[i]];         //  Mutable, Copy to channel specific value
+
+          //Initial Flag Configuration
+          inst_src_empty[ip[i]]         <=  1;
+          inst_snk_full[ip[i]]          <=  0;
+
+          state[i]                      <=  SETUP_COMMAND;
+        end
+        SETUP_COMMAND: begin
+          //The command from the memory should be set from the 'instruction pointer' now we can make a decision
+          if (flag_dest_addr_rst_on_cmd[ip[i]]) begin
+            //Reset the address when processing a new command
+            curr_dest_address[i]        <=  cmd_dest_address[ip[i]];
+          end
+          if (flag_src_addr_rst_on_cmd[ip[i]]) begin
+            curr_src_address[i]         <=  cmd_src_address[ip[i]];
+          end
+          curr_count[i]                 <=  cmd_count[ip[i]];
           channel_count[i]              <=  0;
-          state[i]                      <=  ACTIVE;
+
+          inst_busy[ip[i]]              <=  0;
+          //Bonded to another Instruction/Channel
+          if (flag_egress_bond[i]) begin
+            inst_wait[ip[i]]            <=  1;
+            state[i]                    <=  EGRESS_WAIT;
+          end
+          else if (flag_ingress_bond[i]) begin
+            inst_wait[ip[i]]            <=  1;
+            state[i]                    <=  INGRESS_WAIT;
+          end
+          else begin
+            inst_wait[ip[i]]            <=  0;
+            state[i]                    <=  ACTIVE;
+          end
         end
 
+        EGRESS_WAIT: begin
+          inst_wait[ip[i]]              <=  1;
+          //Egress waits for the remote channel to be full
+          if (inst_snk_full[bond_addr]) begin
+            //Reset the other full so we don't make a decision from of it later on
+            inst_snk_full[bond_addr]    <=  0;
+            state[i]                    <=  ACTIVE;
+          end
+        end
         INGRESS_WAIT: begin
+          inst_wait[ip[i]]              <=  1;
+          //Ingress waits for the remote channel to be empty
+          if (inst_src_empty[bond_addr]) begin
+            //Reset the other empty so we don't make a decision from of it later on
+            inst_src_empty[bond_addr]   <=  0;
+            state[i]                    <=  ACTIVE;
+          end
         end
-
         ACTIVE: begin
+          inst_wait[ip[i]]                    <=  0;
+          inst_busy[ip[i]]                    <=  0;
+          inst_snk_full[ip[i]]                <=  0;
+          inst_src_empty[ip[i]]               <=  0;
           if (dma_enable[i]) begin
             //Activate the source FIFO
             if (!src_activate[i] && src_ready[i]) begin
-              src_count[i]              <=  0;
-              src_activate[i]           <=  1;
+              src_count[i]                    <=  0;
+              src_activate[i]                 <=  1;
             end
             //Activate the sink FIFO
             if ((snk_activate[snka[i]] == 0) && (snk_ready[snka[i]] > 0)) begin
@@ -573,19 +652,52 @@ always @ (posedge clk) begin
               src_strobe[i]                   <=  1;
               snk_count[snka[i]]              <=  snk_count[snka[i]] + 1;
               src_count[i]                    <=  src_count[i] + 1;
+              channel_count[i]                <=  channel_count[i] + 1;
+
+              //Increment or decrement the addresses
+              if (flag_src_addr_inc) begin
+                curr_src_address              <=  curr_src_address + 4;
+              end
+              else if (flag_src_addr_dec) begin
+                curr_src_address              <=  curr_src_address - 4;
+              end
+              if (flag_dest_addr_inc) begin
+                curr_dest_address             <=  curr_dest_address + 4;
+              end
+              else if (flag_dest_addr_dec) begin
+                curr_dest_address             <=  curr_dest_address - 4;
+              end
+
             end
             else begin
               if (src_activate[i] && (src_count[i] >= src_size[i])) begin
                 src_activate[i]               <=  0;
+                
               end
               if (snk_activate[snka[i]] && (snk_count[snka[i]] >= snk_size[snka[i]])) begin
                 snk_activate[snka[i]]         <=  0;
               end
             end
+            //Reached the end of an instruction
+            if (channel_count[i] >= curr_count[i]) begin
+              state                           <=  END_COMMAND;
+            end
           end
           else begin
             state[i]                          <=  FLUSH;
           end
+        end
+        END_COMMAND: begin
+          if (!flag_dest_data_quantum[i] && (snk_count[snka[i]] > 0)) begin
+            snk_activate[snka[i]]             <=  0;
+          end
+
+          inst_busy[ip[i]]                    <=  0;
+          inst_src_empty[ip[i]]               <=  1;
+          inst_snk_full[ip[i]]                <=  1;
+          ip[i]                               <=  cmd_next[i];
+          state                               <=  SETUP_COMMAND;
+
         end
         FLUSH: begin
           if (src_activate[i] && (src_count[i] < src_size[i]))begin

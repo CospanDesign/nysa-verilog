@@ -21,9 +21,13 @@
 //Command Bits
 
 //When Set, resets the address to the address in the instruction, otherwise the address is not changed
-`define CMD_EGRESS_CHANNEL_BOND   7
-`define CMD_INGRESS_CHANNEL_BOND  6
-`define CMD_DEST_ADDR_RST_ON_CMD  5
+`define CMD_BOND_ADDR_TOP         15
+`define CMD_BOND_ADDR_BOT         13
+
+`define CMD_EGRESS_BOND           8
+`define CMD_INGRESS_BOND          7
+`define CMD_DEST_ADDR_RST_ON_CMD  6
+`define CMD_DEST_DATA_QUANTUM     5
 `define CMD_DEST_ADDR_INC         4
 `define CMD_DEST_ADDR_DEC         3
 `define CMD_SRC_ADDR_RST_ON_CMD   2
