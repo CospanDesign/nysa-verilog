@@ -215,6 +215,11 @@ localparam          FINISHED              = 4'h4;
 wire        [31:0]  src_control         [3:0];
 wire        [31:0]  src_status          [3:0];
 
+reg                 inst_ready          [`INST_COUNT - 1:0];
+reg                 inst_busy           [`INST_COUNT - 1:0];
+reg                 inst_finished       [`INST_COUNT - 1:0];
+reg                 inst_idle           [`INST_COUNT - 1:0];
+
 wire        [31:0]  snk_control         [3:0];
 wire        [31:0]  snk_status          [3:0];
 
@@ -467,7 +472,6 @@ assign cmd_next[7]            = cmd_next7;
 
 
 
-
 genvar g;
 generate
 for (g = 0; g < `SOURCE_COUNT; g = g + 1) begin
@@ -476,14 +480,18 @@ end
 endgenerate
 
 
-
-
 //Synchronous Logic
 integer i;
 
 //Source Controllers
 always @ (posedge clk) begin
   if (rst) begin
+    for (i = 0; i < `INST_COUNT; i = i + 1) begin
+      inst_ready[i]           <=  0;
+      inst_busy[i]            <=  0;
+      inst_idle[i]            <=  0;
+      inst_finished[i]        <=  0;
+    end
     for (i = 0; i < `SOURCE_COUNT; i = i + 1) begin
       src_dma_finished[i]     <=  0;
       state[i]                <=  IDLE;
@@ -492,6 +500,7 @@ always @ (posedge clk) begin
       src_activate[i]         <=  0;
       ip[i]                   <=  0;
       snka[i]                 <=  0;
+
     end
     for (i = 0; i < `SINK_COUNT; i = i + 1) begin
       snk_address[i]          <=  0;
@@ -536,9 +545,7 @@ always @ (posedge clk) begin
           state[i]                      <=  ACTIVE;
         end
 
-        CHANNEL_SNK_WAIT: begin
-        end
-        CHANNEL_SRC_WAIT: begin
+        INGRESS_WAIT: begin
         end
 
         ACTIVE: begin
