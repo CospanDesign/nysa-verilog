@@ -44,9 +44,10 @@ reg     [ADDRESS_WIDTH - 1:0]           mem_addr_out;
 reg     [23:0]                          local_write_count;
 reg     [23:0]                          mem_write_count;
 wire                                    mem_write_overflow;
-reg     [23:0]                          local_read_count;
+reg     [23:0]                          local_read_size;
 reg     [23:0]                          mem_read_count;
 reg                                     mem_read_strobe;
+reg                                     mem_write_strobe;
 
 reg                                     prev_write_enable;
 wire                                    posedge_write_enable;
@@ -81,7 +82,7 @@ blk_mem #(
     .INC_NUM_PATTERN    (1              )
 ) mem (
     .clka               (clk            ),
-    .wea                (               ),
+    .wea                (mem_write_strobe ),
     .dina               (f2m_data       ),
     .addra              (mem_addr_in    ),
 
@@ -154,8 +155,8 @@ assign  posedge_read_enable         =   !prev_read_enable   && read_enable;
 assign  mem_write_overflow          =   (mem_write_count    >  local_write_count);
 assign  write_finished              =   (mem_write_count    >= local_write_count);
 
-assign  mem_read_overflow           =   (mem_read_count     >  local_read_count);
-assign  read_finished               =   (mem_read_count     >= local_read_count);
+assign  mem_read_overflow           =   (mem_read_count     >  local_read_size);
+assign  read_finished               =   (mem_read_count     >= local_read_size);
 
 always @ (*) begin
   if (rst) begin
@@ -209,25 +210,29 @@ always @ (posedge clk) begin
     prev_read_enable                <=  0;
 
     local_write_count               <=  0;
-    local_read_count                <=  0;
+    local_read_size                 <=  0;
     mem_write_count                 <=  0;
     mem_read_count                  <=  0;
     mem_read_strobe                 <=  0;
+    mem_write_strobe                <=  0;
   end
   else begin
     //Strobes
     f2m_strobe                      <=  0;
     m2f_strobe                      <=  0;
     mem_read_strobe                 <=  0;
+    mem_write_strobe                <=  0;
 
     //Store Memory Address
     if (posedge_write_enable) begin
         mem_addr_in                 <=  write_addr[ADDRESS_WIDTH - 1: 0];
         local_write_count           <=  write_count;
+        mem_write_count             <=  0;
     end
     if (posedge_read_enable) begin
         mem_addr_out                <=  read_addr[ADDRESS_WIDTH - 1: 0];
-        local_read_count            <=  read_count;
+        local_read_size             <=  read_count;
+        mem_read_count              <=  0;
     end
 
     //If available get a peice of the FIFO that I can write data to the memory
@@ -247,33 +252,29 @@ always @ (posedge clk) begin
       end
     end
 
-    if (m2f_strobe) begin
-      f2m_strobe                    <=  1;
-    end
-
-    if (f2m_strobe) begin
+    if (mem_read_strobe) begin
       if (read_addr_inc) begin
-        mem_addr_in                 <=  mem_addr_in + 1;
+        mem_addr_out                <=  mem_addr_out + 1;
       end
       else if (read_addr_dec) begin
-        mem_addr_in                 <=  mem_addr_in - 1;
+        mem_addr_out                <=  mem_addr_out - 1;
       end
-    end
-    if (mem_read_strobe) begin
-      f2m_strobe                    <=   1;
-      f2m_count                     <=  f2m_count + 1;
+      m2f_strobe                    <=   1;
+      m2f_count                     <=  m2f_count + 1;
     end
 
+    if (mem_write_strobe) begin
+      f2m_strobe                    <=  1;
+    end
     if (write_enable) begin
       if (f2m_activate && (f2m_count < f2m_size)) begin
-
-        mem_read_strobe             <=  1;
+        mem_write_strobe            <=  1;
         f2m_count                   <=  f2m_count + 1;
         if (write_addr_inc) begin
-          mem_addr_out              <=  mem_addr_out + 1;
+          mem_addr_in               <=  mem_addr_in + 1;
         end
         else if (write_addr_dec) begin
-          mem_addr_out              <=  mem_addr_out - 1;
+          mem_addr_in               <=  mem_addr_in - 1;
         end
       end
       else begin
@@ -282,16 +283,21 @@ always @ (posedge clk) begin
     end
 
 
-    if (read_count < local_read_count) begin
+    if (mem_read_count < local_read_size) begin
       if (read_enable) begin
         if ((m2f_activate  > 0) && (m2f_count < m2f_size)) begin
-          m2f_strobe                  <=  1;
-          m2f_count                   <=  m2f_count + 1;
+          mem_read_strobe             <=  1;
+          mem_read_count              <=  mem_read_count + 1;
         end
         else begin
-          m2f_activate  <=  0;
+          if (!m2f_strobe) begin
+            m2f_activate  <=  0;
+          end
         end
       end
+    end
+    else if ((m2f_activate  > 0) && (m2f_count > 0) && (!m2f_strobe)) begin
+      m2f_activate      <=  0;
     end
 
     prev_write_enable  <=  write_enable;

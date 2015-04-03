@@ -7,25 +7,25 @@ module dma (
   input               rst,
   input               enable,
 
-  input       [31:0]  src0_control,
-  input       [31:0]  src1_control,
-  input       [31:0]  src2_control,
-  input       [31:0]  src3_control,
+  input       [31:0]  i_src0_control,
+  input       [31:0]  i_src1_control,
+  input       [31:0]  i_src2_control,
+  input       [31:0]  i_src3_control,
 
-  output tri0 [31:0]  src0_status,
-  output tri0 [31:0]  src1_status,
-  output tri0 [31:0]  src2_status,
-  output tri0 [31:0]  src3_status,
+  output tri0 [31:0]  o_src0_status,
+  output tri0 [31:0]  o_src1_status,
+  output tri0 [31:0]  o_src2_status,
+  output tri0 [31:0]  o_src3_status,
 
-  input       [31:0]  snk0_control,
-  input       [31:0]  snk1_control,
-  input       [31:0]  snk2_control,
-  input       [31:0]  snk3_control,
+  input       [31:0]  i_snk0_control,
+  input       [31:0]  i_snk1_control,
+  input       [31:0]  i_snk2_control,
+  input       [31:0]  i_snk3_control,
 
-  output      [31:0]  snk0_status,
-  output      [31:0]  snk1_status,
-  output      [31:0]  snk2_status,
-  output      [31:0]  snk3_status,
+  output tri0 [31:0]  o_snk0_status,
+  output tri0 [31:0]  o_snk1_status,
+  output tri0 [31:0]  o_snk2_status,
+  output tri0 [31:0]  o_snk3_status,
 
   //Source 0
   output              o_src0_enable,
@@ -215,7 +215,6 @@ localparam          FINISHED              = 4'h8;
 
 //Registers/Wires
 wire        [31:0]  src_control         [3:0];
-wire        [31:0]  src_status          [3:0];
 
 reg                 inst_ready          [`INST_COUNT - 1:0];
 reg                 inst_snk_full       [`INST_COUNT - 1:0];
@@ -223,9 +222,13 @@ reg                 inst_busy           [`INST_COUNT - 1:0];
 reg                 inst_wait           [`INST_COUNT - 1:0];
 
 wire        [31:0]  snk_control         [3:0];
-wire        [31:0]  snk_status          [3:0];
+tri0        [31:0]  snk_status          [3:0];
 
 reg         [3:0]   state               [3:0];
+wire        [3:0]   state0;
+wire        [3:0]   state1;
+wire        [3:0]   state2;
+wire        [3:0]   state3;
 
 reg                 src_enable          [3:0];
 reg         [63:0]  src_address         [3:0];
@@ -234,6 +237,7 @@ wire                src_addr_dec        [3:0];
 reg         [23:0]  src_count           [3:0];
 wire                src_start           [3:0];
 reg                 src_dma_finished    [3:0];
+reg                 src_err_conflict_sink[3:0];
 wire                src_busy            [3:0];
 
 reg                 src_strobe          [3:0];
@@ -280,14 +284,38 @@ wire        [2:0]   cmd_next            [7:0];
 
 //Instruction Pointer into the ROM
 reg         [2:0]   ip [3:0];
+wire        [2:0]   ip0;
+wire        [2:0]   ip1;
+wire        [2:0]   ip2;
+wire        [2:0]   ip3;
 
 //Dynamic Command Values
 reg         [63:0]  curr_src_address    [3:0];
 reg         [63:0]  curr_dest_address   [3:0];
 reg         [31:0]  curr_count          [3:0];
+wire        [31:0]  curr_count0;
+wire        [31:0]  curr_count1;
+wire        [31:0]  curr_count2;
+wire        [31:0]  curr_count3;
+
 reg         [31:0]  channel_count       [3:0];
+wire        [31:0]  channel_count0;
+wire        [31:0]  channel_count1;
+wire        [31:0]  channel_count2;
+wire        [31:0]  channel_count3;
+
 reg         [1:0]   snka                [3:0];
-reg                 snk_in_use          [1:0];
+wire        [1:0]   snka0;
+wire        [1:0]   snka1;
+wire        [1:0]   snka2;
+wire        [1:0]   snka3;
+
+reg                 snk_in_use          [3:0];
+wire                snk_in_use0;
+wire                snk_in_use1;
+wire                snk_in_use2;
+wire                snk_in_use3;
+
 wire        [1:0]   channel_sink        [3:0];
 
 reg         [31:0]  data_out;
@@ -311,11 +339,6 @@ assign src_control[1]                      = i_src1_control;
 assign src_control[2]                      = i_src2_control;
 assign src_control[3]                      = i_src3_control;
 
-assign o_src0_status                       = src_status[0];
-assign o_src1_status                       = src_status[1];
-assign o_src2_status                       = src_status[2];
-assign o_src3_status                       = src_status[3];
-
 assign snk_control[0]                      = i_snk0_control;
 assign snk_control[1]                      = i_snk1_control;
 assign snk_control[2]                      = i_snk2_control;
@@ -330,11 +353,6 @@ assign o_src0_finished                     = src_dma_finished[0];
 assign o_src1_finished                     = src_dma_finished[1];
 assign o_src2_finished                     = src_dma_finished[2];
 assign o_src3_finished                     = src_dma_finished[3];
-
-assign o_src0_busy                         = src_busy[0];
-assign o_src1_busy                         = src_busy[1];
-assign o_src2_busy                         = src_busy[2];
-assign o_src3_busy                         = src_busy[3];
 
 assign o_src0_strobe                       = src_strobe[0];
 assign o_src1_strobe                       = src_strobe[1];
@@ -411,16 +429,16 @@ assign o_snk1_data                         = snk_data[1];
 assign o_snk2_data                         = snk_data[2];
 assign o_snk3_data                         = snk_data[3];
 
-assign dma_enable[0]                       = src0_control[`CTRL_DMA_ENABLE];
-assign dma_enable[1]                       = src1_control[`CTRL_DMA_ENABLE];
-assign dma_enable[2]                       = src2_control[`CTRL_DMA_ENABLE];
-assign dma_enable[3]                       = src3_control[`CTRL_DMA_ENABLE];
+assign dma_enable[0]                       = i_src0_control[`CTRL_DMA_ENABLE];
+assign dma_enable[1]                       = i_src1_control[`CTRL_DMA_ENABLE];
+assign dma_enable[2]                       = i_src2_control[`CTRL_DMA_ENABLE];
+assign dma_enable[3]                       = i_src3_control[`CTRL_DMA_ENABLE];
 
 //SINK IS Different than SOURCE the indirection is more complicated
-assign o_snk0_write_enable                  = snk_enable[0]; //!
-assign o_snk1_write_enable                  = snk_enable[1]; //!
-assign o_snk2_write_enable                  = snk_enable[2]; //!
-assign o_snk3_write_enable                  = snk_enable[3]; //!
+assign o_snk0_write_enable                  = snk_enable[0];
+assign o_snk1_write_enable                  = snk_enable[1];
+assign o_snk2_write_enable                  = snk_enable[2];
+assign o_snk3_write_enable                  = snk_enable[3];
 
 assign o_snk0_write_addr                    = snk_address[0];
 assign o_snk1_write_addr                    = snk_address[1];
@@ -437,10 +455,10 @@ assign o_snk1_write_addr_dec                = snk_addr_dec[1];
 assign o_snk2_write_addr_dec                = snk_addr_dec[2];
 assign o_snk3_write_addr_dec                = snk_addr_dec[3];
 
-assign o_snk0_write_busy                    = snk_busy[0]; //!
-assign o_snk1_write_busy                    = snk_busy[1]; //!
-assign o_snk2_write_busy                    = snk_busy[2]; //!
-assign o_snk3_write_busy                    = snk_busy[3]; //!
+assign o_snk0_write_busy                    = snk_busy[0];
+assign o_snk1_write_busy                    = snk_busy[1];
+assign o_snk2_write_busy                    = snk_busy[2];
+assign o_snk3_write_busy                    = snk_busy[3];
 
 assign o_snk0_write_count                   = snk_data_count[0];
 assign o_snk1_write_count                   = snk_data_count[1];
@@ -451,25 +469,25 @@ assign o_snk3_write_count                   = snk_data_count[3];
 
 
 //Status Output
-assign src0_status[`STS_BUSY]              = src_dma_busy[0];
-assign src1_status[`STS_BUSY]              = src_dma_busy[1];
-assign src2_status[`STS_BUSY]              = src_dma_busy[2];
-assign src3_status[`STS_BUSY]              = src_dma_busy[3];
+assign o_src0_status[`STS_BUSY]              = src_dma_busy[0];
+assign o_src1_status[`STS_BUSY]              = src_dma_busy[1];
+assign o_src2_status[`STS_BUSY]              = src_dma_busy[2];
+assign o_src3_status[`STS_BUSY]              = src_dma_busy[3];
 
-assign src0_status[`STS_FIN]               = src_dma_finished[0];
-assign src1_status[`STS_FIN]               = src_dma_finished[1];
-assign src2_status[`STS_FIN]               = src_dma_finished[2];
-assign src3_status[`STS_FIN]               = src_dma_finished[3];
+assign o_src0_status[`STS_FIN]               = src_dma_finished[0];
+assign o_src1_status[`STS_FIN]               = src_dma_finished[1];
+assign o_src2_status[`STS_FIN]               = src_dma_finished[2];
+assign o_src3_status[`STS_FIN]               = src_dma_finished[3];
 
-assign src0_status[`STS_ERR_CONFLICT_SINK] = src_err_conflict_sink[0];
-assign src1_status[`STS_ERR_CONFLICT_SINK] = src_err_conflict_sink[1];
-assign src2_status[`STS_ERR_CONFLICT_SINK] = src_err_conflict_sink[2];
-assign src3_status[`STS_ERR_CONFLICT_SINK] = src_err_conflict_sink[3];
+assign o_src0_status[`STS_ERR_CONFLICT_SINK] = src_err_conflict_sink[0];
+assign o_src1_status[`STS_ERR_CONFLICT_SINK] = src_err_conflict_sink[1];
+assign o_src2_status[`STS_ERR_CONFLICT_SINK] = src_err_conflict_sink[2];
+assign o_src3_status[`STS_ERR_CONFLICT_SINK] = src_err_conflict_sink[3];
 
-assign src0_status[`CTRL_DMA_ENABLE]       = dma_enable[0];
-assign src1_status[`CTRL_DMA_ENABLE]       = dma_enable[1];
-assign src2_status[`CTRL_DMA_ENABLE]       = dma_enable[2];
-assign src3_status[`CTRL_DMA_ENABLE]       = dma_enable[3];
+assign o_src0_status[`CTRL_DMA_ENABLE]       = dma_enable[0];
+assign o_src1_status[`CTRL_DMA_ENABLE]       = dma_enable[1];
+assign o_src2_status[`CTRL_DMA_ENABLE]       = dma_enable[2];
+assign o_src3_status[`CTRL_DMA_ENABLE]       = dma_enable[3];
 
 //Put all the commands into the program memory block
 assign cmd_src_address[0]     = cmd_src_address0;
@@ -536,10 +554,41 @@ assign cmd_cross_src_port[7]  = cmd_cross_src_port7;
 assign cmd_cross_dest_port[7] = cmd_cross_dest_port7;
 assign cmd_next[7]            = cmd_next7;
 
+//Stuff for debug (GTKWave Connot view arrays)
+assign state0                 = state[0];
+assign state1                 = state[1];
+assign state2                 = state[2];
+assign state3                 = state[3];
+
+assign ip0                    = ip[0];
+assign ip1                    = ip[1];
+assign ip2                    = ip[2];
+assign ip3                    = ip[3];
+
+assign snka0                  = snka[0];
+assign snka1                  = snka[1];
+assign snka2                  = snka[2];
+assign snka3                  = snka[3];
+
+assign channel_count0         = channel_count[0];
+assign channel_count1         = channel_count[1];
+assign channel_count2         = channel_count[2];
+assign channel_count3         = channel_count[3];
+
+assign curr_count0            = curr_count[0];
+assign curr_count1            = curr_count[1];
+assign curr_count2            = curr_count[2];
+assign curr_count3            = curr_count[3];
+
+assign snk_in_use0            = snk_in_use[0];
+assign snk_in_use1            = snk_in_use[1];
+assign snk_in_use2            = snk_in_use[2];
+assign snk_in_use3            = snk_in_use[3];
+
 genvar g;
 generate
 for (g = 0; g < `SOURCE_COUNT; g = g + 1) begin
-  assign src_busy[g]            = (state[g] != IDLE);
+  assign src_dma_busy[g]                = (state[g] != IDLE);
 end
 endgenerate
 
@@ -576,28 +625,33 @@ always @ (posedge clk) begin
       state[i]                               <= IDLE;
       src_address[i]                         <= 0;
       src_dma_finished[i]                    <= 0;
+      src_err_conflict_sink[i]               <= 0;
       src_count[i]                           <= 0;
       src_strobe[i]                          <= 0;
       src_activate[i]                        <= 0;
       ip[i]                                  <= 0;
       snka[i]                                <= 0;
+      curr_count[i]                          <= 0;
+      channel_count[i]                       <= 0;
 
     end
     for (i = 0; i < `SINK_COUNT; i = i + 1) begin
       snk_address[i]                         <=  0;
+      snk_strobe[i]                          <=  0;
       snk_busy[i]                            <=  0;
       snk_count[i]                           <=  0;
       snk_activate[i]                        <=  0;
       snk_in_use[i]                          <=  0;
       snk_enable[i]                          <=  0;
+      snk_addr_inc[i]                        <=  0;
+      snk_addr_dec[i]                        <=  0;
     end
   end
   else begin
     for (i = 0; i < `SOURCE_COUNT; i = i + 1) begin
       src_enable[i]                          <=  0;
-      snk_enable[i]                          <=  0;
       src_strobe[i]                          <=  0;
-      snk_strobe[i]                          <=  0;
+      snk_strobe[snka[i]]                    <=  0;
       snk_in_use[snka[i]]                    <=  dma_enable[i];
 
       case (state[i])
@@ -609,6 +663,8 @@ always @ (posedge clk) begin
           end
           //Flush Anything within the sink FIFO
           if (!snk_in_use[i]) begin
+            snk_strobe[i]                     <= 0;
+            snk_enable[i]                     <= 0;
             if (snk_activate[i] && (snk_count[i] < snk_size[i])) begin
               snk_strobe[i]                   <= 1;
               snk_data[i]                     <= 0;
@@ -629,6 +685,7 @@ always @ (posedge clk) begin
           //Setup only one time
           curr_src_address[i]                 <= cmd_src_address[ip[i]];   //  Mutable, Copy to channel specific value
           curr_dest_address[i]                <= cmd_dest_address[ip[i]];  //  Mutable, Copy to channel specific value
+          snk_address[snka[i]]                <= cmd_dest_address[ip[i]];
 
           //Initial Flag Configuration
           inst_ready[ip[i]]                   <= 1;
@@ -686,6 +743,7 @@ always @ (posedge clk) begin
           end
         end
         ACTIVE: begin
+          src_address[i]                      <= curr_src_address[ip[i]];
           src_enable[i]                       <= 1;
 
           snk_enable[snka[i]]                 <= 1;
@@ -699,9 +757,11 @@ always @ (posedge clk) begin
             if (!src_activate[i] && src_ready[i]) begin
               src_count[i]                    <= 0;
               src_activate[i]                 <= 1;
+              $display("Source Activate!");
             end
             //Activate the sink FIFO
             if ((snk_activate[snka[i]] == 0) && (snk_ready[snka[i]] > 0)) begin
+              $display("Sink Activate!");
               snk_count[snka[i]]              <= 0;
               if (snk_ready[snka[i]][0]) begin
                 snk_activate[snka[i]][0]      <= 1;
@@ -712,12 +772,16 @@ always @ (posedge clk) begin
             end
 
             //Both the Source and Sink FIFOs are ready
-            if ((src_activate[i] && snk_activate[snka[i]]) && (snk_count[snka[i]] > 0) && (src_count[i]))begin
+            if ((src_activate[i] && (snk_activate[snka[i]] > 0)) && 
+                (snk_count[snka[i]] < snk_size[snka[i]]) && 
+                (src_count[i] < src_size[i]))begin
+
               snk_data[snka[i]]               <= src_data[i];
-              snk_strobe[snka[i]]             <= 1;
               src_strobe[i]                   <= 1;
-              snk_count[snka[i]]              <= snk_count[snka[i]] + 1;
               src_count[i]                    <= src_count[i] + 1;
+
+              snk_strobe[snka[i]]             <= 1;
+              snk_count[snka[i]]              <= snk_count[snka[i]] + 1;
               channel_count[i]                <= channel_count[i] + 1;
 
               //Increment or decrement the addresses

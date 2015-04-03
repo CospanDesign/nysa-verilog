@@ -4,26 +4,24 @@
 #Ping
 00000000:00000000:12345678:FEDCBA98
 
-#Write one peice of data to the peripheral device 1, address 0, data 1
-00000000:00000001:01000000:00000001
-
-#Write three peices of data to the peripheral device 1, address 1, data A, B, C
-00000003:00000001:01000001:0000000A
-0000000B
-0000000C
-0000000D
-
-#Read one peice of data from peripheal 1 address 0
-00000000:00000002:01000000:00000000
-
-#Read two peices of data from peripheral 1 address 1 (Data is a filler)
-00000000:00000002:01000001:00000000
-
 #Read all the data
-0000000C:00000002:01000000:00000000
+00000096:00000002:01000000:00000000
+
+#Configure Instruction 0
+00000006:00000001:01000020:00000000
+00000000
+55555555
+AAAAAAAA
+00000010
+00000002
+
+
+#Configure Source 0
+00000001:00000001:01000004:00000011
+
 
 #Sleep
-00000008
+00000100
 
 #Read one (1 and 0 are the same for data count) from peripheral 1 address 0
 00000001:00000002:01000000:00000000

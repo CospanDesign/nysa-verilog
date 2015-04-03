@@ -10,7 +10,7 @@ from string import Template
 SITE_PATH = os.path.join(site.getuserbase(), "nysa")
 PATHS_PATH = os.path.join(SITE_PATH, "paths.json")
 
-verilog_builder = Builder ( action = 'iverilog -o$TARGET -c$SOURCE',
+verilog_builder = Builder ( action = 'iverilog -o$TARGET -c$SOURCE -DSIMULATION',
                             suffix = '.sim')
 sim_builder = Builder     ( action = 'vvp -n $SOURCE', suffix='.vcd')
 wave_builder = Builder    ( action = 'gtkwave design.vcd &')

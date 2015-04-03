@@ -5,18 +5,17 @@
 // Generate statements to procedurally generate the number of ports
 `define SOURCE_COUNT              4
 `define SINK_COUNT                4
-`define WB_MASTER_COUNT           1
 `define INST_COUNT                8
 
-`define CTRL_DMA_ENABLE           6
+`define CTRL_DMA_ENABLE           0
 
 //Bit locations for the sink address location
-`define CTRL_SINK_ADDR_TOP        1
-`define CTRL_SINK_ADDR_BOT        0
+`define CTRL_SINK_ADDR_TOP        5
+`define CTRL_SINK_ADDR_BOT        4
 
 //Bit location for the instruction pointers
-`define CTRL_IP_ADDR_TOP          7
-`define CTRL_IP_ADDR_BOT          4
+`define CTRL_IP_ADDR_TOP          10
+`define CTRL_IP_ADDR_BOT          8
 
 //Command Bits
 
@@ -35,8 +34,8 @@
 `define CMD_SRC_ADDR_DEC          0
 
 //Status Bits
-`define STS_ERR_CONFLICT_SINK     2
-`define STS_FIN                   1
-`define STS_BUSY                  0
+`define STS_ERR_CONFLICT_SINK     3
+`define STS_FIN                   2
+`define STS_BUSY                  1
 
 `endif
