@@ -12,8 +12,9 @@
 `timescale 1ns/1ps
 
 module blk_mem #(
-  parameter DATA_WIDTH    = 8,
-  parameter ADDRESS_WIDTH = 4
+  parameter DATA_WIDTH      = 8,
+  parameter ADDRESS_WIDTH   = 4,
+  parameter INC_NUM_PATTERN = 0
 )(
   input                             clka,
   input                             wea,
@@ -36,12 +37,17 @@ assign doutb = dout;
 //Synchronous Logic
 //write only on the A side
 `ifdef SIMULATION
-//Only initialize in simulation... somthing gets fucked when you try and do it on an FPGA
 integer i;
 initial begin
   i = 0;
   for (i = 0; i < (2 ** ADDRESS_WIDTH); i = i + 1) begin
-    mem[i]  <=  0;
+    if (INC_NUM_PATTERN) begin
+        mem[i]  <=  i;
+    end
+    else begin
+        //Zero Everything Out
+        mem[i]  <=  0;
+    end
   end
 end
 `endif

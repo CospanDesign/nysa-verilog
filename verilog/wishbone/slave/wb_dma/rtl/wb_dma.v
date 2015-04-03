@@ -67,8 +67,7 @@ SOFTWARE.
 
 
 module wb_dma #(
-  parameter START_ENABLED       = 1,
-  parameter WISHBONE_BUS_COUNT  = 1
+  parameter START_ENABLED       = 1
 )(
   input               clk,
   input               rst,
@@ -86,107 +85,114 @@ module wb_dma #(
   input       [31:0]  i_wbs_adr,
 
   //Source 0
-  input       [31:0]  i_src0_address,
-  input               i_src0_start,
-  output              o_src0_finished,
-  output              o_src0_busy,
+  output              o_src0_enable,
+  output      [63:0]  o_src0_address,
+  output      [23:0]  o_src0_count,
+  output              o_src0_addr_inc,
+  output              o_src0_addr_dec,
 
   output              o_src0_if_strobe,
-  output      [31:0]  i_src0_if_data,
+  input       [31:0]  i_src0_if_data,
   input               i_src0_if_ready,
   output              o_src0_if_activate,
   input       [23:0]  i_src0_if_size,
-  input               i_src0_if_starved,
 
   //Source 1
-  input       [31:0]  i_src1_address,
-  input               i_src1_start,
-  output              o_src1_finished,
-  output              o_src1_busy,
+  output              o_src1_enable,
+  output      [63:0]  o_src1_address,
+  output      [23:0]  o_src1_count,
+  output              o_src1_addr_inc,
+  output              o_src1_addr_dec,
 
   output              o_src1_if_strobe,
-  output      [31:0]  i_src1_if_data,
+  input       [31:0]  i_src1_if_data,
   input               i_src1_if_ready,
   output              o_src1_if_activate,
   input       [23:0]  i_src1_if_size,
-  input               i_src1_if_starved,
 
   //Source 2
-  input       [31:0]  i_src2_address,
-  input               i_src2_start,
-  output              o_src2_finished,
-  output              o_src2_busy,
+  output              o_src2_enable,
+  output      [63:0]  o_src2_address,
+  output      [23:0]  o_src2_count,
+  output              o_src2_addr_inc,
+  output              o_src2_addr_dec,
 
   output              o_src2_if_strobe,
-  output      [31:0]  i_src2_if_data,
+  input       [31:0]  i_src2_if_data,
   input               i_src2_if_ready,
   output              o_src2_if_activate,
   input       [23:0]  i_src2_if_size,
-  input               i_src2_if_starved,
 
   //Source 3
-  input       [31:0]  i_src3_address,
-  input               i_src3_start,
-  output              o_src3_finished,
-  output              o_src3_busy,
+  output              o_src3_enable,
+  output      [63:0]  o_src3_address,
+  output      [23:0]  o_src3_count,
+  output              o_src3_addr_inc,
+  output              o_src3_addr_dec,
 
   output              o_src3_if_strobe,
-  output      [31:0]  i_src3_if_data,
+  input       [31:0]  i_src3_if_data,
   input               i_src3_if_ready,
   output              o_src3_if_activate,
   input       [23:0]  i_src3_if_size,
-  input               i_src3_if_starved,
 
   //Sink 0
-  output              o_snk0_address,
-  output              o_snk0_valid,
+  output              o_snk0_write_enable,
+  output      [63:0]  o_snk0_write_addr,
+  output              o_snk0_write_addr_inc,
+  output              o_snk0_write_addr_dec,
+  output              o_snk0_write_busy,
+  output      [23:0]  o_snk0_write_count,
 
   output              o_snk0_strobe,
   input       [1:0]   i_snk0_ready,
   output      [1:0]   o_snk0_activate,
   input       [23:0]  i_snk0_size,
-  input       [31:0]  o_snk0_data,
+  output      [31:0]  o_snk0_data,
 
   //Sink 1
-  output              o_snk1_address,
-  output              o_snk1_valid,
+  output              o_snk1_write_enable,
+  output      [63:0]  o_snk1_write_addr,
+  output              o_snk1_write_addr_inc,
+  output              o_snk1_write_addr_dec,
+  output              o_snk1_write_busy,
+  output      [23:0]  o_snk1_write_count,
+
 
   output              o_snk1_strobe,
   input       [1:0]   i_snk1_ready,
   output      [1:0]   o_snk1_activate,
   input       [23:0]  i_snk1_size,
-  input       [31:0]  o_snk1_data,
+  output      [31:0]  o_snk1_data,
 
   //Sink 2
-  output              o_snk2_address,
-  output              o_snk2_valid,
+  output              o_snk2_write_enable,
+  output      [63:0]  o_snk2_write_addr,
+  output              o_snk2_write_addr_inc,
+  output              o_snk2_write_addr_dec,
+  output              o_snk2_write_busy,
+  output      [23:0]  o_snk2_write_count,
 
   output              o_snk2_strobe,
   input       [1:0]   i_snk2_ready,
   output      [1:0]   o_snk2_activate,
   input       [23:0]  i_snk2_size,
-  input       [31:0]  o_snk2_data,
+  output      [31:0]  o_snk2_data,
 
   //Sink 3
-  output              o_snk3_address,
-  output              o_snk3_valid,
+  output              o_snk3_write_enable,
+  output      [63:0]  o_snk3_write_addr,
+  output              o_snk3_write_addr_inc,
+  output              o_snk3_write_addr_dec,
+  output              o_snk3_write_busy,
+  output      [23:0]  o_snk3_write_count,
+
 
   output              o_snk3_strobe,
   input       [1:0]   i_snk3_ready,
   output      [1:0]   o_snk3_activate,
   input       [23:0]  i_snk3_size,
-  input       [31:0]  o_snk3_data,
-
-  //Wishbone Bus Master
-  output              wbm_o_we,
-  output              wbm_o_stb,
-  output              wbm_o_cyc,
-  output      [3:0]   wbm_o_sel,
-  output      [31:0]  wbm_o_adr,
-  output      [31:0]  wbm_o_dat,
-  input       [31:0]  wbm_i_dat,
-  input               wbm_i_ack,
-  input               wbm_i_int,
+  output      [31:0]  o_snk3_data,
 
   //This interrupt can be controlled from this module or a submodule
   output  reg         o_wbs_int
@@ -361,9 +367,7 @@ reg   [2:0]           cmd_next7;
 
 
 //Submodules
-dma #(
-  .WISHBONE_BUS_COUNT(WISHBONE_BUS_COUNT )
-) dmacntrl(
+dma  dmacntrl(
 
   .clk                  (clk                  ),
   .rst                  (rst                  ),
@@ -379,61 +383,61 @@ dma #(
   .src2_control         (src2_control         ),
   .src3_control         (src3_control         ),
 
-
-  .i_src0_address       (i_src0_address       ),
-  .i_src0_start         (i_src0_start         ),
-  .o_src0_finished      (o_src0_finished      ),
-  .o_src0_busy          (o_src0_busy          ),
+  .o_src0_enable        (o_src0_enable        ),
+  .o_src0_address       (o_src0_address       ),
+  .o_src0_count         (o_src0_count         ),
+  .o_src0_addr_inc      (o_src0_addr_inc      ),
+  .o_src0_addr_dec      (o_src0_addr_dec      ),
 
   .o_src0_strobe        (o_src0_if_strobe     ),
   .i_src0_data          (i_src0_if_data       ),
   .i_src0_ready         (i_src0_if_ready      ),
   .o_src0_activate      (o_src0_if_activate   ),
   .i_src0_size          (i_src0_if_size       ),
-  .i_src0_starved       (i_src0_if_starved    ),
 
-
-  .i_src1_address       (i_src1_address       ),
-  .i_src1_start         (i_src1_start         ),
-  .o_src1_finished      (o_src1_finished      ),
-  .o_src1_busy          (o_src1_busy          ),
+  .o_src1_enable        (o_src1_enable        ),
+  .o_src1_address       (o_src1_address       ),
+  .o_src1_count         (o_src1_count         ),
+  .o_src1_addr_inc      (o_src1_addr_inc      ),
+  .o_src1_addr_dec      (o_src1_addr_dec      ),
 
   .o_src1_strobe        (o_src1_if_strobe     ),
   .i_src1_data          (i_src1_if_data       ),
   .i_src1_ready         (i_src1_if_ready      ),
   .o_src1_activate      (o_src1_if_activate   ),
   .i_src1_size          (i_src1_if_size       ),
-  .i_src1_starved       (i_src1_if_starved    ),
 
-
-  .i_src2_address       (i_src2_address       ),
-  .i_src2_start         (i_src2_start         ),
-  .o_src2_finished      (o_src2_finished      ),
-  .o_src2_busy          (o_src2_busy          ),
+  .o_src2_enable        (o_src2_enable        ),
+  .o_src2_address       (o_src2_address       ),
+  .o_src2_count         (o_src2_count         ),
+  .o_src2_addr_inc      (o_src2_addr_inc      ),
+  .o_src2_addr_dec      (o_src2_addr_dec      ),
 
   .o_src2_strobe        (o_src2_if_strobe     ),
   .i_src2_data          (i_src2_if_data       ),
   .i_src2_ready         (i_src2_if_ready      ),
   .o_src2_activate      (o_src2_if_activate   ),
   .i_src2_size          (i_src2_if_size       ),
-  .i_src2_starved       (i_src2_if_starved    ),
 
-
-  .i_src3_address       (i_src3_address       ),
-  .i_src3_start         (i_src3_start         ),
-  .o_src3_finished      (o_src3_finished      ),
-  .o_src3_busy          (o_src3_busy          ),
+  .o_src3_enable        (o_src3_enable        ),
+  .o_src3_address       (o_src3_address       ),
+  .o_src3_count         (o_src3_count         ),
+  .o_src3_addr_inc      (o_src3_addr_inc      ),
+  .o_src3_addr_dec      (o_src3_addr_dec      ),
 
   .o_src3_strobe        (o_src3_if_strobe     ),
   .i_src3_data          (i_src3_if_data       ),
   .i_src3_ready         (i_src3_if_ready      ),
   .o_src3_activate      (o_src3_if_activate   ),
   .i_src3_size          (i_src3_if_size       ),
-  .i_src3_starved       (i_src3_if_starved    ),
 
 
-  .o_snk0_address       (o_snk0_address       ),
-  .o_snk0_valid         (o_snk0_valid         ),
+  .o_snk0_write_enable  (o_snk0_write_enable  ),
+  .o_snk0_write_addr    (o_snk0_write_addr    ),
+  .o_snk0_write_addr_inc(o_snk0_write_addr_inc),
+  .o_snk0_write_addr_dec(o_snk0_write_addr_dec),
+  .o_snk0_write_busy    (o_snk0_write_busy    ),
+  .o_snk0_write_count   (o_snk0_write_count   ),
 
   .o_snk0_strobe        (o_snk0_strobe        ),
   .i_snk0_ready         (i_snk0_ready         ),
@@ -441,9 +445,12 @@ dma #(
   .i_snk0_size          (i_snk0_size          ),
   .o_snk0_data          (o_snk0_data          ),
 
-
-  .o_snk1_address       (o_snk1_address       ),
-  .o_snk1_valid         (o_snk1_valid         ),
+  .o_snk1_write_enable  (o_snk1_write_enable  ),
+  .o_snk1_write_addr    (o_snk1_write_addr    ),
+  .o_snk1_write_addr_inc(o_snk1_write_addr_inc),
+  .o_snk1_write_addr_dec(o_snk1_write_addr_dec),
+  .o_snk1_write_busy    (o_snk1_write_busy    ),
+  .o_snk1_write_count   (o_snk1_write_count   ),
 
   .o_snk1_strobe        (o_snk1_strobe        ),
   .i_snk1_ready         (i_snk1_ready         ),
@@ -451,9 +458,12 @@ dma #(
   .i_snk1_size          (i_snk1_size          ),
   .o_snk1_data          (o_snk1_data          ),
 
-
-  .o_snk2_address       (o_snk2_address       ),
-  .o_snk2_valid         (o_snk2_valid         ),
+  .o_snk2_write_enable  (o_snk2_write_enable  ),
+  .o_snk2_write_addr    (o_snk2_write_addr    ),
+  .o_snk2_write_addr_inc(o_snk2_write_addr_inc),
+  .o_snk2_write_addr_dec(o_snk2_write_addr_dec),
+  .o_snk2_write_busy    (o_snk2_write_busy    ),
+  .o_snk2_write_count   (o_snk2_write_count   ),
 
   .o_snk2_strobe        (o_snk2_strobe        ),
   .i_snk2_ready         (i_snk2_ready         ),
@@ -461,9 +471,12 @@ dma #(
   .i_snk2_size          (i_snk2_size          ),
   .o_snk2_data          (o_snk2_data          ),
 
-
-  .o_snk3_address       (o_snk3_address       ),
-  .o_snk3_valid         (o_snk3_valid         ),
+  .o_snk3_write_enable  (o_snk3_write_enable  ),
+  .o_snk3_write_addr    (o_snk3_write_addr    ),
+  .o_snk3_write_addr_inc(o_snk3_write_addr_inc),
+  .o_snk3_write_addr_dec(o_snk3_write_addr_dec),
+  .o_snk3_write_busy    (o_snk3_write_busy    ),
+  .o_snk3_write_count   (o_snk3_write_count   ),
 
   .o_snk3_strobe        (o_snk3_strobe        ),
   .i_snk3_ready         (i_snk3_ready         ),
@@ -534,16 +547,6 @@ dma #(
   .cmd_cross_src_port7  (cmd_cross_src_port7  ),
   .cmd_cross_dest_port7 (cmd_cross_dest_port7 ),
   .cmd_next7            (cmd_next7            ),
-
-  .wbm_o_we             (wbm_o_we             ),
-  .wbm_o_stb            (wbm_o_stb            ),
-  .wbm_o_cyc            (wbm_o_cyc            ),
-  .wbm_o_sel            (wbm_o_sel            ),
-  .wbm_o_adr            (wbm_o_adr            ),
-  .wbm_o_dat            (wbm_o_dat            ),
-  .wbm_i_dat            (wbm_i_dat            ),
-  .wbm_i_ack            (wbm_i_ack            ),
-  .wbm_i_int            (wbm_i_int            ),
 
   .interrupt            (interrupt            )
 );
