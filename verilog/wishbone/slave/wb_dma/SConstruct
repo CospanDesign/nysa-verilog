@@ -22,6 +22,7 @@ env = Environment(ENV=os.environ,
 
 env.Alias("sim", 'design.vcd')
 env.Alias("wave", 'design.vcd', "gtkwave design.vcd &")
+env.Alias("w", 'design.vcd', 'gtkwave waves.gtkw &')
 env.Alias("build", 'design.sim')
 
 

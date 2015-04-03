@@ -204,16 +204,17 @@ localparam      CONTROL_ADDR            = 32'h00000000;
 localparam      STATUS_ADDR             = 32'h00000001;
 localparam      SOURCE_COUNT_ADDR       = 32'h00000002;
 localparam      SINK_COUNT_ADDR         = 32'h00000003;
-localparam      WB_BUS_COUNT_ADDR       = 32'h00000004;
-localparam      SNK0_CONTROL_ADDR       = 32'h00000005;
-localparam      SNK1_CONTROL_ADDR       = 32'h00000006;
-localparam      SNK2_CONTROL_ADDR       = 32'h00000007;
-localparam      SNK3_CONTROL_ADDR       = 32'h00000008;
-localparam      SRC0_CONTROL_ADDR       = 32'h00000009;
-localparam      SRC1_CONTROL_ADDR       = 32'h0000000A;
-localparam      SRC2_CONTROL_ADDR       = 32'h0000000B;
-localparam      SRC3_CONTROL_ADDR       = 32'h0000000C;
-localparam      WB_CONTROL_ADDR         = 32'h0000000D;
+localparam      SRC0_CONTROL_ADDR       = 32'h00000004;
+localparam      SRC1_CONTROL_ADDR       = 32'h00000005;
+localparam      SRC2_CONTROL_ADDR       = 32'h00000006;
+localparam      SRC3_CONTROL_ADDR       = 32'h00000007;
+
+localparam      SNK0_CONTROL_ADDR       = 32'h00000008;
+localparam      SNK1_CONTROL_ADDR       = 32'h00000009;
+localparam      SNK2_CONTROL_ADDR       = 32'h0000000A;
+localparam      SNK3_CONTROL_ADDR       = 32'h0000000B;
+
+localparam      WB_CONTROL_ADDR         = 32'h0000000C;
 
 localparam      PARAM_SRC_ADDR_LOW0     = 32'h00000010;
 localparam      PARAM_SRC_ADDR_HIDH0    = 32'h00000011;
@@ -373,15 +374,20 @@ dma  dmacntrl(
   .rst                  (rst                  ),
   .enable               (dma_enable           ),
 
-  .snk0_control         (snk0_control         ),
-  .snk1_control         (snk1_control         ),
-  .snk2_control         (snk2_control         ),
-  .snk3_control         (snk3_control         ),
-
   .src0_control         (src0_control         ),
   .src1_control         (src1_control         ),
   .src2_control         (src2_control         ),
   .src3_control         (src3_control         ),
+
+  .src0_status          (src0_status          ),
+  .src1_status          (src1_status          ),
+  .src2_status          (src2_status          ),
+  .src3_status          (src3_status          ),
+
+  .snk0_control         (snk0_control         ),
+  .snk1_control         (snk1_control         ),
+  .snk2_control         (snk2_control         ),
+  .snk3_control         (snk3_control         ),
 
   .o_src0_enable        (o_src0_enable        ),
   .o_src0_address       (o_src0_address       ),
@@ -656,18 +662,7 @@ always @ (posedge clk) begin
             CONTROL_ADDR: begin
               control   <=  i_wbs_dat;
             end
-            SNK0_CONTROL_ADDR: begin
-              snk0_control   <=  i_wbs_dat;
-            end
-            SNK1_CONTROL_ADDR: begin
-              snk1_control   <=  i_wbs_dat;
-            end
-            SNK2_CONTROL_ADDR: begin
-              snk2_control   <=  i_wbs_dat;
-            end
-            SNK3_CONTROL_ADDR: begin
-              snk3_control   <=  i_wbs_dat;
-            end
+
             SRC0_CONTROL_ADDR: begin
               src0_control   <=  i_wbs_dat;
             end
@@ -680,7 +675,18 @@ always @ (posedge clk) begin
             SRC3_CONTROL_ADDR: begin
               src3_control   <=  i_wbs_dat;
             end
-
+            SNK0_CONTROL_ADDR: begin
+              snk0_control   <=  i_wbs_dat;
+            end
+            SNK1_CONTROL_ADDR: begin
+              snk1_control   <=  i_wbs_dat;
+            end
+            SNK2_CONTROL_ADDR: begin
+              snk2_control   <=  i_wbs_dat;
+            end
+            SNK3_CONTROL_ADDR: begin
+              snk3_control   <=  i_wbs_dat;
+            end
             //Address 0
             PARAM_SRC_ADDR_LOW0: begin
               cmd_src_address0[31:0]   <= i_wbs_dat;
@@ -695,13 +701,13 @@ always @ (posedge clk) begin
               cmd_dest_address0[63:32] <= i_wbs_dat;
             end
             PARAM_COUNT0: begin
-              cmd_count0               <= i_wbs_dat;
+              cmd_count0                <= i_wbs_dat;
             end
             PARAM_CNT0: begin
-              cmd_flags0               <= i_wbs_dat[15:0];
-              cmd_next0                <= i_wbs_dat[19:16];
-              cmd_cross_src_port0      <= i_wbs_dat[23:20];
-              cmd_cross_dest_port0     <= i_wbs_dat[27:24];
+              cmd_flags0                <= i_wbs_dat[15:0];
+              cmd_next0                 <= i_wbs_dat[19:16];
+              cmd_cross_src_port0       <= i_wbs_dat[23:20];
+              cmd_cross_dest_port0      <= i_wbs_dat[27:24];
             end
 
 
@@ -720,13 +726,13 @@ always @ (posedge clk) begin
               cmd_dest_address1 [63:32] <= i_wbs_dat;
             end
             PARAM_COUNT1: begin
-              cmd_count1               <= i_wbs_dat;
+              cmd_count1                <= i_wbs_dat;
             end
             PARAM_CNT1: begin
-              cmd_flags1               <= i_wbs_dat[15:0];
-              cmd_next1                <= i_wbs_dat[19:16];
-              cmd_cross_src_port1      <= i_wbs_dat[23:20];
-              cmd_cross_dest_port1     <= i_wbs_dat[27:24];
+              cmd_flags1                <= i_wbs_dat[15:0];
+              cmd_next1                 <= i_wbs_dat[19:16];
+              cmd_cross_src_port1       <= i_wbs_dat[23:20];
+              cmd_cross_dest_port1      <= i_wbs_dat[27:24];
             end
 
             //Address 2
@@ -743,13 +749,13 @@ always @ (posedge clk) begin
               cmd_dest_address2 [63:32] <= i_wbs_dat;
             end
             PARAM_COUNT2: begin
-              cmd_count2               <= i_wbs_dat;
+              cmd_count2                <= i_wbs_dat;
             end
             PARAM_CNT2: begin
-              cmd_flags2               <= i_wbs_dat[15:0];
-              cmd_next2                <= i_wbs_dat[19:16];
-              cmd_cross_src_port2      <= i_wbs_dat[23:20];
-              cmd_cross_dest_port2     <= i_wbs_dat[27:24];
+              cmd_flags2                <= i_wbs_dat[15:0];
+              cmd_next2                 <= i_wbs_dat[19:16];
+              cmd_cross_src_port2       <= i_wbs_dat[23:20];
+              cmd_cross_dest_port2      <= i_wbs_dat[27:24];
             end
 
             //Address 3
@@ -766,13 +772,13 @@ always @ (posedge clk) begin
               cmd_dest_address3 [63:32] <= i_wbs_dat;
             end
             PARAM_COUNT3: begin
-              cmd_count3               <= i_wbs_dat;
+              cmd_count3                <= i_wbs_dat;
             end
             PARAM_CNT3: begin
-              cmd_flags3               <= i_wbs_dat[15:0];
-              cmd_next3                <= i_wbs_dat[19:16];
-              cmd_cross_src_port3      <= i_wbs_dat[23:20];
-              cmd_cross_dest_port3     <= i_wbs_dat[27:24];
+              cmd_flags3                <= i_wbs_dat[15:0];
+              cmd_next3                 <= i_wbs_dat[19:16];
+              cmd_cross_src_port3       <= i_wbs_dat[23:20];
+              cmd_cross_dest_port3      <= i_wbs_dat[27:24];
             end
 
             //Address 4
@@ -789,13 +795,13 @@ always @ (posedge clk) begin
               cmd_dest_address4 [63:32] <= i_wbs_dat;
             end
             PARAM_COUNT4: begin
-              cmd_count4               <= i_wbs_dat;
+              cmd_count4                <= i_wbs_dat;
             end
             PARAM_CNT4: begin
-              cmd_flags4               <= i_wbs_dat[15:0];
-              cmd_next4                <= i_wbs_dat[19:16];
-              cmd_cross_src_port4      <= i_wbs_dat[23:20];
-              cmd_cross_dest_port4     <= i_wbs_dat[27:24];
+              cmd_flags4                <= i_wbs_dat[15:0];
+              cmd_next4                 <= i_wbs_dat[19:16];
+              cmd_cross_src_port4       <= i_wbs_dat[23:20];
+              cmd_cross_dest_port4      <= i_wbs_dat[27:24];
             end
 
             //Address 5
@@ -835,13 +841,13 @@ always @ (posedge clk) begin
               cmd_dest_address6 [63:32] <= i_wbs_dat;
             end
             PARAM_COUNT6: begin
-              cmd_count6               <= i_wbs_dat;
+              cmd_count6                <= i_wbs_dat;
             end
             PARAM_CNT6: begin
-              cmd_flags6               <= i_wbs_dat[15:0];
-              cmd_next6                <= i_wbs_dat[19:16];
-              cmd_cross_src_port6      <= i_wbs_dat[23:20];
-              cmd_cross_dest_port6     <= i_wbs_dat[27:24];
+              cmd_flags6                <= i_wbs_dat[15:0];
+              cmd_next6                 <= i_wbs_dat[19:16];
+              cmd_cross_src_port6       <= i_wbs_dat[23:20];
+              cmd_cross_dest_port6      <= i_wbs_dat[27:24];
             end
 
             //Address 7
@@ -858,13 +864,13 @@ always @ (posedge clk) begin
               cmd_dest_address7 [63:32] <= i_wbs_dat;
             end
             PARAM_COUNT7: begin
-              cmd_count7               <= i_wbs_dat;
+              cmd_count7                <= i_wbs_dat;
             end
             PARAM_CNT7: begin
-              cmd_flags7               <= i_wbs_dat[15:0];
-              cmd_next7                <= i_wbs_dat[19:16];
-              cmd_cross_src_port7      <= i_wbs_dat[23:20];
-              cmd_cross_dest_port7     <= i_wbs_dat[27:24];
+              cmd_flags7                <= i_wbs_dat[15:0];
+              cmd_next7                 <= i_wbs_dat[19:16];
+              cmd_cross_src_port7       <= i_wbs_dat[23:20];
+              cmd_cross_dest_port7      <= i_wbs_dat[27:24];
             end
             default: begin
             end
@@ -885,34 +891,30 @@ always @ (posedge clk) begin
             SINK_COUNT_ADDR: begin
               o_wbs_dat <= `SINK_COUNT;
             end
-            WB_BUS_COUNT_ADDR: begin
-              o_wbs_dat <= `WB_MASTER_COUNT;
-            end
-             SNK0_CONTROL_ADDR: begin
-              o_wbs_dat <= snk0_status;
-            end
-             SNK1_CONTROL_ADDR: begin
-              o_wbs_dat <= snk1_status;
-            end
-             SNK2_CONTROL_ADDR: begin
-              o_wbs_dat <= snk2_status;
-            end
-             SNK0_CONTROL_ADDR: begin
+            SNK0_CONTROL_ADDR: begin
               o_wbs_dat <= snk3_status;
             end
-             SRC0_CONTROL_ADDR: begin
+            SRC0_CONTROL_ADDR: begin
               o_wbs_dat <= src0_status;
             end
-             SRC1_CONTROL_ADDR: begin
+            SRC1_CONTROL_ADDR: begin
               o_wbs_dat <= src1_status;
             end
-             SRC2_CONTROL_ADDR: begin
+            SRC2_CONTROL_ADDR: begin
               o_wbs_dat <= src2_status;
             end
-             SRC3_CONTROL_ADDR: begin
+            SRC3_CONTROL_ADDR: begin
               o_wbs_dat <= src3_status;
             end
-
+            SNK0_CONTROL_ADDR: begin
+              o_wbs_dat <= snk0_status;
+            end
+            SNK1_CONTROL_ADDR: begin
+              o_wbs_dat <= snk1_status;
+            end
+            SNK2_CONTROL_ADDR: begin
+              o_wbs_dat <= snk2_status;
+            end
             //Address 0
             PARAM_SRC_ADDR_LOW0: begin
               o_wbs_dat  <=  cmd_src_address0[31:0];

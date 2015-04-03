@@ -12,11 +12,10 @@ module dma (
   input       [31:0]  src2_control,
   input       [31:0]  src3_control,
 
-  output      [31:0]  src0_status,
-  output      [31:0]  src1_status,
-  output      [31:0]  src2_status,
-  output      [31:0]  src3_status,
-
+  output tri0 [31:0]  src0_status,
+  output tri0 [31:0]  src1_status,
+  output tri0 [31:0]  src2_status,
+  output tri0 [31:0]  src3_status,
 
   input       [31:0]  snk0_control,
   input       [31:0]  snk1_control,
@@ -471,7 +470,6 @@ assign src0_status[`CTRL_DMA_ENABLE]       = dma_enable[0];
 assign src1_status[`CTRL_DMA_ENABLE]       = dma_enable[1];
 assign src2_status[`CTRL_DMA_ENABLE]       = dma_enable[2];
 assign src3_status[`CTRL_DMA_ENABLE]       = dma_enable[3];
-
 
 //Put all the commands into the program memory block
 assign cmd_src_address[0]     = cmd_src_address0;
