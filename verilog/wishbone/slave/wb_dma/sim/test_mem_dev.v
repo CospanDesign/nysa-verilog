@@ -260,7 +260,10 @@ always @ (posedge clk) begin
         mem_addr_out                <=  mem_addr_out - 1;
       end
       m2f_strobe                    <=   1;
-      m2f_count                     <=  m2f_count + 1;
+    end
+
+    if (!m2f_strobe && !mem_read_strobe && (m2f_activate > 0) && (m2f_count >= m2f_size)) begin
+      m2f_activate  <=  0;
     end
 
     if (mem_write_strobe) begin
@@ -286,18 +289,11 @@ always @ (posedge clk) begin
     if (mem_read_count < local_read_size) begin
       if (read_enable) begin
         if ((m2f_activate  > 0) && (m2f_count < m2f_size)) begin
+          m2f_count                   <=  m2f_count + 1;
           mem_read_strobe             <=  1;
           mem_read_count              <=  mem_read_count + 1;
         end
-        else begin
-          if (!m2f_strobe) begin
-            m2f_activate  <=  0;
-          end
-        end
       end
-    end
-    else if ((m2f_activate  > 0) && (m2f_count > 0) && (!m2f_strobe)) begin
-      m2f_activate      <=  0;
     end
 
     prev_write_enable  <=  write_enable;

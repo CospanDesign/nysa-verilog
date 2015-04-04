@@ -368,8 +368,8 @@ localparam AWIDTH3 = 10;
 
 //1st Device
 test_mem_dev #(
-  .READ_FIFO_SIZE     (                 8  ),
-  .WRITE_FIFO_SIZE    (                 8  ),
+  .READ_FIFO_SIZE     (                 4  ),
+  .WRITE_FIFO_SIZE    (                 3  ),
   .ADDRESS_WIDTH      (           AWIDTH0  )
 )tdm0(
   .clk                (clk                 ),

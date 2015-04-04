@@ -770,19 +770,27 @@ always @ (posedge clk) begin
                 snk_activate[snka[i]][1]      <= 1;
               end
             end
+            if (src_strobe[i]) begin
+              snk_strobe[snka[i]]             <= 1;
+              snk_count[snka[i]]              <= snk_count[snka[i]] + 1;
+              channel_count[i]                <= channel_count[i] + 1;
+              snk_data[snka[i]]               <= src_data[i];
+
+              if (flag_dest_addr_inc[ip[i]]) begin
+                curr_dest_address[i]          <= curr_dest_address[i] + 4;
+              end
+              else if (flag_dest_addr_dec[ip[i]]) begin
+                curr_dest_address[i]          <= curr_dest_address[i] - 4;
+              end
+            end
 
             //Both the Source and Sink FIFOs are ready
             if ((src_activate[i] && (snk_activate[snka[i]] > 0)) && 
                 (snk_count[snka[i]] < snk_size[snka[i]]) && 
                 (src_count[i] < src_size[i]))begin
 
-              snk_data[snka[i]]               <= src_data[i];
               src_strobe[i]                   <= 1;
               src_count[i]                    <= src_count[i] + 1;
-
-              snk_strobe[snka[i]]             <= 1;
-              snk_count[snka[i]]              <= snk_count[snka[i]] + 1;
-              channel_count[i]                <= channel_count[i] + 1;
 
               //Increment or decrement the addresses
               if (flag_src_addr_inc[ip[i]]) begin
@@ -791,13 +799,6 @@ always @ (posedge clk) begin
               else if (flag_src_addr_dec[ip[i]]) begin
                 curr_src_address[i]           <= curr_src_address[i] - 4;
               end
-              if (flag_dest_addr_inc[ip[i]]) begin
-                curr_dest_address[i]          <= curr_dest_address[i] + 4;
-              end
-              else if (flag_dest_addr_dec[ip[i]]) begin
-                curr_dest_address[i]          <= curr_dest_address[i] - 4;
-              end
-
             end
             else begin
               if (src_activate[i] && (src_count[i] >= src_size[i])) begin
@@ -810,7 +811,7 @@ always @ (posedge clk) begin
               end
             end
             //Reached the end of an instruction
-            if (channel_count[i] >= curr_count[i]) begin
+            if (channel_count[i] >= curr_count[i] && !snk_strobe[snka[i]]) begin
               state[i]                        <= END_COMMAND;
             end
           end
