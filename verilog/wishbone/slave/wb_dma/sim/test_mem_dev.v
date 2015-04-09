@@ -14,6 +14,7 @@ module test_mem_dev #(
     input                               write_addr_dec,
     output                              write_finished,
     input       [23:0]                  write_count,
+    input                               write_flush,
 
     output      [1:0]                   write_ready,
     input       [1:0]                   write_activate,
@@ -29,6 +30,7 @@ module test_mem_dev #(
     output                              read_busy,
     output                              read_error,
     input       [23:0]                  read_count,
+    input                               read_flush,
 
     output                              read_ready,
     output                              read_activate,
@@ -74,6 +76,7 @@ reg                                     m2f_strobe;
 wire    [31:0]                          m2f_data;
 
 reg     [23:0]                          m2f_count;
+reg                                     first_write;
 
 //Submodules
 blk_mem #(
@@ -158,40 +161,6 @@ assign  write_finished              =   (mem_write_count    >= local_write_count
 assign  mem_read_overflow           =   (mem_read_count     >  local_read_size);
 assign  read_finished               =   (mem_read_count     >= local_read_size);
 
-always @ (*) begin
-  if (rst) begin
-    f2m_data_error                  = 0;
-  end
-  else begin
-    f2m_data_error                  = f2m_data_error;
-    if (f2m_count > 0) begin
-      if (prev_f2m_data == (2 ** ADDRESS_WIDTH) - 1) begin
-        f2m_data_error                = (f2m_data != 0);
-      end
-      else begin
-        f2m_data_error                = ((prev_f2m_data + 1) != f2m_data);
-      end
-    end
-  end
-end
-
-always @ (*) begin
-  if (rst) begin
-    m2f_data_error                    = 0;
-  end
-  else begin
-    m2f_data_error                    = m2f_data_error;
-    if (m2f_count > 0) begin
-      if (prev_m2f_data == (2 ** ADDRESS_WIDTH) - 1) begin
-        m2f_data_error                = (m2f_data != 0);
-      end
-      else begin
-        m2f_data_error                = ((prev_m2f_data + 1) != m2f_data);
-      end
-    end
-  end
-end
-
 //Synchronous Logic
 always @ (posedge clk) begin
   if (rst) begin
@@ -215,6 +184,11 @@ always @ (posedge clk) begin
     mem_read_count                  <=  0;
     mem_read_strobe                 <=  0;
     mem_write_strobe                <=  0;
+
+    f2m_data_error                  <=  0;
+    m2f_data_error                  <=  0;
+    prev_f2m_data                   <=  0;
+    first_write                     <=  0;
   end
   else begin
     //Strobes
@@ -222,6 +196,37 @@ always @ (posedge clk) begin
     m2f_strobe                      <=  0;
     mem_read_strobe                 <=  0;
     mem_write_strobe                <=  0;
+    f2m_data_error                  <=  0;
+    first_write                     <=  0;
+
+    //Errors (Incomming)
+    if ((f2m_count > 0) && mem_write_strobe && !write_flush) begin
+      if ((prev_f2m_data == (2 ** ADDRESS_WIDTH) - 1) && (f2m_data != 0)) begin
+        f2m_data_error              <=   1;
+        $display ("Wrap Error @ %h: %h != %h", mem_addr_in, prev_f2m_data + 1, f2m_data);
+      end
+      else if ((prev_f2m_data + 1) != f2m_data) begin
+        if (first_write) begin
+          if (prev_f2m_data != f2m_data) begin
+            f2m_data_error          <=  1;
+            $display ("First Write Error @ %h: %h != %h", mem_addr_in, prev_f2m_data + 1, f2m_data);
+          end
+        end
+        else begin
+          f2m_data_error              <=  1;
+          $display ("Error @ %h: %h != %h", mem_addr_in, prev_f2m_data + 1, f2m_data);
+        end
+      end
+    end
+    //Error (Outgoing)
+    if ((m2f_count > 0) && mem_read_strobe && !read_flush) begin
+      if (prev_m2f_data == (2 ** ADDRESS_WIDTH) - 1) begin
+        m2f_data_error                <=  (m2f_data != 0);
+      end
+      else begin
+        m2f_data_error                <=  ((prev_m2f_data + 1) != m2f_data);
+      end
+    end
 
     //Store Memory Address
     if (posedge_write_enable) begin
@@ -237,7 +242,7 @@ always @ (posedge clk) begin
 
     //If available get a peice of the FIFO that I can write data to the memory
     if (!f2m_activate && f2m_ready) begin
-        f2m_activate                <=  0;
+        f2m_activate                <=  1;
         f2m_count                   <=  0;
     end
 
@@ -262,28 +267,38 @@ always @ (posedge clk) begin
       m2f_strobe                    <=   1;
     end
 
-    if (!m2f_strobe && !mem_read_strobe && (m2f_activate > 0) && (m2f_count >= m2f_size)) begin
+    if (!m2f_strobe &&
+        !mem_read_strobe && (m2f_activate > 0) &&
+        ((m2f_count >= m2f_size) || 
+         (mem_read_count > 0 &&
+          m2f_count >= mem_read_count))) begin
       m2f_activate  <=  0;
     end
 
     if (mem_write_strobe) begin
-      f2m_strobe                    <=  1;
+      if (write_addr_inc) begin
+        mem_addr_in               <=  mem_addr_in + 1;
+      end
+      else if (write_addr_dec) begin
+        mem_addr_in               <=  mem_addr_in - 1;
+      end
+
     end
-    if (write_enable) begin
-      if (f2m_activate && (f2m_count < f2m_size)) begin
-        mem_write_strobe            <=  1;
-        f2m_count                   <=  f2m_count + 1;
-        if (write_addr_inc) begin
-          mem_addr_in               <=  mem_addr_in + 1;
-        end
-        else if (write_addr_dec) begin
-          mem_addr_in               <=  mem_addr_in - 1;
+    //if (write_enable) begin
+      if (f2m_count < f2m_size) begin
+        if (f2m_activate) begin
+          f2m_strobe                  <=  1;
+          mem_write_strobe            <=  1;
+          f2m_count                   <=  f2m_count + 1;
+          if (f2m_count == 0) begin
+            first_write               <=  1;
+          end
         end
       end
       else begin
         f2m_activate  <=  0;
       end
-    end
+    //end
 
 
     if (mem_read_count < local_read_size) begin
@@ -296,6 +311,8 @@ always @ (posedge clk) begin
       end
     end
 
+    prev_f2m_data      <=  f2m_data;
+    prev_m2f_data      <=  m2f_data;
     prev_write_enable  <=  write_enable;
     prev_read_enable   <=  read_enable;
 

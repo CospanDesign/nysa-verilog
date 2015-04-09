@@ -368,8 +368,8 @@ localparam AWIDTH3 = 10;
 
 //1st Device
 test_mem_dev #(
-  .READ_FIFO_SIZE     (                 4  ),
-  .WRITE_FIFO_SIZE    (                 3  ),
+  .READ_FIFO_SIZE     (                 3  ),
+  .WRITE_FIFO_SIZE    (                 5  ),
   .ADDRESS_WIDTH      (           AWIDTH0  )
 )tdm0(
   .clk                (clk                 ),
@@ -382,6 +382,7 @@ test_mem_dev #(
   .write_addr_dec     (write_addr_dec[0]   ),
   .write_finished     (write_finished[0]   ),
   .write_count        (write_data_count[0] ),
+  .write_flush        (write_flush[0]      ),
 
   .write_ready        (write_ready[0]      ),
   .write_activate     (write_activate[0]   ),
@@ -397,6 +398,7 @@ test_mem_dev #(
   .read_busy          (read_busy[0]        ),
   .read_error         (read_error[0]       ),
   .read_count         (read_data_count[0]  ),
+  .read_flush         (read_flush[0]       ),
 
   .read_ready         (read_ready[0]       ),
   .read_activate      (read_activate[0]    ),
@@ -407,8 +409,8 @@ test_mem_dev #(
 
 //2nd Device
 test_mem_dev #(
-    .READ_FIFO_SIZE   (                 8  ),
-    .WRITE_FIFO_SIZE  (                 8  ),
+    .READ_FIFO_SIZE   (                 5  ),
+    .WRITE_FIFO_SIZE  (                10  ),
     .ADDRESS_WIDTH    (           AWIDTH1  )
 )tdm1(
   .clk                (clk                 ),
@@ -421,6 +423,7 @@ test_mem_dev #(
   .write_addr_dec     (write_addr_dec[1]   ),
   .write_finished     (write_finished[1]   ),
   .write_count        (write_data_count[1] ),
+  .write_flush        (write_flush[1]      ),
 
   .write_ready        (write_ready[1]      ),
   .write_activate     (write_activate[1]   ),
@@ -436,6 +439,7 @@ test_mem_dev #(
   .read_busy          (read_busy[1]        ),
   .read_error         (read_error[1]       ),
   .read_count         (read_data_count[1]  ),
+  .read_flush         (read_flush[1]       ),
 
   .read_ready         (read_ready[1]       ),
   .read_activate      (read_activate[1]    ),
@@ -460,6 +464,7 @@ test_mem_dev #(
   .write_addr_dec     (write_addr_dec[2]   ),
   .write_finished     (write_finished[2]   ),
   .write_count        (write_data_count[2] ),
+  .write_flush        (write_flush[2]      ),
 
   .write_ready        (write_ready[2]      ),
   .write_activate     (write_activate[2]   ),
@@ -475,6 +480,7 @@ test_mem_dev #(
   .read_busy          (read_busy[2]        ),
   .read_error         (read_error[2]       ),
   .read_count         (read_data_count[2]  ),
+  .read_flush         (read_flush [2]      ),
 
   .read_ready         (read_ready[2]       ),
   .read_activate      (read_activate[2]    ),
@@ -499,6 +505,7 @@ test_mem_dev #(
   .write_addr_dec     (write_addr_dec[3]   ),
   .write_finished     (write_finished[3]   ),
   .write_count        (write_data_count[3] ),
+  .write_flush        (write_flush[3]      ),
 
   .write_ready        (write_ready[3]      ),
   .write_activate     (write_activate[3]   ),
@@ -514,6 +521,7 @@ test_mem_dev #(
   .read_busy          (read_busy[3]        ),
   .read_error         (read_error[3]       ),
   .read_count         (read_data_count[3]  ),
+  .read_flush         (read_flush [3]      ),
 
   .read_ready         (read_ready[3]       ),
   .read_activate      (read_activate[3]    ),

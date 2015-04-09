@@ -4,24 +4,193 @@
 #Ping
 00000000:00000000:12345678:FEDCBA98
 
-#Read all the data
-00000096:00000002:01000000:00000000
+#Configure All Sources
+#BIT 01:        Decrement the address
+#BIT 02:        Increment the address
+#BIT [5:4]:     Sink Address [1:0]
+#BIT [10:8]:    Instruction Address [2:0]
+00000001:00000001:01000004:00000004
+00000001:00000001:01000005:00000004
+00000001:00000001:01000006:00000004
+00000001:00000001:01000007:00000004
+
+#Configure All Sinks
+#BIT 01:        Decrement the address
+#BIT 02:        Increment the address
+#BIT 03:        Use the Quantum of data in the PPFIFO to send data
+00000001:00000001:01000008:00000004
+00000001:00000001:01000009:0000000C
+00000001:00000001:0100000A:00000004
+00000001:00000001:0100000B:0000000C
+
+
+#**** Simple Read/Write
+
+#Configure Instruction 0: Address 0x20
+# Source Address: (64-bits): 00000000:00000000
+# Dest Address:   (64-bits): 00000000:00000000
+# Count:          (32-bits): 00000100
+# Command:
+#   BIT 8:        INGRESS BOND
+#   BIT [27:24]:  INGRESS ADDRESS:  0
+#   BIT [31:28]:  EGRESS ADDRESS:   0
+
 
 #Configure Instruction 0
 00000006:00000001:01000020:00000000
 00000000
 00000000
 00000000
-00000020
-00000002
-
+00000100
+00000000
 
 #Configure Source 0
-00000001:00000001:01000004:00000011
+00000001:00000001:01000004:00000015
+#BIT 00:        Start Executing Instruction pointed to by Instruction pointer
+#BIT 01:        Decrement the address
+#BIT 02:        Increment the address
+#BIT [5:4]:     Sink Address [1:0]
+#BIT [10:8]:    Instruction Address [2:0]
 
 
 #Sleep
+00000400
+
+#Configure Source 0 to turn everything off
+00000001:00000001:01000004:00000000
+
+
+#Configure Instruction 2
+# Source Address: (64-bits): 00000000:00000000
+# Dest Address:   (64-bits): 00000000:00000000
+# Count:          (32-bits): 00000100
+# Command:
+#   BIT 8:        INGRESS BOND
+#   BIT [27:24]:  INGRESS ADDRESS:  0
+#   BIT [31:28]:  EGRESS ADDRESS:   0
+
+00000006:00000001:01000040:00000000
+00000000
+00000000
+00000000
 00000100
+12000000
+
+#Configure Source 2 to turn everything on and read data from instruction 2
+00000001:00000001:01000006:00000235
+
+#Sleep
+00000400
+
+#Configure Source 0 to turn everything off
+00000001:00000001:01000006:00000000
+
+
+#Bonding Test
+#Configure Instruction 0 to be the input path
+#Configure Instruction 2 to be the output path
+# Source Address: (64-bits): 00000000:00000000
+# Dest Address:   (64-bits): 00000000:00000000
+# Count:          (32-bits): 00000100
+# Command:
+#   BIT 1:        Source Increment
+#   BIT 5:        Dest Increment
+#   BIT 6:        Respect Destination Quantum
+#   BIT 8:        INGRESS BOND
+#   BIT [27:24]:  INGRESS ADDRESS:  1
+#   BIT [31:28]:  EGRESS ADDRESS:   0
+00000006:00000001:01000020:00000000
+00000000
+00000000
+00000000
+00000010
+02010900
+
+#Configure Instruction 1 to be the input path
+#Configure Instruction 2 to be the output path
+# Source Address: (64-bits): 00000000:00000000
+# Dest Address:   (64-bits): 00000000:00000000
+# Count:          (32-bits): 00000100
+# Command:
+#   BIT 1:        Source Increment
+#   BIT 5:        Dest Increment
+#   BIT 6:        Respect Destination Quantum
+#   BIT 8:        INGRESS BOND
+#   BIT [27:24]:  INGRESS ADDRESS:  1
+#   BIT [31:28]:  EGRESS ADDRESS:   0
+00000006:00000001:01000030:00000000
+00000000
+00000000
+00000000
+00000010
+03000900
+
+#Configure Instruction 2 to be the output path
+# Source Address: (64-bits): 00000000:00000000
+# Dest Address:   (64-bits): 00000000:00000000
+# Count:          (32-bits): 00000100
+# Command:
+#   BIT 1:        Source Increment
+#   BIT 5:        Dest Increment
+#   BIT 6:        Respect Destination Quantum
+#   BIT 9:        EGRESS BOND
+#   BIT [27:24]:  INGRESS ADDRESS:  0
+#   BIT [31:28]:  EGRESS ADDRESS:   0
+00000006:00000001:01000040:00000000
+00000000
+00000000
+00000000
+00000010
+00030A00
+
+#Configure Instruction 3 to be the output path
+# Source Address: (64-bits): 00000000:00000000
+# Dest Address:   (64-bits): 00000000:00000000
+# Count:          (32-bits): 00000100
+# Command:
+#   BIT 1:        Source Increment
+#   BIT 5:        Dest Increment
+#   BIT 6:        Respect Destination Quantum
+#   BIT 9:        EGRESS BOND
+#   BIT [27:24]:  INGRESS ADDRESS:  0
+#   BIT [31:28]:  EGRESS ADDRESS:   0
+00000006:00000001:01000050:00000000
+00000000
+00000000
+00000000
+00000010
+10020A00
+
+
+
+#Configure Source 0 to turn everything on and read data from instruction 0
+# BIT 0:                            Enable
+# BIT [5:4] SINK Address:           1
+# BIT [10:8]: Instruction Address:  0
+00000001:00000001:01000004:00000011
+
+#Configure Source 1 to turn everything on and read data from instruction 2
+# BIT 0:                            Enable
+# BIT [5:4]:  SINK Address:         0
+# BIT [10:8]: Instruction Address:  2
+00000001:00000001:01000005:00000201
+
+#Sleep
+00001000
+
+#Disable everything
+#Configure Source 0 to turn everything on and read data from instruction 0
+00000001:00000001:01000004:00000000
+
+#Configure Source 1 to turn everything on and read data from instruction 2
+00000001:00000001:01000005:00000000
+
+
+
+
+
+
 
 #Read one (1 and 0 are the same for data count) from peripheral 1 address 0
 00000001:00000002:01000000:00000000
+

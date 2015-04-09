@@ -90,6 +90,7 @@ module wb_dma #(
   output      [23:0]  o_src0_count,
   output              o_src0_addr_inc,
   output              o_src0_addr_dec,
+  output              o_src0_flush,
 
   output              o_src0_if_strobe,
   input       [31:0]  i_src0_if_data,
@@ -103,6 +104,7 @@ module wb_dma #(
   output      [23:0]  o_src1_count,
   output              o_src1_addr_inc,
   output              o_src1_addr_dec,
+  output              o_src1_flush,
 
   output              o_src1_if_strobe,
   input       [31:0]  i_src1_if_data,
@@ -116,6 +118,7 @@ module wb_dma #(
   output      [23:0]  o_src2_count,
   output              o_src2_addr_inc,
   output              o_src2_addr_dec,
+  output              o_src2_flush,
 
   output              o_src2_if_strobe,
   input       [31:0]  i_src2_if_data,
@@ -129,6 +132,7 @@ module wb_dma #(
   output      [23:0]  o_src3_count,
   output              o_src3_addr_inc,
   output              o_src3_addr_dec,
+  output              o_src3_flush,
 
   output              o_src3_if_strobe,
   input       [31:0]  i_src3_if_data,
@@ -143,6 +147,7 @@ module wb_dma #(
   output              o_snk0_write_addr_dec,
   output              o_snk0_write_busy,
   output      [23:0]  o_snk0_write_count,
+  output              o_snk0_flush,
 
   output              o_snk0_strobe,
   input       [1:0]   i_snk0_ready,
@@ -157,7 +162,7 @@ module wb_dma #(
   output              o_snk1_write_addr_dec,
   output              o_snk1_write_busy,
   output      [23:0]  o_snk1_write_count,
-
+  output              o_snk1_flush,
 
   output              o_snk1_strobe,
   input       [1:0]   i_snk1_ready,
@@ -172,6 +177,7 @@ module wb_dma #(
   output              o_snk2_write_addr_dec,
   output              o_snk2_write_busy,
   output      [23:0]  o_snk2_write_count,
+  output              o_snk2_flush,
 
   output              o_snk2_strobe,
   input       [1:0]   i_snk2_ready,
@@ -186,7 +192,7 @@ module wb_dma #(
   output              o_snk3_write_addr_dec,
   output              o_snk3_write_busy,
   output      [23:0]  o_snk3_write_count,
-
+  output              o_snk3_flush,
 
   output              o_snk3_strobe,
   input       [1:0]   i_snk3_ready,
@@ -221,9 +227,9 @@ localparam      SNK2_CONTROL_ADDR       = 32'h0000000E;
 localparam      SNK3_CONTROL_ADDR       = 32'h0000000F;
 
 localparam      SNK0_STATUS_ADDR        = 32'h00000010;
-localparam      SNK1_STATUS_ADDR        = 32'h00000012;
-localparam      SNK2_STATUS_ADDR        = 32'h00000013;
-localparam      SNK3_STATUS_ADDR        = 32'h00000014;
+localparam      SNK1_STATUS_ADDR        = 32'h00000011;
+localparam      SNK2_STATUS_ADDR        = 32'h00000012;
+localparam      SNK3_STATUS_ADDR        = 32'h00000013;
 
 localparam      PARAM_SRC_ADDR_LOW0     = 32'h00000020;
 localparam      PARAM_SRC_ADDR_HIGH0    = 32'h00000021;
@@ -313,65 +319,66 @@ reg   [63:0]          cmd_src_address0;
 reg   [63:0]          cmd_dest_address0;
 reg   [31:0]          cmd_count0;
 reg   [15:0]          cmd_flags0;
-reg   [15:0]          cmd_cross_src_port0;
-reg   [15:0]          cmd_cross_dest_port0;
 reg   [2:0]           cmd_next0;
+reg   [3:0]           cmd_bond_ingress0;
+reg   [3:0]           cmd_bond_egress0;
 
 reg   [63:0]          cmd_src_address1;
 reg   [63:0]          cmd_dest_address1;
 reg   [31:0]          cmd_count1;
 reg   [15:0]          cmd_flags1;
-reg   [15:0]          cmd_cross_src_port1;
-reg   [15:0]          cmd_cross_dest_port1;
 reg   [2:0]           cmd_next1;
+reg   [3:0]           cmd_bond_ingress1;
+reg   [3:0]           cmd_bond_egress1;
 
 reg   [63:0]          cmd_src_address2;
 reg   [63:0]          cmd_dest_address2;
 reg   [31:0]          cmd_count2;
 reg   [15:0]          cmd_flags2;
-reg   [15:0]          cmd_cross_src_port2;
-reg   [15:0]          cmd_cross_dest_port2;
 reg   [2:0]           cmd_next2;
+reg   [3:0]           cmd_bond_ingress2;
+reg   [3:0]           cmd_bond_egress2;
 
 reg   [63:0]          cmd_src_address3;
 reg   [63:0]          cmd_dest_address3;
 reg   [31:0]          cmd_count3;
 reg   [15:0]          cmd_flags3;
-reg   [15:0]          cmd_cross_src_port3;
-reg   [15:0]          cmd_cross_dest_port3;
 reg   [2:0]           cmd_next3;
+reg   [3:0]           cmd_bond_ingress3;
+reg   [3:0]           cmd_bond_egress3;
 
 reg   [63:0]          cmd_src_address4;
 reg   [63:0]          cmd_dest_address4;
 reg   [31:0]          cmd_count4;
 reg   [15:0]          cmd_flags4;
-reg   [15:0]          cmd_cross_src_port4;
-reg   [15:0]          cmd_cross_dest_port4;
 reg   [2:0]           cmd_next4;
+reg   [3:0]           cmd_bond_ingress4;
+reg   [3:0]           cmd_bond_egress4;
 
 reg   [63:0]          cmd_src_address5;
 reg   [63:0]          cmd_dest_address5;
 reg   [31:0]          cmd_count5;
 reg   [15:0]          cmd_flags5;
-reg   [15:0]          cmd_cross_src_port5;
-reg   [15:0]          cmd_cross_dest_port5;
 reg   [2:0]           cmd_next5;
+reg   [3:0]           cmd_bond_ingress5;
+reg   [3:0]           cmd_bond_egress5;
 
 reg   [63:0]          cmd_src_address6;
 reg   [63:0]          cmd_dest_address6;
 reg   [31:0]          cmd_count6;
 reg   [15:0]          cmd_flags6;
-reg   [15:0]          cmd_cross_src_port6;
-reg   [15:0]          cmd_cross_dest_port6;
 reg   [2:0]           cmd_next6;
+reg   [3:0]           cmd_bond_ingress6;
+reg   [3:0]           cmd_bond_egress6;
 
 reg   [63:0]          cmd_src_address7;
 reg   [63:0]          cmd_dest_address7;
 reg   [31:0]          cmd_count7;
 reg   [15:0]          cmd_flags7;
-reg   [15:0]          cmd_cross_src_port7;
-reg   [15:0]          cmd_cross_dest_port7;
 reg   [2:0]           cmd_next7;
+reg   [3:0]           cmd_bond_ingress7;
+reg   [3:0]           cmd_bond_egress7;
+
 
 
 //Submodules
@@ -406,6 +413,7 @@ dma  dmacntrl(
   .o_src0_count         (o_src0_count         ),
   .o_src0_addr_inc      (o_src0_addr_inc      ),
   .o_src0_addr_dec      (o_src0_addr_dec      ),
+  .o_src0_flush         (o_src0_flush         ),
 
   .o_src0_strobe        (o_src0_if_strobe     ),
   .i_src0_data          (i_src0_if_data       ),
@@ -418,6 +426,7 @@ dma  dmacntrl(
   .o_src1_count         (o_src1_count         ),
   .o_src1_addr_inc      (o_src1_addr_inc      ),
   .o_src1_addr_dec      (o_src1_addr_dec      ),
+  .o_src1_flush         (o_src1_flush         ),
 
   .o_src1_strobe        (o_src1_if_strobe     ),
   .i_src1_data          (i_src1_if_data       ),
@@ -430,6 +439,7 @@ dma  dmacntrl(
   .o_src2_count         (o_src2_count         ),
   .o_src2_addr_inc      (o_src2_addr_inc      ),
   .o_src2_addr_dec      (o_src2_addr_dec      ),
+  .o_src2_flush         (o_src2_flush         ),
 
   .o_src2_strobe        (o_src2_if_strobe     ),
   .i_src2_data          (i_src2_if_data       ),
@@ -442,6 +452,7 @@ dma  dmacntrl(
   .o_src3_count         (o_src3_count         ),
   .o_src3_addr_inc      (o_src3_addr_inc      ),
   .o_src3_addr_dec      (o_src3_addr_dec      ),
+  .o_src3_flush         (o_src3_flush         ),
 
   .o_src3_strobe        (o_src3_if_strobe     ),
   .i_src3_data          (i_src3_if_data       ),
@@ -449,13 +460,13 @@ dma  dmacntrl(
   .o_src3_activate      (o_src3_if_activate   ),
   .i_src3_size          (i_src3_if_size       ),
 
-
   .o_snk0_write_enable  (o_snk0_write_enable  ),
   .o_snk0_write_addr    (o_snk0_write_addr    ),
   .o_snk0_write_addr_inc(o_snk0_write_addr_inc),
   .o_snk0_write_addr_dec(o_snk0_write_addr_dec),
   .o_snk0_write_busy    (o_snk0_write_busy    ),
   .o_snk0_write_count   (o_snk0_write_count   ),
+  .o_snk0_flush         (o_snk0_flush         ),
 
   .o_snk0_strobe        (o_snk0_strobe        ),
   .i_snk0_ready         (i_snk0_ready         ),
@@ -469,6 +480,7 @@ dma  dmacntrl(
   .o_snk1_write_addr_dec(o_snk1_write_addr_dec),
   .o_snk1_write_busy    (o_snk1_write_busy    ),
   .o_snk1_write_count   (o_snk1_write_count   ),
+  .o_snk1_flush         (o_snk1_flush         ),
 
   .o_snk1_strobe        (o_snk1_strobe        ),
   .i_snk1_ready         (i_snk1_ready         ),
@@ -482,6 +494,7 @@ dma  dmacntrl(
   .o_snk2_write_addr_dec(o_snk2_write_addr_dec),
   .o_snk2_write_busy    (o_snk2_write_busy    ),
   .o_snk2_write_count   (o_snk2_write_count   ),
+  .o_snk2_flush         (o_snk2_flush         ),
 
   .o_snk2_strobe        (o_snk2_strobe        ),
   .i_snk2_ready         (i_snk2_ready         ),
@@ -495,6 +508,7 @@ dma  dmacntrl(
   .o_snk3_write_addr_dec(o_snk3_write_addr_dec),
   .o_snk3_write_busy    (o_snk3_write_busy    ),
   .o_snk3_write_count   (o_snk3_write_count   ),
+  .o_snk3_flush         (o_snk3_flush         ),
 
   .o_snk3_strobe        (o_snk3_strobe        ),
   .i_snk3_ready         (i_snk3_ready         ),
@@ -506,65 +520,72 @@ dma  dmacntrl(
   .cmd_dest_address0    (cmd_dest_address0    ),
   .cmd_count0           (cmd_count0           ),
   .cmd_flags0           (cmd_flags0           ),
-  .cmd_cross_src_port0  (cmd_cross_src_port0  ),
-  .cmd_cross_dest_port0 (cmd_cross_dest_port0 ),
   .cmd_next0            (cmd_next0            ),
+  .cmd_bond_ingress0    (cmd_bond_ingress0    ),
+  .cmd_bond_egress0     (cmd_bond_egress0     ),
 
   .cmd_src_address1     (cmd_src_address1     ),
   .cmd_dest_address1    (cmd_dest_address1    ),
   .cmd_count1           (cmd_count1           ),
   .cmd_flags1           (cmd_flags1           ),
-  .cmd_cross_src_port1  (cmd_cross_src_port1  ),
-  .cmd_cross_dest_port1 (cmd_cross_dest_port1 ),
   .cmd_next1            (cmd_next1            ),
+  .cmd_bond_ingress1    (cmd_bond_ingress1    ),
+  .cmd_bond_egress1     (cmd_bond_egress1     ),
+
 
   .cmd_src_address2     (cmd_src_address2     ),
   .cmd_dest_address2    (cmd_dest_address2    ),
   .cmd_count2           (cmd_count2           ),
   .cmd_flags2           (cmd_flags2           ),
-  .cmd_cross_src_port2  (cmd_cross_src_port2  ),
-  .cmd_cross_dest_port2 (cmd_cross_dest_port2 ),
   .cmd_next2            (cmd_next2            ),
+  .cmd_bond_ingress2    (cmd_bond_ingress2    ),
+  .cmd_bond_egress2     (cmd_bond_egress2     ),
+
 
   .cmd_src_address3     (cmd_src_address3     ),
   .cmd_dest_address3    (cmd_dest_address3    ),
   .cmd_count3           (cmd_count3           ),
   .cmd_flags3           (cmd_flags3           ),
-  .cmd_cross_src_port3  (cmd_cross_src_port3  ),
-  .cmd_cross_dest_port3 (cmd_cross_dest_port3 ),
   .cmd_next3            (cmd_next3            ),
+  .cmd_bond_ingress3    (cmd_bond_ingress3    ),
+  .cmd_bond_egress3     (cmd_bond_egress3     ),
+
 
   .cmd_src_address4     (cmd_src_address4     ),
   .cmd_dest_address4    (cmd_dest_address4    ),
   .cmd_count4           (cmd_count4           ),
   .cmd_flags4           (cmd_flags4           ),
-  .cmd_cross_src_port4  (cmd_cross_src_port4  ),
-  .cmd_cross_dest_port4 (cmd_cross_dest_port4 ),
   .cmd_next4            (cmd_next4            ),
+  .cmd_bond_ingress4    (cmd_bond_ingress4    ),
+  .cmd_bond_egress4     (cmd_bond_egress4     ),
+
 
   .cmd_src_address5     (cmd_src_address5     ),
   .cmd_dest_address5    (cmd_dest_address5    ),
   .cmd_count5           (cmd_count5           ),
   .cmd_flags5           (cmd_flags5           ),
-  .cmd_cross_src_port5  (cmd_cross_src_port5  ),
-  .cmd_cross_dest_port5 (cmd_cross_dest_port5 ),
   .cmd_next5            (cmd_next5            ),
+  .cmd_bond_ingress5    (cmd_bond_ingress5    ),
+  .cmd_bond_egress5     (cmd_bond_egress5     ),
+
 
   .cmd_src_address6     (cmd_src_address6     ),
   .cmd_dest_address6    (cmd_dest_address6    ),
   .cmd_count6           (cmd_count6           ),
   .cmd_flags6           (cmd_flags6           ),
-  .cmd_cross_src_port6  (cmd_cross_src_port6  ),
-  .cmd_cross_dest_port6 (cmd_cross_dest_port6 ),
   .cmd_next6            (cmd_next6            ),
+  .cmd_bond_ingress6    (cmd_bond_ingress6    ),
+  .cmd_bond_egress6     (cmd_bond_egress6     ),
+
 
   .cmd_src_address7     (cmd_src_address7     ),
   .cmd_dest_address7    (cmd_dest_address7    ),
   .cmd_count7           (cmd_count7           ),
   .cmd_flags7           (cmd_flags7           ),
-  .cmd_cross_src_port7  (cmd_cross_src_port7  ),
-  .cmd_cross_dest_port7 (cmd_cross_dest_port7 ),
   .cmd_next7            (cmd_next7            ),
+  .cmd_bond_ingress7    (cmd_bond_ingress7    ),
+  .cmd_bond_egress7     (cmd_bond_egress7     ),
+
 
   .interrupt            (interrupt            )
 );
@@ -596,65 +617,65 @@ always @ (posedge clk) begin
     cmd_dest_address0             <= 0;
     cmd_count0                    <= 0;
     cmd_flags0                    <= 0;
-    cmd_cross_src_port0           <= 0;
-    cmd_cross_dest_port0          <= 0;
     cmd_next0                     <= 0;
+    cmd_bond_ingress0             <= 0;
+    cmd_bond_egress0              <= 0;
 
     cmd_src_address1              <= 0;
     cmd_dest_address1             <= 0;
     cmd_count1                    <= 0;
     cmd_flags1                    <= 0;
-    cmd_cross_src_port1           <= 0;
-    cmd_cross_dest_port1          <= 0;
     cmd_next1                     <= 0;
+    cmd_bond_ingress1             <= 0;
+    cmd_bond_egress1              <= 0;
 
     cmd_src_address2              <= 0;
     cmd_dest_address2             <= 0;
     cmd_count2                    <= 0;
     cmd_flags2                    <= 0;
-    cmd_cross_src_port2           <= 0;
-    cmd_cross_dest_port2          <= 0;
     cmd_next2                     <= 0;
+    cmd_bond_ingress2             <= 0;
+    cmd_bond_egress2              <= 0;
 
     cmd_src_address3              <= 0;
     cmd_dest_address3             <= 0;
     cmd_count3                    <= 0;
     cmd_flags3                    <= 0;
-    cmd_cross_src_port3           <= 0;
-    cmd_cross_dest_port3          <= 0;
     cmd_next3                     <= 0;
+    cmd_bond_ingress3             <= 0;
+    cmd_bond_egress3              <= 0;
 
     cmd_src_address4              <= 0;
     cmd_dest_address4             <= 0;
     cmd_count4                    <= 0;
     cmd_flags4                    <= 0;
-    cmd_cross_src_port4           <= 0;
-    cmd_cross_dest_port4          <= 0;
     cmd_next4                     <= 0;
+    cmd_bond_ingress4             <= 0;
+    cmd_bond_egress4              <= 0;
 
     cmd_src_address5              <= 0;
     cmd_dest_address5             <= 0;
     cmd_count5                    <= 0;
     cmd_flags5                    <= 0;
-    cmd_cross_src_port5           <= 0;
-    cmd_cross_dest_port5          <= 0;
     cmd_next5                     <= 0;
+    cmd_bond_ingress5             <= 0;
+    cmd_bond_egress5              <= 0;
 
     cmd_src_address6              <= 0;
     cmd_dest_address6             <= 0;
     cmd_count6                    <= 0;
     cmd_flags6                    <= 0;
-    cmd_cross_src_port6           <= 0;
-    cmd_cross_dest_port6          <= 0;
     cmd_next6                     <= 0;
+    cmd_bond_ingress6             <= 0;
+    cmd_bond_egress6              <= 0;
 
     cmd_src_address7              <= 0;
     cmd_dest_address7             <= 0;
     cmd_count7                    <= 0;
     cmd_flags7                    <= 0;
-    cmd_cross_src_port7           <= 0;
-    cmd_cross_dest_port7          <= 0;
     cmd_next7                     <= 0;
+    cmd_bond_ingress7             <= 0;
+    cmd_bond_egress7              <= 0;
 
 
 
@@ -716,14 +737,11 @@ always @ (posedge clk) begin
               cmd_count0                <= i_wbs_dat;
             end
             PARAM_CNT0: begin
-              cmd_flags0                <= i_wbs_dat[15:0];
-              cmd_next0                 <= i_wbs_dat[19:16];
-              cmd_cross_src_port0       <= i_wbs_dat[23:20];
-              cmd_cross_dest_port0      <= i_wbs_dat[27:24];
+              cmd_flags0                <= i_wbs_dat[`BIT_CMD_FLAG_TOP:`BIT_CMD_FLAG_BOT];
+              cmd_next0                 <= i_wbs_dat[`BIT_CMD_NEXT_TOP:`BIT_CMD_NEXT_BOT];
+              cmd_bond_ingress0         <= i_wbs_dat[`BIT_BOND_ADDR_INGRESS_TOP:`BIT_BOND_ADDR_INGRESS_BOT];
+              cmd_bond_egress0          <= i_wbs_dat[`BIT_BOND_ADDR_EGRESS_TOP:`BIT_BOND_ADDR_EGRESS_BOT];
             end
-
-
-
             //Address 1
             PARAM_SRC_ADDR_LOW1: begin
               cmd_src_address1 [31:0]   <= i_wbs_dat;
@@ -741,10 +759,11 @@ always @ (posedge clk) begin
               cmd_count1                <= i_wbs_dat;
             end
             PARAM_CNT1: begin
-              cmd_flags1                <= i_wbs_dat[15:0];
-              cmd_next1                 <= i_wbs_dat[19:16];
-              cmd_cross_src_port1       <= i_wbs_dat[23:20];
-              cmd_cross_dest_port1      <= i_wbs_dat[27:24];
+              cmd_flags1                <= i_wbs_dat[`BIT_CMD_FLAG_TOP:`BIT_CMD_FLAG_BOT];
+              cmd_next1                 <= i_wbs_dat[`BIT_CMD_NEXT_TOP:`BIT_CMD_NEXT_BOT];
+              cmd_bond_ingress1         <= i_wbs_dat[`BIT_BOND_ADDR_INGRESS_TOP:`BIT_BOND_ADDR_INGRESS_BOT];
+              cmd_bond_egress1          <= i_wbs_dat[`BIT_BOND_ADDR_EGRESS_TOP:`BIT_BOND_ADDR_EGRESS_BOT];
+
             end
 
             //Address 2
@@ -764,10 +783,12 @@ always @ (posedge clk) begin
               cmd_count2                <= i_wbs_dat;
             end
             PARAM_CNT2: begin
-              cmd_flags2                <= i_wbs_dat[15:0];
-              cmd_next2                 <= i_wbs_dat[19:16];
-              cmd_cross_src_port2       <= i_wbs_dat[23:20];
-              cmd_cross_dest_port2      <= i_wbs_dat[27:24];
+              cmd_flags2                <= i_wbs_dat[`BIT_CMD_FLAG_TOP:`BIT_CMD_FLAG_BOT];
+              cmd_next2                 <= i_wbs_dat[`BIT_CMD_NEXT_TOP:`BIT_CMD_NEXT_BOT];
+              cmd_bond_ingress2         <= i_wbs_dat[`BIT_BOND_ADDR_INGRESS_TOP:`BIT_BOND_ADDR_INGRESS_BOT];
+              cmd_bond_egress2          <= i_wbs_dat[`BIT_BOND_ADDR_EGRESS_TOP:`BIT_BOND_ADDR_EGRESS_BOT];
+
+
             end
 
             //Address 3
@@ -787,10 +808,10 @@ always @ (posedge clk) begin
               cmd_count3                <= i_wbs_dat;
             end
             PARAM_CNT3: begin
-              cmd_flags3                <= i_wbs_dat[15:0];
-              cmd_next3                 <= i_wbs_dat[19:16];
-              cmd_cross_src_port3       <= i_wbs_dat[23:20];
-              cmd_cross_dest_port3      <= i_wbs_dat[27:24];
+              cmd_flags3                <= i_wbs_dat[`BIT_CMD_FLAG_TOP:`BIT_CMD_FLAG_BOT];
+              cmd_next3                 <= i_wbs_dat[`BIT_CMD_NEXT_TOP:`BIT_CMD_NEXT_BOT];
+              cmd_bond_ingress3         <= i_wbs_dat[`BIT_BOND_ADDR_INGRESS_TOP:`BIT_BOND_ADDR_INGRESS_BOT];
+              cmd_bond_egress3          <= i_wbs_dat[`BIT_BOND_ADDR_EGRESS_TOP:`BIT_BOND_ADDR_EGRESS_BOT];
             end
 
             //Address 4
@@ -810,10 +831,10 @@ always @ (posedge clk) begin
               cmd_count4                <= i_wbs_dat;
             end
             PARAM_CNT4: begin
-              cmd_flags4                <= i_wbs_dat[15:0];
-              cmd_next4                 <= i_wbs_dat[19:16];
-              cmd_cross_src_port4       <= i_wbs_dat[23:20];
-              cmd_cross_dest_port4      <= i_wbs_dat[27:24];
+              cmd_flags4                <= i_wbs_dat[`BIT_CMD_FLAG_TOP:`BIT_CMD_FLAG_BOT];
+              cmd_next4                 <= i_wbs_dat[`BIT_CMD_NEXT_TOP:`BIT_CMD_NEXT_BOT];
+              cmd_bond_ingress4         <= i_wbs_dat[`BIT_BOND_ADDR_INGRESS_TOP:`BIT_BOND_ADDR_INGRESS_BOT];
+              cmd_bond_egress4          <= i_wbs_dat[`BIT_BOND_ADDR_EGRESS_TOP:`BIT_BOND_ADDR_EGRESS_BOT];
             end
 
             //Address 5
@@ -833,10 +854,11 @@ always @ (posedge clk) begin
               cmd_count5               <= i_wbs_dat;
             end
             PARAM_CNT5: begin
-              cmd_flags5               <= i_wbs_dat[15:0];
-              cmd_next5                <= i_wbs_dat[19:16];
-              cmd_cross_src_port5      <= i_wbs_dat[23:20];
-              cmd_cross_dest_port5     <= i_wbs_dat[27:24];
+              cmd_flags5               <= i_wbs_dat[`BIT_CMD_FLAG_TOP:`BIT_CMD_FLAG_BOT];
+              cmd_next5                <= i_wbs_dat[`BIT_CMD_NEXT_TOP:`BIT_CMD_NEXT_BOT];
+              cmd_bond_ingress5        <= i_wbs_dat[`BIT_BOND_ADDR_INGRESS_TOP:`BIT_BOND_ADDR_INGRESS_BOT];
+              cmd_bond_egress5         <= i_wbs_dat[`BIT_BOND_ADDR_EGRESS_TOP:`BIT_BOND_ADDR_EGRESS_BOT];
+
             end
 
             //Address 6
@@ -856,10 +878,12 @@ always @ (posedge clk) begin
               cmd_count6                <= i_wbs_dat;
             end
             PARAM_CNT6: begin
-              cmd_flags6                <= i_wbs_dat[15:0];
-              cmd_next6                 <= i_wbs_dat[19:16];
-              cmd_cross_src_port6       <= i_wbs_dat[23:20];
-              cmd_cross_dest_port6      <= i_wbs_dat[27:24];
+              cmd_flags6                <= i_wbs_dat[`BIT_CMD_FLAG_TOP:`BIT_CMD_FLAG_BOT];
+              cmd_next6                 <= i_wbs_dat[`BIT_CMD_NEXT_TOP:`BIT_CMD_NEXT_BOT];
+              cmd_bond_ingress6         <= i_wbs_dat[`BIT_BOND_ADDR_INGRESS_TOP:`BIT_BOND_ADDR_INGRESS_BOT];
+              cmd_bond_egress6          <= i_wbs_dat[`BIT_BOND_ADDR_EGRESS_TOP:`BIT_BOND_ADDR_EGRESS_BOT];
+
+
             end
 
             //Address 7
@@ -879,10 +903,10 @@ always @ (posedge clk) begin
               cmd_count7                <= i_wbs_dat;
             end
             PARAM_CNT7: begin
-              cmd_flags7                <= i_wbs_dat[15:0];
-              cmd_next7                 <= i_wbs_dat[19:16];
-              cmd_cross_src_port7       <= i_wbs_dat[23:20];
-              cmd_cross_dest_port7      <= i_wbs_dat[27:24];
+              cmd_flags7                <= i_wbs_dat[`BIT_CMD_FLAG_TOP:`BIT_CMD_FLAG_BOT];
+              cmd_next7                 <= i_wbs_dat[`BIT_CMD_NEXT_TOP:`BIT_CMD_NEXT_BOT];
+              cmd_bond_ingress7         <= i_wbs_dat[`BIT_BOND_ADDR_INGRESS_TOP:`BIT_BOND_ADDR_INGRESS_BOT];
+              cmd_bond_egress7          <= i_wbs_dat[`BIT_BOND_ADDR_EGRESS_TOP:`BIT_BOND_ADDR_EGRESS_BOT];
             end
             default: begin
             end
@@ -976,10 +1000,10 @@ always @ (posedge clk) begin
               o_wbs_dat  <=  cmd_count0;
             end
             PARAM_CNT0: begin
-              o_wbs_dat[15:0]     <=  cmd_flags0;
-              o_wbs_dat[19:16]    <=  cmd_next0;
-              o_wbs_dat[23:20]    <=  cmd_cross_src_port0;
-              o_wbs_dat[27:24]    <=  cmd_cross_dest_port0;
+              o_wbs_dat[`BIT_CMD_FLAG_TOP:`BIT_CMD_FLAG_BOT]                         <= cmd_flags0;
+              o_wbs_dat[`BIT_CMD_NEXT_TOP:`BIT_CMD_NEXT_BOT]                         <= cmd_next0;
+              o_wbs_dat[`BIT_BOND_ADDR_INGRESS_TOP:`BIT_BOND_ADDR_INGRESS_BOT]       <= cmd_bond_ingress0;
+              o_wbs_dat[`BIT_BOND_ADDR_EGRESS_TOP:`BIT_BOND_ADDR_EGRESS_BOT]         <= cmd_bond_egress0;
             end
             //Address 1
             PARAM_SRC_ADDR_LOW1: begin
@@ -998,10 +1022,10 @@ always @ (posedge clk) begin
               o_wbs_dat  <=  cmd_count1;
             end
             PARAM_CNT1: begin
-              o_wbs_dat[15:0]     <=  cmd_flags1;
-              o_wbs_dat[19:16]    <=  cmd_next1;
-              o_wbs_dat[23:20]    <=  cmd_cross_src_port1;
-              o_wbs_dat[27:24]    <=  cmd_cross_dest_port1;
+              o_wbs_dat[`BIT_CMD_FLAG_TOP:`BIT_CMD_FLAG_BOT]                         <= cmd_flags1;
+              o_wbs_dat[`BIT_CMD_NEXT_TOP:`BIT_CMD_NEXT_BOT]                         <= cmd_next1;
+              o_wbs_dat[`BIT_BOND_ADDR_INGRESS_TOP:`BIT_BOND_ADDR_INGRESS_BOT]       <= cmd_bond_ingress1;
+              o_wbs_dat[`BIT_BOND_ADDR_EGRESS_TOP:`BIT_BOND_ADDR_EGRESS_BOT]         <= cmd_bond_egress1;
             end
             //Address 2
             PARAM_SRC_ADDR_LOW2: begin
@@ -1020,10 +1044,10 @@ always @ (posedge clk) begin
               o_wbs_dat  <=  cmd_count2;
             end
             PARAM_CNT2: begin
-              o_wbs_dat[15:0]     <=  cmd_flags2;
-              o_wbs_dat[19:16]    <=  cmd_next2;
-              o_wbs_dat[23:20]    <=  cmd_cross_src_port2;
-              o_wbs_dat[27:24]    <=  cmd_cross_dest_port2;
+              o_wbs_dat[`BIT_CMD_FLAG_TOP:`BIT_CMD_FLAG_BOT]                         <= cmd_flags2;
+              o_wbs_dat[`BIT_CMD_NEXT_TOP:`BIT_CMD_NEXT_BOT]                         <= cmd_next2;
+              o_wbs_dat[`BIT_BOND_ADDR_INGRESS_TOP:`BIT_BOND_ADDR_INGRESS_BOT]       <= cmd_bond_ingress2;
+              o_wbs_dat[`BIT_BOND_ADDR_EGRESS_TOP:`BIT_BOND_ADDR_EGRESS_BOT]         <= cmd_bond_egress2;
             end
             //Address 3
             PARAM_SRC_ADDR_LOW3: begin
@@ -1042,10 +1066,10 @@ always @ (posedge clk) begin
               o_wbs_dat  <=  cmd_count3;
             end
             PARAM_CNT3: begin
-              o_wbs_dat[15:0]     <=  cmd_flags3;
-              o_wbs_dat[19:16]    <=  cmd_next3;
-              o_wbs_dat[23:20]    <=  cmd_cross_src_port3;
-              o_wbs_dat[27:24]    <=  cmd_cross_dest_port3;
+              o_wbs_dat[`BIT_CMD_FLAG_TOP:`BIT_CMD_FLAG_BOT]                         <= cmd_flags3;
+              o_wbs_dat[`BIT_CMD_NEXT_TOP:`BIT_CMD_NEXT_BOT]                         <= cmd_next3;
+              o_wbs_dat[`BIT_BOND_ADDR_INGRESS_TOP:`BIT_BOND_ADDR_INGRESS_BOT]       <= cmd_bond_ingress3;
+              o_wbs_dat[`BIT_BOND_ADDR_EGRESS_TOP:`BIT_BOND_ADDR_EGRESS_BOT]         <= cmd_bond_egress3;
             end
             //Address 4
             PARAM_SRC_ADDR_LOW4: begin
@@ -1064,10 +1088,10 @@ always @ (posedge clk) begin
               o_wbs_dat  <=  cmd_count4;
             end
             PARAM_CNT4: begin
-              o_wbs_dat[15:0]     <=  cmd_flags4;
-              o_wbs_dat[19:16]    <=  cmd_next4;
-              o_wbs_dat[23:20]    <=  cmd_cross_src_port4;
-              o_wbs_dat[27:24]    <=  cmd_cross_dest_port4;
+              o_wbs_dat[`BIT_CMD_FLAG_TOP:`BIT_CMD_FLAG_BOT]                         <= cmd_flags4;
+              o_wbs_dat[`BIT_CMD_NEXT_TOP:`BIT_CMD_NEXT_BOT]                         <= cmd_next4;
+              o_wbs_dat[`BIT_BOND_ADDR_INGRESS_TOP:`BIT_BOND_ADDR_INGRESS_BOT]       <= cmd_bond_ingress4;
+              o_wbs_dat[`BIT_BOND_ADDR_EGRESS_TOP:`BIT_BOND_ADDR_EGRESS_BOT]         <= cmd_bond_egress4;
             end
             //Address 5
             PARAM_SRC_ADDR_LOW5: begin
@@ -1086,10 +1110,10 @@ always @ (posedge clk) begin
               o_wbs_dat  <=  cmd_count5;
             end
             PARAM_CNT5: begin
-              o_wbs_dat[15:0]     <=  cmd_flags5;
-              o_wbs_dat[19:16]    <=  cmd_next5;
-              o_wbs_dat[23:20]    <=  cmd_cross_src_port5;
-              o_wbs_dat[27:24]    <=  cmd_cross_dest_port5;
+              o_wbs_dat[`BIT_CMD_FLAG_TOP:`BIT_CMD_FLAG_BOT]                         <= cmd_flags5;
+              o_wbs_dat[`BIT_CMD_NEXT_TOP:`BIT_CMD_NEXT_BOT]                         <= cmd_next5;
+              o_wbs_dat[`BIT_BOND_ADDR_INGRESS_TOP:`BIT_BOND_ADDR_INGRESS_BOT]       <= cmd_bond_ingress5;
+              o_wbs_dat[`BIT_BOND_ADDR_EGRESS_TOP:`BIT_BOND_ADDR_EGRESS_BOT]         <= cmd_bond_egress5;
             end
             //Address 6
             PARAM_SRC_ADDR_LOW6: begin
@@ -1108,10 +1132,10 @@ always @ (posedge clk) begin
               o_wbs_dat  <=  cmd_count6;
             end
             PARAM_CNT6: begin
-              o_wbs_dat[15:0]     <=  cmd_flags6;
-              o_wbs_dat[19:16]    <=  cmd_next6;
-              o_wbs_dat[23:20]    <=  cmd_cross_src_port6;
-              o_wbs_dat[27:24]    <=  cmd_cross_dest_port6;
+              o_wbs_dat[`BIT_CMD_FLAG_TOP:`BIT_CMD_FLAG_BOT]                         <= cmd_flags6;
+              o_wbs_dat[`BIT_CMD_NEXT_TOP:`BIT_CMD_NEXT_BOT]                         <= cmd_next6;
+              o_wbs_dat[`BIT_BOND_ADDR_INGRESS_TOP:`BIT_BOND_ADDR_INGRESS_BOT]       <= cmd_bond_ingress6;
+              o_wbs_dat[`BIT_BOND_ADDR_EGRESS_TOP:`BIT_BOND_ADDR_EGRESS_BOT]         <= cmd_bond_egress6;
             end
             //Address 7
             PARAM_SRC_ADDR_LOW7: begin
@@ -1130,10 +1154,10 @@ always @ (posedge clk) begin
               o_wbs_dat  <=  cmd_count7;
             end
             PARAM_CNT7: begin
-              o_wbs_dat[15:0]   <=  cmd_flags7;
-              o_wbs_dat[19:16]  <=  cmd_next7;
-              o_wbs_dat[23:20]  <=  cmd_cross_src_port7;
-              o_wbs_dat[27:24]  <=  cmd_cross_dest_port7;
+              o_wbs_dat[`BIT_CMD_FLAG_TOP:`BIT_CMD_FLAG_BOT]                          <= cmd_flags7;
+              o_wbs_dat[`BIT_CMD_NEXT_TOP:`BIT_CMD_NEXT_BOT]                          <= cmd_next7;
+              o_wbs_dat[`BIT_BOND_ADDR_INGRESS_TOP:`BIT_BOND_ADDR_INGRESS_BOT]        <= cmd_bond_ingress7;
+              o_wbs_dat[`BIT_BOND_ADDR_EGRESS_TOP:`BIT_BOND_ADDR_EGRESS_BOT]          <= cmd_bond_egress7;
             end
             default: begin
             end

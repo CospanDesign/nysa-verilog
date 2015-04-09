@@ -1,10 +1,88 @@
 DMA Controller
 
-Flags:
-  -SINK_MASTER_ADDR       [8]:    DMA must use the address provided by the sink
-                                  If not set the DMA uses the address set by the user
-  -SOURCE_MASTER_ADDR     [7]:    DMA must use the address provided by the source
-                                  If not set the DMA uses the address set by the user
-  -DMA_ENABLE             [6]:    Enable DMA Channel
-  -PPFIFO_WB_SEL          [5]:    Select between a Ping Pong FIFO or the wishbone bus as the sink
-  -SINK_ADDR              [3:0]:  Address of the sink address within DMA
+Registers:
+  DMA Control Registers
+  0x00: (RW): DMA Control Register
+  0x01: (R ): DMA Status
+  0x02: (R ): Read the number of sources in the DMA
+  0x03: (R ): Read the number of sinks in the DMA
+
+  Source Port Address
+  0x04: (RW): Source 0 Control
+  0x05: (RW): Source 1 Control
+  0x06: (RW): Source 2 Control
+  0x07: (RW): Source 3 Control
+  0x08: (R ): Source 0 Status
+  0x09: (R ): Source 1 Status
+  0x0A: (R ): Source 2 Status
+  0x0B: (R ): Source 3 Status
+
+  Sink Port Addresses
+  0x0C: (RW): Sink 0 Control
+  0x0D: (RW): Sink 1 Control
+  0x0E: (RW): Sink 2 Control
+  0x0F: (RW): Sink 3 Control
+  0x10: (R ): Sink 0 Status
+  0x11: (R ): Sink 1 Status
+  0x12: (R ): Sink 2 Status
+  0x13: (R ): Sink 3 Status
+
+  Source Control 0 - 3
+    Each source is configure independent of the instructions
+      (this might need to be changed in the future)
+
+    BITs:
+      00:     Enable Channel (Start Processing instructions given at Instruction Pointer)
+      3:2
+      5:4:    SINK Address to bind [1:0]
+      7:6:
+      10:8:   Instruction Pointer  [2:0]
+      31:11:
+
+  Instructions 0 - 7
+  Description:
+    Each instruction has a source address, destination address number of
+    32-bit words to transfer, and a control/flag registers.
+    The instructions start at an offset of
+      20 + 10 * Instruction Index
+
+    As an example to write to instruction 3: the first register address:
+      0x20 + 0x10 * (3) = 0x50
+
+    The registers of each instruction are as follows:
+
+    Offset:
+
+    0x00: (RW) Source Address (Low 32-bit value)
+    0x01: (RW) Source Address (High 32-bit value)
+    0x02: (RW) Destination Address (Low 32-bit value)
+    0x03: (RW) Destination Address (High 32-bit value)
+    0x04: (RW) Number of 32-bit words to transfer
+    0x05: (RW) Control:
+      BITs:
+        00: Decrement Source address on every read
+        01: Increment Source address on every read
+        02: Reset address on every command (Set this low to allow the address to continuously increment or decrement)
+        03:
+        04: Decrement Destination address on every write
+        05: Increment Destination address on every write
+        06: Respect the Quantum of a write packet
+            0: Send data to the destination as fast as possible
+            1: Do not finish a write until an entire packet of data is written, this is useful for things like SATA
+        07: Reset address on every command (Set this low to allow the address to continuously increment or decrement)
+        08: Use CMD_BOND_ADDR_INGRESS with this bit to block on the action
+        09: Use CMD_BOND_ADDR_EGRESS with this bit to bock
+        10:
+        11: CMD_CONTINUE: Continue with the next data in instruction
+            0: Stop the DMA transfer after the packet is finished
+            1: Read the next instruction and execute it
+        15:12:
+        After completing go to the command defined by the next 4 bits (Only do this if CMD_CONTINUE is 1)
+        19:16: NEXT_COMMAND BIT  [3:0]
+        23:20:
+        27:24: CMD_BOND_ADDR_INGRESS [3:0] Address of Instruction to wait until read has finished
+        31:28: CMD_BOND_ADDR_EGRESS  [3:0] Address of Instruction to wait until write is finished
+
+
+#Interrupts
+Call an interrupt when an instruction is finished
