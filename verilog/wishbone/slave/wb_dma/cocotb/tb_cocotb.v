@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-`include "sata_defines.v"
+`include "dma_defines.v"
 
 module tb_cocotb (
 
@@ -13,12 +13,15 @@ input   [31:0]    in_command,
 input   [31:0]    in_address,
 input   [31:0]    in_data,
 input   [27:0]    in_data_count,
+
 input             out_ready,
 output            out_en,
 output  [31:0]    out_status,
 output  [31:0]    out_address,
 output  [31:0]    out_data,
 output  [27:0]    out_data_count,
+input   [31:0]    test_id,
+
 input             ih_reset
 
 );
@@ -27,13 +30,14 @@ input             ih_reset
 //Parameters
 //Registers/Wires
 
-reg               in_ready;
-reg   [31:0]      in_command;
-reg   [31:0]      in_address;
-reg   [31:0]      in_data;
-reg   [27:0]      in_data_count;
-reg               out_ready;
-reg               ih_reset;
+reg               r_rst;
+reg               r_in_ready;
+reg   [31:0]      r_in_command;
+reg   [31:0]      r_in_address;
+reg   [31:0]      r_in_data;
+reg   [27:0]      r_in_data_count;
+reg               r_out_ready;
+reg               r_ih_reset;
 
 //There is a bug in COCOTB when stiumlating a signal, sometimes it can be corrupted if not registered
 always @ (*) r_rst           = rst;
@@ -120,16 +124,16 @@ wire              read_strobe     [3:0];
 
 //Submodules
 wishbone_master wm (
-  .clk            (clk              ),
-  .rst            (rst              ),
+  .clk            (clk            ),
+  .rst            (rst            ),
 
-  .i_ih_rst       (ih_reset       ),
-  .i_ready        (in_ready       ),
-  .i_command      (in_command     ),
-  .i_address      (in_address     ),
-  .i_data         (in_data        ),
-  .i_data_count   (in_data_count  ),
-  .i_out_ready    (out_ready      ),
+  .i_ih_rst       (r_ih_reset     ),
+  .i_ready        (r_in_ready     ),
+  .i_command      (r_in_command   ),
+  .i_address      (r_in_address   ),
+  .i_data         (r_in_data      ),
+  .i_data_count   (r_in_data_count),
+  .i_out_ready    (r_out_ready    ),
   .o_en           (out_en         ),
   .o_status       (out_status     ),
   .o_address      (out_address    ),

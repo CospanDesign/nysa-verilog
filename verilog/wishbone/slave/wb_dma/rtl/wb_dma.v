@@ -39,10 +39,10 @@ SOFTWARE.
   SDB_ABI_CLASS:0
 
   Set the ABI Major Version: (8-bits)
-  SDB_ABI_VERSION_MAJOR:13
+  SDB_ABI_VERSION_MAJOR:0x13
 
   Set the ABI Minor Version (8-bits)
-  SDB_ABI_VERSION_MINOR:0
+  SDB_ABI_VERSION_MINOR:0x01
 
   Set the Module URL (63 Unicode Characters)
   SDB_MODULE_URL:http://www.example.com
@@ -60,7 +60,7 @@ SOFTWARE.
   SDB_WRITEABLE:True
 
   Device Size: Number of Registers
-  SDB_SIZE:3
+  SDB_SIZE:0x95
 */
 
 `include "dma_defines.v"

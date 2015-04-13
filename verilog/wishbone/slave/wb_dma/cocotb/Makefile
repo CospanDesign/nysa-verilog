@@ -8,12 +8,14 @@ PYTHONPATH := ./model:$(PYTHONPATH)
 export PYTHONPATH
 
 
-EXTRA_ARGS+=-I$(TOPDIR)/rtl/
+EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/
 
 #Dependencies
 VERILOG_SOURCES = $(NYSA)/verilog/generic/blk_mem.v
 VERILOG_SOURCES += $(NYSA)/verilog/generic/cross_clock_enable.v
 VERILOG_SOURCES += $(NYSA)/verilog/generic/ppfifo.v
+VERILOG_SOURCES += $(NYSA)/verilog/wishbone/master/wishbone_master.v
+VERILOG_SOURCES += ${NYSA}/verilog/sim/wishbone/interconnect/example_2port_interconnect/wishbone_interconnect.v
 
 #Simulation Devices
 VERILOG_SOURCES += $(TOPDIR)/sim/test_mem_dev.v
@@ -30,7 +32,7 @@ TOPLEVEL = tb_cocotb
 GPI_IMPL := vpi
 
 export TOPLEVEL_LANG
-MODULE=tb_cocotb
+MODULE=test_dma
 
 include $(COCOTB)/makefiles/Makefile.inc
 include $(COCOTB)/makefiles/Makefile.sim

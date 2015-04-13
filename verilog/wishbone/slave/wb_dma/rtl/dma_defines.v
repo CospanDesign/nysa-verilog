@@ -12,11 +12,11 @@
 `define BIT_CFG_SRC_ADDR_DEC         1
 `define BIT_CFG_SRC_ADDR_INC         2
 
-`define BIT_CFG_SRC_SINK_ADDR_BOT    4
-`define BIT_CFG_SRC_SINK_ADDR_TOP    5
+`define BIT_CFG_SRC_SINK_ADDR_BOT    8
+`define BIT_CFG_SRC_SINK_ADDR_TOP    9
 
-`define BIT_CFG_IP_ADDR_BOT          8
-`define BIT_CFG_IP_ADDR_TOP          10
+`define BIT_CFG_IP_ADDR_BOT          16
+`define BIT_CFG_IP_ADDR_TOP          18
 
 
 //Sink Port Configuration

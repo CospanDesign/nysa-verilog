@@ -736,9 +736,10 @@ always @ (posedge clk) begin
     for (i = 0; i < `SOURCE_COUNT; i = i + 1) begin
       src_enable[i]                          <=  0;
       src_strobe[i]                          <=  0;
+      src_flush[i]                           <=  0;
+
       snk_strobe[snka[i]]                    <=  0;
       snk_in_use[snka[i]]                    <=  dma_enable[i];
-      src_flush[i]                           <=  0;
       snk_flush[snka[i]]                     <=  0;
 
       case (state[i])

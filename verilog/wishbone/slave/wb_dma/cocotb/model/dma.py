@@ -34,7 +34,7 @@ import time
 from array import array as Array
 
 
-import driver
+from nysa.host.driver import driver
 
 
 COSPAN_DESIGN_DMA_MODULE        = 0x01
@@ -52,16 +52,28 @@ CHANNEL_COUNT                   = 2
 SINK_COUNT                      = 3
 
 CHANNEL_ADDR_CONTROL_BASE       = 4
+
+BIT_CFG_DMA_ENABLE              = 0
+BIT_CFG_SRC_ADDR_DEC            = 1
+BIT_CFG_SRC_ADDR_INC            = 2
+
 CHANNEL_ADDR_STATUS_BASE        = 8
 
 SINK_ADDR_CONTROL_BASE          = 12
+
+BIT_CFG_DEST_ADDR_DEC           = 1
+BIT_CFG_DEST_ADDR_INC           = 2
+BIT_CFG_DEST_DATA_QUANTUM       = 3
+
 SINK_ADDR_STATUS_BASE           = 16
 
 BIT_CHAN_CNTRL_EN               = 0
-BIT_SINK_ADDR_TOP               = 5
-BIT_SINK_ADDR_BOT               = 6
-BIT_INST_PTR_TOP                = 10
-BIT_INST_PTR_BOT                = 8
+
+BIT_SINK_ADDR_BOT               = 8
+BIT_SINK_ADDR_TOP               = 10
+
+BIT_INST_PTR_BOT                = 16
+BIT_INST_PTR_TOP                = 19
 
 INST_BASE                       = 0x20
 INST_OFFSET                     = 0x10
@@ -98,7 +110,7 @@ BIT_INST_CMD_BOND_ADDR_OUT_TOP  = 31
 BIT_INST_CMD_BOND_ADDR_OUT_BOT  = 28
 
 #Instruction Count
-INST_COUNT                      = 8
+INSTRUCTION_COUNT               = 8
 
 
 class DMAError(Exception):
@@ -109,6 +121,7 @@ class DMAError(Exception):
         User requesting a channel count out of range
         User requesting an instruction out of range
     """
+    pass
 
 
 class DMA(driver.Driver):
@@ -126,12 +139,12 @@ class DMA(driver.Driver):
 
     @staticmethod
     def get_abi_minor():
+        #return COSPAN_DESIGN_DMA_MODULE
         return COSPAN_DESIGN_DMA_MODULE
-
 
     def __init__(self, nysa, urn, debug = False):
         super (DMA, self).__init__(nysa, urn, debug)
-        self.instructions_available = [for i in range(0, INST_COUNT)]
+        self.instructions_available = [i for i in range(0, INSTRUCTION_COUNT)]
         self.instruction_used = []
         self.channel_count = None
         self.sink_count = None
@@ -146,6 +159,11 @@ class DMA(driver.Driver):
         self.channel_count = self.read_register(CHANNEL_COUNT)
         self.sink_count = self.read_register(SINK_COUNT)
 
+    def get_channel_count(self):
+        return self.read_register(CHANNEL_COUNT)
+
+    def get_sink_count(self):
+        return self.read_register(SINK_COUNT)
 
     def enable_dma(self, enable):
         """
@@ -164,7 +182,7 @@ class DMA(driver.Driver):
         """
         self.set_register_bit(BIT_CONTROL_ENABLE, enable)
 
-    def enable_interrupt_when_command_fin(self, enable):
+    def enable_interrupt_when_command_finish(self, enable):
         """
         When the command is finished fire off an interrupt to the host
 
@@ -179,14 +197,15 @@ class DMA(driver.Driver):
         Raises:
             NysaCommError
         """
+        raise AssertionError("Not implemented yet!")
         pass
 
-    def set_channel_sink_addr(self, channel, addr):
+    def set_channel_sink_addr(self, channel, address):
         """
         Setup the addr where this channel will write to
 
         Args:
-            channel (unsigned char): channel to talk configure
+            channel (unsigned char): channel to configure
             addr (unsigned char): The 2 bit addr of the destination
                 channel
         Returns:
@@ -198,22 +217,21 @@ class DMA(driver.Driver):
         if channel > self.channel_count - 1:
             raise DMAError("Illegal channel count: %d > %d" % (channel, self.channel_count - 1))
 
-        if addr > self.sink_cont - 1:
-            raise DMAError("Illegal sink count: %d > %d" % (addr, self.sink_count - 1)
+        if address > self.sink_count - 1:
+            raise DMAError("Illegal sink count: %d > %d" % (address, self.sink_count - 1))
 
         r = self.read_register(CHANNEL_ADDR_CONTROL_BASE + channel)
-        mask = BIT_SINK_ADDR_TOP - BIT_SINK_ADDR_BOT
+        mask = ((1 << BIT_SINK_ADDR_TOP) - (1 << BIT_SINK_ADDR_BOT))
         r &= ~mask
-        addr &= mask >> BIT_SINK_ADDR_BOT
-        r |= addres << BIT_SINK_ADDR_BOT
-        self.write_register(CHANNEL_ADDR_CONTROL_BASE + channel)
+        r |= address << BIT_SINK_ADDR_BOT
+        self.write_register(CHANNEL_ADDR_CONTROL_BASE + channel, r)
 
     def get_channel_sink_addr(self, channel):
         """
         Get the data sink port for the specified channel
 
         Args:
-            channel (unsigned char): channel to talk configure
+            channel (unsigned char): channel to configure
 
         Returns (unsigned integer):
             Destination port of a DMA transfer
@@ -221,7 +239,15 @@ class DMA(driver.Driver):
         Raises:
             NysaCommError
         """
-        pass
+        if channel > self.channel_count - 1:
+            raise DMAError("Illegal channel count: %d > %d" % (channel, self.channel_count - 1))
+
+        r = self.read_register(CHANNEL_ADDR_CONTROL_BASE + channel)
+        mask = ((1 << BIT_SINK_ADDR_TOP) - (1 << BIT_SINK_ADDR_BOT))
+        r &= mask
+        address = (r >> BIT_SINK_ADDR_BOT & 0x03)
+        self.n.s.Verbose("Channel: %d Sink Address: 0x%02X" % (channel, address))
+        return address
 
     def set_channel_instruction_pointer(self, channel, ip_addr):
         """
@@ -236,50 +262,315 @@ class DMA(driver.Driver):
         Raises:
             NysaCommError
         """
-        pass
+        if channel > self.channel_count - 1:
+            raise DMAError("Illegal channel count: %d > %d" % (channel, self.channel_count - 1))
 
-    def get_channel_instruction_pointer(self, channel)
+        if ip_addr > INSTRUCTION_COUNT - 1:
+            raise DMAError("Illegal sink count: %d > %d" % (ip_addr, INSTRUCTION_COUNT - 1))
+
+        r = self.read_register(CHANNEL_ADDR_CONTROL_BASE + channel)
+        mask = ((1 << BIT_INST_PTR_TOP) - (1 << BIT_INST_PTR_BOT))
+        r &= ~mask
+        r |= ip_addr << BIT_INST_PTR_BOT
+        self.write_register(CHANNEL_ADDR_CONTROL_BASE + channel, r)
+
+    def get_channel_instruction_pointer(self, channel):
         """
         Gets the instruction pointer for a channel
 
         Args:
-            channel (unsigned char): channel to talk configure
+            channel (unsigned char): channel to configure
 
         Returns (unsigned integer):
             Address of the instruction
 
         Raises:
             NysaCommError
+            DMAError:
+                User requested an address out of range
         """
+        if channel > self.channel_count - 1:
+            raise DMAError("Illegal channel count: %d > %d" % (channel, self.channel_count - 1))
 
-        pass
+        r = self.read_register(CHANNEL_ADDR_CONTROL_BASE + channel)
+        mask = ((1 << BIT_INST_PTR_TOP) - (1 << BIT_INST_PTR_BOT))
+        r &= mask
+        address = (r >> BIT_INST_PTR_BOT & 0x07)
+        self.n.s.Verbose("Channel %d Sink Address: 0x%02X" % (channel, address))
+        return address
 
-    def enable_channel(self, channel):
+    def enable_source_address_increment(self, source, enable):
         """
-        Start executing insturctions for a channel pointed to by the instruction
-        pointer
+        Enable incrementing the address on 32-bit value read from the source
 
         Args:
-            channel (unsigned char): channel to talk configure
+            channel (unsigned char): channel to configure
+            enable (bool):
+                True: Enable incrementing the address
+                False: Disable incrementing the address
+
+                NOTE: Do not set both increment and decrement, unknown
+                    behavior
 
         Returns:
             Nothing
 
         Raises:
             NysaCommError
+            DMAError:
+                User requested an address out of range
+        """
+        if source > self.channel_count - 1:
+            raise DMAError("Illegal source count: %d > %d" % (source, self.channel_count - 1))
+        self.enable_register_bit(CHANNEL_ADDR_CONTROL_BASE + source, BIT_CFG_SRC_ADDR_INC, enable)
+
+    def is_source_address_increment(self, source):
+        """
+        Return True if the source address will increment on every read
+
+        Args:
+            channel (unsigned char): channel to configure
+        Returns:
+            Nothing
+
+        Raises:
+            NysaCommError
+            DMAError:
+                User requested an address out of range
+        """
+        if source > self.channel_count - 1:
+            raise DMAError("Illegal source count: %d > %d" % (source, self.channel_count - 1))
+        return self.is_register_bit_set(CHANNEL_ADDR_CONTROL_BASE + source, BIT_CFG_SRC_ADDR_INC)
+
+    def enable_source_address_decrement(self, source, enable):
+        """
+        Enable decrementing the address on 32-bit value read from the source
+
+        Args:
+            channel (unsigned char): channel to configure
+            enable (bool):
+                True: Enable decrementing the address
+                False: Disable decrementing the address
+
+                NOTE: Do not set both increment and decrement, unknown
+                    behavior
+
+        Returns:
+            Nothing
+
+        Raises:
+            NysaCommError
+            DMAError:
+                User requested an address out of range
+        """
+        if source > self.channel_count - 1:
+            raise DMAError("Illegal source count: %d > %d" % (source, self.channel_count - 1))
+        self.enable_register_bit(CHANNEL_ADDR_CONTROL_BASE + source, BIT_CFG_SRC_ADDR_DEC, enable)
+
+    def is_source_address_decrement(self, source):
+        """
+        Return True if the source address will decrement on every read
+
+        Args:
+            channel (unsigned char): channel to configure
+        Returns:
+            Nothing
+
+        Raises:
+            NysaCommError
+            DMAError:
+                User requested an address out of range
+        """
+        if source > self.channel_count - 1:
+            raise DMAError("Illegal source count: %d > %d" % (source, self.channel_count - 1))
+        return self.is_register_bit_set(CHANNEL_ADDR_CONTROL_BASE + source, BIT_CFG_SRC_ADDR_DEC)
+
+    def enable_dest_address_increment(self, sink, enable):
+        """
+        Enable incrementing the address on 32-bit value read from the dest
+
+        Args:
+            sink (unsigned char): sink to configure
+            enable (bool):
+                True: Enable incrementing the address
+                False: Disable incrementing the address
+
+                NOTE: Do not set both increment and decrement, unknown
+                    behavior
+
+        Returns:
+            Nothing
+
+        Raises:
+            NysaCommError
+            DMAError:
+                User requested an address out of range
+        """
+        if sink > self.sink_count - 1:
+            raise DMAError("Illegal sink count: %d > %d" % (sink, self.sink_count - 1))
+        self.enable_register_bit(SINK_ADDR_CONTROL_BASE + source, BIT_CFG_DEST_ADDR_INC, enable)
+
+    def is_dest_address_increment(self, sink):
+        """
+        Return True if the source address will increment on every read
+
+        Args:
+            sink (unsigned char): sink to configure
+        Returns:
+            Nothing
+
+        Raises:
+            NysaCommError
+            DMAError:
+                User requested an address out of range
+        """
+        if sink > self.sink_count - 1:
+            raise DMAError("Illegal sink count: %d > %d" % (sink, self.sink_count - 1))
+        return self.is_register_bit(SINK_ADDR_CONTROL_BASE + source, BIT_CFG_DEST_ADDR_INC)
+
+    def enable_dest_address_decrement(self, sink, enable):
+        """
+        Enable decrementing the address on 32-bit value read from the dest
+
+        Args:
+            sink (unsigned char): sink to configure
+            enable (bool):
+                True: Enable decrementing the address
+                False: Disable decrementing the address
+
+                NOTE: Do not set both increment and decrement, unknown
+                    behavior
+
+        Returns:
+            Nothing
+
+        Raises:
+            NysaCommError
+            DMAError:
+                User requested an address out of range
+        """
+
+        if sink > self.sink_count - 1:
+            raise DMAError("Illegal sink count: %d > %d" % (sink, self.sink_count - 1))
+        self.enable_register_bit(SINK_ADDR_CONTROL_BASE + source, BIT_CFG_DEST_ADDR_DEC, enable)
+
+    def is_dest_address_decrement(self, sink):
+        """
+        Return True if the source address will decrement on every read
+
+        Args:
+            sink (unsigned char): sink to configure
+        Returns:
+            Nothing
+
+        Raises:
+            NysaCommError
+            DMAError:
+                User requested an address out of range
+        """
+
+        if sink > self.sink_count - 1:
+            raise DMAError("Illegal sink count: %d > %d" % (sink, self.sink_count - 1))
+        return self.is_register_bit(SINK_ADDR_CONTROL_BASE + source, BIT_CFG_DEST_ADDR_DEC)
+
+    def enable_dest_respect_quantum(self, sink, enable):
+        """
+        Enable respect data quantum:
+        Some devices require data to arrive in a quantum of data
+
+        i.e. SATA requires data to arrive in chunks of 8K bytes. the buffers
+        that are setup to write to SATA are 8K so the DMA controller should
+        fill up the entire buffer before releasing the buffer. Otherwise unknown
+        behavior could be observed on SATA
+
+        Args:
+            sink (unsigned char): sink to configure
+            enable (bool):
+                True: Enable respect data quantum
+                False: Disable respect data quantum
+
+        Returns:
+            Nothing
+
+        Raises:
+            NysaCommError
+            DMAError:
+                User requested an address out of range
+        """
+        if sink > self.sink_count - 1:
+            raise DMAError("Illegal sink count: %d > %d" % (sink, self.sink_count - 1))
+        self.enable_register_bit(SINK_ADDR_CONTROL_BASE + source, BIT_CFG_DEST_ADDR_DEC, enable)
+        
+    def is_dest_respect_quantum(self, sink):
+        """
+        Return True if the source address will respect data quantum on every read
+
+        Args:
+            sink (unsigned char): sink to configure
+        Returns:
+            Nothing
+
+        Raises:
+            NysaCommError
+            DMAError:
+                User requested an address out of range
+        """
+        if sink > self.sink_count - 1:
+            raise DMAError("Illegal sink count: %d > %d" % (sink, self.sink_count - 1))
+        return self.is_register_bit(SINK_ADDR_CONTROL_BASE + source, BIT_CFG_DEST_ADDR_DEC)
+
+    def enable_channel(self, channel, enable):
+        """
+        Start executing insturctions for a channel pointed to by the instruction
+        pointer
+
+        Args:
+            channel (unsigned char): channel to configure
+
+        Returns:
+            Nothing
+
+        Raises:
+            NysaCommError
+            DMAError:
+                User requested an address out of range
 
         """
-        pass
+        if channel > self.channel_count - 1:
+            raise DMAError("Illegal channel count: %d > %d" % (channel, self.channel_count - 1))
 
-    def set_instruction(self,   inst_addr,
-                                source_addr
-                                dest_addr,
-                                count,
-                                ingress_enable,
-                                egress_enable,
-                                cmd_continue,
-                                next_instruction,
-                                ingress_bond_addr,
+        self.enable_register_bit(CHANNEL_ADDR_CONTROL_BASE + channel, BIT_CFG_DMA_ENABLE, enable)
+
+    def is_channel_enable(self, channel):
+        """
+        Returns true if channel is enable
+
+        Args:
+            channel (unsigned char): channel to configure
+
+        Returns (bool): 
+            is channel enable 
+
+        Raises:
+            NysaCommError
+            DMAError:
+                User requested an address out of range
+        """
+        if channel > self.channel_count - 1:
+            raise DMAError("Illegal channel count: %d > %d" % (channel, self.channel_count - 1))
+        value = self.is_register_bit_set(CHANNEL_ADDR_CONTROL_BASE + channel, BIT_CFG_DMA_ENABLE)
+        self.n.s.Verbose("Channel %d Enable: %s" % (channel, str(value)))
+        return value
+
+    def set_instruction(self,   inst_addr,          \
+                                source_addr,        \
+                                dest_addr,          \
+                                count,              \
+                                ingress_enable,     \
+                                egress_enable,      \
+                                cmd_continue,       \
+                                next_instruction,   \
+                                ingress_bond_addr,  \
                                 egress_bond_addr):
         """
         Setup individual instruction
@@ -307,8 +598,8 @@ class DMA(driver.Driver):
         Raises:
             NysaCommError
         """
-        if inst_addr > INST_COUNT - 1:
-            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INST_COUNT))
+        if inst_addr > INSTRUCTION_COUNT - 1:
+            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
 
     def set_instruction_source_address(self, inst_addr, source_addr):
         """
@@ -323,8 +614,8 @@ class DMA(driver.Driver):
             NysaCommError
             DMAError
         """
-        if inst_addr > INST_COUNT - 1:
-            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INST_COUNT))
+        if inst_addr > INSTRUCTION_COUNT - 1:
+            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
         self.write_register(INST_BASE + inst_addr + INST_SRC_ADDR_LOW,  ((source_addr >> 32) &  0xFFFFFFFF))
         self.write_register(INST_BASE + inst_addr + INST_SRC_ADDR_HIGH, ((source_addr) &        0xFFFFFFFF))
 
@@ -340,8 +631,8 @@ class DMA(driver.Driver):
             NysaCommError
             DMAError
         """
-        if inst_addr > INST_COUNT - 1:
-            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INST_COUNT))
+        if inst_addr > INSTRUCTION_COUNT - 1:
+            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
         self.write_register(INST_BASE + inst_addr + INST_DEST_ADDR_LOW,  ((dest_addr >> 32) &  0xFFFFFFFF))
         self.write_register(INST_BASE + inst_addr + INST_DEST_ADDR_HIGH, ((dest_addr) &        0xFFFFFFFF))
 
@@ -356,9 +647,9 @@ class DMA(driver.Driver):
             NysaCommError
             DMAError
         """
-        if inst_addr > INST_COUNT - 1:
-            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INST_COUNT))
-        self.write_register(INST_BASE + inst_addr + INST_COUNT, count)
+        if inst_addr > INSTRUCTION_COUNT - 1:
+            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
+        self.write_register(INST_BASE + inst_addr + INSTRUCTION_COUNT, count)
 
     def set_instruction_ingress(self, enable, ingress_inst_addr):
         """
@@ -371,10 +662,10 @@ class DMA(driver.Driver):
             NysaCommError
             DMAError
         """
-        if inst_addr > INST_COUNT - 1:
-            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INST_COUNT))
-        if ingress_inst_addr > INST_COUNT - 1:
-            raise DMAError("Specified ingress address is out of range (%d > %d)" % (ingress_inst_addr, INST_COUNT))
+        if inst_addr > INSTRUCTION_COUNT - 1:
+            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
+        if ingress_inst_addr > INSTRUCTION_COUNT - 1:
+            raise DMAError("Specified ingress address is out of range (%d > %d)" % (ingress_inst_addr, INSTRUCTION_COUNT))
         r = self.read_register(INST_BASE + inst_addr + INST_CNTRL)
         mask = BIT_INST_CMD_BOND_ADDR_IN_TOP - BIT_INST_CMD_BOND_ADDR_IN_BOT
         r &= ~mask
@@ -392,10 +683,10 @@ class DMA(driver.Driver):
             NysaCommError
             DMAError
         """
-        if inst_addr > INST_COUNT - 1:
-            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INST_COUNT))
-        if egress_inst_addr > INST_COUNT - 1:
-            raise DMAError("Specified egress address is out of range (%d > %d)" % (egress_inst_addr, INST_COUNT))
+        if inst_addr > INSTRUCTION_COUNT - 1:
+            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
+        if egress_inst_addr > INSTRUCTION_COUNT - 1:
+            raise DMAError("Specified egress address is out of range (%d > %d)" % (egress_inst_addr, INSTRUCTION_COUNT))
         r = self.read_register(INST_BASE + inst_addr + INST_CNTRL)
         mask = BIT_INST_CMD_BOND_ADDR_OUT_TOP - BIT_INST_CMD_BOND_ADDR_OUT_BOT
         r &= ~mask
@@ -413,10 +704,10 @@ class DMA(driver.Driver):
             NysaCommError
             DMAError
         """
-        if inst_addr > INST_COUNT - 1:
-            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INST_COUNT))
-        if next_instruction > INST_COUNT - 1:
-            raise DMAError("Specified next address is out of range (%d > %d)" % (next_instruction, INST_COUNT))
+        if inst_addr > INSTRUCTION_COUNT - 1:
+            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
+        if next_instruction > INSTRUCTION_COUNT - 1:
+            raise DMAError("Specified next address is out of range (%d > %d)" % (next_instruction, INSTRUCTION_COUNT))
         r = self.read_register(INST_BASE + inst_addr + INST_CNTRL)
         mask = BIT_INST_CMD_NEXT_TOP - BIT_INST_CMD_NEXT_BOT
         r &= ~mask
@@ -434,8 +725,8 @@ class DMA(driver.Driver):
             NysaCommError
             DMAError
         """
-        if inst_addr > INST_COUNT - 1:
-            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INST_COUNT))
+        if inst_addr > INSTRUCTION_COUNT - 1:
+            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
         self.set_register_bit(INST_BASE + inst_addr, BIT_INST_CMD_CONTINUE, enable)
 
     def setup_double_buffer(self, source, sink, mem, source_addr, sink_addr, count):
@@ -449,7 +740,7 @@ class DMA(driver.Driver):
             NysaCommError
             DMAError
         """
-        if inst_addr > INST_COUNT - 1:
-            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INST_COUNT))
+        if inst_addr > INSTRUCTION_COUNT - 1:
+            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
 
 
