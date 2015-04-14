@@ -317,7 +317,7 @@ wishbone_interconnect wi (
 
 localparam AWIDTH0 = 8;
 localparam AWIDTH1 = 8;
-localparam AWIDTH2 = 8;
+localparam AWIDTH2 = 9;
 localparam AWIDTH3 = 8;
 
 //1st Device
@@ -363,8 +363,8 @@ test_mem_dev #(
 
 //2nd Device
 test_mem_dev #(
-    .READ_FIFO_SIZE   (                 5  ),
-    .WRITE_FIFO_SIZE  (                10  ),
+    .READ_FIFO_SIZE   (                 4  ),
+    .WRITE_FIFO_SIZE  (                 7  ),
     .ADDRESS_WIDTH    (           AWIDTH1  )
 )tdm1(
   .clk                (clk                 ),
@@ -404,8 +404,8 @@ test_mem_dev #(
 
 //3rd Device
 test_mem_dev #(
-    .READ_FIFO_SIZE   (                 8  ),
-    .WRITE_FIFO_SIZE  (                 8  ),
+    .READ_FIFO_SIZE   (                 4  ),
+    .WRITE_FIFO_SIZE  (                 6  ),
     .ADDRESS_WIDTH    (           AWIDTH2  )
 )tdm2(
   .clk                (clk                 ),

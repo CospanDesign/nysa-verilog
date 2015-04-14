@@ -1,15 +1,15 @@
 [*]
-[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Tue Apr 14 14:44:06 2015
+[*] GTKWave Analyzer v3.3.62 (w)1999-2014 BSI
+[*] Tue Apr 14 16:21:54 2015
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/design.vcd"
-[dumpfile_mtime] "Tue Apr 14 14:42:49 2015"
-[dumpfile_size] 483429
+[dumpfile_mtime] "Tue Apr 14 16:21:10 2015"
+[dumpfile_size] 579769
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/waveforms.gtkw"
 [timestart] 0
 [size] 1918 1059
 [pos] -1 -1
-*-11.417539 1212 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-10.353211 1380 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.s1.
 [treeopen] tb_cocotb.tdm0.
@@ -54,33 +54,48 @@ tb_cocotb.out_status[31:0]
 -
 @c00200
 -Test 2
-@2022
-^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/sim/states.txt
+@802022
+^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/sim/states.txt
 tb_cocotb.s1.dmacntrl.state0[3:0]
+@28
+(0)tb_cocotb.s1.dmacntrl.state0[3:0]
+(1)tb_cocotb.s1.dmacntrl.state0[3:0]
+(2)tb_cocotb.s1.dmacntrl.state0[3:0]
+(3)tb_cocotb.s1.dmacntrl.state0[3:0]
+@1001200
+-group_end
 @22
 tb_cocotb.s1.dmacntrl.ip0[2:0]
 tb_cocotb.s1.dmacntrl.snka0[1:0]
 @200
 -
+@c00200
+-Source 0
+-Test Mem Read
 @28
 tb_cocotb.tdm0.m2f_ready[1:0]
 tb_cocotb.tdm0.m2f_activate[1:0]
 @22
-tb_cocotb.tdm0.m2f_data[31:0]
 tb_cocotb.tdm0.m2f_count[23:0]
 tb_cocotb.tdm0.m2f_size[23:0]
 @28
+tb_cocotb.tdm0.prev_read_enable
+[color] 3
 tb_cocotb.tdm0.m2f_strobe
+@22
+tb_cocotb.tdm0.mem_addr_out[7:0]
+[color] 7
+tb_cocotb.tdm0.m2f_data[31:0]
 @200
 -
-@28
-tb_cocotb.tdm0.fill_mem
 @22
-tb_cocotb.tdm0.fill_mem_data[31:0]
+[color] 7
+tb_cocotb.tdm0.prev_m2f_data[31:0]
 @28
-tb_cocotb.tdm0.fill_mem_wea
-@c00200
--Source 0
+[color] 1
+tb_cocotb.tdm0.m2f_data_error
+@1401200
+-Test Mem Read
 @22
 tb_cocotb.s1.dmacntrl.channel_count0[31:0]
 tb_cocotb.s1.dmacntrl.curr_count0[31:0]
@@ -108,6 +123,9 @@ tb_cocotb.s1.dmacntrl.o_src0_addr_dec
 tb_cocotb.s1.dmacntrl.o_src0_address[63:0]
 @1401200
 -Source Address
+@200
+-
+@1401200
 -Source 0
 @200
 -
@@ -137,8 +155,53 @@ tb_cocotb.s1.o_snk2_write_enable
 @22
 tb_cocotb.s1.snk2_status[31:0]
 tb_cocotb.s1.snk2_control[31:0]
+@200
+-
+@800200
+-Test Mem Write
+@28
+tb_cocotb.tdm2.f2m_activate
+@22
+tb_cocotb.tdm2.f2m_count[23:0]
+tb_cocotb.tdm2.f2m_data[31:0]
+@28
+tb_cocotb.tdm2.f2m_ready
+@22
+tb_cocotb.tdm2.f2m_size[23:0]
+@28
+tb_cocotb.tdm2.f2m_strobe
+[color] 1
+tb_cocotb.tdm2.f2m_data_error
+@200
+-
+@28
+tb_cocotb.tdm2.write_activate[1:0]
+@22
+tb_cocotb.tdm2.write_addr[63:0]
+@28
+tb_cocotb.tdm2.write_addr_dec
+tb_cocotb.tdm2.write_addr_inc
+@22
+tb_cocotb.tdm2.write_count[23:0]
+tb_cocotb.tdm2.write_data[31:0]
+@28
+tb_cocotb.tdm2.write_enable
+tb_cocotb.tdm2.write_finished
+tb_cocotb.tdm2.write_flush
+tb_cocotb.tdm2.write_ready[1:0]
+@22
+tb_cocotb.tdm2.write_size[23:0]
+@28
+tb_cocotb.tdm2.write_strobe
+@1000200
+-Test Mem Write
 @1401200
 -Sink 2
+@200
+-
+@1401200
 -Test 2
+@200
+-
 [pattern_trace] 1
 [pattern_trace] 0
