@@ -1,0 +1,144 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Tue Apr 14 14:44:06 2015
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/design.vcd"
+[dumpfile_mtime] "Tue Apr 14 14:42:49 2015"
+[dumpfile_size] 483429
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/waveforms.gtkw"
+[timestart] 0
+[size] 1918 1059
+[pos] -1 -1
+*-11.417539 1212 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_cocotb.
+[treeopen] tb_cocotb.s1.
+[treeopen] tb_cocotb.tdm0.
+[sst_width] 213
+[signals_width] 350
+[sst_expanded] 1
+[sst_vpaned_height] 313
+@28
+tb_cocotb.clk
+tb_cocotb.rst
+@200
+-
+@22
+[color] 6
+tb_cocotb.test_id[31:0]
+@200
+-
+@c00200
+-COMM
+@28
+tb_cocotb.ih_reset
+@22
+tb_cocotb.in_address[31:0]
+tb_cocotb.in_command[31:0]
+tb_cocotb.in_data[31:0]
+tb_cocotb.in_data_count[27:0]
+@28
+tb_cocotb.in_ready
+tb_cocotb.master_ready
+@22
+tb_cocotb.out_address[31:0]
+tb_cocotb.out_data[31:0]
+tb_cocotb.out_data_count[27:0]
+@28
+tb_cocotb.out_en
+tb_cocotb.out_ready
+@22
+tb_cocotb.out_status[31:0]
+@1401200
+-COMM
+@200
+-
+@c00200
+-Test 2
+@2022
+^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/sim/states.txt
+tb_cocotb.s1.dmacntrl.state0[3:0]
+@22
+tb_cocotb.s1.dmacntrl.ip0[2:0]
+tb_cocotb.s1.dmacntrl.snka0[1:0]
+@200
+-
+@28
+tb_cocotb.tdm0.m2f_ready[1:0]
+tb_cocotb.tdm0.m2f_activate[1:0]
+@22
+tb_cocotb.tdm0.m2f_data[31:0]
+tb_cocotb.tdm0.m2f_count[23:0]
+tb_cocotb.tdm0.m2f_size[23:0]
+@28
+tb_cocotb.tdm0.m2f_strobe
+@200
+-
+@28
+tb_cocotb.tdm0.fill_mem
+@22
+tb_cocotb.tdm0.fill_mem_data[31:0]
+@28
+tb_cocotb.tdm0.fill_mem_wea
+@c00200
+-Source 0
+@22
+tb_cocotb.s1.dmacntrl.channel_count0[31:0]
+tb_cocotb.s1.dmacntrl.curr_count0[31:0]
+tb_cocotb.s1.dmacntrl.i_src0_ready
+tb_cocotb.s1.dmacntrl.i_src0_size[23:0]
+tb_cocotb.s1.dmacntrl.o_src0_activate
+tb_cocotb.s1.dmacntrl.o_src0_count[23:0]
+tb_cocotb.s1.dmacntrl.o_src0_enable
+tb_cocotb.s1.dmacntrl.o_src0_finished
+tb_cocotb.s1.dmacntrl.o_src0_flush
+tb_cocotb.s1.dmacntrl.o_src0_status[31:0]
+tb_cocotb.s1.dmacntrl.o_src0_strobe
+tb_cocotb.s1.i_src0_if_data[31:0]
+@28
+tb_cocotb.s1.i_src0_if_ready
+@22
+tb_cocotb.s1.i_src0_if_size[23:0]
+@200
+-
+@c00200
+-Source Address
+@22
+tb_cocotb.s1.dmacntrl.o_src0_addr_inc
+tb_cocotb.s1.dmacntrl.o_src0_addr_dec
+tb_cocotb.s1.dmacntrl.o_src0_address[63:0]
+@1401200
+-Source Address
+-Source 0
+@200
+-
+@c00200
+-Sink 2
+@28
+tb_cocotb.s1.i_snk2_ready[1:0]
+@22
+tb_cocotb.s1.i_snk2_size[23:0]
+@28
+tb_cocotb.s1.o_snk2_activate[1:0]
+@22
+tb_cocotb.s1.o_snk2_data[31:0]
+@28
+tb_cocotb.s1.o_snk2_flush
+tb_cocotb.s1.o_snk2_strobe
+@22
+tb_cocotb.s1.o_snk2_write_addr[63:0]
+@28
+tb_cocotb.s1.o_snk2_write_addr_dec
+tb_cocotb.s1.o_snk2_write_addr_inc
+tb_cocotb.s1.o_snk2_write_busy
+@22
+tb_cocotb.s1.o_snk2_write_count[23:0]
+@28
+tb_cocotb.s1.o_snk2_write_enable
+@22
+tb_cocotb.s1.snk2_status[31:0]
+tb_cocotb.s1.snk2_control[31:0]
+@1401200
+-Sink 2
+-Test 2
+[pattern_trace] 1
+[pattern_trace] 0
