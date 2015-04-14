@@ -12,6 +12,7 @@ wip
 temp.txt
 *.sim
 *.vcd
+*.vvp
 *.gtkw
 
 # C extensions
