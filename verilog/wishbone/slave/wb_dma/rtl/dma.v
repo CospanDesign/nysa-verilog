@@ -770,6 +770,7 @@ always @ (posedge clk) begin
         SETUP_CHANNEL: begin
           //Setup only one time
           curr_src_address[i]                 <= cmd_src_address[ip[i]];   //  Mutable, Copy to channel specific value
+          src_address[i]                      <= cmd_src_address[ip[i]];
           curr_dest_address[i]                <= cmd_dest_address[ip[i]];  //  Mutable, Copy to channel specific value
           snk_address[snka[i]]                <= cmd_dest_address[ip[i]];
 
@@ -786,9 +787,11 @@ always @ (posedge clk) begin
           if (flag_dest_addr_rst_on_cmd[ip[i]]) begin
             //Reset the address when processing a new command
             curr_dest_address[i]              <= cmd_dest_address[ip[i]];
+            snk_address[snka[i]]              <= cmd_dest_address[ip[i]];
           end
           if (flag_src_addr_rst_on_cmd[ip[i]]) begin
             curr_src_address[i]               <= cmd_src_address[ip[i]];
+            src_address[i]                    <= cmd_src_address[ip[i]];
           end
           curr_count[i]                       <= cmd_count[ip[i]];
           channel_count[i]                    <= 0;
@@ -829,7 +832,7 @@ always @ (posedge clk) begin
           end
         end
         ACTIVE: begin
-          src_address[i]                      <= curr_src_address[ip[i]];
+          //src_address[i]                      <= curr_src_address[ip[i]];
           src_enable[i]                       <= 1;
 
           snk_enable[snka[i]]                 <= 1;

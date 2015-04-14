@@ -189,9 +189,10 @@ def test_setup_dma(dut):
     yield cocotb.external(dma.enable_source_address_increment)  (CHANNEL_ADDR,  True                )
     yield cocotb.external(dma.enable_dest_address_increment)    (SINK_ADDR,     True                )
     yield cocotb.external(dma.enable_dest_respect_quantum)      (SINK_ADDR,     True                )
-    yield cocotb.external(dma.set_instruction_source_address)   (INST_ADDR,     0x0000000000000001  )
+    yield cocotb.external(dma.set_instruction_source_address)   (INST_ADDR,     0x0000000000000000  )
     yield cocotb.external(dma.set_instruction_dest_address)     (INST_ADDR,     0x0000000000000010  )
     yield cocotb.external(dma.set_instruction_count)            (INST_ADDR,     0x0100              )
+    yield nysa.wait_clocks(10)
 
     #Start
     yield cocotb.external(dma.set_channel_instruction_pointer)  (CHANNEL_ADDR,  INST_ADDR           )

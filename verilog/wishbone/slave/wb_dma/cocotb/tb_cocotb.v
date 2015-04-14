@@ -315,10 +315,10 @@ wishbone_interconnect wi (
   .i_s1_int   (w_wbs1_int           )
 );
 
-localparam AWIDTH0 = 10;
-localparam AWIDTH1 = 10;
-localparam AWIDTH2 = 10;
-localparam AWIDTH3 = 10;
+localparam AWIDTH0 = 8;
+localparam AWIDTH1 = 8;
+localparam AWIDTH2 = 8;
+localparam AWIDTH3 = 8;
 
 //1st Device
 test_mem_dev #(

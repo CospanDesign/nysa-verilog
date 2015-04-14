@@ -2,7 +2,7 @@
 module test_mem_dev #(
     parameter           READ_FIFO_SIZE  = 8,
     parameter           WRITE_FIFO_SIZE = 8,
-    parameter           ADDRESS_WIDTH   = 10
+    parameter           ADDRESS_WIDTH   = 8
 )(
     input               clk,
     input               rst,
@@ -78,6 +78,13 @@ wire    [31:0]                          m2f_data;
 reg     [23:0]                          m2f_count;
 reg                                     first_write;
 
+wire    [31:0]                          din;
+wire                                    wea;
+
+reg                                     fill_mem;
+reg     [31:0]                          fill_mem_data;
+reg                                     fill_mem_wea;
+
 //Submodules
 blk_mem #(
     .DATA_WIDTH         (32             ),
@@ -85,8 +92,8 @@ blk_mem #(
     .INC_NUM_PATTERN    (1              )
 ) mem (
     .clka               (clk            ),
-    .wea                (mem_write_strobe ),
-    .dina               (f2m_data       ),
+    .wea                (wea            ),
+    .dina               (din            ),
     .addra              (mem_addr_in    ),
 
     .clkb               (clk            ),
@@ -161,6 +168,9 @@ assign  write_finished              =   (mem_write_count    >= local_write_count
 assign  mem_read_overflow           =   (mem_read_count     >  local_read_size);
 assign  read_finished               =   (mem_read_count     >= local_read_size);
 
+assign din                          =   fill_mem ? fill_mem_data: f2m_data;
+assign wea                          =   fill_mem ? fill_mem_wea: f2m_strobe;
+
 //Synchronous Logic
 always @ (posedge clk) begin
   if (rst) begin
@@ -189,6 +199,23 @@ always @ (posedge clk) begin
     m2f_data_error                  <=  0;
     prev_f2m_data                   <=  0;
     first_write                     <=  0;
+
+    fill_mem                        <=  1;
+    fill_mem_data                   <=  0;
+    fill_mem_wea                    <=  1;
+
+  end
+  else if (fill_mem) begin
+    fill_mem_wea                     <= 1;
+    if (mem_addr_in < (2 ** ADDRESS_WIDTH - 1)) begin
+        fill_mem_data               <= mem_addr_in + 1;
+        mem_addr_in                 <= mem_addr_in + 1;
+    end
+    else begin
+        fill_mem                    <= 0;
+        fill_mem_wea                <= 0;
+    end
+    
   end
   else begin
     //Strobes
