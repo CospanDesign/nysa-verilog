@@ -63,9 +63,9 @@ class NysaSim (FauxNysa):
     def __init__(self, dut, period = CLK_PERIOD):
         self.status = Status()
         self.status.set_level('verbose')
+        self.comm_lock = cocotb.triggers.Lock('comm')
         self.dut                              = dut
         dev_dict                              = json.load(open('test_dict.json'))
-        self.out_ready                        = 0
         super (NysaSim, self).__init__(dev_dict, self.status)
 
         self.timeout                          = 1000
@@ -130,9 +130,11 @@ class NysaSim (FauxNysa):
 
     @cocotb.function
     def _read(self, address, length = 1, mem_device = False):
+        yield(self.comm_lock.acquire())
+        # print "_Read Acquire Lock"
         data_index = 0
         self.dut.in_ready       <= 0
-        self.out_ready          <= 0
+        self.dut.out_ready      <= 0
 
         self.response = Array('B')
         self.wait_clocks(10)
@@ -170,10 +172,14 @@ class NysaSim (FauxNysa):
             self.dut.out_ready      <= 1
 
         yield RisingEdge(self.dut.master_ready)
+        self.comm_lock.release()
+        # print "_Read Release Lock"
         raise ReturnValue(self.response)
 
     @cocotb.function
     def write(self, address, data = None, mem_device = False):
+        yield(self.comm_lock.acquire())
+        # print "Write Acquired Lock"
         data_count = len(data) / 4
         #print "data count: %d" % data_count
         self.wait_clocks(1)
@@ -182,7 +188,6 @@ class NysaSim (FauxNysa):
             raise NysaCommError("Length of data to write is 0!")
         data_index          = 0
         timeout_count       = 0
-        self.dut.out_ready  <= 0
 
         #self.dut.log.info("Writing data")
         self.dut.in_address         <= address
@@ -215,6 +220,8 @@ class NysaSim (FauxNysa):
         self.response.append(0xFF & (value >> 16))
         self.response.append(0xFF & (value >> 8))
         self.response.append(0xFF & value)
+        # print "Write Release Lock"
+        self.comm_lock.release()
 
     @cocotb.coroutine
     def wait_for_interrupts(self, wait_time = 1):
@@ -226,6 +233,8 @@ class NysaSim (FauxNysa):
 
     @cocotb.coroutine
     def reset(self):
+        yield(self.comm_lock.acquire())
+        #print "Reset Acquired Lock"
         yield(self.wait_clocks(RESET_PERIOD / 2))
 
         self.dut.rst            <= 1
@@ -240,6 +249,8 @@ class NysaSim (FauxNysa):
         yield(self.wait_clocks(RESET_PERIOD / 2))
         self.dut.rst            <= 0
         yield(self.wait_clocks(RESET_PERIOD / 2))
+        #print "Reset Release Lock"
+        self.comm_lock.release()
 
     @cocotb.coroutine
     def ping(self):
@@ -264,7 +275,7 @@ class NysaSim (FauxNysa):
         self.dut.in_data        <=  0
         self.dut.in_address     <=  0
         self.dut.in_data_count  <=  0
-        self.out_ready      <=  1
+        self.dut.out_ready      <=  1
 
         timeout_count       =  0
 

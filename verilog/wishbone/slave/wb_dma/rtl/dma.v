@@ -474,10 +474,10 @@ assign o_snk1_data                         = snk_data[1];
 assign o_snk2_data                         = snk_data[2];
 assign o_snk3_data                         = snk_data[3];
 
-assign dma_enable[0]                       = i_src0_control[`BIT_CFG_DMA_ENABLE];
-assign dma_enable[1]                       = i_src1_control[`BIT_CFG_DMA_ENABLE];
-assign dma_enable[2]                       = i_src2_control[`BIT_CFG_DMA_ENABLE];
-assign dma_enable[3]                       = i_src3_control[`BIT_CFG_DMA_ENABLE];
+//assign dma_enable[0]                       = i_src0_control[`BIT_CFG_DMA_ENABLE];
+//assign dma_enable[1]                       = i_src1_control[`BIT_CFG_DMA_ENABLE];
+//assign dma_enable[2]                       = i_src2_control[`BIT_CFG_DMA_ENABLE];
+//assign dma_enable[3]                       = i_src3_control[`BIT_CFG_DMA_ENABLE];
 
 //SINK IS Different than SOURCE the indirection is more complicated
 assign o_snk0_write_enable                  = snk_enable[0];
@@ -667,9 +667,9 @@ genvar g;
 generate
 for (g = 0; g < `SOURCE_COUNT; g = g + 1) begin
   assign src_dma_busy[g]                = (state[g] != IDLE);
-  assign  flag_src_addr_inc[g]          = cmd_flags[g][`BIT_CFG_SRC_ADDR_INC];
-  assign  flag_src_addr_dec[g]          = cmd_flags[g][`BIT_CFG_SRC_ADDR_DEC];
-
+  assign  flag_src_addr_inc[g]          = src_control[g][`BIT_CFG_SRC_ADDR_INC];
+  assign  flag_src_addr_dec[g]          = src_control[g][`BIT_CFG_SRC_ADDR_DEC];
+  assign  dma_enable[g]                 = src_control[g][`BIT_CFG_DMA_ENABLE];
 end
 endgenerate
 
@@ -778,6 +778,8 @@ always @ (posedge clk) begin
           inst_egress_ready[ip[i]]            <= 0;
 
           state[i]                            <= SETUP_COMMAND;
+          //$display("cmd_src_address: %h", cmd_src_address[ip[i]]);
+          //$display("cmd_dest_address: %h", cmd_dest_address[ip[i]]);
         end
         SETUP_COMMAND: begin
           //The command from the memory should be set from the 'instruction pointer' now we can make a decision

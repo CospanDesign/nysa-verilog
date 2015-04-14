@@ -51,21 +51,21 @@ STATUS                          = 1
 CHANNEL_COUNT                   = 2
 SINK_COUNT                      = 3
 
-CHANNEL_ADDR_CONTROL_BASE       = 4
+CHANNEL_ADDR_CONTROL_BASE       = 0x04
 
 BIT_CFG_DMA_ENABLE              = 0
 BIT_CFG_SRC_ADDR_DEC            = 1
 BIT_CFG_SRC_ADDR_INC            = 2
 
-CHANNEL_ADDR_STATUS_BASE        = 8
+CHANNEL_ADDR_STATUS_BASE        = 0x08
 
-SINK_ADDR_CONTROL_BASE          = 12
+SINK_ADDR_CONTROL_BASE          = 0x0C
 
 BIT_CFG_DEST_ADDR_DEC           = 1
 BIT_CFG_DEST_ADDR_INC           = 2
 BIT_CFG_DEST_DATA_QUANTUM       = 3
 
-SINK_ADDR_STATUS_BASE           = 16
+SINK_ADDR_STATUS_BASE           = 0x10
 
 BIT_CHAN_CNTRL_EN               = 0
 
@@ -75,6 +75,7 @@ BIT_SINK_ADDR_TOP               = 10
 BIT_INST_PTR_BOT                = 16
 BIT_INST_PTR_TOP                = 19
 
+#Insutructions
 INST_BASE                       = 0x20
 INST_OFFSET                     = 0x10
 
@@ -408,11 +409,11 @@ class DMA(driver.Driver):
         """
         if sink > self.sink_count - 1:
             raise DMAError("Illegal sink count: %d > %d" % (sink, self.sink_count - 1))
-        self.enable_register_bit(SINK_ADDR_CONTROL_BASE + source, BIT_CFG_DEST_ADDR_INC, enable)
+        self.enable_register_bit(SINK_ADDR_CONTROL_BASE + sink, BIT_CFG_DEST_ADDR_INC, enable)
 
     def is_dest_address_increment(self, sink):
         """
-        Return True if the source address will increment on every read
+        Return True if the sink address will increment on every read
 
         Args:
             sink (unsigned char): sink to configure
@@ -426,7 +427,7 @@ class DMA(driver.Driver):
         """
         if sink > self.sink_count - 1:
             raise DMAError("Illegal sink count: %d > %d" % (sink, self.sink_count - 1))
-        return self.is_register_bit(SINK_ADDR_CONTROL_BASE + source, BIT_CFG_DEST_ADDR_INC)
+        return self.is_register_bit_set(SINK_ADDR_CONTROL_BASE + sink, BIT_CFG_DEST_ADDR_INC)
 
     def enable_dest_address_decrement(self, sink, enable):
         """
@@ -452,11 +453,11 @@ class DMA(driver.Driver):
 
         if sink > self.sink_count - 1:
             raise DMAError("Illegal sink count: %d > %d" % (sink, self.sink_count - 1))
-        self.enable_register_bit(SINK_ADDR_CONTROL_BASE + source, BIT_CFG_DEST_ADDR_DEC, enable)
+        self.enable_register_bit(SINK_ADDR_CONTROL_BASE + sink, BIT_CFG_DEST_ADDR_DEC, enable)
 
     def is_dest_address_decrement(self, sink):
         """
-        Return True if the source address will decrement on every read
+        Return True if the sink address will decrement on every read
 
         Args:
             sink (unsigned char): sink to configure
@@ -471,7 +472,7 @@ class DMA(driver.Driver):
 
         if sink > self.sink_count - 1:
             raise DMAError("Illegal sink count: %d > %d" % (sink, self.sink_count - 1))
-        return self.is_register_bit(SINK_ADDR_CONTROL_BASE + source, BIT_CFG_DEST_ADDR_DEC)
+        return self.is_register_bit_set(SINK_ADDR_CONTROL_BASE + sink, BIT_CFG_DEST_ADDR_DEC)
 
     def enable_dest_respect_quantum(self, sink, enable):
         """
@@ -499,8 +500,8 @@ class DMA(driver.Driver):
         """
         if sink > self.sink_count - 1:
             raise DMAError("Illegal sink count: %d > %d" % (sink, self.sink_count - 1))
-        self.enable_register_bit(SINK_ADDR_CONTROL_BASE + source, BIT_CFG_DEST_ADDR_DEC, enable)
-        
+        self.enable_register_bit(SINK_ADDR_CONTROL_BASE + sink, BIT_CFG_DEST_ADDR_DEC, enable)
+
     def is_dest_respect_quantum(self, sink):
         """
         Return True if the source address will respect data quantum on every read
@@ -517,7 +518,7 @@ class DMA(driver.Driver):
         """
         if sink > self.sink_count - 1:
             raise DMAError("Illegal sink count: %d > %d" % (sink, self.sink_count - 1))
-        return self.is_register_bit(SINK_ADDR_CONTROL_BASE + source, BIT_CFG_DEST_ADDR_DEC)
+        return self.is_register_bit_set(SINK_ADDR_CONTROL_BASE + sink, BIT_CFG_DEST_ADDR_DEC)
 
     def enable_channel(self, channel, enable):
         """
@@ -548,8 +549,8 @@ class DMA(driver.Driver):
         Args:
             channel (unsigned char): channel to configure
 
-        Returns (bool): 
-            is channel enable 
+        Returns (bool):
+            is channel enable
 
         Raises:
             NysaCommError
@@ -616,8 +617,8 @@ class DMA(driver.Driver):
         """
         if inst_addr > INSTRUCTION_COUNT - 1:
             raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
-        self.write_register(INST_BASE + inst_addr + INST_SRC_ADDR_LOW,  ((source_addr >> 32) &  0xFFFFFFFF))
-        self.write_register(INST_BASE + inst_addr + INST_SRC_ADDR_HIGH, ((source_addr) &        0xFFFFFFFF))
+        self.write_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_SRC_ADDR_LOW,  ((source_addr) &        0xFFFFFFFF))
+        self.write_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_SRC_ADDR_HIGH, ((source_addr >> 32) &  0xFFFFFFFF))
 
     def set_instruction_dest_address(self, inst_addr, dest_addr):
         """
@@ -633,8 +634,8 @@ class DMA(driver.Driver):
         """
         if inst_addr > INSTRUCTION_COUNT - 1:
             raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
-        self.write_register(INST_BASE + inst_addr + INST_DEST_ADDR_LOW,  ((dest_addr >> 32) &  0xFFFFFFFF))
-        self.write_register(INST_BASE + inst_addr + INST_DEST_ADDR_HIGH, ((dest_addr) &        0xFFFFFFFF))
+        self.write_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_DEST_ADDR_LOW,  ((dest_addr) &         0xFFFFFFFF))
+        self.write_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_DEST_ADDR_HIGH, ((dest_addr >> 32) &   0xFFFFFFFF))
 
     def set_instruction_count(self, inst_addr, count):
         """
@@ -649,7 +650,7 @@ class DMA(driver.Driver):
         """
         if inst_addr > INSTRUCTION_COUNT - 1:
             raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
-        self.write_register(INST_BASE + inst_addr + INSTRUCTION_COUNT, count)
+        self.write_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_COUNT, count)
 
     def set_instruction_ingress(self, enable, ingress_inst_addr):
         """
@@ -666,11 +667,11 @@ class DMA(driver.Driver):
             raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
         if ingress_inst_addr > INSTRUCTION_COUNT - 1:
             raise DMAError("Specified ingress address is out of range (%d > %d)" % (ingress_inst_addr, INSTRUCTION_COUNT))
-        r = self.read_register(INST_BASE + inst_addr + INST_CNTRL)
+        r = self.read_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL)
         mask = BIT_INST_CMD_BOND_ADDR_IN_TOP - BIT_INST_CMD_BOND_ADDR_IN_BOT
         r &= ~mask
         r |= ingress_inst_addr << BIT_INST_CMD_BOND_ADDR_IN_BOT
-        self.write_register(INST_BASE + inst_addr + INST_CNTRL, r)
+        self.write_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL, r)
 
     def set_insturction_egress(self, enable, egress_inst_addr):
         """
@@ -687,11 +688,11 @@ class DMA(driver.Driver):
             raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
         if egress_inst_addr > INSTRUCTION_COUNT - 1:
             raise DMAError("Specified egress address is out of range (%d > %d)" % (egress_inst_addr, INSTRUCTION_COUNT))
-        r = self.read_register(INST_BASE + inst_addr + INST_CNTRL)
+        r = self.read_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL)
         mask = BIT_INST_CMD_BOND_ADDR_OUT_TOP - BIT_INST_CMD_BOND_ADDR_OUT_BOT
         r &= ~mask
         r |= egress_inst_addr << BIT_INST_CMD_BOND_ADDR_OUT_BOT
-        self.write_register(INST_BASE + inst_addr + INST_CNTRL, r)
+        self.write_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL, r)
 
     def set_instruction_next_instruction(self, next_instruction):
         """
@@ -708,11 +709,11 @@ class DMA(driver.Driver):
             raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
         if next_instruction > INSTRUCTION_COUNT - 1:
             raise DMAError("Specified next address is out of range (%d > %d)" % (next_instruction, INSTRUCTION_COUNT))
-        r = self.read_register(INST_BASE + inst_addr + INST_CNTRL)
+        r = self.read_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL)
         mask = BIT_INST_CMD_NEXT_TOP - BIT_INST_CMD_NEXT_BOT
         r &= ~mask
         r |= next_instruction << BIT_INST_CMD_NEXT_BOT
-        self.write_register(INST_BASE + inst_addr + INST_CNTRL, r)
+        self.write_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL, r)
 
     def enable_instruction_continue(self, inst_addr, enable):
         """
@@ -727,7 +728,7 @@ class DMA(driver.Driver):
         """
         if inst_addr > INSTRUCTION_COUNT - 1:
             raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
-        self.set_register_bit(INST_BASE + inst_addr, BIT_INST_CMD_CONTINUE, enable)
+        self.set_register_bit(INST_BASE + (INST_OFFSET * inst_addr), BIT_INST_CMD_CONTINUE, enable)
 
     def setup_double_buffer(self, source, sink, mem, source_addr, sink_addr, count):
         """
@@ -742,5 +743,6 @@ class DMA(driver.Driver):
         """
         if inst_addr > INSTRUCTION_COUNT - 1:
             raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
+
 
 

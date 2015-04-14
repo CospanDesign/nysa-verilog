@@ -97,7 +97,8 @@ wire    [63:0]    write_addr      [3:0];
 wire              write_addr_inc  [3:0];
 wire              write_addr_dec  [3:0];
 wire              write_finished  [3:0];
-wire    [23:0]    write_data_count     [3:0];
+wire    [23:0]    write_data_count[3:0];
+wire              write_flush     [3:0];
 
 wire    [1:0]     write_ready     [3:0];
 wire    [1:0]     write_activate  [3:0];
@@ -113,6 +114,7 @@ wire              read_addr_dec   [3:0];
 wire              read_busy       [3:0];
 wire              read_error      [3:0];
 wire    [23:0]    read_data_count [3:0];
+wire              read_flush      [3:0];
 
 wire              read_ready      [3:0];
 wire              read_activate   [3:0];
@@ -174,6 +176,7 @@ wb_dma s1 (
   .o_src0_count           (read_data_count[0]  ),
   .o_src0_addr_inc        (read_addr_inc[0]    ),
   .o_src0_addr_dec        (read_addr_dec[0]    ),
+  .o_src0_flush           (read_flush[0]       ),
 
   .o_src0_if_strobe       (read_strobe[0]      ),
   .i_src0_if_data         (read_data[0]        ),
@@ -187,6 +190,7 @@ wb_dma s1 (
   .o_src1_count           (read_data_count[1]  ),
   .o_src1_addr_inc        (read_addr_inc[1]    ),
   .o_src1_addr_dec        (read_addr_dec[1]    ),
+  .o_src1_flush           (read_flush[1]       ),
 
   .o_src1_if_strobe       (read_strobe[1]      ),
   .i_src1_if_data         (read_data[1]        ),
@@ -200,6 +204,7 @@ wb_dma s1 (
   .o_src2_count           (read_data_count[2]  ),
   .o_src2_addr_inc        (read_addr_inc[2]    ),
   .o_src2_addr_dec        (read_addr_dec[2]    ),
+  .o_src2_flush           (read_flush[2]       ),
 
   .o_src2_if_strobe       (read_strobe[2]      ),
   .i_src2_if_data         (read_data[2]        ),
@@ -213,6 +218,7 @@ wb_dma s1 (
   .o_src3_count           (read_data_count[3]  ),
   .o_src3_addr_inc        (read_addr_inc[3]    ),
   .o_src3_addr_dec        (read_addr_dec[3]    ),
+  .o_src3_flush           (read_flush[3]       ),
 
   .o_src3_if_strobe       (read_strobe[3]      ),
   .i_src3_if_data         (read_data[3]        ),
@@ -226,6 +232,7 @@ wb_dma s1 (
   .o_snk0_write_addr_inc  (write_addr_inc[0]   ),
   .o_snk0_write_addr_dec  (write_addr_dec[0]   ),
   .o_snk0_write_count     (write_data_count[0] ),
+  .o_snk0_flush           (write_flush[0]      ),
 
   .o_snk0_strobe          (write_strobe[0]     ),
   .i_snk0_ready           (write_ready[0]      ),
@@ -239,6 +246,7 @@ wb_dma s1 (
   .o_snk1_write_addr_inc  (write_addr_inc[1]   ),
   .o_snk1_write_addr_dec  (write_addr_dec[1]   ),
   .o_snk1_write_count     (write_data_count[1] ),
+  .o_snk1_flush           (write_flush[1]      ),
 
   .o_snk1_strobe          (write_strobe[1]     ),
   .i_snk1_ready           (write_ready[1]      ),
@@ -252,6 +260,7 @@ wb_dma s1 (
   .o_snk2_write_addr_inc  (write_addr_inc[2]   ),
   .o_snk2_write_addr_dec  (write_addr_dec[2]   ),
   .o_snk2_write_count     (write_data_count[2] ),
+  .o_snk2_flush           (write_flush[2]      ),
 
   .o_snk2_strobe          (write_strobe[2]     ),
   .i_snk2_ready           (write_ready[2]      ),
@@ -265,6 +274,7 @@ wb_dma s1 (
   .o_snk3_write_addr_inc  (write_addr_inc[3]   ),
   .o_snk3_write_addr_dec  (write_addr_dec[3]   ),
   .o_snk3_write_count     (write_data_count[3] ),
+  .o_snk3_flush           (write_flush[3]      ),
 
   .o_snk3_strobe          (write_strobe[3]     ),
   .i_snk3_ready           (write_ready[3]      ),
