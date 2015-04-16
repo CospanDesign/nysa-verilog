@@ -1,0 +1,72 @@
+[*]
+[*] GTKWave Analyzer v3.3.34 (w)1999-2012 BSI
+[*] Thu Sep 26 20:51:35 2013
+[*]
+[dumpfile] "/home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/common/wb_ppfifo_2_mem/design.vcd"
+[dumpfile_mtime] "Thu Sep 26 20:51:04 2013"
+[dumpfile_size] 550986
+[savefile] "/home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/common/wb_ppfifo_2_mem/PPFIFO_2_MEM_WAVES.gtkw"
+[timestart] 0
+[size] 1596 877
+[pos] -1 -1
+*-22.564867 13270000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] wishbone_master_tb.
+[sst_width] 210
+[signals_width] 206
+[sst_expanded] 1
+[sst_vpaned_height] 249
+@28
+wishbone_master_tb.clk
+wishbone_master_tb.rst
+@200
+-
+@800200
+-Test Bench
+@28
+wishbone_master_tb.execute_command
+wishbone_master_tb.command_finished
+@22
+wishbone_master_tb.r_in_command[31:0]
+@200
+-
+@22
+wishbone_master_tb.state[7:0]
+@200
+-
+@22
+wishbone_master_tb.r_in_address[31:0]
+wishbone_master_tb.r_in_data[31:0]
+wishbone_master_tb.r_in_command[31:0]
+@200
+-
+@28
+wishbone_master_tb.w_out_en
+@22
+wishbone_master_tb.w_out_status[31:0]
+wishbone_master_tb.w_out_data_count[27:0]
+wishbone_master_tb.w_out_data[31:0]
+@1000200
+-Test Bench
+@200
+-
+@800200
+-Test Core
+@28
+wishbone_master_tb.test_p2m.r_enable
+@200
+-
+@22
+wishbone_master_tb.test_p2m.w_wfifo_size[23:0]
+@28
+wishbone_master_tb.test_p2m.w_wfifo_ready[1:0]
+wishbone_master_tb.test_p2m.r_wfifo_activate[1:0]
+wishbone_master_tb.test_p2m.r_wfifo_strobe
+@22
+wishbone_master_tb.test_p2m.r_wfifo_data[31:0]
+wishbone_master_tb.test_p2m.r_wfifo_count[23:0]
+@1000200
+-Test Core
+@200
+-
+[pattern_trace] 1
+[pattern_trace] 0
