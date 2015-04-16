@@ -1,0 +1,63 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Sun May 25 00:44:46 2014
+[*]
+[dumpfile] "/home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_uart/design.vcd"
+[dumpfile_mtime] "Sun May 25 00:32:10 2014"
+[dumpfile_size] 3646267
+[savefile] "/home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_uart/uart_waves.gtkw"
+[timestart] 0
+[size] 1916 1057
+[pos] -1 -1
+*-25.416441 0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] wishbone_master_tb.
+[treeopen] wishbone_master_tb.s1.
+[treeopen] wishbone_master_tb.s1.uc.
+[sst_width] 213
+[signals_width] 166
+[sst_expanded] 1
+[sst_vpaned_height] 312
+@28
+wishbone_master_tb.clk
+wishbone_master_tb.rst
+@200
+-
+@28
+wishbone_master_tb.u_test.transmit
+@c00200
+-Test UART
+@22
+wishbone_master_tb.u_test.tx_byte[7:0]
+@28
+wishbone_master_tb.u_test.tx
+@200
+-
+@28
+wishbone_master_tb.u_test.rx
+wishbone_master_tb.u_test.received
+@22
+wishbone_master_tb.u_test.rx_byte[7:0]
+@1401200
+-Test UART
+@200
+-
+@800200
+-DUT UART
+@29
+[color] 2
+wishbone_master_tb.s1.uc.u.rx
+@22
+wishbone_master_tb.s1.uc.u.rx_bit_count[3:0]
+wishbone_master_tb.s1.uc.u.rx_state[2:0]
+wishbone_master_tb.s1.uc.u.rx_data[7:0]
+wishbone_master_tb.s1.uc.u.rx_byte[7:0]
+@200
+-
+@22
+wishbone_master_tb.s1.uc.u.tx_byte[7:0]
+@28
+wishbone_master_tb.s1.uc.u.tx
+@1000200
+-DUT UART
+[pattern_trace] 1
+[pattern_trace] 0

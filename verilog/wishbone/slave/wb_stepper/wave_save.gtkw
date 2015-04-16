@@ -1,0 +1,75 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Sat Jul  5 21:27:00 2014
+[*]
+[dumpfile] "/home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_stepper/design.vcd"
+[dumpfile_mtime] "Sat Jul  5 21:26:58 2014"
+[dumpfile_size] 7221497
+[savefile] "/home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_stepper/wave_save.gtkw"
+[timestart] 0
+[size] 1918 1059
+[pos] -1 -1
+*-24.689737 90230000 1108000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] wishbone_master_tb.
+[treeopen] wishbone_master_tb.s1.
+[treeopen] wishbone_master_tb.s1.stpr.
+[treeopen] wishbone_master_tb.s1.stpr.bps.
+[sst_width] 213
+[signals_width] 238
+[sst_expanded] 1
+[sst_vpaned_height] 313
+@28
+wishbone_master_tb.s1.stpr.bps.clk
+wishbone_master_tb.s1.stpr.bps.rst
+@22
+wishbone_master_tb.s1.curr_pos[31:0]
+wishbone_master_tb.s1.steps[31:0]
+@200
+-
+@800200
+-bipolar stepper
+@28
+wishbone_master_tb.s1.stpr.bps.o_move_strobe
+wishbone_master_tb.s1.stpr.bps.i_go
+@22
+wishbone_master_tb.s1.stpr.bps.state[3:0]
+wishbone_master_tb.s1.stpr.bps.step_pos[7:0]
+@200
+-
+@28
+wishbone_master_tb.s1.stpr.bps.o_hbridge0_l
+wishbone_master_tb.s1.stpr.bps.o_hbridge0_r
+wishbone_master_tb.s1.stpr.bps.o_hbridge1_l
+wishbone_master_tb.s1.stpr.bps.o_hbridge1_r
+@200
+-
+@22
+wishbone_master_tb.s1.stpr.bps.step_count[31:0]
+@200
+-
+@22
+wishbone_master_tb.s1.stpr.bps.walk_period[31:0]
+wishbone_master_tb.s1.stpr.bps.run_period[31:0]
+wishbone_master_tb.s1.stpr.bps.velocity[31:0]
+wishbone_master_tb.s1.stpr.bps.step_count[31:0]
+wishbone_master_tb.s1.stpr.bps.steps_left[31:0]
+wishbone_master_tb.s1.stpr.bps.micro_step_count[31:0]
+wishbone_master_tb.s1.stpr.bps.max_step_count[31:0]
+wishbone_master_tb.s1.stpr.bps.current_period[31:0]
+@28
+wishbone_master_tb.s1.stpr.bps.step_change
+@200
+-
+@1000200
+-bipolar stepper
+@28
+wishbone_master_tb.s1.stpr.bps.bms.i_go
+wishbone_master_tb.s1.stpr.bps.direction
+@22
+wishbone_master_tb.s1.stpr.bps.bms.step_pos[31:0]
+wishbone_master_tb.s1.stpr.bps.bms.i_current_period[31:0]
+wishbone_master_tb.s1.stpr.bps.bms.micro_current_period[31:0]
+@23
+wishbone_master_tb.s1.stpr.bps.bms.step_pos[31:0]
+[pattern_trace] 1
+[pattern_trace] 0

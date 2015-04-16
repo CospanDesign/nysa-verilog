@@ -1,0 +1,71 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Tue May 27 03:21:36 2014
+[*]
+[dumpfile] "/home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_spi/design.vcd"
+[dumpfile_mtime] "Tue May 27 03:05:41 2014"
+[dumpfile_size] 208830
+[savefile] "/home/cospan/Projects/nysa/nysa/cbuilder/verilog/wishbone/slave/wb_spi/spi_waves.gtkw"
+[timestart] 0
+[size] 1918 1059
+[pos] -1 -1
+*-20.252460 405510 405510 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] wishbone_master_tb.
+[treeopen] wishbone_master_tb.s1.
+[sst_width] 213
+[signals_width] 166
+[sst_expanded] 1
+[sst_vpaned_height] 313
+@28
+wishbone_master_tb.clk
+wishbone_master_tb.rst
+wishbone_master_tb.execute_command
+@200
+-
+@800200
+-wb_spi
+@22
+wishbone_master_tb.s1.ctrl[31:0]
+@28
+wishbone_master_tb.s1.ass
+wishbone_master_tb.s1.ie
+wishbone_master_tb.s1.lsb
+@29
+[color] 2
+wishbone_master_tb.s1.go
+@22
+wishbone_master_tb.s1.char_len[6:0]
+@200
+-
+-
+@28
+wishbone_master_tb.s1.miso_pad_i
+wishbone_master_tb.s1.mosi_pad_o
+@22
+wishbone_master_tb.s1.ss_pad_o[7:0]
+@28
+wishbone_master_tb.s1.sclk_pad_o
+@200
+-
+@22
+wishbone_master_tb.s1.shift.data[127:0]
+wishbone_master_tb.s1.shift.p_out[127:0]
+@28
+wishbone_master_tb.s1.shift.tx_clk
+wishbone_master_tb.s1.shift.tip
+wishbone_master_tb.s1.shift.last
+@22
+wishbone_master_tb.s1.shift.latch[3:0]
+wishbone_master_tb.s1.shift.mosi_data[127:0]
+@1000200
+-wb_spi
+@200
+-
+@22
+wishbone_master_tb.s1.i_wbs_adr[31:0]
+@28
+wishbone_master_tb.s1.i_wbs_we
+@22
+wishbone_master_tb.s1.write_data[127:0]
+[pattern_trace] 1
+[pattern_trace] 0

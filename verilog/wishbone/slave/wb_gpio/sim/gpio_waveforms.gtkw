@@ -1,0 +1,63 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Mon Sep 22 14:10:36 2014
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_gpio/design.vcd"
+[dumpfile_mtime] "Mon Sep 22 14:09:37 2014"
+[dumpfile_size] 154767
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_gpio/sim/gpio_waveforms.gtkw"
+[timestart] 0
+[size] 1918 1059
+[pos] -1 -1
+*-22.064217 5330000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] wishbone_master_tb.
+[sst_width] 213
+[signals_width] 262
+[sst_expanded] 1
+[sst_vpaned_height] 313
+@800200
+-Registers
+@22
+wishbone_master_tb.s1.gpio_out[31:0]
+wishbone_master_tb.s1.gpio_in[31:0]
+wishbone_master_tb.s1.interrupts[31:0]
+wishbone_master_tb.s1.interrupt_enable[31:0]
+wishbone_master_tb.s1.interrupt_edge[31:0]
+wishbone_master_tb.s1.interrupt_both_edge[31:0]
+wishbone_master_tb.s1.interrupt_timeout_count[31:0]
+@1000200
+-Registers
+@200
+-
+@800200
+-Interrupts
+@22
+wishbone_master_tb.s1.pos_gpio_edge[31:0]
+wishbone_master_tb.s1.neg_gpio_edge[31:0]
+@28
+wishbone_master_tb.s1.clear_interrupts
+wishbone_master_tb.s1.o_wbs_int
+@1000200
+-Interrupts
+@200
+-
+@800200
+-Peripheral Interconnect
+@22
+wishbone_master_tb.wi.i_m_adr[31:0]
+wishbone_master_tb.wi.o_s0_dat[31:0]
+@28
+wishbone_master_tb.wi.i_s0_int
+wishbone_master_tb.wi.i_s1_int
+@1000200
+-Peripheral Interconnect
+@200
+-
+@800201
+-Master
+@23
+wishbone_master_tb.wm.i_data[31:0]
+@1000201
+-Master
+[pattern_trace] 1
+[pattern_trace] 0

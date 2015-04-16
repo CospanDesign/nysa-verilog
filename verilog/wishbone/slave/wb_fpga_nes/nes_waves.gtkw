@@ -1,0 +1,157 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Fri Dec 19 21:13:46 2014
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_fpga_nes/design.vcd"
+[dumpfile_mtime] "Fri Dec 19 21:13:21 2014"
+[dumpfile_size] 4697821
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_fpga_nes/nes_waves.gtkw"
+[timestart] 0
+[size] 1918 1059
+[pos] -1 -1
+*-26.448309 130150000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] wishbone_master_tb.
+[treeopen] wishbone_master_tb.s1.
+[treeopen] wishbone_master_tb.s1.nes.
+[treeopen] wishbone_master_tb.s1.nes.ppu_blk.
+[treeopen] wishbone_master_tb.s1.nes.ppu_blk.ppu_vga_blk.
+[sst_width] 250
+[signals_width] 222
+[sst_expanded] 1
+[sst_vpaned_height] 390
+@28
+wishbone_master_tb.clk
+wishbone_master_tb.rst
+wishbone_master_tb.s1.o_wbs_ack
+@200
+-
+@c00200
+-HCI
+@28
+wishbone_master_tb.s1.nes.hci_blk.o_dbg_active
+@22
+[color] 6
+wishbone_master_tb.s1.nes.hci_blk.state[4:0]
+@28
+wishbone_master_tb.s1.nes.hci_blk.o_hci_ready
+@200
+-
+@28
+wishbone_master_tb.s1.nes.hci_blk.i_opcode_strobe
+@22
+wishbone_master_tb.s1.nes.hci_blk.i_opcode[7:0]
+@200
+-
+@28
+wishbone_master_tb.s1.nes.hci_blk.o_opcode_ack
+@22
+wishbone_master_tb.s1.nes.hci_blk.o_opcode_status[15:0]
+@200
+-
+@28
+wishbone_master_tb.s1.nes.hci_blk.i_host_ready
+@22
+wishbone_master_tb.s1.nes.hci_blk.i_count[31:0]
+wishbone_master_tb.s1.nes.hci_blk.r_execute_count[15:0]
+@200
+-
+@22
+wishbone_master_tb.s1.nes.hci_blk.i_data[7:0]
+@28
+wishbone_master_tb.s1.nes.hci_blk.o_data_strobe
+@22
+wishbone_master_tb.s1.nes.hci_blk.o_data[7:0]
+@200
+-
+@c00200
+-CPU
+@28
+wishbone_master_tb.s1.nes.hci_blk.i_cpu_break
+wishbone_master_tb.s1.w_console_reset
+@200
+-
+@22
+wishbone_master_tb.s1.nes.hci_blk.o_cpu_address[15:0]
+wishbone_master_tb.s1.nes.hci_blk.o_cpu_dout[7:0]
+wishbone_master_tb.s1.nes.hci_blk.i_cpu_din[7:0]
+@28
+wishbone_master_tb.s1.nes.hci_blk.o_cpu_r_nw
+@1401200
+-CPU
+@c00200
+-DEBUG
+@22
+wishbone_master_tb.s1.nes.hci_blk.o_cpu_dbg_reg_dout[7:0]
+wishbone_master_tb.s1.nes.hci_blk.o_cpu_dbg_reg_sel[3:0]
+@28
+wishbone_master_tb.s1.nes.hci_blk.o_cpu_dbg_reg_wr
+@22
+wishbone_master_tb.s1.nes.hci_blk.i_cpu_dbg_reg_din[7:0]
+@1401200
+-DEBUG
+-HCI
+@200
+-
+@22
+wishbone_master_tb.s1.nes.ppu_blk.ppu_vga_blk.vga_sync_blk.d_vcnt[9:0]
+@28
+wishbone_master_tb.s1.nes.ppu_blk.ppu_vga_blk.vga_sync_blk.d_vsync
+@200
+-
+@800200
+-PPU
+@24
+wishbone_master_tb.s1.nes.ppu_blk.r_out[2:0]
+wishbone_master_tb.s1.nes.ppu_blk.g_out[2:0]
+wishbone_master_tb.s1.nes.ppu_blk.b_out[1:0]
+@200
+-
+@800200
+-VGA Controller
+@28
+wishbone_master_tb.s1.nes.ppu_blk.ppu_vga_blk.vblank_out
+@200
+-
+@28
+wishbone_master_tb.s1.nes.ppu_blk.ppu_vga_blk.pix_pulse_out
+@24
+wishbone_master_tb.s1.nes.ppu_blk.ppu_vga_blk.nes_x_out[9:0]
+@22
+wishbone_master_tb.s1.nes.ppu_blk.ppu_vga_blk.nes_y_out[9:0]
+wishbone_master_tb.s1.nes.ppu_blk.ppu_vga_blk.nes_y_next_out[9:0]
+@28
+wishbone_master_tb.s1.nes.ppu_blk.gen.clk
+@200
+-
+@22
+wishbone_master_tb.s1.nes.ppu_blk.ppu_vga_blk.sys_palette_idx_in[5:0]
+@1000200
+-VGA Controller
+@200
+-
+@1000200
+-PPU
+@28
+wishbone_master_tb.s1.nes.ppu_blk.gen.o_pix_pulse_out
+@24
+wishbone_master_tb.s1.nes.ppu_blk.gen.o_nes_x_out[9:0]
+@22
+wishbone_master_tb.s1.nes.ppu_blk.gen.o_nes_y_out[9:0]
+wishbone_master_tb.s1.nes.ppu_blk.gen.o_nes_y_next_out[9:0]
+@28
+wishbone_master_tb.s1.nes.ppu_blk.gen.o_hsync
+wishbone_master_tb.s1.nes.ppu_blk.gen.o_vsync
+@200
+-
+@24
+wishbone_master_tb.s1.nes.ppu_blk.gen.o_r_out[2:0]
+wishbone_master_tb.s1.nes.ppu_blk.gen.o_g_out[2:0]
+wishbone_master_tb.s1.nes.ppu_blk.gen.o_b_out[1:0]
+@200
+-
+@25
+wishbone_master_tb.s1.nes.ppu_blk.gen.o_image_width[9:0]
+@24
+wishbone_master_tb.s1.nes.ppu_blk.gen.o_image_height[9:0]
+[pattern_trace] 1
+[pattern_trace] 0
