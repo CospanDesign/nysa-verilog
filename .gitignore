@@ -13,6 +13,7 @@ temp.txt
 *.sim
 *.vcd
 *.vvp
+results.xml
 
 # C extensions
 *.so
