@@ -75,7 +75,7 @@ BIT_SINK_ADDR_TOP               = 10
 BIT_INST_PTR_BOT                = 16
 BIT_INST_PTR_TOP                = 19
 
-#Insutructions
+#Instructions
 INST_BASE                       = 0x20
 INST_OFFSET                     = 0x10
 
@@ -159,6 +159,9 @@ class DMA(driver.Driver):
         """
         self.channel_count = self.read_register(CHANNEL_COUNT)
         self.sink_count = self.read_register(SINK_COUNT)
+        self.enable_dma(False)
+        for i in range(self.channel_count):
+            self.enable_channel(i, False)
 
     def get_channel_count(self):
         return self.read_register(CHANNEL_COUNT)
@@ -410,6 +413,8 @@ class DMA(driver.Driver):
         if sink > self.sink_count - 1:
             raise DMAError("Illegal sink count: %d > %d" % (sink, self.sink_count - 1))
         self.enable_register_bit(SINK_ADDR_CONTROL_BASE + sink, BIT_CFG_DEST_ADDR_INC, enable)
+        if enable:
+            self.enable_register_bit(SINK_ADDR_CONTROL_BASE + sink, BIT_CFG_DEST_ADDR_DEC, False)
 
     def is_dest_address_increment(self, sink):
         """
@@ -454,6 +459,8 @@ class DMA(driver.Driver):
         if sink > self.sink_count - 1:
             raise DMAError("Illegal sink count: %d > %d" % (sink, self.sink_count - 1))
         self.enable_register_bit(SINK_ADDR_CONTROL_BASE + sink, BIT_CFG_DEST_ADDR_DEC, enable)
+        if enable:
+            self.enable_register_bit(SINK_ADDR_CONTROL_BASE + sink, BIT_CFG_DEST_ADDR_INC, False)
 
     def is_dest_address_decrement(self, sink):
         """
@@ -500,7 +507,7 @@ class DMA(driver.Driver):
         """
         if sink > self.sink_count - 1:
             raise DMAError("Illegal sink count: %d > %d" % (sink, self.sink_count - 1))
-        self.enable_register_bit(SINK_ADDR_CONTROL_BASE + sink, BIT_CFG_DEST_ADDR_DEC, enable)
+        self.enable_register_bit(SINK_ADDR_CONTROL_BASE + sink, BIT_CFG_DEST_DATA_QUANTUM, enable)
 
     def is_dest_respect_quantum(self, sink):
         """
@@ -518,7 +525,7 @@ class DMA(driver.Driver):
         """
         if sink > self.sink_count - 1:
             raise DMAError("Illegal sink count: %d > %d" % (sink, self.sink_count - 1))
-        return self.is_register_bit_set(SINK_ADDR_CONTROL_BASE + sink, BIT_CFG_DEST_ADDR_DEC)
+        return self.is_register_bit_set(SINK_ADDR_CONTROL_BASE + sink, BIT_CFG_DEST_DATA_QUANTUM)
 
     def enable_channel(self, channel, enable):
         """

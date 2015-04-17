@@ -103,7 +103,7 @@ blk_mem #(
 
 ppfifo#(
   .DATA_WIDTH           (32             ),
-  .ADDRESS_WIDTH        (READ_FIFO_SIZE )
+  .ADDRESS_WIDTH        (WRITE_FIFO_SIZE)
 )fifo_to_mem (
   .reset                (rst            ),
 
@@ -170,6 +170,7 @@ assign  read_finished               =   (mem_read_count     >= local_read_size);
 
 assign din                          =   fill_mem ? fill_mem_data: f2m_data;
 assign wea                          =   fill_mem ? fill_mem_wea: f2m_strobe;
+assign read_error                   =   m2f_data_error;
 
 //Synchronous Logic
 always @ (posedge clk) begin
@@ -233,19 +234,20 @@ always @ (posedge clk) begin
     //Errors (Incomming)
     if ((f2m_count > 0) && mem_write_strobe && !write_flush) begin
       if ((prev_f2m_data == (2 ** ADDRESS_WIDTH) - 1) && (f2m_data != 0)) begin
+      //if ((mem_addr_in == (2 ** ADDRESS_WIDTH) - 1) && (f2m_data != 0)) begin
         f2m_data_error              <=   1;
-        $display ("Write: Wrap Error @ %h: %h != %h", mem_addr_in, prev_f2m_data + 1, f2m_data);
+        $display ("Write: Wrap Error @ 0x%h: 0x%h != 0x%h", mem_addr_in, prev_f2m_data + 1, f2m_data);
       end
       else if ((prev_f2m_data + 1) != f2m_data) begin
         if (first_write) begin
           if (prev_f2m_data != f2m_data) begin
             f2m_data_error          <=  1;
-            $display ("Write: First Write Error @ %h: %h != %h", mem_addr_in, prev_f2m_data + 1, f2m_data);
+            $display ("Write: First Write Error @ 0x%h: 0x%h != 0x%h", mem_addr_in, prev_f2m_data + 1, f2m_data);
           end
         end
         else begin
           f2m_data_error              <=  1;
-          $display ("Write: Error @ %h: %h != %h", mem_addr_in, prev_f2m_data + 1, f2m_data);
+          $display ("Write: Error @ 0x%h: 0x%h != 0x%h", mem_addr_in, prev_f2m_data + 1, f2m_data);
         end
       end
     end
@@ -255,11 +257,11 @@ always @ (posedge clk) begin
     if ((m2f_count > 0) && m2f_strobe && !read_flush && ((m2f_activate & m2f_ready) == 0)) begin
       if (((prev_m2f_data + 1)== (2 ** ADDRESS_WIDTH)) && (m2f_data != 0))begin
         m2f_data_error                  <= 1;
-        $display ("Read: Wrap Error @ %h should be 0", prev_m2f_data);
+        $display ("Read: Wrap Error @ 0x%h should be 0", prev_m2f_data);
       end
       else if ((prev_m2f_data + 1) != m2f_data) begin
         m2f_data_error                  <= 1;
-        $display ("Read: Error @ %h: %h != %h", mem_addr_out, m2f_data, (prev_m2f_data + 1));
+        $display ("Read: Error @ 0x%h: 0x%h != 0x%h", mem_addr_out, m2f_data, (prev_m2f_data + 1));
       end
     end
 

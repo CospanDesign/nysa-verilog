@@ -320,10 +320,24 @@ localparam AWIDTH1 = 8;
 localparam AWIDTH2 = 9;
 localparam AWIDTH3 = 8;
 
+localparam READ_FIFO_SIZE0      = 8;
+localparam WRITE_FIFO_SIZE0     = 8;
+
+localparam READ_FIFO_SIZE1      = 8;
+localparam WRITE_FIFO_SIZE1     = 8;
+
+localparam READ_FIFO_SIZE2      = 8;
+localparam WRITE_FIFO_SIZE2     = 8;
+
+localparam READ_FIFO_SIZE3      = 8;
+localparam WRITE_FIFO_SIZE3     = 7;
+
+
+
 //1st Device
 test_mem_dev #(
-  .READ_FIFO_SIZE     (                 3  ),
-  .WRITE_FIFO_SIZE    (                 5  ),
+  .READ_FIFO_SIZE     ( READ_FIFO_SIZE0    ),
+  .WRITE_FIFO_SIZE    ( WRITE_FIFO_SIZE0   ),
   .ADDRESS_WIDTH      (           AWIDTH0  )
 )tdm0(
   .clk                (clk                 ),
@@ -363,8 +377,8 @@ test_mem_dev #(
 
 //2nd Device
 test_mem_dev #(
-    .READ_FIFO_SIZE   (                 4  ),
-    .WRITE_FIFO_SIZE  (                 7  ),
+    .READ_FIFO_SIZE   ( READ_FIFO_SIZE1    ),
+    .WRITE_FIFO_SIZE  ( WRITE_FIFO_SIZE1   ),
     .ADDRESS_WIDTH    (           AWIDTH1  )
 )tdm1(
   .clk                (clk                 ),
@@ -404,8 +418,8 @@ test_mem_dev #(
 
 //3rd Device
 test_mem_dev #(
-    .READ_FIFO_SIZE   (                 4  ),
-    .WRITE_FIFO_SIZE  (                 6  ),
+    .READ_FIFO_SIZE   (  READ_FIFO_SIZE2   ),
+    .WRITE_FIFO_SIZE  (  WRITE_FIFO_SIZE2  ),
     .ADDRESS_WIDTH    (           AWIDTH2  )
 )tdm2(
   .clk                (clk                 ),
@@ -445,8 +459,8 @@ test_mem_dev #(
 
 //4th Device
 test_mem_dev #(
-    .READ_FIFO_SIZE   (                 8  ),
-    .WRITE_FIFO_SIZE  (                 8  ),
+    .READ_FIFO_SIZE   (  READ_FIFO_SIZE3   ),
+    .WRITE_FIFO_SIZE  (  WRITE_FIFO_SIZE3  ),
     .ADDRESS_WIDTH    (           AWIDTH3  )
 )tdm3(
   .clk                (clk                 ),

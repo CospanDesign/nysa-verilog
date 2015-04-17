@@ -359,6 +359,16 @@ wire                flag_instruction_continue       [`INST_COUNT - 1: 0];
 wire        [3:0]   ingress_bond_ip                 [`INST_COUNT - 1: 0];
 wire        [3:0]   egress_bond_ip                  [`INST_COUNT - 1: 0];
 
+wire                flag_channel_enable0;
+wire                flag_channel_enable1;
+wire                flag_channel_enable2;
+wire                flag_channel_enable3;
+
+wire                flag_dest_data_quantum0;
+wire                flag_dest_data_quantum1;
+wire                flag_dest_data_quantum2;
+wire                flag_dest_data_quantum3;
+
 
 wire                flag_instruction_continue0;
 wire                flag_instruction_continue1;
@@ -624,6 +634,11 @@ assign channel_count1         = channel_count[1];
 assign channel_count2         = channel_count[2];
 assign channel_count3         = channel_count[3];
 
+assign flag_channel_enable0       = dma_enable[0];
+assign flag_channel_enable1       = dma_enable[1];
+assign flag_channel_enable2       = dma_enable[2];
+assign flag_channel_enable3       = dma_enable[3];
+
 assign curr_count0            = curr_count[0];
 assign curr_count1            = curr_count[1];
 assign curr_count2            = curr_count[2];
@@ -633,6 +648,11 @@ assign snk_in_use0            = snk_in_use[0];
 assign snk_in_use1            = snk_in_use[1];
 assign snk_in_use2            = snk_in_use[2];
 assign snk_in_use3            = snk_in_use[3];
+
+assign flag_dest_data_quantum0= flag_dest_data_quantum[0];
+assign flag_dest_data_quantum1= flag_dest_data_quantum[1];
+assign flag_dest_data_quantum2= flag_dest_data_quantum[2];
+assign flag_dest_data_quantum3= flag_dest_data_quantum[3];
 
 assign inst_ingress_ready0    = inst_ingress_ready[0];
 assign inst_ingress_ready1    = inst_ingress_ready[1];
@@ -666,7 +686,7 @@ assign flag_instruction_continue7 = flag_instruction_continue[7];
 genvar g;
 generate
 for (g = 0; g < `SOURCE_COUNT; g = g + 1) begin
-  assign src_dma_busy[g]                = (state[g] != IDLE);
+  assign  src_dma_busy[g]               = (state[g] != IDLE);
   assign  flag_src_addr_inc[g]          = src_control[g][`BIT_CFG_SRC_ADDR_INC];
   assign  flag_src_addr_dec[g]          = src_control[g][`BIT_CFG_SRC_ADDR_DEC];
   assign  dma_enable[g]                 = src_control[g][`BIT_CFG_DMA_ENABLE];
@@ -687,9 +707,9 @@ endgenerate
 genvar j;
 generate
 for (j = 0; j < `SINK_COUNT; j = j + 1) begin
-  assign  flag_dest_data_quantum[j]     = cmd_flags[j][`BIT_CFG_DEST_DATA_QUANTUM];
-  assign  flag_dest_addr_inc[j]         = cmd_flags[j][`BIT_CFG_DEST_ADDR_INC];
-  assign  flag_dest_addr_dec[j]         = cmd_flags[j][`BIT_CFG_DEST_ADDR_DEC];
+  assign  flag_dest_data_quantum[j]     = snk_control[j][`BIT_CFG_DEST_DATA_QUANTUM];
+  assign  flag_dest_addr_inc[j]         = snk_control[j][`BIT_CFG_DEST_ADDR_INC];
+  assign  flag_dest_addr_dec[j]         = snk_control[j][`BIT_CFG_DEST_ADDR_DEC];
 end
 endgenerate
 
@@ -730,6 +750,7 @@ always @ (posedge clk) begin
       snk_in_use[i]                          <=  0;
       snk_enable[i]                          <=  0;
       snk_flush[i]                           <=  0;
+      snk_data[i]                            <=  0;
     end
   end
   else begin
@@ -753,9 +774,9 @@ always @ (posedge clk) begin
           if (!snk_in_use[i]) begin
             snk_strobe[i]                     <= 0;
             snk_enable[i]                     <= 0;
+            snk_data_count[i]                 <= 0;
             if (snk_activate[i] && (snk_count[i] < snk_size[i])) begin
               snk_strobe[i]                   <= 1;
-              snk_data[i]                     <= 0;
               snk_count[i]                    <= snk_count[i] + 1;
 
               snk_enable[i]                   <= 0;
@@ -861,7 +882,6 @@ always @ (posedge clk) begin
             end
             if (src_strobe[i]) begin
               snk_strobe[snka[i]]             <= 1;
-              snk_count[snka[i]]              <= snk_count[snka[i]] + 1;
               channel_count[i]                <= channel_count[i] + 1;
               snk_data[snka[i]]               <= src_data[i];
 
@@ -880,6 +900,7 @@ always @ (posedge clk) begin
 
               src_strobe[i]                   <= 1;
               src_count[i]                    <= src_count[i] + 1;
+              snk_count[snka[i]]              <= snk_count[snka[i]] + 1;
 
               //Increment or decrement the addresses
               if (flag_src_addr_inc[i]) begin

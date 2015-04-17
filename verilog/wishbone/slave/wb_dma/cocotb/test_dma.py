@@ -24,11 +24,9 @@ def first_test(dut):
     yield(nysa.reset())
     nysa.read_sdb()
 
-    #nysa.pretty_print_sdb()
-    #dma = DMA(nysa, nysa.find_device(DMA)[0])
+    nysa.pretty_print_sdb()
     dma = DMA(nysa, nysa.find_device(DMA)[0])
     yield cocotb.external(dma.setup)()
-    print "Try a read"
     yield cocotb.external(dma.get_channel_count)()
 
     dut.log.info("DMA Opened!")
@@ -259,7 +257,8 @@ def test_execute_single_instruction(dut):
     yield nysa.wait_clocks(10)
     yield cocotb.external(dma.enable_dest_address_increment)    (SINK_ADDR,     True                )
     yield nysa.wait_clocks(10)
-    yield cocotb.external(dma.enable_dest_respect_quantum)      (SINK_ADDR,     True                )
+    yield cocotb.external(dma.enable_dest_respect_quantum)      (SINK_ADDR,     False              )
+    #yield cocotb.external(dma.enable_dest_respect_quantum)      (SINK_ADDR,     True                )
     yield nysa.wait_clocks(10)
     yield cocotb.external(dma.set_instruction_source_address)   (INST_ADDR,     0x0000000000000000  )
     yield nysa.wait_clocks(10)
@@ -280,10 +279,10 @@ def test_execute_single_instruction(dut):
     #yield nysa.wait_clocks(10)
 
     if len(source_error_monitor) > 0:
-        print "Errors on source"
+        raise cocotb.result.TestFailure("Test %d Error on source %d write detected %d errors" % (dut.test_id, CHANNEL_ADDR, len(source_error_monitor)))
 
     if len(sink_error_monitor) > 0:
-        print "Errors on sink"
+        raise cocotb.result.TestFailure("Test %d Error on source %d read detected %d errors" % (dut.test_id, SINK_ADDR, len(sink_error_monitor)))
 
     source_error_monitor.kill()
     sink_error_monitor.kill()
@@ -313,19 +312,36 @@ def test_continuous_transfer(dut):
     yield cocotb.external(dma.enable_dma)(True)
     #yield nysa.wait_clocks(10)
 
-    CHANNEL_ADDR = 0
-    SINK_ADDR = 2
-    INST_ADDR = 7
+    CHANNEL_ADDR = 3
+    SINK_ADDR = 1
+    INST_ADDR = 2
+
+    source_error = get_source_error_signal(dut, CHANNEL_ADDR)
+    sink_error = get_sink_error_signal(dut, SINK_ADDR)
+    source_error_monitor = ErrorMonitor(dut, source_error)
+    sink_error_monitor = ErrorMonitor(dut, sink_error)
+    #yield cocotb.external(dma.enable_channel)                   (CHANNEL_ADDR,  False               )
+
+
 
     yield cocotb.external(dma.set_channel_sink_addr)            (CHANNEL_ADDR,  SINK_ADDR           )
+    yield nysa.wait_clocks(10)
     yield cocotb.external(dma.set_channel_instruction_pointer)  (CHANNEL_ADDR,  INST_ADDR           )
+    yield nysa.wait_clocks(10)
     yield cocotb.external(dma.enable_source_address_increment)  (CHANNEL_ADDR,  True                )
+    yield nysa.wait_clocks(10)
     yield cocotb.external(dma.enable_dest_address_increment)    (SINK_ADDR,     True                )
-    yield cocotb.external(dma.enable_dest_respect_quantum)      (SINK_ADDR,     True                )
+    yield nysa.wait_clocks(10)
+    yield cocotb.external(dma.enable_dest_respect_quantum)      (SINK_ADDR,     False               )
+    yield nysa.wait_clocks(10)
     yield cocotb.external(dma.enable_instruction_continue)      (INST_ADDR,     True                )
+    yield nysa.wait_clocks(10)
     yield cocotb.external(dma.set_instruction_source_address)   (INST_ADDR,     0x0000000000000000  )
+    yield nysa.wait_clocks(10)
     yield cocotb.external(dma.set_instruction_dest_address)     (INST_ADDR,     0x0000000000000010  )
+    yield nysa.wait_clocks(10)
     yield cocotb.external(dma.set_instruction_count)            (INST_ADDR,     0x0100              )
+    yield nysa.wait_clocks(10)
     yield cocotb.external(dma.set_instruction_next_instruction) (INST_ADDR,     INST_ADDR           )
     yield nysa.wait_clocks(10)
 
@@ -337,6 +353,16 @@ def test_continuous_transfer(dut):
     yield cocotb.external(dma.enable_channel)                   (CHANNEL_ADDR,  False               )
     yield cocotb.external(dma.enable_dma)(False)
     yield nysa.wait_clocks(10)
+
+    if len(source_error_monitor) > 0:
+        raise cocotb.result.TestFailure("Test %d Error on source %d read detected %d errors" % (dut.test_id, CHANNEL_ADDR, len(source_error_monitor)))
+
+    if len(sink_error_monitor) > 0:
+        raise cocotb.result.TestFailure("Test %d Error on sink %d read detected %d errors" % (dut.test_id, SINK_ADDR, len(sink_error_monitor)))
+
+
+    source_error_monitor.kill()
+    sink_error_monitor.kill()
 
 
 
@@ -370,7 +396,8 @@ def test_double_buffer(dut):
     yield cocotb.external(dma.set_channel_instruction_pointer)  (CHANNEL_ADDR,  INST_ADDR           )
     yield cocotb.external(dma.enable_source_address_increment)  (CHANNEL_ADDR,  True                )
     yield cocotb.external(dma.enable_dest_address_increment)    (SINK_ADDR,     True                )
-    yield cocotb.external(dma.enable_dest_respect_quantum)      (SINK_ADDR,     True                )
+    #yield cocotb.external(dma.enable_dest_respect_quantum)      (SINK_ADDR,     True                )
+    yield cocotb.external(dma.enable_dest_respect_quantum)      (SINK_ADDR,     False               )
     yield cocotb.external(dma.enable_instruction_continue)      (INST_ADDR,     False               )
     yield cocotb.external(dma.set_instruction_source_address)   (INST_ADDR,     0x0000000000000000  )
     yield cocotb.external(dma.set_instruction_dest_address)     (INST_ADDR,     0x0000000000000010  )
