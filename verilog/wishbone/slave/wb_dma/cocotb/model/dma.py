@@ -100,7 +100,7 @@ BIT_INST_DEST_RST_ON_INST       = 7
 BIT_INST_CMD_BOND_INGRESS       = 8
 BIT_INST_CMD_BOND_EGRESS        = 9
 
-BIT_INST_CMD_CONTINUE           = 10
+BIT_INST_CMD_CONTINUE           = 11
 BIT_INST_CMD_NEXT_TOP           = 19
 BIT_INST_CMD_NEXT_BOT           = 16
 
@@ -694,7 +694,7 @@ class DMA(driver.Driver):
         r |= egress_inst_addr << BIT_INST_CMD_BOND_ADDR_OUT_BOT
         self.write_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL, r)
 
-    def set_instruction_next_instruction(self, next_instruction):
+    def set_instruction_next_instruction(self, inst_addr, next_instruction):
         """
 
         Args:
@@ -728,7 +728,7 @@ class DMA(driver.Driver):
         """
         if inst_addr > INSTRUCTION_COUNT - 1:
             raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
-        self.set_register_bit(INST_BASE + (INST_OFFSET * inst_addr), BIT_INST_CMD_CONTINUE, enable)
+        self.enable_register_bit(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL, BIT_INST_CMD_CONTINUE, enable)
 
     def setup_double_buffer(self, source, sink, mem, source_addr, sink_addr, count):
         """

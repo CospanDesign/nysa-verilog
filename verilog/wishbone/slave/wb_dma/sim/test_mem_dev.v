@@ -207,6 +207,7 @@ always @ (posedge clk) begin
     prev_m2f_data                   <=  0;
 
   end
+  //Fill Memory Device
   else if (fill_mem) begin
     fill_mem_wea                     <= 1;
     if (mem_addr_in < (2 ** ADDRESS_WIDTH - 1)) begin

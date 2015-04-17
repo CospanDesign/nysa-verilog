@@ -1,0 +1,234 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Mon Apr  6 02:47:47 2015
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/design.vcd"
+[dumpfile_mtime] "Mon Apr  6 02:47:45 2015"
+[dumpfile_size] 1840477
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/waves.gtkw"
+[timestart] 58440000
+[size] 1918 1059
+[pos] -1 -1
+*-22.406317 78390000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] wishbone_master_tb.
+[treeopen] wishbone_master_tb.s1.
+[sst_width] 213
+[signals_width] 238
+[sst_expanded] 1
+[sst_vpaned_height] 313
+@28
+wishbone_master_tb.clk
+wishbone_master_tb.rst
+wishbone_master_tb.execute_command
+@200
+-
+@800200
+-DMA Controller
+-Channel 0
+@22
+wishbone_master_tb.s1.dmacntrl.snka0[1:0]
+@2022
+^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/sim/states.txt
+wishbone_master_tb.s1.dmacntrl.state0[3:0]
+@28
+wishbone_master_tb.s1.dmacntrl.snk_in_use0
+wishbone_master_tb.s1.dmacntrl.snk_in_use1
+@200
+-
+@22
+wishbone_master_tb.s1.dmacntrl.cmd_src_address0[63:0]
+wishbone_master_tb.s1.dmacntrl.cmd_dest_address0[63:0]
+wishbone_master_tb.s1.dmacntrl.cmd_count0[31:0]
+wishbone_master_tb.s1.dmacntrl.cmd_bond_ingress0[3:0]
+wishbone_master_tb.s1.dmacntrl.cmd_bond_egress0[3:0]
+@200
+-
+@28
+wishbone_master_tb.s1.dmacntrl.inst_ingress_ready0
+@29
+wishbone_master_tb.s1.dmacntrl.inst_egress_ready0
+@28
+wishbone_master_tb.s1.dmacntrl.flag_instruction_continue0
+@22
+wishbone_master_tb.s1.dmacntrl.snka0[1:0]
+@1000200
+-Channel 0
+@c00200
+-Channel 2
+@28
+wishbone_master_tb.s1.dmacntrl.snk_in_use3
+@22
+wishbone_master_tb.s1.dmacntrl.o_snk3_write_addr[63:0]
+@2022
+^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/sim/states.txt
+wishbone_master_tb.s1.dmacntrl.state2[3:0]
+@22
+wishbone_master_tb.s1.dmacntrl.snka2[1:0]
+@28
+wishbone_master_tb.s1.dmacntrl.cmd_next2[2:0]
+wishbone_master_tb.s1.dmacntrl.o_src2_enable
+@22
+wishbone_master_tb.s1.dmacntrl.cmd_flags2[15:0]
+wishbone_master_tb.s1.dmacntrl.channel_count2[31:0]
+wishbone_master_tb.s1.dmacntrl.cmd_bond_ingress2[3:0]
+wishbone_master_tb.s1.dmacntrl.cmd_bond_egress2[3:0]
+wishbone_master_tb.s1.dmacntrl.cmd_count2[31:0]
+wishbone_master_tb.s1.dmacntrl.cmd_dest_address2[63:0]
+@200
+-
+@22
+wishbone_master_tb.s1.dmacntrl.i_src2_control[31:0]
+wishbone_master_tb.s1.dmacntrl.i_src2_data[31:0]
+@28
+wishbone_master_tb.s1.dmacntrl.i_src2_ready
+@22
+wishbone_master_tb.s1.dmacntrl.i_src2_size[23:0]
+@28
+wishbone_master_tb.s1.dmacntrl.o_src2_activate
+wishbone_master_tb.s1.dmacntrl.o_src2_addr_dec
+wishbone_master_tb.s1.dmacntrl.o_src2_addr_inc
+@22
+wishbone_master_tb.s1.dmacntrl.o_src2_address[63:0]
+wishbone_master_tb.s1.dmacntrl.o_src2_count[23:0]
+@28
+wishbone_master_tb.s1.dmacntrl.o_src2_enable
+wishbone_master_tb.s1.dmacntrl.o_src2_finished
+wishbone_master_tb.s1.dmacntrl.o_src2_flush
+@22
+wishbone_master_tb.s1.dmacntrl.o_src2_status[31:0]
+@28
+wishbone_master_tb.s1.dmacntrl.o_src2_strobe
+@200
+-
+@22
+wishbone_master_tb.s1.dmacntrl.i_snk3_control[31:0]
+wishbone_master_tb.s1.dmacntrl.i_snk3_size[23:0]
+@28
+wishbone_master_tb.s1.dmacntrl.i_snk3_ready[1:0]
+wishbone_master_tb.s1.dmacntrl.o_snk3_activate[1:0]
+@22
+wishbone_master_tb.s1.dmacntrl.o_snk3_data[31:0]
+@28
+wishbone_master_tb.s1.dmacntrl.o_snk3_flush
+@22
+wishbone_master_tb.s1.dmacntrl.o_snk3_status[31:0]
+@28
+wishbone_master_tb.s1.dmacntrl.o_snk3_strobe
+@22
+wishbone_master_tb.s1.dmacntrl.o_snk3_write_addr[63:0]
+@28
+wishbone_master_tb.s1.dmacntrl.o_snk3_write_addr_dec
+wishbone_master_tb.s1.dmacntrl.o_snk3_write_addr_inc
+wishbone_master_tb.s1.dmacntrl.o_snk3_write_busy
+@22
+wishbone_master_tb.s1.dmacntrl.o_snk3_write_count[23:0]
+@28
+wishbone_master_tb.s1.dmacntrl.o_snk3_write_enable
+@1401200
+-Channel 2
+@1000200
+-DMA Controller
+@c00200
+-Test 0
+@22
+wishbone_master_tb.tdm0.prev_m2f_data[31:0]
+wishbone_master_tb.tdm0.m2f_data[31:0]
+[color] 1
+wishbone_master_tb.tdm1.m2f_data_error
+@28
+wishbone_master_tb.tdm0.m2f_strobe
+@22
+wishbone_master_tb.tdm0.mem_addr_out[9:0]
+wishbone_master_tb.tdm0.m2f_data[31:0]
+wishbone_master_tb.tdm1.mem_addr_out[9:0]
+wishbone_master_tb.tdm1.m2f_data[31:0]
+@200
+-
+@28
+wishbone_master_tb.tdm0.read_enable
+wishbone_master_tb.tdm0.read_ready
+wishbone_master_tb.tdm0.read_finished
+wishbone_master_tb.tdm0.read_strobe
+@22
+wishbone_master_tb.tdm0.read_data[31:0]
+@28
+wishbone_master_tb.tdm0.read_addr_dec
+wishbone_master_tb.tdm0.read_addr_inc
+@22
+wishbone_master_tb.tdm0.read_addr[63:0]
+@28
+wishbone_master_tb.tdm0.read_activate
+@200
+-
+@28
+wishbone_master_tb.tdm0.write_enable
+wishbone_master_tb.tdm0.write_ready[1:0]
+wishbone_master_tb.tdm0.write_activate[1:0]
+wishbone_master_tb.tdm0.write_strobe
+wishbone_master_tb.tdm0.f2m_ready
+@22
+wishbone_master_tb.tdm0.write_data[31:0]
+wishbone_master_tb.tdm0.f2m_data[31:0]
+@1401200
+-Test 0
+@c00200
+-Test 1
+@28
+wishbone_master_tb.tdm1.write_enable
+wishbone_master_tb.tdm1.write_finished
+wishbone_master_tb.tdm1.write_ready[1:0]
+wishbone_master_tb.tdm1.write_activate[1:0]
+@22
+wishbone_master_tb.tdm1.write_size[23:0]
+@28
+wishbone_master_tb.tdm1.write_strobe
+wishbone_master_tb.tdm1.write_addr_inc
+wishbone_master_tb.tdm1.write_addr_dec
+@22
+wishbone_master_tb.tdm1.write_addr[63:0]
+wishbone_master_tb.tdm1.write_data[31:0]
+@200
+-
+@28
+wishbone_master_tb.tdm1.f2m_ready
+wishbone_master_tb.tdm1.f2m_activate
+wishbone_master_tb.tdm1.f2m_strobe
+[color] 1
+wishbone_master_tb.tdm1.f2m_data_error
+wishbone_master_tb.tdm1.mem_write_strobe
+@22
+[color] 7
+wishbone_master_tb.tdm1.f2m_data[31:0]
+[color] 6
+wishbone_master_tb.tdm1.prev_f2m_data[31:0]
+wishbone_master_tb.tdm1.f2m_size[23:0]
+wishbone_master_tb.tdm1.f2m_count[23:0]
+wishbone_master_tb.tdm1.mem_addr_in[9:0]
+@1401200
+-Test 1
+@2022
+^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/sim/states.txt
+wishbone_master_tb.s1.dmacntrl.state1[3:0]
+@22
+wishbone_master_tb.s1.dmacntrl.channel_count1[31:0]
+wishbone_master_tb.s1.dmacntrl.cmd_next2[2:0]
+wishbone_master_tb.s1.dmacntrl.ip1[2:0]
+@200
+-
+@22
+wishbone_master_tb.s1.dmacntrl.cmd_dest_address1[63:0]
+wishbone_master_tb.s1.dmacntrl.cmd_bond_egress2[3:0]
+wishbone_master_tb.s1.dmacntrl.cmd_bond_ingress2[3:0]
+@200
+-
+@28
+wishbone_master_tb.s1.dmacntrl.inst_ingress_ready2
+wishbone_master_tb.s1.dmacntrl.inst_egress_ready2
+@22
+wishbone_master_tb.s1.dmacntrl.snka1[1:0]
+@200
+-
+@28
+wishbone_master_tb.s1.dmacntrl.flag_instruction_continue2
+[pattern_trace] 1
+[pattern_trace] 0
