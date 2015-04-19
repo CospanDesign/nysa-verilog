@@ -131,13 +131,13 @@ class NysaSim (FauxNysa):
     @cocotb.function
     def _read(self, address, length = 1, mem_device = False):
         yield(self.comm_lock.acquire())
-        # print "_Read Acquire Lock"
+        #print "_Read Acquire Lock"
         data_index = 0
         self.dut.in_ready       <= 0
         self.dut.out_ready      <= 0
 
         self.response = Array('B')
-        self.wait_clocks(10)
+        yield( self.wait_clocks(10))
 
         if (mem_device):
             self.dut.in_command <= 0x00010002
@@ -148,18 +148,18 @@ class NysaSim (FauxNysa):
         self.dut.in_address     <= address
         self.dut.in_data        <= 0
 
-        self.wait_clocks(1)
+        yield( self.wait_clocks(1))
         self.dut.in_ready       <= 1
         yield FallingEdge(self.dut.master_ready)
-        self.wait_clocks(1)
+        yield( self.wait_clocks(1))
         self.dut.in_ready       <= 0
-        self.wait_clocks(1)
+        yield( self.wait_clocks(1))
         self.dut.out_ready      <= 1
 
         while data_index < length:
             #self.dut.log.info("Waiting for master to assert out enable")
             yield RisingEdge(self.dut.out_en)
-            self.wait_clocks(1)
+            yield( self.wait_clocks(1))
             self.dut.out_ready      <= 0
             timeout_count           =  0
             data_index              += 1
@@ -168,12 +168,14 @@ class NysaSim (FauxNysa):
             self.response.append(0xFF & (value >> 16))
             self.response.append(0xFF & (value >> 8))
             self.response.append(0xFF & value)
-            self.wait_clocks(1)
+            yield( self.wait_clocks(1))
             self.dut.out_ready      <= 1
 
-        yield RisingEdge(self.dut.master_ready)
+        if self.dut.master_ready.value.get_value() == 0:
+            yield RisingEdge(self.dut.master_ready)
+
+        yield( self.wait_clocks(10))
         self.comm_lock.release()
-        # print "_Read Release Lock"
         raise ReturnValue(self.response)
 
     @cocotb.function
@@ -182,7 +184,7 @@ class NysaSim (FauxNysa):
         # print "Write Acquired Lock"
         data_count = len(data) / 4
         #print "data count: %d" % data_count
-        self.wait_clocks(1)
+        yield( self.wait_clocks(1))
 
         if data_count == 0:
             raise NysaCommError("Length of data to write is 0!")
@@ -206,13 +208,13 @@ class NysaSim (FauxNysa):
             self.dut.in_ready       <= 1
             #self.dut.log.info("Waiting for master to deassert ready")
             yield FallingEdge(self.dut.master_ready)
-            self.wait_clocks(1)
+            yield( self.wait_clocks(1))
             data_index          += 1
             timeout_count       =  0
             #self.dut.log.info("Waiting for master to be ready")
             self.dut.in_ready       <= 0
             yield RisingEdge(self.dut.master_ready)
-            self.wait_clocks(1)
+            yield( self.wait_clocks(1))
 
         self.response = Array('B')
         value = self.dut.out_data.value.get_value()
@@ -220,7 +222,8 @@ class NysaSim (FauxNysa):
         self.response.append(0xFF & (value >> 16))
         self.response.append(0xFF & (value >> 8))
         self.response.append(0xFF & value)
-        # print "Write Release Lock"
+
+        yield( self.wait_clocks(10))
         self.comm_lock.release()
 
     @cocotb.coroutine
@@ -249,8 +252,9 @@ class NysaSim (FauxNysa):
         yield(self.wait_clocks(RESET_PERIOD / 2))
         self.dut.rst            <= 0
         yield(self.wait_clocks(RESET_PERIOD / 2))
-        #print "Reset Release Lock"
+        yield( self.wait_clocks(10))
         self.comm_lock.release()
+        #print "Reset Release Lock"
 
     @cocotb.coroutine
     def ping(self):

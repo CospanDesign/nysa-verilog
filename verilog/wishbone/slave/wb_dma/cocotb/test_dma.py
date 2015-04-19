@@ -1,6 +1,8 @@
 # Simple tests for an adder module
 import cocotb
+import logging
 from cocotb.result import TestFailure
+from model import dma as dmam
 from model.dma import DMA
 from model.sim_host import NysaSim
 import time
@@ -11,7 +13,9 @@ CLK_PERIOD = 4
 def first_test(dut):
     """
     Description:
-        Initial Test
+        Very Basic Functionality
+            Startup Nysa
+            Startup DMA Controller
 
     Test ID: 0
 
@@ -33,12 +37,46 @@ def first_test(dut):
     dut.log.info("Ready")
 
 
+def get_register_range(signal, top_bit, bot_bit):
+    #print "top_bit: %d" % top_bit
+    mask = (((1 << (top_bit)) - (1 << bot_bit)) >> (bot_bit))
+    time.sleep(0.001)
+    value = signal.value.get_value()
+    value &= ((1 << top_bit) - (1 << bot_bit));
+    value = (value >> bot_bit) & mask
+    return value
 
-@cocotb.test(skip = True)
+def is_bit_set(signal, bit):
+    return ((signal & 1 << bit) > 0)
+
+@cocotb.test(skip = False)
 def test_setup_dma(dut):
     """
     Description:
-        Setup a channel
+        Set Values Within Simulation and make sure they stimulate
+        The correct places
+            Read Number of Sources
+            Read Number of Sinks
+            Read Number of Instructions
+            Source Testing:
+                Enable DMA
+                Address Increment
+                Address Decrement
+                Address No Change
+                Set Sink Address
+                Set Instruction Address
+            Sink Testing:
+                Address Increment
+                Address Decrement
+                Address No Change
+                Quantum
+            Instruction
+                Continue Testing
+                Next Address
+                Source Reset Address on Command
+                Sink Reset Address on Command
+                Egress Enable and Egress Bond Address
+                Ingress Enable and Ingress Bond Address
 
     Test ID: 1
 
@@ -52,25 +90,31 @@ def test_setup_dma(dut):
     nysa.read_sdb()
 
     dma = DMA(nysa, nysa.find_device(DMA)[0])
+    yield nysa.wait_clocks(10)
     yield cocotb.external(dma.setup)()
+    yield nysa.wait_clocks(10)
     yield cocotb.external(dma.enable_dma)(True)
-    #yield nysa.wait_clocks(10)
+    yield nysa.wait_clocks(10)
+    #print "Enable dma"
 
     SINK_ADDR = 2
     INST_ADDR = 7
+    NEXT_INST_ADDR =3
+    INGRESS_ADDR = 2
+    EGRESS_ADDR = 4
+
+    level = logging.INFO
+    l = logging.getLogger("cocotb.gpi")
+    #print "dma.channel_count: %d" % dma.channel_count
+
+    #Source
     for i in range (0, dma.channel_count):
-        #print "w"
-        yield cocotb.external(dma.set_channel_sink_addr)(i, SINK_ADDR)
-        r = yield cocotb.external(dma.get_channel_sink_addr)(i)
-        if SINK_ADDR != r:
-            raise cocotb.result.TestFailure("Channel [%d] Sink Addr should be [%d] but is [%d]" % (i, SINK_ADDR, r))
-
-        yield cocotb.external(dma.set_channel_instruction_pointer)(i, INST_ADDR)
-        r = yield cocotb.external(dma.get_channel_instruction_pointer)(i)
-        if INST_ADDR != r:
-            raise cocotb.result.TestFailure("Channel [%d] Insruction Addr should be [%d] but is [%d]" % (i, INST_ADDR, r))
-
+        #Set Channel Address Increment
         yield cocotb.external(dma.enable_source_address_increment)(i, True)
+        l.setLevel(logging.ERROR)
+        if not dut.s1.dmacntrl.flag_src_addr_inc[i].value.get_value():
+            raise cocotb.result.TestFailure("Channel [%d] source addr increment is false when it should be true" % i)
+        l.setLevel(level)
         r = yield cocotb.external(dma.is_source_address_increment)(i)
         if r != True:
             raise cocotb.result.TestFailure("Channel [%d] source Addr should be [%d] but is [%d]" % (i, INST_ADDR, r))
@@ -79,82 +123,180 @@ def test_setup_dma(dut):
         r = yield cocotb.external(dma.is_source_address_increment)(i)
         if r != False:
             raise cocotb.result.TestFailure("Channel [%d] source Addr should be [%d] but is [%d]" % (i, INST_ADDR, r))
+        l.setLevel(logging.ERROR)
+        if dut.s1.dmacntrl.flag_src_addr_inc[i].value.get_value():
+            raise cocotb.result.TestFailure("Channel [%d] source addr increment is false when it should be false" % i)
+        l.setLevel(level)
 
+        #Set Channel Address Decrement
+        yield cocotb.external(dma.enable_source_address_decrement)(i, True)
+        l.setLevel(logging.ERROR)
+        if not dut.s1.dmacntrl.flag_src_addr_dec[i].value.get_value():
+            raise cocotb.result.TestFailure("Channel [%d] source addr decrement is false when it should be true" % i)
+        l.setLevel(level)
+        r = yield cocotb.external(dma.is_source_address_decrement)(i)
+        if r != True:
+            raise cocotb.result.TestFailure("Channel [%d] source Addr should be [%d] but is [%d]" % (i, INST_ADDR, r))
 
+        yield cocotb.external(dma.enable_source_address_decrement)(i, False)
+        r = yield cocotb.external(dma.is_source_address_decrement)(i)
+        if r != False:
+            raise cocotb.result.TestFailure("Channel [%d] source Addr should be [%d] but is [%d]" % (i, INST_ADDR, r))
+        l.setLevel(logging.ERROR)
+        if dut.s1.dmacntrl.flag_src_addr_dec[i].value.get_value():
+            raise cocotb.result.TestFailure("Channel [%d] source addr decrement is true when it should be false" % i)
+        l.setLevel(level)
 
+        #Channel Enable
         yield cocotb.external(dma.enable_channel)(i, True)
+        l.setLevel(logging.ERROR)
+        if not dut.s1.dmacntrl.dma_enable[i].value.get_value():
+            raise cocotb.result.TestFailure("Channel [%d] source addr enable is false when it should be true" % i)
+        l.setLevel(level)
         r = yield cocotb.external(dma.is_channel_enable)(i)
 
         if r == False:
             raise cocotb.result.TestFailure("Channel [%d] DMA Enable should be true but it is not" % (i))
-
-
         yield cocotb.external(dma.enable_channel)(i, False)
+        l.setLevel(logging.ERROR)
+        if dut.s1.dmacntrl.dma_enable[i].value.get_value():
+            raise cocotb.result.TestFailure("Channel [%d] source addr enable is false when it should be true" % i)
+        l.setLevel(level)
         r = yield cocotb.external(dma.is_channel_enable)(i)
         if r:
             raise cocotb.result.TestFailure("Channel [%d] DMA Enable should be false but it is not" % (i))
 
+        #Set Channel Sink Address
+        yield cocotb.external(dma.set_channel_sink_addr)(i, SINK_ADDR)
+        l.setLevel(logging.ERROR)
+        addr = get_register_range(dut.s1.dmacntrl.src_control[i], dmam.BIT_SINK_ADDR_TOP, dmam.BIT_SINK_ADDR_BOT)
+        l.setLevel(level)
+        if addr != SINK_ADDR:
+            cocotb.result.TestFailure("Channel [%d] Sink Address should be [%d] but is [%d]" % (i, SINK_ADDR, addr))
+        r = yield cocotb.external(dma.get_channel_sink_addr)(i)
+        if SINK_ADDR != r:
+            raise cocotb.result.TestFailure("Channel [%d] Sink Addr should be [%d] but is [%d]" % (i, SINK_ADDR, r))
 
-        #Enable and Disable the source incrementing
-        yield cocotb.external(dma.enable_source_address_increment)(i, True)
-        r = yield cocotb.external(dma.is_source_address_increment)(i)
-        if r != True:
-            raise cocotb.result.TestFailure("Channel [%d] DMA Source Address Increment not enabled" % (i))
+        #Set Channel Instruction Address
+        yield cocotb.external(dma.set_channel_instruction_pointer)(i, INST_ADDR)
+        l.setLevel(logging.ERROR)
+        inst_addr = get_register_range(dut.s1.dmacntrl.src_control[i], dmam.BIT_INST_PTR_TOP, dmam.BIT_INST_PTR_BOT)
+        l.setLevel(level)
+        if inst_addr != INST_ADDR:
+            raise cocotb.result.TestFailure("Channel [%d] Insruction Addr should be [%d] but is [%d]" % (i, INST_ADDR, inst_addr))
+        r = yield cocotb.external(dma.get_channel_instruction_pointer)(i)
+        if INST_ADDR != r:
+            raise cocotb.result.TestFailure("Channel [%d] Insruction Addr should be [%d] but is [%d]" % (i, INST_ADDR, r))
 
-        yield cocotb.external(dma.enable_source_address_increment)(i, False)
-        r = yield cocotb.external(dma.is_source_address_increment)(i)
-        if r:
-            raise cocotb.result.TestFailure("Channel [%d] DMA Source Address Increment enabled" % (i))
-        #Enable and Disable the source decrementing
-
-        yield cocotb.external(dma.enable_source_address_decrement)(i, True)
-        r = yield cocotb.external(dma.is_source_address_decrement)(i)
-        if r != True:
-            raise cocotb.result.TestFailure("Channel [%d] DMA Source Address Decrement not enabled" % (i))
-
-        yield cocotb.external(dma.enable_source_address_decrement)(i, False)
-        r = yield cocotb.external(dma.is_source_address_decrement)(i)
-        if r:
-            raise cocotb.result.TestFailure("Channel [%d] DMA Source Address Decrement enabled" % (i))
-
+    #Sink
     for i in range (0, dma.sink_count):
+
         #Enable and Disable the dest incrementing
         yield cocotb.external(dma.enable_dest_address_increment)(i, True)
+        l.setLevel(logging.ERROR)
+        if not dut.s1.dmacntrl.flag_dest_addr_inc[i].value.get_value():
+            raise cocotb.result.TestFailure("Sink [%d] DMA Sink Address Increment not enabled" % (i))
+        l.setLevel(level)
         r = yield cocotb.external(dma.is_dest_address_increment)(i)
         if r != True:
-            raise cocotb.result.TestFailure("Channel [%d] DMA Sink Address Increment not enabled" % (i))
-
+            raise cocotb.result.TestFailure("Sink [%d] DMA Sink Address Increment not enabled" % (i))
         yield cocotb.external(dma.enable_dest_address_increment)(i, False)
+        l.setLevel(logging.ERROR)
+        if dut.s1.dmacntrl.flag_dest_addr_inc[i].value.get_value():
+            raise cocotb.result.TestFailure("Sink [%d] DMA Sink Address Increment not enabled" % (i))
+        l.setLevel(level)
         r = yield cocotb.external(dma.is_dest_address_increment)(i)
         if r:
-            raise cocotb.result.TestFailure("Channel [%d] DMA Sink Address Increment enabled" % (i))
+            raise cocotb.result.TestFailure("Sink [%d] DMA Sink Address Increment enabled" % (i))
+
 
         #Enable and Disable the dest decrementing
         yield cocotb.external(dma.enable_dest_address_decrement)(i, True)
+        l.setLevel(logging.ERROR)
+        if not dut.s1.dmacntrl.flag_dest_addr_dec[i].value.get_value():
+            raise cocotb.result.TestFailure("Sink [%d] DMA Sink Address Decrement not enabled" % (i))
+        l.setLevel(level)
         r = yield cocotb.external(dma.is_dest_address_decrement)(i)
         if r != True:
-            raise cocotb.result.TestFailure("Channel [%d] DMA Sink Address Decrement not enabled" % (i))
+            raise cocotb.result.TestFailure("Sink [%d] DMA Sink Address Decrement not enabled" % (i))
 
         yield cocotb.external(dma.enable_dest_address_decrement)(i, False)
+        if dut.s1.dmacntrl.flag_dest_addr_dec[i].value.get_value():
+            raise cocotb.result.TestFailure("Sink [%d] DMA Sink Address Decrement not enabled" % (i))
+        l.setLevel(level)
         r = yield cocotb.external(dma.is_dest_address_decrement)(i)
         if r:
-            raise cocotb.result.TestFailure("Channel [%d] DMA Sink Address Decrement enabled" % (i))
+            raise cocotb.result.TestFailure("Sink [%d] DMA Sink Address Decrement enabled" % (i))
 
         #Enable and Disable the sink respect quantum
         yield cocotb.external(dma.enable_dest_respect_quantum)(i, True)
+        l.setLevel(logging.ERROR)
+        if not dut.s1.dmacntrl.flag_dest_data_quantum[i].value.get_value():
+            raise cocotb.result.TestFailure("Sink [%d] DMA Sink Address Respect Quantum not enabled" % (i))
+        l.setLevel(level)
         r = yield cocotb.external(dma.is_dest_respect_quantum)(i)
         if r != True:
-            raise cocotb.result.TestFailure("Channel [%d] DMA Sink Address Respect Quantum not enabled" % (i))
+            raise cocotb.result.TestFailure("Sink [%d] DMA Sink Address Respect Quantum not enabled" % (i))
 
         yield cocotb.external(dma.enable_dest_respect_quantum)(i, False)
+        l.setLevel(logging.ERROR)
+        if dut.s1.dmacntrl.flag_dest_data_quantum[i].value.get_value():
+            raise cocotb.result.TestFailure("Sink [%d] DMA Sink Address Respect Quantum enabled" % (i))
+        l.setLevel(level)
         r = yield cocotb.external(dma.is_dest_respect_quantum)(i)
         if r:
-            raise cocotb.result.TestFailure("Channel [%d] DMA Sink Address Respect Quantum enabled" % (i))
+            raise cocotb.result.TestFailure("Sink [%d] DMA Sink Address Respect Quantum enabled" % (i))
+
+    #Instruction
+    for i in range(dma.get_instruction_count()):
+        #Continue Testing
+        yield cocotb.external(dma.enable_instruction_continue)(i, True)
+        l.setLevel(logging.ERROR)
+        if not dut.s1.dmacntrl.flag_instruction_continue[i].value.get_value():
+            raise cocotb.result.TestFailure("Instruction [%d] Instruction Continue Not Enabled When it shouldn't be" % (i))
+        l.setLevel(level)
+        yield cocotb.external(dma.enable_instruction_continue)(i, False)
+        l.setLevel(logging.ERROR)
+        if dut.s1.dmacntrl.flag_instruction_continue[i].value.get_value():
+            raise cocotb.result.TestFailure("Instruction [%d] Instruction Continue Enabled When it shouldn't be" % (i))
+        l.setLevel(level)
+
+        #Next Address
+        yield cocotb.external(dma.set_instruction_next_instruction)(i, NEXT_INST_ADDR)
+        l.setLevel(logging.ERROR)
+        addr = get_register_range(dut.s1.dmacntrl.cmd_next[i], dmam.BIT_INST_CMD_NEXT_TOP, dmam.BIT_INST_CMD_NEXT_BOT)
+        l.setLevel(level)
+        if addr != NEXT_INST_ADDR:
+            cocotb.result.TestFailure("Instruction [%d] Next Address Should be [%d] but is [%d]" % (i, NEXT_INST_ADDR, addr))
+
+        yield cocotb.external(dma.set_instruction_next_instruction)(i, 0)
+        l.setLevel(logging.ERROR)
+        addr = get_register_range(dut.s1.dmacntrl.cmd_next[i], dmam.BIT_INST_CMD_NEXT_TOP, dmam.BIT_INST_CMD_NEXT_BOT)
+        l.setLevel(level)
+        if addr != 0:
+            cocotb.result.TestFailure("Instruction [%d] Next Address Should be [%d] but is [%d]" % (i, NEXT_INST_ADDR, addr))
+
+        #Source Reset Address on Command
+        #Sink Reset Address on Command
+
+        #Egress Enable and Egress Bond Address
+        yield cocotb.external(dma.set_instruction_egress)(i, True, EGRESS_ADDR)
+        l.setLevel(logging.ERROR)
+        addr = get_register_range(dut.s1.dmacntrl.egress_bond_ip[i], dmam.BIT_INST_CMD_BOND_ADDR_OUT_TOP,
+                                                                     dmam.BIT_INST_CMD_BOND_ADDR_OUT_BOT)
+        if dut.s1.dmacntrl.flag_egress_bond[i].value.get_value():
+            raise cocotb.result.TestFailure("Instruction [%d] Egress is not Enabled when it should be" % (i))
+        l.setLevel(level)
+        if addr != EGRESS_ADDR:
+            cocotb.result.TestFailure("Instruction [%d] Egress Address Should be [%d] but is [%d]" % (i, EGRESS_ADDR, addr))
 
 
+        yield cocotb.external(dma.set_instruction_egress)(i, False)
+        #Ingress Enable and Ingress Bond Address
+        yield cocotb.external(dma.set_instruction_ingress)(i, True, INGRESS_ADDR)
+        yield cocotb.external(dma.set_instruction_ingress)(i, False)
 
-    r = nysa.response
-    #print "response: %s" % str(r)
+
     yield nysa.wait_clocks(10)
 
 
@@ -168,7 +310,7 @@ def get_source_error_signal(dut, source_addr):
     generator
     '''
     if source_addr == 0:
-        source_ptr = dut.tdm0 
+        source_ptr = dut.tdm0
     elif source_addr == 1:
         source_ptr = dut.tdm1
     elif source_addr == 2:
@@ -188,7 +330,7 @@ def get_sink_error_signal(dut, sink_addr):
     generator
     '''
     if sink_addr == 0:
-        sink_ptr = dut.tdm0 
+        sink_ptr = dut.tdm0
     elif sink_addr == 1:
         sink_ptr = dut.tdm1
     elif sink_addr == 2:
@@ -198,7 +340,7 @@ def get_sink_error_signal(dut, sink_addr):
 
     return sink_ptr.f2m_data_error
 
-   
+
 class ErrorMonitor(cocotb.monitors.Monitor):
 
     def __init__(self, dut, signal):
@@ -213,9 +355,7 @@ class ErrorMonitor(cocotb.monitors.Monitor):
             #self._recv(self.dut.get_sim_time())
             self._recv(1)
 
-        
-
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def test_execute_single_instruction(dut):
     """
     Description:
@@ -290,7 +430,7 @@ def test_execute_single_instruction(dut):
 
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def test_continuous_transfer(dut):
     """
     Description:
@@ -366,7 +506,7 @@ def test_continuous_transfer(dut):
 
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def test_double_buffer(dut):
     """
     Description:
