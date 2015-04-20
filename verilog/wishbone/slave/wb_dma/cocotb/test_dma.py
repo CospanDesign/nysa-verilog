@@ -36,11 +36,9 @@ def first_test(dut):
     dut.log.info("DMA Opened!")
     dut.log.info("Ready")
 
-
 def get_register_range(signal, top_bit, bot_bit):
     #print "top_bit: %d" % top_bit
     mask = (((1 << (top_bit)) - (1 << bot_bit)) >> (bot_bit))
-    time.sleep(0.001)
     value = signal.value.get_value()
     value &= ((1 << top_bit) - (1 << bot_bit));
     value = (value >> bot_bit) & mask
@@ -49,7 +47,7 @@ def get_register_range(signal, top_bit, bot_bit):
 def is_bit_set(signal, bit):
     return ((signal & 1 << bit) > 0)
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def test_setup_dma(dut):
     """
     Description:
@@ -60,12 +58,14 @@ def test_setup_dma(dut):
             Read Number of Instructions
             Source Testing:
                 Enable DMA
+                Source Address
                 Address Increment
                 Address Decrement
                 Address No Change
                 Set Sink Address
                 Set Instruction Address
             Sink Testing:
+                Sink Address
                 Address Increment
                 Address Decrement
                 Address No Change
@@ -264,37 +264,78 @@ def test_setup_dma(dut):
         #Next Address
         yield cocotb.external(dma.set_instruction_next_instruction)(i, NEXT_INST_ADDR)
         l.setLevel(logging.ERROR)
-        addr = get_register_range(dut.s1.dmacntrl.cmd_next[i], dmam.BIT_INST_CMD_NEXT_TOP, dmam.BIT_INST_CMD_NEXT_BOT)
+        addr = dut.s1.dmacntrl.cmd_next[i].value.get_value()
         l.setLevel(level)
         if addr != NEXT_INST_ADDR:
-            cocotb.result.TestFailure("Instruction [%d] Next Address Should be [%d] but is [%d]" % (i, NEXT_INST_ADDR, addr))
+            raise cocotb.result.TestFailure("Instruction [%d] Next Address Should be [%d] but is [%d]" % (i, NEXT_INST_ADDR, addr))
 
         yield cocotb.external(dma.set_instruction_next_instruction)(i, 0)
         l.setLevel(logging.ERROR)
-        addr = get_register_range(dut.s1.dmacntrl.cmd_next[i], dmam.BIT_INST_CMD_NEXT_TOP, dmam.BIT_INST_CMD_NEXT_BOT)
+        addr = dut.s1.dmacntrl.cmd_next[i].value.get_value()
         l.setLevel(level)
         if addr != 0:
-            cocotb.result.TestFailure("Instruction [%d] Next Address Should be [%d] but is [%d]" % (i, NEXT_INST_ADDR, addr))
+            raise cocotb.result.TestFailure("Instruction [%d] Next Address Should be [%d] but is [%d]" % (i, 0, addr))
 
         #Source Reset Address on Command
+        yield cocotb.external(dma.enable_instruction_src_addr_reset_on_cmd)(i, True)
+        l.setLevel(logging.ERROR)
+        if not dut.s1.dmacntrl.flag_src_addr_rst_on_cmd[i].value.get_value():
+            raise cocotb.result.TestFailure("Instruction [%d] Reset Source Address on command is not set" % (i))
+        l.setLevel(level)
+        yield cocotb.external(dma.enable_instruction_src_addr_reset_on_cmd)(i, False)
+        l.setLevel(logging.ERROR)
+        if dut.s1.dmacntrl.flag_src_addr_rst_on_cmd[i].value.get_value():
+            raise cocotb.result.TestFailure("Instruction [%d] Reset Source Address on command is set" % (i))
+        l.setLevel(level)
+
         #Sink Reset Address on Command
+        yield cocotb.external(dma.enable_instruction_dest_addr_reset_on_cmd)(i, True)
+        l.setLevel(logging.ERROR)
+        if not dut.s1.dmacntrl.flag_dest_addr_rst_on_cmd[i].value.get_value():
+            raise cocotb.result.TestFailure("Instruction [%d] Reset Destination Address on command is not set" % (i))
+        l.setLevel(level)
+
+        yield cocotb.external(dma.enable_instruction_dest_addr_reset_on_cmd)(i, False)
+        if dut.s1.dmacntrl.flag_dest_addr_rst_on_cmd[i].value.get_value():
+            raise cocotb.result.TestFailure("Instruction [%d] Reset Destination Address on command is set" % (i))
+        l.setLevel(level)
 
         #Egress Enable and Egress Bond Address
         yield cocotb.external(dma.set_instruction_egress)(i, True, EGRESS_ADDR)
         l.setLevel(logging.ERROR)
-        addr = get_register_range(dut.s1.dmacntrl.egress_bond_ip[i], dmam.BIT_INST_CMD_BOND_ADDR_OUT_TOP,
-                                                                     dmam.BIT_INST_CMD_BOND_ADDR_OUT_BOT)
-        if dut.s1.dmacntrl.flag_egress_bond[i].value.get_value():
+        addr = dut.s1.dmacntrl.egress_bond_ip[i].value.get_value()
+
+        if not dut.s1.dmacntrl.flag_egress_bond[i].value.get_value():
             raise cocotb.result.TestFailure("Instruction [%d] Egress is not Enabled when it should be" % (i))
         l.setLevel(level)
-        if addr != EGRESS_ADDR:
-            cocotb.result.TestFailure("Instruction [%d] Egress Address Should be [%d] but is [%d]" % (i, EGRESS_ADDR, addr))
 
+        if addr != EGRESS_ADDR:
+            raise cocotb.result.TestFailure("Instruction [%d] Egress Address Should be [%d] but is [%d]" % (i, EGRESS_ADDR, addr))
 
         yield cocotb.external(dma.set_instruction_egress)(i, False)
+        if dut.s1.dmacntrl.flag_egress_bond[i].value.get_value():
+            raise cocotb.result.TestFailure("Instruction [%d] Egress is Enabled when it shouldn't be" % (i))
+
         #Ingress Enable and Ingress Bond Address
         yield cocotb.external(dma.set_instruction_ingress)(i, True, INGRESS_ADDR)
+        l.setLevel(logging.ERROR)
+        addr = dut.s1.dmacntrl.ingress_bond_ip[i].value.get_value()
+        if not dut.s1.dmacntrl.flag_ingress_bond[i].value.get_value():
+            raise cocotb.result.TestFailure("Instruction [%d] Ingress is not Enabled when it should be" % (i))
+        l.setLevel(level)
+        if addr != INGRESS_ADDR:
+            raise cocotb.result.TestFailure("Instruction [%d] Ingress Address Should be [%d] but is [%d]" % (i, EGRESS_ADDR, addr))
+
         yield cocotb.external(dma.set_instruction_ingress)(i, False)
+
+        l.setLevel(logging.ERROR)
+        if dut.s1.dmacntrl.flag_ingress_bond[i].value.get_value():
+            raise cocotb.result.TestFailure("Instruction [%d] Ingress is Enabled when it shouldn't be" % (i))
+        l.setLevel(level)
+
+
+
+
 
 
     yield nysa.wait_clocks(10)
@@ -506,7 +547,7 @@ def test_continuous_transfer(dut):
 
 
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def test_double_buffer(dut):
     """
     Description:
@@ -521,38 +562,50 @@ def test_double_buffer(dut):
     nysa = NysaSim(dut)
     yield(nysa.reset())
     nysa.read_sdb()
-    yield nysa.wait_clocks(2000)
+    yield nysa.wait_clocks(10)
 
     dma = DMA(nysa, nysa.find_device(DMA)[0])
     yield cocotb.external(dma.setup)()
     yield cocotb.external(dma.enable_dma)(True)
     #yield nysa.wait_clocks(10)
 
-    CHANNEL_ADDR = 0
-    SINK_ADDR = 2
-    INST_ADDR = 7
+    INST_START_ADDR = 0
+    SOURCE_CHANNEL = 0
+    SINK_CHANNEL = 1
+    MEM_SINK_CHANNEL = 2
+    MEM_SOURCE_CHANNEL = 2
+    SOURCE_ADDR = 0x00
+    SINK_ADDR = 0x00
+    MEM_ADDR0 = 0x00
+    MEM_ADDR1 = 0x080
+    COUNT = 0x080
 
-    yield cocotb.external(dma.set_channel_sink_addr)            (CHANNEL_ADDR,  SINK_ADDR           )
-    yield cocotb.external(dma.set_channel_instruction_pointer)  (CHANNEL_ADDR,  INST_ADDR           )
-    yield cocotb.external(dma.enable_source_address_increment)  (CHANNEL_ADDR,  True                )
-    yield cocotb.external(dma.enable_dest_address_increment)    (SINK_ADDR,     True                )
-    #yield cocotb.external(dma.enable_dest_respect_quantum)      (SINK_ADDR,     True                )
-    yield cocotb.external(dma.enable_dest_respect_quantum)      (SINK_ADDR,     False               )
-    yield cocotb.external(dma.enable_instruction_continue)      (INST_ADDR,     False               )
-    yield cocotb.external(dma.set_instruction_source_address)   (INST_ADDR,     0x0000000000000000  )
-    yield cocotb.external(dma.set_instruction_dest_address)     (INST_ADDR,     0x0000000000000010  )
-    yield cocotb.external(dma.set_instruction_count)            (INST_ADDR,     0x0100              )
-    yield cocotb.external(dma.set_instruction_next_instruction) (INST_ADDR,     INST_ADDR           )
-    yield nysa.wait_clocks(10)
+    print "Setup double buffer"
 
-    #Start
-    yield cocotb.external(dma.set_channel_instruction_pointer)  (CHANNEL_ADDR,  INST_ADDR           )
-    yield cocotb.external(dma.enable_channel)                   (CHANNEL_ADDR,  True                )
+    #Setup Address Increments for all sinks and sources
+    yield cocotb.external(dma.enable_source_address_increment)(SOURCE_CHANNEL, True)
+    yield cocotb.external(dma.enable_dest_address_increment)(SINK_CHANNEL, True)
+
+    yield cocotb.external(dma.enable_source_address_increment)(MEM_SOURCE_CHANNEL, True)
+    yield cocotb.external(dma.enable_dest_address_increment)(MEM_SINK_CHANNEL, True)
+
+    yield cocotb.external(dma.setup_double_buffer)                      \
+                        (    start_inst_addr =   INST_START_ADDR,       \
+                             source          =   SOURCE_CHANNEL,        \
+                             sink            =   SINK_CHANNEL,          \
+                             mem_sink        =   MEM_SINK_CHANNEL,      \
+                             mem_source      =   MEM_SOURCE_CHANNEL,    \
+                             source_addr     =   SOURCE_ADDR,           \
+                             sink_addr       =   SINK_ADDR,             \
+                             mem_addr0       =   MEM_ADDR0,             \
+                             mem_addr1       =   MEM_ADDR1,             \
+                             count           =   COUNT  )
+
+    yield cocotb.external(dma.enable_channel)(SOURCE_CHANNEL, True)
+    yield cocotb.external(dma.enable_channel)(MEM_SOURCE_CHANNEL, True)
 
     yield nysa.wait_clocks(2000)
-    yield cocotb.external(dma.enable_channel)                   (CHANNEL_ADDR,  False               )
-    yield cocotb.external(dma.enable_dma)(False)
-    yield nysa.wait_clocks(10)
 
-
+    yield cocotb.external(dma.enable_channel)(SOURCE_CHANNEL, False)
+    yield cocotb.external(dma.enable_channel)(MEM_SOURCE_CHANNEL, False)
 

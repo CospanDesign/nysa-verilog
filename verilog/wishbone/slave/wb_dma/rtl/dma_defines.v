@@ -41,8 +41,6 @@
 `define BIT_BOND_ADDR_EGRESS_TOP     31
 `define BIT_BOND_ADDR_EGRESS_BOT     28
 
-
-
 //When Set, resets the address to the address in the instruction, otherwise the address is not changed
 `define BIT_CMD_BOND_ADDR_TOP        15
 `define BIT_CMD_BOND_ADDR_BOT        13

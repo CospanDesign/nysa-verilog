@@ -680,7 +680,7 @@ class DMA(driver.Driver):
 
         elif ingress_inst_addr is None:
             raise DMAError("Ingress Address cannot be left blank!")
-        
+
         if inst_addr > INSTRUCTION_COUNT - 1:
             raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
 
@@ -688,7 +688,7 @@ class DMA(driver.Driver):
             raise DMAError("Specified ingress address is out of range (%d > %d)" % (ingress_inst_addr, INSTRUCTION_COUNT))
 
         r = self.read_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL)
-        mask = BIT_INST_CMD_BOND_ADDR_IN_TOP - BIT_INST_CMD_BOND_ADDR_IN_BOT
+        mask = ((1 << BIT_INST_CMD_BOND_ADDR_IN_TOP) - (1 << BIT_INST_CMD_BOND_ADDR_IN_BOT))
         r &= ~mask
         r |= ingress_inst_addr << BIT_INST_CMD_BOND_ADDR_IN_BOT
         self.write_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL, r)
@@ -716,10 +716,13 @@ class DMA(driver.Driver):
         if egress_inst_addr > INSTRUCTION_COUNT - 1:
             raise DMAError("Specified egress address is out of range (%d > %d)" % (egress_inst_addr, INSTRUCTION_COUNT))
         r = self.read_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL)
-        mask = BIT_INST_CMD_BOND_ADDR_OUT_TOP - BIT_INST_CMD_BOND_ADDR_OUT_BOT
+        mask = (1 << BIT_INST_CMD_BOND_ADDR_OUT_TOP) - (1 << BIT_INST_CMD_BOND_ADDR_OUT_BOT)
         r &= ~mask
         r |= egress_inst_addr << BIT_INST_CMD_BOND_ADDR_OUT_BOT
         self.write_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL, r)
+        r = self.read_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL)
+        self.enable_register_bit(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL, BIT_INST_CMD_BOND_EGRESS, enable)
+        r = self.read_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL)
 
     def set_instruction_next_instruction(self, inst_addr, next_instruction):
         """
@@ -738,7 +741,7 @@ class DMA(driver.Driver):
         if next_instruction > INSTRUCTION_COUNT - 1:
             raise DMAError("Specified next address is out of range (%d > %d)" % (next_instruction, INSTRUCTION_COUNT))
         r = self.read_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL)
-        mask = BIT_INST_CMD_NEXT_TOP - BIT_INST_CMD_NEXT_BOT
+        mask = (1 << BIT_INST_CMD_NEXT_TOP) - (1 << BIT_INST_CMD_NEXT_BOT)
         r &= ~mask
         r |= next_instruction << BIT_INST_CMD_NEXT_BOT
         self.write_register(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL, r)
@@ -759,11 +762,13 @@ class DMA(driver.Driver):
             raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
         self.enable_register_bit(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL, BIT_INST_CMD_CONTINUE, enable)
 
-    def setup_double_buffer(self, source, sink, mem, source_addr, sink_addr, count):
+    def enable_instruction_src_addr_reset_on_cmd(self, inst_addr, enable):
         """
+        Enable source address reset on command
 
         Args:
             instr_addr (unsigned int): Address of instruction
+            enalble (boolean): Enable or Disable
         Returns:
             Nothing
         Raises:
@@ -772,4 +777,111 @@ class DMA(driver.Driver):
         """
         if inst_addr > INSTRUCTION_COUNT - 1:
             raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
+        self.enable_register_bit(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL, BIT_INST_SRC_RST_ON_INST, enable)
+
+    def enable_instruction_dest_addr_reset_on_cmd(self, inst_addr, enable):
+        """
+        Enable dest address reset on command
+
+        Args:
+            instr_addr (unsigned int): Address of instruction
+            enalble (boolean): Enable or Disable
+        Returns:
+            Nothing
+        Raises:
+            NysaCommError
+            DMAError
+        """
+        if inst_addr > INSTRUCTION_COUNT - 1:
+           raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
+
+        self.set_instruction_source_address(start_inst_addr, source_addr)
+        self.set_instruction_next_instruction(start_inst_addr, start_inst_addr + 1)
+        self.enable_register_bit(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL, BIT_INST_DEST_RST_ON_INST, enable)
+
+    def setup_double_buffer(self,
+                            start_inst_addr,
+                            source,
+                            sink,
+                            mem_sink,
+                            mem_source,
+                            source_addr,
+                            sink_addr,
+                            mem_addr0,
+                            mem_addr1,
+                            count):
+        """
+
+        Args:
+            start_instr_addr (unsigned int): Address of the first instruction
+                The following four will be used
+            source (unsigned int): source address to read all data from
+            sink (unsigned int): sink address to write all data to
+            mem_sink (unisgned int): location to store the data into temporarily
+            mem_source (unsigned int): source channel to source the data from
+            source_addr (64-bit unsigned): source address to read the data from
+            sink_addr (64-bit unsigned): sink address to write the data to
+            mem_addr0 (64-bit unsigned): 1st buffer in memory to store the data
+            mem_addr1 (64-bit unsigned): 2nd buffer in memory to store the data
+            count (32-bit unsigned): number of 32-bit values to read or write
+        Returns:
+            Nothing
+        Raises:
+            NysaCommError
+            DMAError
+        """
+        if (start_inst_addr + 4)> INSTRUCTION_COUNT - 1:
+            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
+
+        if source > self.channel_count:
+            raise DMAError("Specified source address is out of range (%d > %d)" % (source, self.channel_count))
+
+        if sink > self.sink_count:
+            raise DMAError("Specified sink address is out of range (%d > %d)" % (sink, self.sink_count))
+
+        if mem_source > self.channel_count:
+            raise DMAError("Specified memory source is out of range (%d > %d)" % (mem_source, self.channel_count))
+
+        if mem_sink > self.sink_count:
+            raise DMAError("Specified memory sink is out or range (%d > %d)" % (mem_sink, self.sink_count))
+
+        #Setup the source
+        #Instruction 0 and 1 will be the double buffers for the ingress
+
+        #Setup Instruction 0
+        self.set_instruction_source_address(    start_inst_addr,        source_addr)
+        self.set_instruction_next_instruction(  start_inst_addr,        start_inst_addr + 1)
+        self.set_instruction_dest_address(      start_inst_addr,        mem_addr0)
+        self.set_instruction_count(             start_inst_addr,        count)
+        self.enable_instruction_continue(       start_inst_addr,        True)
+        self.set_instruction_ingress(           start_inst_addr,        True, start_inst_addr + 2)
+        self.set_channel_instruction_pointer(   source,                 start_inst_addr)
+
+        #Setup Instruction 1
+        self.set_instruction_source_address(    start_inst_addr + 1,    source_addr)
+        self.set_instruction_next_instruction(  start_inst_addr + 1,    start_inst_addr)
+        self.set_instruction_dest_address(      start_inst_addr + 1,    mem_addr1)
+        self.set_instruction_count(             start_inst_addr + 1,    count)
+        self.enable_instruction_continue(       start_inst_addr + 1,    True)
+        self.set_instruction_ingress(           start_inst_addr + 1,    True, start_inst_addr + 3)
+
+        #Instruction 2 and 3 will be the double buffer for the output
+
+        #Setup Instruction 2
+        self.set_instruction_source_address(    start_inst_addr + 2,    mem_addr0)
+        self.set_instruction_next_instruction(  start_inst_addr + 2,    start_inst_addr + 3)
+        self.set_instruction_dest_address(      start_inst_addr + 2,    sink_addr)
+        self.set_instruction_count(             start_inst_addr + 2,    count)
+        self.enable_instruction_continue(       start_inst_addr + 2,    True)
+        self.set_instruction_egress(            start_inst_addr + 2,    True, start_inst_addr)
+        self.set_channel_instruction_pointer(   mem_source,             start_inst_addr + 2)
+
+        #Setup Instruction 3
+        self.set_instruction_source_address(    start_inst_addr + 3,    mem_addr0)
+        self.set_instruction_next_instruction(  start_inst_addr + 3,    start_inst_addr + 2)
+        self.set_instruction_dest_address(      start_inst_addr + 3,    sink_addr)
+        self.set_instruction_count(             start_inst_addr + 3,    count)
+        self.enable_instruction_continue(       start_inst_addr + 3,    True)
+        self.set_instruction_egress(            start_inst_addr + 3,    True, start_inst_addr + 1)
+
 
