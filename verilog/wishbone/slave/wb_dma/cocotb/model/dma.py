@@ -794,9 +794,6 @@ class DMA(driver.Driver):
         """
         if inst_addr > INSTRUCTION_COUNT - 1:
            raise DMAError("Specified instruction address out of range (%d > %d)" % (inst_addr, INSTRUCTION_COUNT))
-
-        self.set_instruction_source_address(start_inst_addr, source_addr)
-        self.set_instruction_next_instruction(start_inst_addr, start_inst_addr + 1)
         self.enable_register_bit(INST_BASE + (INST_OFFSET * inst_addr) + INST_CNTRL, BIT_INST_DEST_RST_ON_INST, enable)
 
     def setup_double_buffer(self,

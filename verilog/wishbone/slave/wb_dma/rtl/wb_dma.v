@@ -142,6 +142,7 @@ module wb_dma #(
 
   //Sink 0
   output              o_snk0_write_enable,
+  input               i_snk0_write_finished,
   output      [63:0]  o_snk0_write_addr,
   output              o_snk0_write_addr_inc,
   output              o_snk0_write_addr_dec,
@@ -157,6 +158,7 @@ module wb_dma #(
 
   //Sink 1
   output              o_snk1_write_enable,
+  input               i_snk1_write_finished,
   output      [63:0]  o_snk1_write_addr,
   output              o_snk1_write_addr_inc,
   output              o_snk1_write_addr_dec,
@@ -172,6 +174,7 @@ module wb_dma #(
 
   //Sink 2
   output              o_snk2_write_enable,
+  input               i_snk2_write_finished,
   output      [63:0]  o_snk2_write_addr,
   output              o_snk2_write_addr_inc,
   output              o_snk2_write_addr_dec,
@@ -187,6 +190,7 @@ module wb_dma #(
 
   //Sink 3
   output              o_snk3_write_enable,
+  input               i_snk3_write_finished,
   output      [63:0]  o_snk3_write_addr,
   output              o_snk3_write_addr_inc,
   output              o_snk3_write_addr_dec,
@@ -461,6 +465,7 @@ dma  dmacntrl(
   .i_src3_size          (i_src3_if_size       ),
 
   .o_snk0_write_enable  (o_snk0_write_enable  ),
+  .i_snk0_write_finished(i_snk0_write_finished),
   .o_snk0_write_addr    (o_snk0_write_addr    ),
   .o_snk0_write_addr_inc(o_snk0_write_addr_inc),
   .o_snk0_write_addr_dec(o_snk0_write_addr_dec),
@@ -475,6 +480,7 @@ dma  dmacntrl(
   .o_snk0_data          (o_snk0_data          ),
 
   .o_snk1_write_enable  (o_snk1_write_enable  ),
+  .i_snk1_write_finished(i_snk1_write_finished),
   .o_snk1_write_addr    (o_snk1_write_addr    ),
   .o_snk1_write_addr_inc(o_snk1_write_addr_inc),
   .o_snk1_write_addr_dec(o_snk1_write_addr_dec),
@@ -489,6 +495,7 @@ dma  dmacntrl(
   .o_snk1_data          (o_snk1_data          ),
 
   .o_snk2_write_enable  (o_snk2_write_enable  ),
+  .i_snk2_write_finished(i_snk2_write_finished),
   .o_snk2_write_addr    (o_snk2_write_addr    ),
   .o_snk2_write_addr_inc(o_snk2_write_addr_inc),
   .o_snk2_write_addr_dec(o_snk2_write_addr_dec),
@@ -503,6 +510,7 @@ dma  dmacntrl(
   .o_snk2_data          (o_snk2_data          ),
 
   .o_snk3_write_enable  (o_snk3_write_enable  ),
+  .i_snk3_write_finished(i_snk3_write_finished),
   .o_snk3_write_addr    (o_snk3_write_addr    ),
   .o_snk3_write_addr_inc(o_snk3_write_addr_inc),
   .o_snk3_write_addr_dec(o_snk3_write_addr_dec),

@@ -471,7 +471,7 @@ def test_execute_single_instruction(dut):
 
 
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def test_continuous_transfer(dut):
     """
     Description:
@@ -547,7 +547,7 @@ def test_continuous_transfer(dut):
 
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def test_double_buffer(dut):
     """
     Description:
@@ -569,25 +569,48 @@ def test_double_buffer(dut):
     yield cocotb.external(dma.enable_dma)(True)
     #yield nysa.wait_clocks(10)
 
-    INST_START_ADDR = 0
-    SOURCE_CHANNEL = 0
-    SINK_CHANNEL = 1
-    MEM_SINK_CHANNEL = 2
+    #Instructions
+    INST_START_ADDR    = 0
+
+    #Channels
+    SOURCE_CHANNEL     = 0
+
+    MEM_SINK_CHANNEL   = 2
     MEM_SOURCE_CHANNEL = 2
-    SOURCE_ADDR = 0x00
-    SINK_ADDR = 0x00
-    MEM_ADDR0 = 0x00
-    MEM_ADDR1 = 0x080
-    COUNT = 0x080
+
+    SINK_CHANNEL       = 1
+
+    #Addresses
+    SOURCE_ADDR        = 0x0000
+
+    MEM_ADDR0          = 0x0000
+    MEM_ADDR1          = 0x0000
+
+    SINK_ADDR          = 0x0000
+
+    #Count
+    COUNT              = 0x0080
 
     print "Setup double buffer"
+
+    source_error = get_source_error_signal(dut, SOURCE_CHANNEL)
+    sink_error = get_sink_error_signal(dut, SINK_CHANNEL)
+
+    source_error_monitor = ErrorMonitor(dut, source_error)
+    sink_error_monitor = ErrorMonitor(dut, sink_error)
 
     #Setup Address Increments for all sinks and sources
     yield cocotb.external(dma.enable_source_address_increment)(SOURCE_CHANNEL, True)
     yield cocotb.external(dma.enable_dest_address_increment)(SINK_CHANNEL, True)
+    yield cocotb.external(dma.enable_dest_respect_quantum)(MEM_SINK_CHANNEL, True)
 
     yield cocotb.external(dma.enable_source_address_increment)(MEM_SOURCE_CHANNEL, True)
+    yield cocotb.external(dma.enable_dest_respect_quantum)(MEM_SINK_CHANNEL, False)
     yield cocotb.external(dma.enable_dest_address_increment)(MEM_SINK_CHANNEL, True)
+
+    yield cocotb.external(dma.set_channel_sink_addr)(SOURCE_CHANNEL,        MEM_SINK_CHANNEL)
+    yield cocotb.external(dma.set_channel_sink_addr)(MEM_SOURCE_CHANNEL,    SINK_CHANNEL)
+
 
     yield cocotb.external(dma.setup_double_buffer)                      \
                         (    start_inst_addr =   INST_START_ADDR,       \
@@ -604,8 +627,22 @@ def test_double_buffer(dut):
     yield cocotb.external(dma.enable_channel)(SOURCE_CHANNEL, True)
     yield cocotb.external(dma.enable_channel)(MEM_SOURCE_CHANNEL, True)
 
-    yield nysa.wait_clocks(2000)
+    yield nysa.wait_clocks(4000)
 
     yield cocotb.external(dma.enable_channel)(SOURCE_CHANNEL, False)
     yield cocotb.external(dma.enable_channel)(MEM_SOURCE_CHANNEL, False)
+
+
+    if len(source_error_monitor) > 0:
+        raise cocotb.result.TestFailure("Test %d Error on source %d read detected %d errors" % (dut.test_id, SOURCE_CHANNEL, len(source_error_monitor)))
+
+    if len(sink_error_monitor) > 0:
+        raise cocotb.result.TestFailure("Test %d Error on sink %d read detected %d errors" % (dut.test_id, SINK_CHANNEL, len(sink_error_monitor)))
+
+
+    source_error_monitor.kill()
+    sink_error_monitor.kill()
+    yield nysa.wait_clocks(100)
+
+
 

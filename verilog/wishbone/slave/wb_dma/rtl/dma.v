@@ -85,6 +85,7 @@ module dma (
 
   //Sink 0
   output              o_snk0_write_enable,
+  input               i_snk0_write_finished,
   output      [63:0]  o_snk0_write_addr,
   output              o_snk0_write_addr_inc,
   output              o_snk0_write_addr_dec,
@@ -100,6 +101,7 @@ module dma (
 
   //Sink 1
   output              o_snk1_write_enable,
+  input               i_snk1_write_finished,
   output      [63:0]  o_snk1_write_addr,
   output              o_snk1_write_addr_inc,
   output              o_snk1_write_addr_dec,
@@ -115,6 +117,7 @@ module dma (
 
   //Sink 2
   output              o_snk2_write_enable,
+  input               i_snk2_write_finished,
   output      [63:0]  o_snk2_write_addr,
   output              o_snk2_write_addr_inc,
   output              o_snk2_write_addr_dec,
@@ -130,6 +133,7 @@ module dma (
 
   //Sink 3
   output              o_snk3_write_enable,
+  input               i_snk3_write_finished,
   output      [63:0]  o_snk3_write_addr,
   output              o_snk3_write_addr_inc,
   output              o_snk3_write_addr_dec,
@@ -275,6 +279,7 @@ reg                 src_activate        [3:0];
 wire        [23:0]  src_size            [3:0];
 
 //Sink Control Values
+wire                snk_finished        [3:0];
 reg         [63:0]  snk_address         [3:0];
 reg                 snk_write_busy      [3:0];
 
@@ -290,6 +295,11 @@ reg         [1:0]   snk_activate        [3:0];
 wire        [23:0]  snk_size            [3:0];
 reg         [31:0]  snk_data            [3:0];
 reg         [23:0]  snk_count           [3:0];
+
+wire        [32:0]  snk_count0;
+wire        [32:0]  snk_count1;
+wire        [32:0]  snk_count2;
+wire        [32:0]  snk_count3;
 
 //Channel Specific Controls
 wire                dma_enable          [3:0];
@@ -495,6 +505,11 @@ assign o_snk1_write_enable                  = snk_enable[1];
 assign o_snk2_write_enable                  = snk_enable[2];
 assign o_snk3_write_enable                  = snk_enable[3];
 
+assign snk_finished[0]                      = i_snk0_write_finished;
+assign snk_finished[1]                      = i_snk1_write_finished;
+assign snk_finished[2]                      = i_snk2_write_finished;
+assign snk_finished[3]                      = i_snk3_write_finished;
+
 assign o_snk0_write_addr                    = snk_address[0];
 assign o_snk1_write_addr                    = snk_address[1];
 assign o_snk2_write_addr                    = snk_address[2];
@@ -618,6 +633,11 @@ assign state0                 = state[0];
 assign state1                 = state[1];
 assign state2                 = state[2];
 assign state3                 = state[3];
+
+assign snk_count0             = snk_count[0];
+assign snk_count1             = snk_count[1];
+assign snk_count2             = snk_count[2];
+assign snk_count3             = snk_count[3];
 
 assign ip0                    = ip[0];
 assign ip1                    = ip[1];
@@ -915,12 +935,13 @@ always @ (posedge clk) begin
                 src_activate[i]               <= 0;
                 src_address[i]                <= curr_src_address[i];
               end
-              if (snk_activate[snka[i]] && (snk_count[snka[i]] >= snk_size[snka[i]])) begin
+              if (snk_activate[snka[i]] && (snk_count[snka[i]] >= snk_size[snka[i]]) && !snk_strobe[snka[i]]) begin
                 snk_activate[snka[i]]         <= 0;
                 snk_address[snka[i]]          <= curr_dest_address[i];
               end
             end
             //Reached the end of an instruction
+//XXX: Fix End Command
             if (channel_count[i] >= curr_count[i] && !snk_strobe[snka[i]]) begin
               state[i]                        <= END_COMMAND;
             end
@@ -930,21 +951,45 @@ always @ (posedge clk) begin
           end
         end
         END_COMMAND: begin
-          if (!flag_dest_data_quantum[snka[i]] && (snk_count[snka[i]] > 0)) begin
-            snk_activate[snka[i]]             <= 0;
-            snk_address[snka[i]]              <= curr_dest_address[i];
-          end
-          inst_busy[ip[i]]                    <= 0;
-          inst_ingress_ready[ip[i]]           <= 1;
-          inst_egress_ready[ip[i]]            <= 1;
-          if (flag_instruction_continue[ip[i]]) begin
-            ip[i]                             <= cmd_next[ip[i]];
-            inst_ingress_ready[cmd_next[ip[i]]]   <= 1;
-            inst_egress_ready[cmd_next[ip[i]]]<= 0;
-            state[i]                          <= SETUP_COMMAND;
+          snk_enable[snka[i]]                 <= 0;
+          if (dma_enable[i]) begin 
+            if (!flag_dest_data_quantum[snka[i]] && (snk_count[snka[i]] > 0)) begin
+              snk_activate[snka[i]]             <= 0;
+              snk_address[snka[i]]              <= curr_dest_address[i];
+            end
+            if (!flag_dest_data_quantum[snka[i]] && snk_finished[snka[i]]) begin
+              inst_busy[ip[i]]                  <= 0;
+              inst_ingress_ready[ip[i]]         <= 1;
+              inst_egress_ready[ip[i]]          <= 1;
+           
+              if (flag_instruction_continue[ip[i]]) begin
+                ip[i]                             <= cmd_next[ip[i]];
+                inst_ingress_ready[cmd_next[ip[i]]]   <= 1;
+                inst_egress_ready[cmd_next[ip[i]]]<= 0;
+                state[i]                          <= SETUP_COMMAND;
+              end
+              else begin
+                state[i]                          <= FLUSH;
+              end
+            end
+            else if (flag_dest_data_quantum[snka[i]])begin
+              inst_busy[ip[i]]                  <= 0;
+              inst_ingress_ready[ip[i]]         <= 1;
+              inst_egress_ready[ip[i]]          <= 1;
+           
+              if (flag_instruction_continue[ip[i]]) begin
+                ip[i]                             <= cmd_next[ip[i]];
+                inst_ingress_ready[cmd_next[ip[i]]]   <= 1;
+                inst_egress_ready[cmd_next[ip[i]]]<= 0;
+                state[i]                          <= SETUP_COMMAND;
+              end
+              else begin
+                state[i]                          <= FLUSH;
+              end
+            end
           end
           else begin
-            state[i]                          <= FLUSH;
+            state[i]                              <= FLUSH;
           end
         end
         FLUSH: begin

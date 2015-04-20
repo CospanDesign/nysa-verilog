@@ -85,6 +85,8 @@ reg                                     fill_mem;
 reg     [31:0]                          fill_mem_data;
 reg                                     fill_mem_wea;
 
+wire                                    write_fifo_empty;
+
 //Submodules
 blk_mem #(
     .DATA_WIDTH         (32             ),
@@ -115,7 +117,7 @@ ppfifo#(
   .write_strobe         (write_strobe   ),
   .write_data           (write_data     ),
 
-  //.starved              ( ),
+  .starved              (write_fifo_empty),
 
   //Read
   .read_clock           (clk            ),
@@ -163,7 +165,7 @@ assign  posedge_write_enable        =   !prev_write_enable  && write_enable;
 assign  posedge_read_enable         =   !prev_read_enable   && read_enable;
 
 assign  mem_write_overflow          =   (mem_write_count    >  local_write_count);
-assign  write_finished              =   (mem_write_count    >= local_write_count);
+assign  write_finished              =   ((mem_write_count    >= local_write_count) && write_fifo_empty);
 
 assign  mem_read_overflow           =   (mem_read_count     >  local_read_size);
 assign  read_finished               =   (mem_read_count     >= local_read_size);
@@ -313,6 +315,7 @@ always @ (posedge clk) begin
     end
 
     if (mem_write_strobe) begin
+      mem_write_count             <=  mem_write_count + 1;
       if (write_addr_inc) begin
         mem_addr_in               <=  mem_addr_in + 1;
       end

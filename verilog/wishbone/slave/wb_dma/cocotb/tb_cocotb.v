@@ -228,6 +228,7 @@ wb_dma s1 (
 
   //Sink 0
   .o_snk0_write_enable    (write_enable[0]     ),
+  .i_snk0_write_finished  (write_finished[0]   ),
   .o_snk0_write_addr      (write_addr[0]       ),
   .o_snk0_write_addr_inc  (write_addr_inc[0]   ),
   .o_snk0_write_addr_dec  (write_addr_dec[0]   ),
@@ -242,6 +243,7 @@ wb_dma s1 (
 
   //Sink 1
   .o_snk1_write_enable    (write_enable[1]     ),
+  .i_snk1_write_finished  (write_finished[1]   ),
   .o_snk1_write_addr      (write_addr[1]       ),
   .o_snk1_write_addr_inc  (write_addr_inc[1]   ),
   .o_snk1_write_addr_dec  (write_addr_dec[1]   ),
@@ -256,6 +258,7 @@ wb_dma s1 (
 
   //Sink 2
   .o_snk2_write_enable    (write_enable[2]     ),
+  .i_snk2_write_finished  (write_finished[2]   ),
   .o_snk2_write_addr      (write_addr[2]       ),
   .o_snk2_write_addr_inc  (write_addr_inc[2]   ),
   .o_snk2_write_addr_dec  (write_addr_dec[2]   ),
@@ -270,6 +273,7 @@ wb_dma s1 (
 
   //Sink 3
   .o_snk3_write_enable    (write_enable[3]     ),
+  .i_snk3_write_finished  (write_finished[3]   ),
   .o_snk3_write_addr      (write_addr[3]       ),
   .o_snk3_write_addr_inc  (write_addr_inc[3]   ),
   .o_snk3_write_addr_dec  (write_addr_dec[3]   ),
@@ -317,7 +321,7 @@ wishbone_interconnect wi (
 
 localparam AWIDTH0 = 8;
 localparam AWIDTH1 = 8;
-localparam AWIDTH2 = 9;
+localparam AWIDTH2 = 8;
 localparam AWIDTH3 = 8;
 
 localparam READ_FIFO_SIZE0      = 8;
@@ -326,11 +330,11 @@ localparam WRITE_FIFO_SIZE0     = 8;
 localparam READ_FIFO_SIZE1      = 8;
 localparam WRITE_FIFO_SIZE1     = 8;
 
-localparam READ_FIFO_SIZE2      = 8;
-localparam WRITE_FIFO_SIZE2     = 8;
+localparam READ_FIFO_SIZE2      = 6;
+localparam WRITE_FIFO_SIZE2     = 6;
 
 localparam READ_FIFO_SIZE3      = 8;
-localparam WRITE_FIFO_SIZE3     = 7;
+localparam WRITE_FIFO_SIZE3     = 8;
 
 
 
