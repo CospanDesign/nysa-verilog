@@ -15,8 +15,11 @@ ${NYSA}/verilog/wishbone/master/wishbone_master.v
 #${XILINX}/ISE/verilog/src/glbl.v
 
 #The generic directory contains a lot of non-platform specific verilog code
-#${NYSA}/verilog/generic/<some name here>.v
+${NYSA}/verilog/generic/cross_clock_enable.v
+${NYSA}/verilog/generic/blk_mem.v
+${NYSA}/verilog/generic/ppfifo.v
 
+rtl/test_mem_dev.v
 rtl/wb_test_dma_mem.v
 sim/tb_wishbone_master.v
 

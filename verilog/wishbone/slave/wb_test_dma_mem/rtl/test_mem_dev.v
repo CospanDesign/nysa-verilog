@@ -4,39 +4,47 @@ module test_mem_dev #(
     parameter           WRITE_FIFO_SIZE = 8,
     parameter           ADDRESS_WIDTH   = 8
 )(
-    input               clk,
-    input               rst,
+    input                                 clk,
+    input                                 rst,
+
+    //BRAM Style Interface
+    input                                 bram_en,
+    input                                 bram_we,
+    input       [(ADDRESS_WIDTH - 1):0]   bram_address,
+    input       [31:0]                    bram_data_in,
+    output      [31:0]                    bram_data_out,
+    output                                initializing,
 
     //Write Side
-    input                               write_enable,
-    input       [63:0]                  write_addr,
-    input                               write_addr_inc,
-    input                               write_addr_dec,
-    output                              write_finished,
-    input       [23:0]                  write_count,
-    input                               write_flush,
+    input                                 write_enable,
+    input       [63:0]                    write_addr,
+    input                                 write_addr_inc,
+    input                                 write_addr_dec,
+    output                                write_finished,
+    input       [23:0]                    write_count,
+    input                                 write_flush,
 
-    output      [1:0]                   write_ready,
-    input       [1:0]                   write_activate,
-    output      [23:0]                  write_size,
-    input                               write_strobe,
-    input       [31:0]                  write_data,
+    output      [1:0]                     write_ready,
+    input       [1:0]                     write_activate,
+    output      [23:0]                    write_size,
+    input                                 write_strobe,
+    input       [31:0]                    write_data,
 
     //Read Side
-    input                               read_enable,
-    input       [63:0]                  read_addr,
-    input                               read_addr_inc,
-    input                               read_addr_dec,
-    output                              read_busy,
-    output                              read_error,
-    input       [23:0]                  read_count,
-    input                               read_flush,
+    input                                 read_enable,
+    input       [63:0]                    read_addr,
+    input                                 read_addr_inc,
+    input                                 read_addr_dec,
+    output                                read_busy,
+    output                                read_error,
+    input       [23:0]                    read_count,
+    input                                 read_flush,
 
-    output                              read_ready,
-    output                              read_activate,
-    output      [23:0]                  read_size,
-    output      [31:0]                  read_data,
-    input                               read_strobe
+    output                                read_ready,
+    output                                read_activate,
+    output      [23:0]                    read_size,
+    output      [31:0]                    read_data,
+    input                                 read_strobe
 );
 
 //Local Parameters
@@ -87,6 +95,12 @@ reg                                     fill_mem_wea;
 
 wire                                    write_fifo_empty;
 
+wire                                    blk_mem_we;
+wire                                    blk_mem_en;
+wire    [(ADDRESS_WIDTH - 1):0]         blk_mem_wr_addr;
+wire    [(ADDRESS_WIDTH - 1):0]         blk_mem_rd_addr;
+wire    [31:0]                          blk_mem_data_in;
+
 //Submodules
 blk_mem #(
     .DATA_WIDTH         (32             ),
@@ -94,13 +108,13 @@ blk_mem #(
     .INC_NUM_PATTERN    (1              )
 ) mem (
     .clka               (clk            ),
-    .wea                (wea            ),
-    .dina               (din            ),
-    .addra              (mem_addr_in    ),
+    .wea                (blk_mem_we     ),
+    .dina               (blk_mem_data_in),
+    .addra              (blk_mem_wr_addr),
 
     .clkb               (clk            ),
     .doutb              (m2f_data       ),
-    .addrb              (mem_addr_out   )
+    .addrb              (blk_mem_rd_addr)
 );
 
 ppfifo#(
@@ -174,6 +188,15 @@ assign din                          =   fill_mem ? fill_mem_data: f2m_data;
 assign wea                          =   fill_mem ? fill_mem_wea: f2m_strobe;
 assign read_error                   =   m2f_data_error;
 
+assign blk_mem_we                   =   bram_en ? bram_we           : wea;
+assign blk_mem_wr_addr              =   bram_en ? bram_address      : mem_addr_in;
+assign blk_mem_rd_addr              =   bram_en ? bram_address      : mem_addr_out;
+assign blk_mem_data_in              =   bram_en ? bram_data_in      : din;
+assign bram_data_out                =   m2f_data;
+
+assign initializing                 =   fill_mem_wea;
+
+
 //Synchronous Logic
 always @ (posedge clk) begin
   if (rst) begin
@@ -221,7 +244,7 @@ always @ (posedge clk) begin
         fill_mem                    <= 0;
         fill_mem_wea                <= 0;
     end
-    
+
   end
   else begin
     //Strobes
@@ -308,7 +331,7 @@ always @ (posedge clk) begin
 
     if (!m2f_strobe &&
         !mem_read_strobe && (m2f_activate > 0) &&
-        ((m2f_count >= m2f_size) || 
+        ((m2f_count >= m2f_size) ||
          (mem_read_count > 0 &&
           m2f_count >= mem_read_count))) begin
       m2f_activate  <=  0;

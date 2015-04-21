@@ -23,6 +23,8 @@ SOFTWARE.
 */
 
 /*
+  Self Defining Bus (SDB)
+
   Set the Vendor ID (Hexidecimal 64-bit Number)
   SDB_VENDOR_ID:0x800000000000C594
 
@@ -39,10 +41,10 @@ SOFTWARE.
   SDB_ABI_CLASS:0
 
   Set the ABI Major Version: (8-bits)
-  SDB_ABI_VERSION_MAJOR:0x13
+  SDB_ABI_VERSION_MAJOR:0x06
 
   Set the ABI Minor Version (8-bits)
-  SDB_ABI_VERSION_MINOR:0
+  SDB_ABI_VERSION_MINOR:2
 
   Set the Module URL (63 Unicode Characters)
   SDB_MODULE_URL:http://www.example.com
@@ -60,122 +62,164 @@ SOFTWARE.
   SDB_WRITEABLE:True
 
   Device Size: Number of Registers
-  SDB_SIZE:3
+  SDB_SIZE:1024
 */
 
 
-module wb_test_dma_mem (
-  input               clk,
-  input               rst,
+module wb_test_dma_mem #(
+  parameter ADDR_WIDTH      = 10,
+  parameter READ_FIFO_SIZE  = 8,
+  parameter WRITE_FIFO_SIZE = 8
+)(
+  input                                 clk,
+  input                                 rst,
 
-  //Add signals to control your device here
+  //wishbone slave signals
+  input                                 i_wbs_we,
+  input                                 i_wbs_stb,
+  input                                 i_wbs_cyc,
+  input       [3:0]                     i_wbs_sel,
+  input       [31:0]                    i_wbs_adr,
+  input       [31:0]                    i_wbs_dat,
+  output reg  [31:0]                    o_wbs_dat,
+  output reg                            o_wbs_ack,
 
-  //Wishbone Bus Signals
-  input               i_wbs_we,
-  input               i_wbs_cyc,
-  input       [3:0]   i_wbs_sel,
-  input       [31:0]  i_wbs_dat,
-  input               i_wbs_stb,
-  output  reg         o_wbs_ack,
-  output  reg [31:0]  o_wbs_dat,
-  input       [31:0]  i_wbs_adr,
+  output reg                            o_wbs_int,
 
-  //This interrupt can be controlled from this module or a submodule
-  output  reg         o_wbs_int
-  //output              o_wbs_int
+  //Write Side
+  input                                 write_enable,
+  input       [63:0]                    write_addr,
+  input                                 write_addr_inc,
+  input                                 write_addr_dec,
+  output                                write_finished,
+  input       [23:0]                    write_count,
+  input                                 write_flush,
+
+  output      [1:0]                     write_ready,
+  input       [1:0]                     write_activate,
+  output      [23:0]                    write_size,
+  input                                 write_strobe,
+  input       [31:0]                    write_data,
+
+  //Read Side
+  input                                 read_enable,
+  input       [63:0]                    read_addr,
+  input                                 read_addr_inc,
+  input                                 read_addr_dec,
+  output                                read_busy,
+  output                                read_error,
+  input       [23:0]                    read_count,
+  input                                 read_flush,
+
+  output                                read_ready,
+  output                                read_activate,
+  output      [23:0]                    read_size,
+  output      [31:0]                    read_data,
+  input                                 read_strobe
+
 );
 
-//Local Parameters
-localparam     ADDR_0  = 32'h00000000;
-localparam     ADDR_1  = 32'h00000001;
-localparam     ADDR_2  = 32'h00000002;
+localparam                SLEEP_COUNT = 4;
 
-//Local Registers/Wires
-//Submodules
-//Asynchronous Logic
-//Synchronous Logic
+//Registers/Wires
+reg   [3:0]               ram_sleep;
 
+reg                       bram_en;
+reg   [ADDR_WIDTH - 1:0]  bram_addr;
+reg   [31:0]              bram_write_data;
+wire  [31:0]              bram_read_data;
+
+//Sub Modules
+test_mem_dev #(
+  .READ_FIFO_SIZE     (READ_FIFO_SIZE     ),
+  .WRITE_FIFO_SIZE    (WRITE_FIFO_SIZE    ),
+  .ADDRESS_WIDTH      (ADDR_WIDTH         )
+)tmd(
+  .clk                (clk                ),
+  .rst                (rst                ),
+
+  //BRAM
+  .bram_en            (bram_en            ),
+  .bram_we            (i_wbs_we           ),
+  .bram_address       (bram_addr          ),
+  .bram_data_in       (bram_write_data    ),
+  .bram_data_out      (bram_read_data     ),
+
+  .write_enable       (write_enable       ),
+  .write_addr         (write_addr         ),
+  .write_addr_inc     (write_addr_inc     ),
+  .write_addr_dec     (write_addr_dec     ),
+  .write_finished     (write_finished     ),
+  .write_count        (write_count        ),
+  .write_flush        (write_flush        ),
+
+  .write_ready        (write_ready        ),
+  .write_activate     (write_activate     ),
+  .write_size         (write_size         ),
+  .write_strobe       (write_strobe       ),
+  .write_data         (write_data         ),
+
+
+  .read_enable        (read_enable        ),
+  .read_addr          (read_addr          ),
+  .read_addr_inc      (read_addr_inc      ),
+  .read_addr_dec      (read_addr_dec      ),
+  .read_busy          (read_busy          ),
+  .read_error         (read_error         ),
+  .read_count         (read_count         ),
+  .read_flush         (read_flush         ),
+
+  .read_ready         (read_ready         ),
+  .read_activate      (read_activate      ),
+  .read_size          (read_size          ),
+  .read_data          (read_data          ),
+  .read_strobe        (read_strobe        )
+);
+
+
+//blocks
 always @ (posedge clk) begin
   if (rst) begin
-    o_wbs_dat <= 32'h0;
-    o_wbs_ack <= 0;
-    o_wbs_int <= 0;
+    o_wbs_dat                   <= 32'h0;
+    o_wbs_ack                   <= 0;
+    o_wbs_int                   <= 0;
+
+    ram_sleep                   <= SLEEP_COUNT;
+    bram_en                     <= 0;
+    bram_addr                   <= 0;
+    bram_write_data             <= 0;
   end
-
   else begin
-    //when the master acks our ack, then put our ack down
-    if (o_wbs_ack && ~i_wbs_stb)begin
-      o_wbs_ack <= 0;
-    end
 
-    if (i_wbs_stb && i_wbs_cyc) begin
+    bram_en                     <= 0;
+
+    if (o_wbs_ack & ~i_wbs_stb)begin
+      //when the master acks our ack, then put our ack down
+      o_wbs_ack                 <= 0;
+    end
+    if (i_wbs_stb & i_wbs_cyc) begin
       //master is requesting somethign
-      if (!o_wbs_ack) begin
-        if (i_wbs_we) begin
-          //write request
-          case (i_wbs_adr)
-            ADDR_0: begin
-              //writing something to address 0
-              //do something
+      bram_en                   <= 1;
+      bram_addr                 <= i_wbs_adr[ADDR_WIDTH - 1:0];
+      if (i_wbs_we) begin
+        //write request
+        bram_write_data         <= i_wbs_dat;
+      end
+      else begin
+        //read request
+        o_wbs_dat               <= bram_read_data;
+      end
 
-              //NOTE THE FOLLOWING LINE IS AN EXAMPLE
-              //  THIS IS WHAT THE USER WILL READ FROM ADDRESS 0
-              $display("ADDR: %h user wrote %h", i_wbs_adr, i_wbs_dat);
-            end
-            ADDR_1: begin
-              //writing something to address 1
-              //do something
-
-              //NOTE THE FOLLOWING LINE IS AN EXAMPLE
-              //  THIS IS WHAT THE USER WILL READ FROM ADDRESS 0
-              $display("ADDR: %h user wrote %h", i_wbs_adr, i_wbs_dat);
-            end
-            ADDR_2: begin
-              //writing something to address 3
-              //do something
-
-              //NOTE THE FOLLOWING LINE IS AN EXAMPLE
-              //  THIS IS WHAT THE USER WILL READ FROM ADDRESS 0
-              $display("ADDR: %h user wrote %h", i_wbs_adr, i_wbs_dat);
-            end
-            //add as many ADDR_X you need here
-            default: begin
-            end
-          endcase
-        end
-        else begin
-          //read request
-          case (i_wbs_adr)
-            ADDR_0: begin
-              //reading something from address 0
-              //NOTE THE FOLLOWING LINE IS AN EXAMPLE
-              //  THIS IS WHAT THE USER WILL READ FROM ADDRESS 0
-              $display("user read %h", ADDR_0);
-              o_wbs_dat <= ADDR_0;
-            end
-            ADDR_1: begin
-              //reading something from address 1
-              //NOTE THE FOLLOWING LINE IS AN EXAMPLE
-              //  THIS IS WHAT THE USER WILL READ FROM ADDRESS 0
-              $display("user read %h", ADDR_1);
-              o_wbs_dat <= ADDR_1;
-            end
-            ADDR_2: begin
-              //reading soething from address 2
-              //NOTE THE FOLLOWING LINE IS AN EXAMPLE
-              //  THIS IS WHAT THE USER WILL READ FROM ADDRESS 0
-              $display("user read %h", ADDR_2);
-              o_wbs_dat <= ADDR_2;
-            end
-            //add as many ADDR_X you need here
-            default: begin
-            end
-          endcase
-        end
-      o_wbs_ack <= 1;
-    end
+      if (ram_sleep > 0) begin
+        ram_sleep               <= ram_sleep - 1;
+      end
+      else begin
+        o_wbs_ack               <= 1;
+        ram_sleep               <= SLEEP_COUNT;
+      end
     end
   end
 end
+
 
 endmodule
