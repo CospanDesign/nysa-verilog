@@ -3,7 +3,7 @@ import cocotb
 import logging
 from cocotb.result import TestFailure
 from model import dma as dmam
-from model.dma import DMA
+from nysa.host.driver.dma import DMA
 from model.sim_host import NysaSim
 import time
 
@@ -47,7 +47,7 @@ def get_register_range(signal, top_bit, bot_bit):
 def is_bit_set(signal, bit):
     return ((signal & 1 << bit) > 0)
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def test_setup_dma(dut):
     """
     Description:
@@ -301,7 +301,8 @@ def test_setup_dma(dut):
         l.setLevel(level)
 
         #Egress Enable and Egress Bond Address
-        yield cocotb.external(dma.set_instruction_egress)(i, True, EGRESS_ADDR)
+        yield cocotb.external(dma.set_instruction_egress)(i, EGRESS_ADDR)
+        yield cocotb.external(dma.enable_egress_bond)(i, True)
         l.setLevel(logging.ERROR)
         addr = dut.s1.dmacntrl.egress_bond_ip[i].value.get_value()
 
@@ -312,12 +313,13 @@ def test_setup_dma(dut):
         if addr != EGRESS_ADDR:
             raise cocotb.result.TestFailure("Instruction [%d] Egress Address Should be [%d] but is [%d]" % (i, EGRESS_ADDR, addr))
 
-        yield cocotb.external(dma.set_instruction_egress)(i, False)
+        yield cocotb.external(dma.enable_egress_bond)(i, False)
         if dut.s1.dmacntrl.flag_egress_bond[i].value.get_value():
             raise cocotb.result.TestFailure("Instruction [%d] Egress is Enabled when it shouldn't be" % (i))
 
         #Ingress Enable and Ingress Bond Address
-        yield cocotb.external(dma.set_instruction_ingress)(i, True, INGRESS_ADDR)
+        yield cocotb.external(dma.set_instruction_ingress)(i, INGRESS_ADDR)
+        yield cocotb.external(dma.enable_ingress_bond)(i, True)
         l.setLevel(logging.ERROR)
         addr = dut.s1.dmacntrl.ingress_bond_ip[i].value.get_value()
         if not dut.s1.dmacntrl.flag_ingress_bond[i].value.get_value():
@@ -326,7 +328,7 @@ def test_setup_dma(dut):
         if addr != INGRESS_ADDR:
             raise cocotb.result.TestFailure("Instruction [%d] Ingress Address Should be [%d] but is [%d]" % (i, EGRESS_ADDR, addr))
 
-        yield cocotb.external(dma.set_instruction_ingress)(i, False)
+        yield cocotb.external(dma.enable_ingress_bond)(i, False)
 
         l.setLevel(logging.ERROR)
         if dut.s1.dmacntrl.flag_ingress_bond[i].value.get_value():
@@ -334,8 +336,7 @@ def test_setup_dma(dut):
         l.setLevel(level)
 
 
-
-
+    print "Finished"
 
 
     yield nysa.wait_clocks(10)
@@ -471,7 +472,7 @@ def test_execute_single_instruction(dut):
 
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def test_continuous_transfer(dut):
     """
     Description:
