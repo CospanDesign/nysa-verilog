@@ -104,8 +104,10 @@ wire    [31:0]                          blk_mem_data_in;
 //Submodules
 blk_mem #(
     .DATA_WIDTH         (32             ),
-    .ADDRESS_WIDTH      (ADDRESS_WIDTH  ),
-    .INC_NUM_PATTERN    (1              )
+`ifdef SIMULATION
+    .INC_NUM_PATTERN    (1              ),
+`endif
+    .ADDRESS_WIDTH      (ADDRESS_WIDTH  )
 ) mem (
     .clka               (clk            ),
     .wea                (blk_mem_we     ),
