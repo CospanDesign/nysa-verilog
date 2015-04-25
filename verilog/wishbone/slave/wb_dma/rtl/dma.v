@@ -12,20 +12,20 @@ module dma (
   input       [31:0]  i_src2_control,
   input       [31:0]  i_src3_control,
 
-  output tri0 [31:0]  o_src0_status,
-  output tri0 [31:0]  o_src1_status,
-  output tri0 [31:0]  o_src2_status,
-  output tri0 [31:0]  o_src3_status,
+  output      [31:0]  o_src0_status,
+  output      [31:0]  o_src1_status,
+  output      [31:0]  o_src2_status,
+  output      [31:0]  o_src3_status,
 
   input       [31:0]  i_snk0_control,
   input       [31:0]  i_snk1_control,
   input       [31:0]  i_snk2_control,
   input       [31:0]  i_snk3_control,
 
-  output tri0 [31:0]  o_snk0_status,
-  output tri0 [31:0]  o_snk1_status,
-  output tri0 [31:0]  o_snk2_status,
-  output tri0 [31:0]  o_snk3_status,
+  output      [31:0]  o_snk0_status,
+  output      [31:0]  o_snk1_status,
+  output      [31:0]  o_snk2_status,
+  output      [31:0]  o_snk3_status,
 
   //Source 0
   output              o_src0_enable,
@@ -252,7 +252,7 @@ reg                 inst_busy           [`INST_COUNT - 1:0];
 reg                 inst_wait           [`INST_COUNT - 1:0];
 
 wire        [31:0]  snk_control         [3:0];
-tri0        [31:0]  snk_status          [3:0];
+wire        [31:0]  snk_status          [3:0];
 
 reg         [3:0]   state               [3:0];
 wire        [3:0]   state0;
@@ -744,21 +744,21 @@ always @ (posedge clk) begin
       inst_egress_ready[i]                   <=  0;
       inst_wait[i]                           <=  0;
       inst_busy[i]                           <=  0;
-      src_enable[i]                          <=  0;
     end
     for (i = 0; i < `SOURCE_COUNT; i = i + 1) begin
-      state[i]                               <= IDLE;
-      src_address[i]                         <= 0;
-      src_dma_finished[i]                    <= 0;
-      src_err_conflict_sink[i]               <= 0;
-      src_count[i]                           <= 0;
-      src_strobe[i]                          <= 0;
-      src_activate[i]                        <= 0;
-      ip[i]                                  <= 0;
-      snka[i]                                <= 0;
-      curr_count[i]                          <= 0;
-      channel_count[i]                       <= 0;
-      src_flush[i]                           <= 0;
+      state[i]                               <=  IDLE;
+      src_enable[i]                          <=  0;
+      src_address[i]                         <=  0;
+      src_dma_finished[i]                    <=  0;
+      src_err_conflict_sink[i]               <=  0;
+      src_count[i]                           <=  0;
+      src_strobe[i]                          <=  0;
+      src_activate[i]                        <=  0;
+      ip[i]                                  <=  0;
+      snka[i]                                <=  0;
+      curr_count[i]                          <=  0;
+      channel_count[i]                       <=  0;
+      src_flush[i]                           <=  0;
 
     end
     for (i = 0; i < `SINK_COUNT; i = i + 1) begin
