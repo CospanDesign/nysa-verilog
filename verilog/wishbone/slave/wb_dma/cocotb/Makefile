@@ -18,7 +18,9 @@ VERILOG_SOURCES += $(NYSA)/verilog/wishbone/master/wishbone_master.v
 VERILOG_SOURCES += ${NYSA}/verilog/sim/wishbone/interconnect/example_2port_interconnect/wishbone_interconnect.v
 
 #Simulation Devices
-VERILOG_SOURCES += $(TOPDIR)/sim/test_mem_dev.v
+VERILOG_SOURCES += $(NYSA)/verilog/wishbone/slave/wb_test_dma_mem/rtl/test_mem_dev.v
+VERILOG_SOURCES += $(NYSA)/verilog/wishbone/slave/wb_test_dma_mem/rtl/wb_test_dma_mem.v
+#VERILOG_SOURCES += $(TOPDIR)/sim/test_mem_dev.v
 
 #DUT
 VERILOG_SOURCES += $(TOPDIR)/rtl/dma.v

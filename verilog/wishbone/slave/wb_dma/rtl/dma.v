@@ -790,6 +790,19 @@ always @ (posedge clk) begin
             ip[i]                            <= src_control[i][`BIT_CFG_IP_ADDR_TOP:`BIT_CFG_IP_ADDR_BOT];
             snka[i]                          <= src_control[i][`BIT_CFG_SRC_SINK_ADDR_TOP:`BIT_CFG_SRC_SINK_ADDR_BOT];
           end
+          //Rlush Anything within the source FIFOs
+          if (src_ready[i] && !src_activate[i]) begin
+            src_count[i]                     <= 0;
+            src_activate[i]                  <= 1;
+          end
+          else begin 
+            if (src_count[i] < src_size[i]) begin
+                src_strobe[i]                <= 1;
+            end
+            else begin
+                src_activate[i]              <= 0;
+            end
+          end
           //Flush Anything within the sink FIFO
           if (!snk_in_use[i]) begin
             snk_strobe[i]                     <= 0;

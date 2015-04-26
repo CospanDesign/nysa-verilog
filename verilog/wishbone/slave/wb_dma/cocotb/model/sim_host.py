@@ -43,7 +43,7 @@ from nysa.host.nysa import NysaCommError
 from nysa.common.status import Status
 
 CLK_PERIOD = 4
-RESET_PERIOD = 10
+RESET_PERIOD = 20
 
 
 

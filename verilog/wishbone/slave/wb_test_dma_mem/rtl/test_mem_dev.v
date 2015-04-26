@@ -41,7 +41,7 @@ module test_mem_dev #(
     input                                 read_flush,
 
     output                                read_ready,
-    output                                read_activate,
+    input                                 read_activate,
     output      [23:0]                    read_size,
     output      [31:0]                    read_data,
     input                                 read_strobe
@@ -104,9 +104,6 @@ wire    [31:0]                          blk_mem_data_in;
 //Submodules
 blk_mem #(
     .DATA_WIDTH         (32             ),
-`ifdef SIMULATION
-    .INC_NUM_PATTERN    (1              ),
-`endif
     .ADDRESS_WIDTH      (ADDRESS_WIDTH  )
 ) mem (
     .clka               (clk            ),

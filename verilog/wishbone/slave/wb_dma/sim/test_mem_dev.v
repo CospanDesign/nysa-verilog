@@ -4,39 +4,39 @@ module test_mem_dev #(
     parameter           WRITE_FIFO_SIZE = 8,
     parameter           ADDRESS_WIDTH   = 8
 )(
-    input               clk,
-    input               rst,
+    input                                 clk,
+    input                                 rst,
 
     //Write Side
-    input                               write_enable,
-    input       [63:0]                  write_addr,
-    input                               write_addr_inc,
-    input                               write_addr_dec,
-    output                              write_finished,
-    input       [23:0]                  write_count,
-    input                               write_flush,
+    input                                 write_enable,
+    input       [63:0]                    write_addr,
+    input                                 write_addr_inc,
+    input                                 write_addr_dec,
+    output                                write_finished,
+    input       [23:0]                    write_count,
+    input                                 write_flush,
 
-    output      [1:0]                   write_ready,
-    input       [1:0]                   write_activate,
-    output      [23:0]                  write_size,
-    input                               write_strobe,
-    input       [31:0]                  write_data,
+    output      [1:0]                     write_ready,
+    input       [1:0]                     write_activate,
+    output      [23:0]                    write_size,
+    input                                 write_strobe,
+    input       [31:0]                    write_data,
 
     //Read Side
-    input                               read_enable,
-    input       [63:0]                  read_addr,
-    input                               read_addr_inc,
-    input                               read_addr_dec,
-    output                              read_busy,
-    output                              read_error,
-    input       [23:0]                  read_count,
-    input                               read_flush,
+    input                                 read_enable,
+    input       [63:0]                    read_addr,
+    input                                 read_addr_inc,
+    input                                 read_addr_dec,
+    output                                read_busy,
+    output                                read_error,
+    input       [23:0]                    read_count,
+    input                                 read_flush,
 
-    output                              read_ready,
-    output                              read_activate,
-    output      [23:0]                  read_size,
-    output      [31:0]                  read_data,
-    input                               read_strobe
+    output                                read_ready,
+    output                                read_activate,
+    output      [23:0]                    read_size,
+    output      [31:0]                    read_data,
+    input                                 read_strobe
 );
 
 //Local Parameters
@@ -221,7 +221,7 @@ always @ (posedge clk) begin
         fill_mem                    <= 0;
         fill_mem_wea                <= 0;
     end
-    
+
   end
   else begin
     //Strobes
@@ -308,7 +308,7 @@ always @ (posedge clk) begin
 
     if (!m2f_strobe &&
         !mem_read_strobe && (m2f_activate > 0) &&
-        ((m2f_count >= m2f_size) || 
+        ((m2f_count >= m2f_size) ||
          (mem_read_count > 0 &&
           m2f_count >= mem_read_count))) begin
       m2f_activate  <=  0;

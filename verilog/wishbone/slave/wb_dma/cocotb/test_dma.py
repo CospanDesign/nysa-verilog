@@ -9,7 +9,7 @@ import time
 
 CLK_PERIOD = 4
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def first_test(dut):
     """
     Description:
@@ -352,13 +352,13 @@ def get_source_error_signal(dut, source_addr):
     generator
     '''
     if source_addr == 0:
-        source_ptr = dut.tdm0
+        source_ptr = dut.tdm0.tmd
     elif source_addr == 1:
-        source_ptr = dut.tdm1
+        source_ptr = dut.tdm1.tmd
     elif source_addr == 2:
-        source_ptr = dut.tdm2
+        source_ptr = dut.tdm2.tmd
     elif source_addr == 3:
-        source_ptr = dut.tdm3
+        source_ptr = dut.tdm3.tmd
 
     return source_ptr.m2f_data_error
 
@@ -372,13 +372,13 @@ def get_sink_error_signal(dut, sink_addr):
     generator
     '''
     if sink_addr == 0:
-        sink_ptr = dut.tdm0
+        sink_ptr = dut.tdm0.tmd
     elif sink_addr == 1:
-        sink_ptr = dut.tdm1
+        sink_ptr = dut.tdm1.tmd
     elif sink_addr == 2:
-        sink_ptr = dut.tdm2
+        sink_ptr = dut.tdm2.tmd
     elif sink_addr == 3:
-        sink_ptr = dut.tdm3
+        sink_ptr = dut.tdm3.tmd
 
     return sink_ptr.f2m_data_error
 
@@ -397,7 +397,7 @@ class ErrorMonitor(cocotb.monitors.Monitor):
             #self._recv(self.dut.get_sim_time())
             self._recv(1)
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def test_execute_single_instruction(dut):
     """
     Description:
@@ -472,7 +472,7 @@ def test_execute_single_instruction(dut):
 
 
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def test_continuous_transfer(dut):
     """
     Description:
@@ -540,7 +540,7 @@ def test_continuous_transfer(dut):
         raise cocotb.result.TestFailure("Test %d Error on source %d read detected %d errors" % (dut.test_id, CHANNEL_ADDR, len(source_error_monitor)))
 
     if len(sink_error_monitor) > 0:
-        raise cocotb.result.TestFailure("Test %d Error on sink %d read detected %d errors" % (dut.test_id, SINK_ADDR, len(sink_error_monitor)))
+        raise cocotb.result.TestFailure("Test %d Error on sink %d write detected %d errors" % (dut.test_id, SINK_ADDR, len(sink_error_monitor)))
 
 
     source_error_monitor.kill()
@@ -548,7 +548,7 @@ def test_continuous_transfer(dut):
 
 
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def test_double_buffer(dut):
     """
     Description:

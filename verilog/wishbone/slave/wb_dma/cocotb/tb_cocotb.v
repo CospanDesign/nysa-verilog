@@ -339,167 +339,205 @@ localparam WRITE_FIFO_SIZE3     = 8;
 
 
 //1st Device
-test_mem_dev #(
-  .READ_FIFO_SIZE     ( READ_FIFO_SIZE0    ),
-  .WRITE_FIFO_SIZE    ( WRITE_FIFO_SIZE0   ),
-  .ADDRESS_WIDTH      (           AWIDTH0  )
+wb_test_dma_mem #(
+  //.READ_FIFO_SIZE     ( READ_FIFO_SIZE0    ),
+  //.WRITE_FIFO_SIZE    ( WRITE_FIFO_SIZE0   ),
+  //.ADDR_WIDTH         (           AWIDTH0  )
 )tdm0(
   .clk                (clk                 ),
   .rst                (rst                 ),
 
+  .i_wbs_we           (0                   ),
+  .i_wbs_stb          (0                   ),
+  .i_wbs_cyc          (0                   ),
+  .i_wbs_sel          (0                   ),
+  .i_wbs_adr          (0                   ),
+  .i_wbs_dat          (0                   ),
+  .o_wbs_dat          (                    ),
+  .o_wbs_ack          (                    ),
+  .o_wbs_int          (                    ),
 
-  .write_enable       (write_enable[0]     ),
-  .write_addr         (write_addr[0]       ),
-  .write_addr_inc     (write_addr_inc[0]   ),
-  .write_addr_dec     (write_addr_dec[0]   ),
-  .write_finished     (write_finished[0]   ),
-  .write_count        (write_data_count[0] ),
-  .write_flush        (write_flush[0]      ),
+  .i_write_enable     (write_enable[0]     ),
+  .i_write_addr       (write_addr[0]       ),
+  .i_write_addr_inc   (write_addr_inc[0]   ),
+  .i_write_addr_dec   (write_addr_dec[0]   ),
+  .o_write_finished   (write_finished[0]   ),
+  .i_write_count      (write_data_count[0] ),
+  .i_write_flush      (write_flush[0]      ),
 
-  .write_ready        (write_ready[0]      ),
-  .write_activate     (write_activate[0]   ),
-  .write_size         (write_size[0]       ),
-  .write_strobe       (write_strobe[0]     ),
-  .write_data         (write_data[0]       ),
+  .o_write_ready      (write_ready[0]      ),
+  .i_write_activate   (write_activate[0]   ),
+  .o_write_size       (write_size[0]       ),
+  .i_write_strobe     (write_strobe[0]     ),
+  .i_write_data       (write_data[0]       ),
 
 
-  .read_enable        (read_enable[0]      ),
-  .read_addr          (read_addr[0]        ),
-  .read_addr_inc      (read_addr_inc[0]    ),
-  .read_addr_dec      (read_addr_dec[0]    ),
-  .read_busy          (read_busy[0]        ),
-  .read_error         (read_error[0]       ),
-  .read_count         (read_data_count[0]  ),
-  .read_flush         (read_flush[0]       ),
+  .i_read_enable      (read_enable[0]      ),
+  .i_read_addr        (read_addr[0]        ),
+  .i_read_addr_inc    (read_addr_inc[0]    ),
+  .i_read_addr_dec    (read_addr_dec[0]    ),
+  .o_read_busy        (read_busy[0]        ),
+  .o_read_error       (read_error[0]       ),
+  .i_read_count       (read_data_count[0]  ),
+  .i_read_flush       (read_flush[0]       ),
 
-  .read_ready         (read_ready[0]       ),
-  .read_activate      (read_activate[0]    ),
-  .read_size          (read_size[0]        ),
-  .read_data          (read_data[0]        ),
-  .read_strobe        (read_strobe[0]      )
+  .o_read_ready       (read_ready[0]       ),
+  .i_read_activate    (read_activate[0]    ),
+  .o_read_size        (read_size[0]        ),
+  .o_read_data        (read_data[0]        ),
+  .i_read_strobe      (read_strobe[0]      )
 );
 
 //2nd Device
-test_mem_dev #(
-    .READ_FIFO_SIZE   ( READ_FIFO_SIZE1    ),
-    .WRITE_FIFO_SIZE  ( WRITE_FIFO_SIZE1   ),
-    .ADDRESS_WIDTH    (           AWIDTH1  )
+wb_test_dma_mem #(
+    //.READ_FIFO_SIZE   ( READ_FIFO_SIZE1    ),
+    //.WRITE_FIFO_SIZE  ( WRITE_FIFO_SIZE1   ),
+    //.ADDR_WIDTH       (           AWIDTH1  )
 )tdm1(
   .clk                (clk                 ),
   .rst                (rst                 ),
 
-
-  .write_enable       (write_enable[1]     ),
-  .write_addr         (write_addr[1]       ),
-  .write_addr_inc     (write_addr_inc[1]   ),
-  .write_addr_dec     (write_addr_dec[1]   ),
-  .write_finished     (write_finished[1]   ),
-  .write_count        (write_data_count[1] ),
-  .write_flush        (write_flush[1]      ),
-
-  .write_ready        (write_ready[1]      ),
-  .write_activate     (write_activate[1]   ),
-  .write_size         (write_size[1]       ),
-  .write_strobe       (write_strobe[1]     ),
-  .write_data         (write_data[1]       ),
+  .i_wbs_we           (0                   ),
+  .i_wbs_stb          (0                   ),
+  .i_wbs_cyc          (0                   ),
+  .i_wbs_sel          (0                   ),
+  .i_wbs_adr          (0                   ),
+  .i_wbs_dat          (0                   ),
+  .o_wbs_dat          (                    ),
+  .o_wbs_ack          (                    ),
+  .o_wbs_int          (                    ),
 
 
-  .read_enable        (read_enable[1]      ),
-  .read_addr          (read_addr[1]        ),
-  .read_addr_inc      (read_addr_inc[1]    ),
-  .read_addr_dec      (read_addr_dec[1]    ),
-  .read_busy          (read_busy[1]        ),
-  .read_error         (read_error[1]       ),
-  .read_count         (read_data_count[1]  ),
-  .read_flush         (read_flush[1]       ),
+  .i_write_enable     (write_enable[1]     ),
+  .i_write_addr       (write_addr[1]       ),
+  .i_write_addr_inc   (write_addr_inc[1]   ),
+  .i_write_addr_dec   (write_addr_dec[1]   ),
+  .o_write_finished   (write_finished[1]   ),
+  .i_write_count      (write_data_count[1] ),
+  .i_write_flush      (write_flush[1]      ),
 
-  .read_ready         (read_ready[1]       ),
-  .read_activate      (read_activate[1]    ),
-  .read_size          (read_size[1]        ),
-  .read_data          (read_data[1]        ),
-  .read_strobe        (read_strobe[1]      )
+  .o_write_ready      (write_ready[1]      ),
+  .i_write_activate   (write_activate[1]   ),
+  .o_write_size       (write_size[1]       ),
+  .i_write_strobe     (write_strobe[1]     ),
+  .i_write_data       (write_data[1]       ),
+
+
+  .i_read_enable      (read_enable[1]      ),
+  .i_read_addr        (read_addr[1]        ),
+  .i_read_addr_inc    (read_addr_inc[1]    ),
+  .i_read_addr_dec    (read_addr_dec[1]    ),
+  .o_read_busy        (read_busy[1]        ),
+  .o_read_error       (read_error[1]       ),
+  .i_read_count       (read_data_count[1]  ),
+  .i_read_flush       (read_flush[1]       ),
+
+  .o_read_ready       (read_ready[1]       ),
+  .i_read_activate    (read_activate[1]    ),
+  .o_read_size        (read_size[1]        ),
+  .o_read_data        (read_data[1]        ),
+  .i_read_strobe      (read_strobe[1]      )
 );
 
 //3rd Device
-test_mem_dev #(
-    .READ_FIFO_SIZE   (  READ_FIFO_SIZE2   ),
-    .WRITE_FIFO_SIZE  (  WRITE_FIFO_SIZE2  ),
-    .ADDRESS_WIDTH    (           AWIDTH2  )
+wb_test_dma_mem #(
+    //.READ_FIFO_SIZE   (  READ_FIFO_SIZE2   ),
+    //.WRITE_FIFO_SIZE  (  WRITE_FIFO_SIZE2  ),
+    //.ADDR_WIDTH       (           AWIDTH2  )
 )tdm2(
   .clk                (clk                 ),
   .rst                (rst                 ),
 
-
-  .write_enable       (write_enable[2]     ),
-  .write_addr         (write_addr[2]       ),
-  .write_addr_inc     (write_addr_inc[2]   ),
-  .write_addr_dec     (write_addr_dec[2]   ),
-  .write_finished     (write_finished[2]   ),
-  .write_count        (write_data_count[2] ),
-  .write_flush        (write_flush[2]      ),
-
-  .write_ready        (write_ready[2]      ),
-  .write_activate     (write_activate[2]   ),
-  .write_size         (write_size[2]       ),
-  .write_strobe       (write_strobe[2]     ),
-  .write_data         (write_data[2]       ),
+  .i_wbs_we           (0                   ),
+  .i_wbs_stb          (0                   ),
+  .i_wbs_cyc          (0                   ),
+  .i_wbs_sel          (0                   ),
+  .i_wbs_adr          (0                   ),
+  .i_wbs_dat          (0                   ),
+  .o_wbs_dat          (                    ),
+  .o_wbs_ack          (                    ),
+  .o_wbs_int          (                    ),
 
 
-  .read_enable        (read_enable[2]      ),
-  .read_addr          (read_addr[2]        ),
-  .read_addr_inc      (read_addr_inc[2]    ),
-  .read_addr_dec      (read_addr_dec[2]    ),
-  .read_busy          (read_busy[2]        ),
-  .read_error         (read_error[2]       ),
-  .read_count         (read_data_count[2]  ),
-  .read_flush         (read_flush [2]      ),
+  .i_write_enable     (write_enable[2]     ),
+  .i_write_addr       (write_addr[2]       ),
+  .i_write_addr_inc   (write_addr_inc[2]   ),
+  .i_write_addr_dec   (write_addr_dec[2]   ),
+  .o_write_finished   (write_finished[2]   ),
+  .i_write_count      (write_data_count[2] ),
+  .i_write_flush      (write_flush[2]      ),
 
-  .read_ready         (read_ready[2]       ),
-  .read_activate      (read_activate[2]    ),
-  .read_size          (read_size[2]        ),
-  .read_data          (read_data[2]        ),
-  .read_strobe        (read_strobe[2]      )
+  .o_write_ready      (write_ready[2]      ),
+  .i_write_activate   (write_activate[2]   ),
+  .o_write_size       (write_size[2]       ),
+  .i_write_strobe     (write_strobe[2]     ),
+  .i_write_data       (write_data[2]       ),
+
+
+  .i_read_enable      (read_enable[2]      ),
+  .i_read_addr        (read_addr[2]        ),
+  .i_read_addr_inc    (read_addr_inc[2]    ),
+  .i_read_addr_dec    (read_addr_dec[2]    ),
+  .o_read_busy        (read_busy[2]        ),
+  .o_read_error       (read_error[2]       ),
+  .i_read_count       (read_data_count[2]  ),
+  .i_read_flush       (read_flush [2]      ),
+
+  .o_read_ready       (read_ready[2]       ),
+  .i_read_activate    (read_activate[2]    ),
+  .o_read_size        (read_size[2]        ),
+  .o_read_data        (read_data[2]        ),
+  .i_read_strobe      (read_strobe[2]      )
 );
 
 //4th Device
-test_mem_dev #(
-    .READ_FIFO_SIZE   (  READ_FIFO_SIZE3   ),
-    .WRITE_FIFO_SIZE  (  WRITE_FIFO_SIZE3  ),
-    .ADDRESS_WIDTH    (           AWIDTH3  )
+wb_test_dma_mem #(
+    //.READ_FIFO_SIZE   (  READ_FIFO_SIZE3   ),
+    //.WRITE_FIFO_SIZE  (  WRITE_FIFO_SIZE3  ),
+    //.ADDR_WIDTH       (           AWIDTH3  )
 )tdm3(
   .clk                (clk                 ),
   .rst                (rst                 ),
 
+  .i_wbs_we           (0                   ),
+  .i_wbs_stb          (0                   ),
+  .i_wbs_cyc          (0                   ),
+  .i_wbs_sel          (0                   ),
+  .i_wbs_adr          (0                   ),
+  .i_wbs_dat          (0                   ),
+  .o_wbs_dat          (                    ),
+  .o_wbs_ack          (                    ),
+  .o_wbs_int          (                    ),
 
-  .write_enable       (write_enable[3]     ),
-  .write_addr         (write_addr[3]       ),
-  .write_addr_inc     (write_addr_inc[3]   ),
-  .write_addr_dec     (write_addr_dec[3]   ),
-  .write_finished     (write_finished[3]   ),
-  .write_count        (write_data_count[3] ),
-  .write_flush        (write_flush[3]      ),
+  .i_write_enable     (write_enable[3]     ),
+  .i_write_addr       (write_addr[3]       ),
+  .i_write_addr_inc   (write_addr_inc[3]   ),
+  .i_write_addr_dec   (write_addr_dec[3]   ),
+  .o_write_finished   (write_finished[3]   ),
+  .i_write_count      (write_data_count[3] ),
+  .i_write_flush      (write_flush[3]      ),
 
-  .write_ready        (write_ready[3]      ),
-  .write_activate     (write_activate[3]   ),
-  .write_size         (write_size[3]       ),
-  .write_strobe       (write_strobe[3]     ),
-  .write_data         (write_data[3]       ),
+  .o_write_ready      (write_ready[3]      ),
+  .i_write_activate   (write_activate[3]   ),
+  .o_write_size       (write_size[3]       ),
+  .i_write_strobe     (write_strobe[3]     ),
+  .i_write_data       (write_data[3]       ),
 
 
-  .read_enable        (read_enable[3]      ),
-  .read_addr          (read_addr[3]        ),
-  .read_addr_inc      (read_addr_inc[3]    ),
-  .read_addr_dec      (read_addr_dec[3]    ),
-  .read_busy          (read_busy[3]        ),
-  .read_error         (read_error[3]       ),
-  .read_count         (read_data_count[3]  ),
-  .read_flush         (read_flush [3]      ),
+  .i_read_enable      (read_enable[3]      ),
+  .i_read_addr        (read_addr[3]        ),
+  .i_read_addr_inc    (read_addr_inc[3]    ),
+  .i_read_addr_dec    (read_addr_dec[3]    ),
+  .o_read_busy        (read_busy[3]        ),
+  .o_read_error       (read_error[3]       ),
+  .i_read_count       (read_data_count[3]  ),
+  .i_read_flush       (read_flush [3]      ),
 
-  .read_ready         (read_ready[3]       ),
-  .read_activate      (read_activate[3]    ),
-  .read_size          (read_size[3]        ),
-  .read_data          (read_data[3]        ),
-  .read_strobe        (read_strobe[3]      )
+  .o_read_ready       (read_ready[3]       ),
+  .i_read_activate    (read_activate[3]    ),
+  .o_read_size        (read_size[3]        ),
+  .o_read_data        (read_data[3]        ),
+  .i_read_strobe      (read_strobe[3]      )
 );
 
 
