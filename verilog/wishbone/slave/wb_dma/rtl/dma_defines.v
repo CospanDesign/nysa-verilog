@@ -55,6 +55,14 @@
 
 
 //Status Bits
+`define BIT_STS_SRC_STATE3           13
+`define BIT_STS_SRC_STATE0           10
+`define BIT_STS_SRC_READY            9
+`define BIT_STS_SRC_ACTIVATE         8
+`define BIT_STS_SNK_READY_HIGH       7
+`define BIT_STS_SNK_READY_LOW        6
+`define BIT_STS_SNK_ACTIVATE_HIGH    5
+`define BIT_STS_SNK_ACTIVATE_LOW     4
 `define BIT_STS_ERR_CONFLICT_SINK    3
 `define BIT_STS_FIN                  2
 `define BIT_STS_BUSY                 1

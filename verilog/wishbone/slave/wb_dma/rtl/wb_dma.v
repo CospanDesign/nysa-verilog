@@ -317,6 +317,8 @@ wire  [31:0]          src1_status;
 wire  [31:0]          src2_status;
 wire  [31:0]          src3_status;
 
+wire                  cmd_int_enable;
+
 //8 Commands
 
 reg   [63:0]          cmd_src_address0;
@@ -599,7 +601,8 @@ dma  dmacntrl(
 );
 
 //Asynchronous Logic
-assign  dma_enable    = control[0];
+assign  dma_enable      =   control[0];
+assign  cmd_int_enable  =   control[1];
 //Synchronous Logic
 
 always @ (posedge clk) begin
@@ -689,6 +692,17 @@ always @ (posedge clk) begin
 
   end
   else begin
+    if (cmd_int_enable) begin
+      if (src0_status[1] || src1_status[1] || src2_status[1] || src3_status[1]) begin
+        o_wbs_int                 <= 1;
+      end
+      else begin
+        o_wbs_int                 <= 0;
+      end
+    end
+    else begin
+      o_wbs_int                   <= 0;
+    end
     //when the master acks our ack, then put our ack down
     if (o_wbs_ack && ~i_wbs_stb)begin
       o_wbs_ack <= 0;

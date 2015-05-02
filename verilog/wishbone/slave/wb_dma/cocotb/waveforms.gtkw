@@ -1,26 +1,27 @@
 [*]
 [*] GTKWave Analyzer v3.3.62 (w)1999-2014 BSI
-[*] Sat Apr 25 14:45:46 2015
+[*] Fri May  1 01:28:01 2015
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/design.vcd"
-[dumpfile_mtime] "Sat Apr 25 14:45:21 2015"
-[dumpfile_size] 4636709
+[dumpfile_mtime] "Fri May  1 01:26:26 2015"
+[dumpfile_size] 3639472
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/waveforms.gtkw"
 [timestart] 0
-[size] 1920 1058
+[size] 1920 1080
 [pos] -1 -1
-*-15.018460 75800 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-14.037670 57433 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.s1.
 [treeopen] tb_cocotb.tdm0.
 [treeopen] tb_cocotb.tdm0.tmd.
 [treeopen] tb_cocotb.tdm1.
+[treeopen] tb_cocotb.tdm1.tmd.
 [treeopen] tb_cocotb.tdm2.
 [treeopen] tb_cocotb.tdm3.
 [sst_width] 279
 [signals_width] 350
 [sst_expanded] 1
-[sst_vpaned_height] 313
+[sst_vpaned_height] 320
 @28
 tb_cocotb.clk
 tb_cocotb.rst
@@ -57,10 +58,10 @@ tb_cocotb.out_status[31:0]
 @200
 -
 -
-@800200
+@c00200
 -Test 2
 @2022
-^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/sim/states.txt
+^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/sim/states.txt
 tb_cocotb.s1.dmacntrl.state0[3:0]
 @22
 tb_cocotb.s1.dmacntrl.ip0[2:0]
@@ -72,7 +73,7 @@ tb_cocotb.s1.dmacntrl.cmd_count7[31:0]
 tb_cocotb.s1.dmacntrl.flag_dest_data_quantum2
 @200
 -
-@800200
+@c00200
 -Source 0
 @28
 tb_cocotb.tdm0.tmd.clk
@@ -124,14 +125,9 @@ tb_cocotb.s1.dmacntrl.o_src0_addr_dec
 tb_cocotb.s1.dmacntrl.o_src0_address[63:0]
 @1401200
 -Source Address
-@1000200
 -Source 0
 @200
 -
-@800200
--Sink 2
-@1000200
--Sink 2
 @28
 tb_cocotb.tdm2.tmd.f2m_activate
 @22
@@ -154,9 +150,8 @@ tb_cocotb.tdm2.tmd.write_addr[63:0]
 @28
 tb_cocotb.tdm2.tmd.write_addr_dec
 tb_cocotb.tdm2.tmd.write_addr_inc
-@23
-tb_cocotb.tdm2.tmd.write_count[23:0]
 @22
+tb_cocotb.tdm2.tmd.write_count[23:0]
 tb_cocotb.tdm2.tmd.write_data[31:0]
 @28
 tb_cocotb.tdm2.tmd.write_enable
@@ -172,22 +167,19 @@ tb_cocotb.tdm2.tmd.write_strobe
 -
 @22
 tb_cocotb.tdm2.tmd.blk_mem_data_in[31:0]
-tb_cocotb.tdm2.tmd.blk_mem_rd_addr[7:0]
 @28
 tb_cocotb.tdm2.tmd.blk_mem_we
 @22
-tb_cocotb.tdm2.tmd.blk_mem_wr_addr[7:0]
-tb_cocotb.tdm2.tmd.bram_address[7:0]
 tb_cocotb.tdm2.tmd.bram_data_in[31:0]
 tb_cocotb.tdm2.tmd.bram_data_out[31:0]
 @28
 tb_cocotb.tdm2.tmd.bram_en
 tb_cocotb.tdm2.tmd.bram_we
-@1000200
+@1401200
 -Test 2
 @200
 -
-@c00200
+@800200
 -Test 3
 @28
 tb_cocotb.s1.dmacntrl.o_snk0_write_enable
@@ -226,25 +218,70 @@ tb_cocotb.s1.dmacntrl.o_snk3_write_addr_dec
 tb_cocotb.s1.dmacntrl.o_snk3_write_addr_inc
 @200
 -
-@c00200
--Source 3
+@800200
+-SINK0
+@28
+tb_cocotb.tdm0.tmd.write_activate[1:0]
+@22
+tb_cocotb.tdm0.tmd.write_addr[63:0]
+@28
+tb_cocotb.tdm0.tmd.write_addr_dec
+tb_cocotb.tdm0.tmd.write_addr_inc
+@22
+tb_cocotb.tdm0.tmd.write_data[31:0]
+@28
+tb_cocotb.tdm0.tmd.write_enable
+tb_cocotb.tdm0.tmd.write_fifo_empty
 @200
 -
-@1401200
--Source 3
-@c00200
--Sink 1
+@28
+[color] 2
+tb_cocotb.tdm0.tmd.write_finished
+tb_cocotb.tdm0.tmd.posedge_write_enable
+@22
+tb_cocotb.tdm0.tmd.write_count[23:0]
+tb_cocotb.tdm0.tmd.local_write_count[23:0]
 @200
 -
-@1401200
--Sink 1
+@28
+tb_cocotb.tdm0.tmd.write_flush
+tb_cocotb.tdm0.tmd.write_ready[1:0]
+@22
+tb_cocotb.tdm0.tmd.write_size[23:0]
+@28
+tb_cocotb.tdm0.tmd.write_strobe
+[color] 1
+tb_cocotb.tdm0.tmd.f2m_data_error
+@200
+-
+@28
+tb_cocotb.s1.dmacntrl.snka0[1:0]
+tb_cocotb.s1.dmacntrl.snka1[1:0]
+tb_cocotb.s1.dmacntrl.snka2[1:0]
+tb_cocotb.s1.dmacntrl.snka3[1:0]
+tb_cocotb.s1.dmacntrl.flag_channel_enable0
+tb_cocotb.s1.dmacntrl.flag_channel_enable1
+tb_cocotb.s1.dmacntrl.flag_channel_enable2
+tb_cocotb.s1.dmacntrl.flag_channel_enable3
+tb_cocotb.s1.dmacntrl.snk_in_use0
+@29
+tb_cocotb.s1.dmacntrl.snk_in_use1
+@28
+tb_cocotb.s1.dmacntrl.snk_in_use2
+tb_cocotb.s1.dmacntrl.snk_in_use3
+@1000200
+-SINK0
+@200
+-
+-
+@1000200
 -Test 3
 @200
 -
 @800200
 -Test 4
 @2022
-^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/sim/states.txt
+^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_dma/sim/states.txt
 tb_cocotb.s1.dmacntrl.state0[3:0]
 @22
 tb_cocotb.s1.dmacntrl.state1[3:0]
@@ -255,7 +292,7 @@ tb_cocotb.s1.dmacntrl.snka0[1:0]
 @200
 -
 -
-@800200
+@c00200
 -Source 0
 @22
 tb_cocotb.s1.dmacntrl.channel_count0[31:0]
@@ -284,7 +321,6 @@ tb_cocotb.s1.dmacntrl.o_src0_addr_dec
 tb_cocotb.s1.dmacntrl.o_src0_address[63:0]
 @1401200
 -Source Address
-@1000200
 -Source 0
 @200
 -
@@ -314,6 +350,9 @@ tb_cocotb.s1.o_snk2_write_enable
 @22
 tb_cocotb.s1.snk2_status[31:0]
 tb_cocotb.s1.snk2_control[31:0]
+@28
+[color] 2
+tb_cocotb.tdm2.tmd.write_finished
 @1000200
 -Sink 2
 @28

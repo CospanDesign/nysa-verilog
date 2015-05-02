@@ -422,8 +422,8 @@ def test_execute_single_instruction(dut):
     yield cocotb.external(dma.enable_dma)(True)
     #yield nysa.wait_clocks(10)
 
-    CHANNEL_ADDR = 0
-    SINK_ADDR = 2
+    CHANNEL_ADDR = 1
+    SINK_ADDR = 0
     INST_ADDR = 7
 
     source_error = get_source_error_signal(dut, CHANNEL_ADDR)
@@ -446,7 +446,7 @@ def test_execute_single_instruction(dut):
     yield nysa.wait_clocks(10)
     yield cocotb.external(dma.set_instruction_dest_address)     (INST_ADDR,     0x0000000000000010  )
     yield nysa.wait_clocks(10)
-    yield cocotb.external(dma.set_instruction_data_count)       (INST_ADDR,     0x0100              )
+    yield cocotb.external(dma.set_instruction_data_count)       (INST_ADDR,     1000                )
     yield nysa.wait_clocks(10)
     yield cocotb.external(dma.set_channel_instruction_pointer)  (CHANNEL_ADDR,  INST_ADDR           )
     yield nysa.wait_clocks(10)
@@ -495,7 +495,7 @@ def test_continuous_transfer(dut):
     #yield nysa.wait_clocks(10)
 
     CHANNEL_ADDR = 3
-    SINK_ADDR = 1
+    SINK_ADDR = 2
     INST_ADDR = 2
 
     source_error = get_source_error_signal(dut, CHANNEL_ADDR)

@@ -541,25 +541,67 @@ assign o_snk2_flush                         = snk_flush[2];
 assign o_snk3_flush                         = snk_flush[3];
 
 //Status Output
-assign o_src0_status[`BIT_STS_BUSY]         = src_dma_busy[0];
-assign o_src1_status[`BIT_STS_BUSY]         = src_dma_busy[1];
-assign o_src2_status[`BIT_STS_BUSY]         = src_dma_busy[2];
-assign o_src3_status[`BIT_STS_BUSY]         = src_dma_busy[3];
+assign o_src0_status[`BIT_CFG_DMA_ENABLE]                     = dma_enable[0];
+assign o_src1_status[`BIT_CFG_DMA_ENABLE]                     = dma_enable[1];
+assign o_src2_status[`BIT_CFG_DMA_ENABLE]                     = dma_enable[2];
+assign o_src3_status[`BIT_CFG_DMA_ENABLE]                     = dma_enable[3];
 
-assign o_src0_status[`BIT_STS_FIN]          = src_dma_finished[0];
-assign o_src1_status[`BIT_STS_FIN]          = src_dma_finished[1];
-assign o_src2_status[`BIT_STS_FIN]          = src_dma_finished[2];
-assign o_src3_status[`BIT_STS_FIN]          = src_dma_finished[3];
+assign o_src0_status[`BIT_STS_BUSY]                           = src_dma_busy[0];
+assign o_src1_status[`BIT_STS_BUSY]                           = src_dma_busy[1];
+assign o_src2_status[`BIT_STS_BUSY]                           = src_dma_busy[2];
+assign o_src3_status[`BIT_STS_BUSY]                           = src_dma_busy[3];
 
-assign o_src0_status[`BIT_STS_ERR_CONFLICT_SINK] = src_err_conflict_sink[0];
-assign o_src1_status[`BIT_STS_ERR_CONFLICT_SINK] = src_err_conflict_sink[1];
-assign o_src2_status[`BIT_STS_ERR_CONFLICT_SINK] = src_err_conflict_sink[2];
-assign o_src3_status[`BIT_STS_ERR_CONFLICT_SINK] = src_err_conflict_sink[3];
+assign o_src0_status[`BIT_STS_FIN]                            = src_dma_finished[0];
+assign o_src1_status[`BIT_STS_FIN]                            = src_dma_finished[1];
+assign o_src2_status[`BIT_STS_FIN]                            = src_dma_finished[2];
+assign o_src3_status[`BIT_STS_FIN]                            = src_dma_finished[3];
 
-assign o_src0_status[`BIT_CFG_DMA_ENABLE]       = dma_enable[0];
-assign o_src1_status[`BIT_CFG_DMA_ENABLE]       = dma_enable[1];
-assign o_src2_status[`BIT_CFG_DMA_ENABLE]       = dma_enable[2];
-assign o_src3_status[`BIT_CFG_DMA_ENABLE]       = dma_enable[3];
+assign o_src0_status[`BIT_STS_ERR_CONFLICT_SINK]              = src_err_conflict_sink[0];
+assign o_src1_status[`BIT_STS_ERR_CONFLICT_SINK]              = src_err_conflict_sink[1];
+assign o_src2_status[`BIT_STS_ERR_CONFLICT_SINK]              = src_err_conflict_sink[2];
+assign o_src3_status[`BIT_STS_ERR_CONFLICT_SINK]              = src_err_conflict_sink[3];
+
+assign o_src0_status[`BIT_STS_SNK_ACTIVATE_LOW]               = snk_activate[snka[0]][0];
+assign o_src1_status[`BIT_STS_SNK_ACTIVATE_LOW]               = snk_activate[snka[1]][0];
+assign o_src2_status[`BIT_STS_SNK_ACTIVATE_LOW]               = snk_activate[snka[2]][0];
+assign o_src3_status[`BIT_STS_SNK_ACTIVATE_LOW]               = snk_activate[snka[3]][0];
+
+assign o_src0_status[`BIT_STS_SNK_ACTIVATE_HIGH]              = snk_activate[snka[0]][1];
+assign o_src1_status[`BIT_STS_SNK_ACTIVATE_HIGH]              = snk_activate[snka[1]][1];
+assign o_src2_status[`BIT_STS_SNK_ACTIVATE_HIGH]              = snk_activate[snka[2]][1];
+assign o_src3_status[`BIT_STS_SNK_ACTIVATE_HIGH]              = snk_activate[snka[3]][1];
+
+assign o_src0_status[`BIT_STS_SNK_READY_LOW]                  = snk_ready[snka[0]][0];
+assign o_src1_status[`BIT_STS_SNK_READY_LOW]                  = snk_ready[snka[1]][0];
+assign o_src2_status[`BIT_STS_SNK_READY_LOW]                  = snk_ready[snka[2]][0];
+assign o_src3_status[`BIT_STS_SNK_READY_LOW]                  = snk_ready[snka[3]][0];
+
+assign o_src0_status[`BIT_STS_SNK_READY_HIGH]                 = snk_ready[snka[0]][1];
+assign o_src1_status[`BIT_STS_SNK_READY_HIGH]                 = snk_ready[snka[1]][1];
+assign o_src2_status[`BIT_STS_SNK_READY_HIGH]                 = snk_ready[snka[2]][1];
+assign o_src3_status[`BIT_STS_SNK_READY_HIGH]                 = snk_ready[snka[3]][1];
+
+assign o_src0_status[`BIT_STS_SRC_ACTIVATE]                   = src_activate[0];
+assign o_src1_status[`BIT_STS_SRC_ACTIVATE]                   = src_activate[1];
+assign o_src2_status[`BIT_STS_SRC_ACTIVATE]                   = src_activate[2];
+assign o_src3_status[`BIT_STS_SRC_ACTIVATE]                   = src_activate[3];
+
+assign o_src0_status[`BIT_STS_SRC_READY]                      = src_ready[0];
+assign o_src1_status[`BIT_STS_SRC_READY]                      = src_ready[1];
+assign o_src2_status[`BIT_STS_SRC_READY]                      = src_ready[2];
+assign o_src3_status[`BIT_STS_SRC_READY]                      = src_ready[3];
+
+assign o_src0_status[`BIT_STS_SRC_STATE3:`BIT_STS_SRC_STATE0] = state[0];
+assign o_src1_status[`BIT_STS_SRC_STATE3:`BIT_STS_SRC_STATE0] = state[1];
+assign o_src2_status[`BIT_STS_SRC_STATE3:`BIT_STS_SRC_STATE0] = state[2];
+assign o_src3_status[`BIT_STS_SRC_STATE3:`BIT_STS_SRC_STATE0] = state[3];
+
+
+//Put the rest to zero
+assign o_src0_status[31:`BIT_STS_SRC_STATE3 + 1] = 0;
+assign o_src1_status[31:`BIT_STS_SRC_STATE3 + 1] = 0;
+assign o_src2_status[31:`BIT_STS_SRC_STATE3 + 1] = 0;
+assign o_src3_status[31:`BIT_STS_SRC_STATE3 + 1] = 0;
 
 //Put all the commands into the program memory block
 assign cmd_src_address[0]     = cmd_src_address0;
@@ -778,10 +820,13 @@ always @ (posedge clk) begin
       src_enable[i]                          <=  0;
       src_strobe[i]                          <=  0;
       src_flush[i]                           <=  0;
+      src_dma_finished[i]                    <=  0;
 
-      snk_strobe[snka[i]]                    <=  0;
-      snk_in_use[snka[i]]                    <=  dma_enable[i];
-      snk_flush[snka[i]]                     <=  0;
+      if (dma_enable[i] && snk_in_use[snka[i]]) begin
+        snk_strobe[snka[i]]                  <=  0;
+        snk_flush[snka[i]]                   <=  0;
+      end
+      //snk_in_use[snka[i]]                    <=  dma_enable[i];
 
       case (state[i])
         IDLE: begin
@@ -795,7 +840,7 @@ always @ (posedge clk) begin
             src_count[i]                     <= 0;
             src_activate[i]                  <= 1;
           end
-          else begin 
+          else begin
             if (src_count[i] < src_size[i]) begin
                 src_strobe[i]                <= 1;
             end
@@ -827,6 +872,8 @@ always @ (posedge clk) begin
           src_address[i]                      <= cmd_src_address[ip[i]];
           curr_dest_address[i]                <= cmd_dest_address[ip[i]];  //  Mutable, Copy to channel specific value
           snk_address[snka[i]]                <= cmd_dest_address[ip[i]];
+          snk_in_use[snka[i]]                 <= 1;
+          channel_count[i]                    <= 0;
 
           //Initial Flag Configuration
           inst_ingress_ready[ip[i]]           <= 1;
@@ -848,7 +895,6 @@ always @ (posedge clk) begin
             src_address[i]                    <= cmd_src_address[ip[i]];
           end
           curr_count[i]                       <= cmd_count[ip[i]];
-          channel_count[i]                    <= 0;
           snk_data_count[snka[i]]             <= cmd_count[ip[i]];
 
           inst_busy[ip[i]]                    <= 0;
@@ -956,6 +1002,7 @@ always @ (posedge clk) begin
             //Reached the end of an instruction
 //XXX: Fix End Command
             if (channel_count[i] >= curr_count[i] && !snk_strobe[snka[i]]) begin
+            //if (snk_finished[snka[i]]) begin
               state[i]                        <= END_COMMAND;
             end
           end
@@ -965,7 +1012,7 @@ always @ (posedge clk) begin
         end
         END_COMMAND: begin
           snk_enable[snka[i]]                 <= 0;
-          if (dma_enable[i]) begin 
+          if (dma_enable[i]) begin
             if (!flag_dest_data_quantum[snka[i]] && (snk_count[snka[i]] > 0)) begin
               snk_activate[snka[i]]             <= 0;
               snk_address[snka[i]]              <= curr_dest_address[i];
@@ -974,12 +1021,13 @@ always @ (posedge clk) begin
               inst_busy[ip[i]]                  <= 0;
               inst_ingress_ready[ip[i]]         <= 1;
               inst_egress_ready[ip[i]]          <= 1;
-           
+
               if (flag_instruction_continue[ip[i]]) begin
-                ip[i]                             <= cmd_next[ip[i]];
+                ip[i]                                 <= cmd_next[ip[i]];
                 inst_ingress_ready[cmd_next[ip[i]]]   <= 1;
-                inst_egress_ready[cmd_next[ip[i]]]<= 0;
-                state[i]                          <= SETUP_COMMAND;
+                inst_egress_ready[cmd_next[ip[i]]]    <= 0;
+                channel_count[i]                      <= 0;
+                state[i]                              <= SETUP_COMMAND;
               end
               else begin
                 state[i]                          <= FLUSH;
@@ -989,12 +1037,13 @@ always @ (posedge clk) begin
               inst_busy[ip[i]]                  <= 0;
               inst_ingress_ready[ip[i]]         <= 1;
               inst_egress_ready[ip[i]]          <= 1;
-           
+
               if (flag_instruction_continue[ip[i]]) begin
-                ip[i]                             <= cmd_next[ip[i]];
+                ip[i]                                 <= cmd_next[ip[i]];
                 inst_ingress_ready[cmd_next[ip[i]]]   <= 1;
-                inst_egress_ready[cmd_next[ip[i]]]<= 0;
-                state[i]                          <= SETUP_COMMAND;
+                inst_egress_ready[cmd_next[ip[i]]]    <= 0;
+                channel_count[i]                      <= 0;
+                state[i]                              <= SETUP_COMMAND;
               end
               else begin
                 state[i]                          <= FLUSH;
@@ -1041,8 +1090,10 @@ always @ (posedge clk) begin
           inst_busy[ip[i]]                    <=  0;
           inst_ingress_ready[ip[i]]           <=  0;
           inst_egress_ready[ip[i]]            <=  0;
+          src_dma_finished[i]                 <=  1;
           if (!dma_enable[i]) begin
-            state[i]                          <= IDLE;
+            snk_in_use[snka[i]]               <=  0;
+            state[i]                          <=  IDLE;
           end
         end
       endcase

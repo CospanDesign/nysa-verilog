@@ -51,7 +51,6 @@ module test_mem_dev #(
 //Registers/Wires
 reg     [ADDRESS_WIDTH - 1:0]           mem_addr_in;
 reg     [ADDRESS_WIDTH - 1:0]           mem_addr_out;
-reg     [23:0]                          local_write_count;
 reg     [23:0]                          mem_write_count;
 wire                                    mem_write_overflow;
 reg     [23:0]                          local_read_size;
@@ -140,7 +139,7 @@ ppfifo#(
   .read_count           (f2m_size       ),
   .read_data            (f2m_data       )
 
-  //.inactive             ( )
+  //.inactive           (               )
 
 );
 
@@ -159,7 +158,7 @@ ppfifo#(
   .write_strobe         (m2f_strobe     ),
   .write_data           (m2f_data       ),
 
-  //.starved              ( ),
+  //.starved            (               ),
 
   //Read
   .read_clock           (clk            ),
@@ -169,7 +168,7 @@ ppfifo#(
   .read_count           (read_size      ),
   .read_data            (read_data      )
 
-  //.inactive             ( )
+  //.inactive           (               )
 
 );
 
@@ -177,11 +176,11 @@ ppfifo#(
 assign  posedge_write_enable        =   !prev_write_enable  && write_enable;
 assign  posedge_read_enable         =   !prev_read_enable   && read_enable;
 
-assign  mem_write_overflow          =   (mem_write_count    >  local_write_count);
-assign  write_finished              =   ((mem_write_count    >= local_write_count) && write_fifo_empty);
+assign  mem_write_overflow          =   ((write_count > 0) && (mem_write_count >  write_count));
+assign  write_finished              =   ((write_count > 0) && (mem_write_count >= write_count) && write_fifo_empty);
 
-assign  mem_read_overflow           =   (mem_read_count     >  local_read_size);
-assign  read_finished               =   (mem_read_count     >= local_read_size);
+assign  mem_read_overflow           =   ((local_read_size > 0) && (mem_read_count >  local_read_size));
+assign  read_finished               =   ((local_read_size > 0) && (mem_read_count >= local_read_size));
 
 assign din                          =   fill_mem ? fill_mem_data: f2m_data;
 assign wea                          =   fill_mem ? fill_mem_wea: f2m_strobe;
@@ -213,7 +212,6 @@ always @ (posedge clk) begin
     prev_write_enable               <=  0;
     prev_read_enable                <=  0;
 
-    local_write_count               <=  0;
     local_read_size                 <=  0;
     mem_write_count                 <=  0;
     mem_read_count                  <=  0;
@@ -243,7 +241,6 @@ always @ (posedge clk) begin
         fill_mem                    <= 0;
         fill_mem_wea                <= 0;
     end
-
   end
   else begin
     //Strobes
@@ -292,13 +289,16 @@ always @ (posedge clk) begin
     //Store Memory Address
     if (posedge_write_enable) begin
         mem_addr_in                 <=  write_addr[ADDRESS_WIDTH - 1: 0];
-        local_write_count           <=  write_count;
         mem_write_count             <=  0;
     end
     if (posedge_read_enable) begin
         mem_addr_out                <=  read_addr[ADDRESS_WIDTH - 1: 0];
         local_read_size             <=  read_count;
         mem_read_count              <=  0;
+    end
+
+    if (!read_enable) begin
+        local_read_size             <=  0;
     end
 
     //If available get a peice of the FIFO that I can write data to the memory
@@ -332,7 +332,7 @@ always @ (posedge clk) begin
         !mem_read_strobe && (m2f_activate > 0) &&
         ((m2f_count >= m2f_size) ||
          (mem_read_count > 0 &&
-          m2f_count >= mem_read_count))) begin
+          mem_read_count >= local_read_size))) begin
       m2f_activate  <=  0;
     end
 
