@@ -71,7 +71,8 @@ always @ (posedge clk) begin
     if (o_wbs_ack & ~ i_wbs_stb)begin
       o_wbs_ack <= 0;
     end
-    if (i_wbs_stb & i_wbs_cyc) begin
+
+    if (!o_wbs_ack && i_wbs_stb & i_wbs_cyc) begin
       //master is requesting somethign
       if (i_wbs_we) begin
         //ROMS can't be written to
