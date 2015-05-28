@@ -144,20 +144,20 @@ assign  addr_out            = {r_rselect, r_address};
 
 
 //Debug
-wire  [23:0]                debug_f0_w_count;
-wire  [23:0]                debug_f1_w_count;
+//wire  [23:0]                debug_f0_w_count;
+//wire  [23:0]                debug_f1_w_count;
 
-wire  [23:0]                debug_f0_r_size;
-wire  [23:0]                debug_f1_r_size;
+//wire  [23:0]                debug_f0_r_size;
+//wire  [23:0]                debug_f1_r_size;
 
 //wire  [23:0]                debug_f0_r_count;
 //wire  [23:0]                debug_f1_r_count;
 
-assign  debug_f0_w_count    = w_count[0];
-assign  debug_f1_w_count    = w_count[1];
+//assign  debug_f0_w_count    = w_count[0];
+//assign  debug_f1_w_count    = w_count[1];
 
-assign  debug_f0_r_size     = r_size[0];
-assign  debug_f1_r_size     = r_size[1];
+//assign  debug_f0_r_size     = r_size[0];
+//assign  debug_f1_r_size     = r_size[1];
 
 assign  inactive            = (w_count[0] == 0) &&
                               (w_count[1] == 0) &&
