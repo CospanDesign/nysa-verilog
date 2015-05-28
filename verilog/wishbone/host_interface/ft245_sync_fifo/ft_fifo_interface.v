@@ -148,7 +148,6 @@ wire  [1:0]                         if_write_ready;
 reg   [1:0]                         if_write_activate;
 wire  [23:0]                        if_write_fifo_size;
 wire                                if_write_strobe;
-wire                                if_starved;
 
 wire                                if_read_strobe;
 wire                                if_read_ready;
@@ -179,24 +178,25 @@ ppfifo # (
   .DATA_WIDTH(`IN_FIFO_DATA_SIZE),
   .ADDRESS_WIDTH(`IN_FIFO_ADDRESS_WIDTH)
 ) fifo_in (
-  .reset(rst),
+  .reset           (rst                ),
 
   //write side
-  .write_clock(ftdi_clk),
-  .write_data(if_write_data),
-  .write_ready(if_write_ready),
-  .write_activate(if_write_activate),
-  .write_fifo_size(if_write_fifo_size),
-  .write_strobe(if_write_strobe),
-  .starved(if_starved),
+  .write_clock     (ftdi_clk           ),
+  .write_data      (if_write_data      ),
+  .write_ready     (if_write_ready     ),
+  .write_activate  (if_write_activate  ),
+  .write_fifo_size (if_write_fifo_size ),
+  .write_strobe    (if_write_strobe    ),
+  .starved         (                   ),
 
   //read side
-  .read_clock(clk),
-  .read_strobe(if_read_strobe),
-  .read_ready(if_read_ready),
-  .read_activate(if_read_activate),
-  .read_count(if_read_count),
-  .read_data(if_read_data)
+  .read_clock      (clk                ),
+  .read_strobe     (if_read_strobe     ),
+  .read_ready      (if_read_ready      ),
+  .read_activate   (if_read_activate   ),
+  .read_count      (if_read_count      ),
+  .read_data       (if_read_data       ),
+  .inactive        (                   )
 );
 
 
@@ -205,24 +205,25 @@ ppfifo # (
   .DATA_WIDTH(`OUT_FIFO_DATA_SIZE),
   .ADDRESS_WIDTH(`OUT_FIFO_ADDRESS_WIDTH)
 ) fifo_out (
-  .reset(rst),
+  .reset           (rst                                  ),
 
   //write side
-  .write_clock(clk),
-  .write_data(of_write_data),
-  .write_ready(of_write_ready),
-  .write_activate(of_write_activate),
-  .write_fifo_size(of_write_fifo_size),
-  .write_strobe(of_write_strobe),
-  .starved(out_fifo_starved),
+  .write_clock     (clk                                  ),
+  .write_data      (of_write_data                        ),
+  .write_ready     (of_write_ready                       ),
+  .write_activate  (of_write_activate                    ),
+  .write_fifo_size (of_write_fifo_size                   ),
+  .write_strobe    (of_write_strobe                      ),
+  .starved         (out_fifo_starved                     ),
 
   //read side
-  .read_clock(ftdi_clk),
-  .read_strobe(of_read_strobe & ftdi_transmit_ready),
-  .read_ready(of_read_ready),
-  .read_activate(of_read_activate),
-  .read_count(of_read_count),
-  .read_data(of_read_data)
+  .read_clock      (ftdi_clk                             ),
+  .read_strobe     (of_read_strobe & ftdi_transmit_ready ),
+  .read_ready      (of_read_ready                        ),
+  .read_activate   (of_read_activate                     ),
+  .read_count      (of_read_count                        ),
+  .read_data       (of_read_data                         ),
+  .inactive        (                                     )
 );
 
 

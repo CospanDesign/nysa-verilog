@@ -145,10 +145,6 @@ wire    [15:0]      wdebug;
 //reg     [15:0]      rdebug;
 //assign  debug       = wdebug;
 assign  o_ftdi_debug = ftdi_debug;
-
-
-wire    [7:0]       out_d;
-assign              out_d = out_packet[position];
 assign              o_ih_reset  = 0;
 
 //modules

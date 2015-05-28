@@ -145,7 +145,7 @@ module wishbone_master (
   reg                 prev_int          = 0;
 
 
-  reg                 interrupt_mask    = 32'h00000000;
+  reg [31:0]          interrupt_mask    = 32'h00000000;
 
   reg [31:0]          nack_timeout      = `DEF_NACK_TIMEOUT;
   reg [31:0]          nack_count        = 0;
@@ -235,7 +235,7 @@ always @ (posedge clk) begin
     o_data          <= 32'h0;
     //o_data_count  <= 28'h0;
     local_address     <= 32'h0;
-    local_data        <= 32'h0;
+    //local_data        <= 32'h0;
     local_data_count  <= 27'h0;
     master_flags      <= 32'h0;
     rw_count          <= 0;
@@ -496,7 +496,7 @@ always @ (posedge clk) begin
           nack_count               <= nack_timeout;
 
           local_address            <= i_address;
-          local_data               <= i_data;
+          //local_data               <= i_data;
           //o_data_count           <= 0;
 
           case (real_command)
