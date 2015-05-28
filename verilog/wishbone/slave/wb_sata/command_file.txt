@@ -1,0 +1,43 @@
+#Add other command line options here
++libext+.v
++incdir+${NYSA}/verilog
+#+incdir+rtl/wb_sata_defines.v
++incdir+rtl
+#+incdir+${NYSA_SATA}/rtl/sata_defines.v
++incdir+${NYSA_SATA}/rtl
+
+rtl/wb_sata_defines.v
+${NYSA_SATA}/rtl/sata_defines.v
+
+${NYSA_SATA}/rtl/phy/oob_controller.v
+${NYSA_SATA}/rtl/phy/sata_phy_layer.v
+
+${NYSA_SATA}/rtl/link/crc.v
+${NYSA_SATA}/rtl/link/cont_controller.v
+${NYSA_SATA}/rtl/link/scrambler.v
+${NYSA_SATA}/rtl/link/sata_link_layer_write.v
+${NYSA_SATA}/rtl/link/sata_link_layer_read.v
+${NYSA_SATA}/rtl/link/sata_link_layer.v
+
+${NYSA_SATA}/rtl/transport/sata_transport_layer.v
+
+${NYSA_SATA}/rtl/command/sata_command_layer.v
+
+${NYSA_SATA}/rtl/generic/blk_mem.v
+${NYSA_SATA}/rtl/generic/cross_clock_enable.v
+${NYSA_SATA}/rtl/generic/debounce.v
+${NYSA_SATA}/rtl/generic/ppfifo.v
+
+${NYSA_SATA}/rtl/sata_stack.v
+
+#Use the NYSA keyword to point to the nysa-verilog base directory
+
+${NYSA}/verilog/sim/wishbone/interconnect/example_2port_interconnect/wishbone_interconnect.v
+${NYSA}/verilog/wishbone/master/wishbone_master.v
+
+#Example module from Xilinx
+#${XILINX}/ISE/verilog/src/glbl.v
+
+rtl/wb_sata.v
+sim/tb_wishbone_master.v
+
