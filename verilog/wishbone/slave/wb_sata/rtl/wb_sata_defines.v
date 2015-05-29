@@ -13,9 +13,10 @@
 
 //Status
 `define BIT_PLATFORM_READY              0
-`define BIT_LINKUP                      1
-`define BIT_COMMAND_LAYER_READY         2
-`define BIT_SATA_BUSY                   3
+`define BIT_PLATFORM_ERROR              1
+`define BIT_LINKUP                      2
+`define BIT_COMMAND_LAYER_READY         3
+`define BIT_SATA_BUSY                   4
 `define BIT_PHY_READY                   5
 `define BIT_LINK_LAYER_READY            6
 `define BIT_TRANSPORT_LAYER_READY       7

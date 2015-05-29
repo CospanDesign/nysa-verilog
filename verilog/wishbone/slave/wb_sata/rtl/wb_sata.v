@@ -70,6 +70,7 @@ module wb_sata (
   input               rst,
 
   input               sata_75mhz_clk,
+  input               i_platform_ready,
 
   //Add signals to control your device here
   //Wishbone Bus Signals
@@ -85,18 +86,20 @@ module wb_sata (
   //This interrupt can be controlled from this module or a submodule
   output  reg         o_wbs_int,
 
-  output      [31:0]  tx_dout,
-  output              tx_isk,
-  output              tx_comm_reset,
-  output              tx_comm_wake,
-  output              tx_elec_idle,
+  output      [31:0]  o_tx_dout,
+  output      [3:0]   o_tx_isk,
+  output              o_tx_comm_reset,
+  output              o_tx_comm_wake,
+  output              o_tx_elec_idle,
+  input               i_tx_oob_complete,
 
-  input       [31:0]  rx_din,
-  input       [3:0]   rx_isk,
-  input               rx_elec_idle,
-  input               comm_init_detect,
-  input               comm_wake_detect,
-  input               rx_byte_is_aligned
+  input       [31:0]  i_rx_din,
+  input       [3:0]   i_rx_isk,
+  input               i_rx_elec_idle,
+  input               i_comm_init_detect,
+  input               i_comm_wake_detect,
+
+  input               i_phy_error
 );
 
 //Local Parameters
@@ -112,6 +115,7 @@ localparam      HARD_DRIVE_ADDRESS_HIGH = 32'h00000005;
 //Local Registers/Wires
 reg   [31:0]    control;
 wire  [31:0]    status;
+wire            tx_isk;
 
 
 //wire  [23:0]  slw_in_data_addra;
@@ -122,7 +126,8 @@ wire  [31:0]    status;
 reg           data_in_clk_valid;
 reg           data_out_clk_valid;
 
-wire          platform_ready;
+wire          platform_error;
+
 wire          linkup;
 wire          sata_ready;
 wire          sata_busy;
@@ -221,7 +226,8 @@ sata_stack sata(
   .data_out_clk           (clk                    ),
   .data_out_clk_valid     (data_out_clk_valid     ),
 
-  .platform_ready         (platform_ready         ),   //the underlying physical platform is
+  .platform_ready         (i_platform_ready       ),   //the underlying physical platform is
+  .platform_error         (platform_error         ),
   .linkup                 (linkup                 ),   //link is finished
 
   .sata_ready             (sata_ready             ),
@@ -274,19 +280,21 @@ sata_stack sata(
   .transport_layer_ready  (transport_layer_ready  ),
   .link_layer_ready       (link_layer_ready       ),
   .phy_ready              (phy_ready              ),
+  .phy_error              (i_phy_error            ),
 
-  .tx_dout                (tx_dout                ),
+  .tx_dout                (o_tx_dout              ),
   .tx_isk                 (tx_isk                 ),
-  .tx_comm_reset          (tx_comm_reset          ),
-  .tx_comm_wake           (tx_comm_wake           ),
-  .tx_elec_idle           (tx_elec_idle           ),
+  .tx_comm_reset          (o_tx_comm_reset        ),
+  .tx_comm_wake           (o_tx_comm_wake         ),
+  .tx_elec_idle           (o_tx_elec_idle         ),
+  .tx_oob_complete        (i_tx_oob_complete      ),
 
-  .rx_din                 (rx_din                 ),
-  .rx_isk                 (rx_isk                 ),
-  .rx_elec_idle           (rx_elec_idle           ),
-  .comm_init_detect       (comm_init_detect       ),
-  .comm_wake_detect       (comm_wake_detect       ),
-  .rx_byte_is_aligned     (rx_byte_is_aligned     ),
+  .rx_din                 (i_rx_din               ),
+  .rx_isk                 (i_rx_isk               ),
+  .rx_elec_idle           (i_rx_elec_idle         ),
+  .comm_init_detect       (i_comm_init_detect     ),
+  .comm_wake_detect       (i_comm_wake_detect     ),
+
 
 
   .dbg_send_command_stb   (                       ),
@@ -394,6 +402,7 @@ sata_stack sata(
 );
 
 //Asynchronous Logic
+assign  o_tx_isk                 = (tx_isk) ? 4'b1111 : 4'b0000;
 //Synchronous Logic
 
 always @ (posedge clk) begin
@@ -518,7 +527,8 @@ always @ (posedge clk) begin
             STATUS: begin
               o_wbs_dat <= 0;
 
-              o_wbs_dat[`BIT_PLATFORM_READY                     ] <= platform_ready;
+              o_wbs_dat[`BIT_PLATFORM_READY                     ] <= i_platform_ready;
+              o_wbs_dat[`BIT_PLATFORM_ERROR                     ] <= platform_error;
               o_wbs_dat[`BIT_LINKUP                             ] <= linkup;
               o_wbs_dat[`BIT_COMMAND_LAYER_READY                ] <= sata_ready;
               o_wbs_dat[`BIT_SATA_BUSY                          ] <= sata_busy;
