@@ -218,7 +218,7 @@ always @ (posedge clk ) begin
       IDLE: begin
         //get a FIFO
         if (in_fifo_ready) begin
-          read_count        <=  in_fifo_count - 1;
+          read_count        <=  in_fifo_count - 24'h1;
           in_fifo_activate  <=  1;
           in_fifo_read      <=  1;
 
@@ -237,11 +237,11 @@ always @ (posedge clk ) begin
           found_id_byte       <=  1;
           assembler_state     <=  PROCESS_DATA;
           in_fifo_read        <=  1;
-          read_count            <=  read_count - 1;
+          read_count            <=  read_count - 24'h1;
         end
         else begin
           in_fifo_read          <=  1;
-          read_count            <=  read_count - 1;
+          read_count            <=  read_count - 24'h1;
         end
         if (read_count == 0) begin
           in_fifo_activate    <=  0;
@@ -250,18 +250,18 @@ always @ (posedge clk ) begin
       end
       PROCESS_DATA: begin
         input_dword             <= {input_dword[23:0], in_fifo_data};
-        if (packet_count == 3) begin
+        if (packet_count == 2'h3) begin
           assembler_state       <=  WAIT_FOR_INPUT_HANDLER;
         end
         else begin
-          packet_count          <= packet_count + 1;
+          packet_count          <= packet_count + 2'h1;
           if (read_count == 0) begin
             in_fifo_activate    <=  0;
             assembler_state     <=  IDLE;
           end
           else begin
             in_fifo_read        <=  1;
-            read_count          <= read_count - 1;
+            read_count          <= read_count - 24'h1;
           end
         end
       end
@@ -270,7 +270,7 @@ always @ (posedge clk ) begin
           packet_count          <=  0;
           if (read_count > 0) begin
             in_fifo_read        <=  1;
-            read_count          <= read_count - 1;
+            read_count          <= read_count - 24'h1;
             assembler_state     <=  PROCESS_DATA;
           end
           else begin
