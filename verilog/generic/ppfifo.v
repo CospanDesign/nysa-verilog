@@ -58,7 +58,6 @@ module ppfifo
 localparam FIFO_DEPTH = (1 << ADDRESS_WIDTH);
 
 //Local Registers/Wires
-assign  write_fifo_size     = FIFO_DEPTH;
 
 //Write Side
 wire                        ppfifo_ready;  // The write side only needs to
@@ -85,27 +84,6 @@ reg                         w_empty[1:0];
 reg                         w_reset;        //write side reset
 reg   [4:0]                 w_reset_timeout;
 wire                        ready;
-
-//assign  r_wselect           = (write_activate == 2'b00) ? 1'b0 :
-//                              (write_activate == 2'b01) ? 1'b0 :
-//                              (write_activate == 2'b10) ? 1'b1 :
-//                              reset ?                     1'b0 :
-//                              r_wselect;
-//                            //I know this can be shortened down but it's more
-//                            //readible thi way
-
-assign  addr_in             = {r_wselect, write_address};
-//assign  write_enable        = (write_activate > 0) && write_strobe;
-assign  ppfifo_ready        = !(w_reset || r_reset);
-assign  ready               = ppfifo_ready;
-
-//assign  wcc_tie_select      = (wcc_read_ready == 2'b00) ? 1'b0 :
-//                              (wcc_read_ready == 2'b01) ? 1'b0 :
-//                              (wcc_read_ready == 2'b10) ? 1'b1 :
-//                              wcc_tie_select;
-                                            // If the first FIFO is ready,
-                                            // then both FIFOs are ready then
-                                            // keep the first FIFO
 
 //Read Side
 wire  [ADDRESS_WIDTH: 0]    addr_out;     //Actual address to the BRAM
@@ -139,6 +117,31 @@ reg                         r_pre_read_wait;//Wait an extra cycle so the registe
                                             //the data to be registered
 wire  [DATA_WIDTH - 1: 0]   w_read_data;    //data from the read FIFO
 reg   [DATA_WIDTH - 1: 0]   r_read_data;    //data from the read FIFO
+
+
+
+//assign  r_wselect           = (write_activate == 2'b00) ? 1'b0 :
+//                              (write_activate == 2'b01) ? 1'b0 :
+//                              (write_activate == 2'b10) ? 1'b1 :
+//                              reset ?                     1'b0 :
+//                              r_wselect;
+//                            //I know this can be shortened down but it's more
+//                            //readible thi way
+
+assign  write_fifo_size     = FIFO_DEPTH;
+
+assign  addr_in             = {r_wselect, write_address};
+//assign  write_enable        = (write_activate > 0) && write_strobe;
+assign  ppfifo_ready        = !(w_reset || r_reset);
+assign  ready               = ppfifo_ready;
+
+//assign  wcc_tie_select      = (wcc_read_ready == 2'b00) ? 1'b0 :
+//                              (wcc_read_ready == 2'b01) ? 1'b0 :
+//                              (wcc_read_ready == 2'b10) ? 1'b1 :
+//                              wcc_tie_select;
+                                            // If the first FIFO is ready,
+                                            // then both FIFOs are ready then
+                                            // keep the first FIFO
 
 assign  addr_out            = {r_rselect, r_address};
 
@@ -291,8 +294,8 @@ always @ (posedge write_clock) begin
     w_reset_timeout <=  0;
   end
   else begin
-    if (w_reset && (w_reset_timeout < 4'h4)) begin
-      w_reset_timeout <=  w_reset_timeout + 1;
+    if (w_reset && (w_reset_timeout < 5'h4)) begin
+      w_reset_timeout <=  w_reset_timeout + 5'h1;
     end
     else begin
       w_reset       <=  0;
@@ -306,8 +309,8 @@ always @ (posedge read_clock) begin
     r_reset_timeout   <=  0;
   end
   else begin
-    if (r_reset && (r_reset_timeout < 4'h4)) begin
-      r_reset_timeout <= r_reset_timeout + 1;
+    if (r_reset && (r_reset_timeout < 5'h4)) begin
+      r_reset_timeout <= r_reset_timeout + 5'h1;
     end
     else begin
       r_reset         <=  0;
