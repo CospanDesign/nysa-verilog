@@ -27,13 +27,13 @@ SOFTWARE.
   SDB_VENDOR_ID:0x800000000000C594
 
   Set the Device ID (Hexcidecimal 32-bit Number)
-  SDB_DEVICE_ID:0x800000000000C594
+  SDB_DEVICE_ID:0x00000010
 
   Set the version of the Core XX.XXX.XXX Example: 01.000.000
   SDB_CORE_VERSION:00.000.001
 
   Set the Device Name: 19 UNICODE characters
-  SDB_NAME:wb_sata
+  SDB_NAME:sata
 
   Set the class of the device (16 bits) Set as 0
   SDB_ABI_CLASS:0
@@ -45,7 +45,7 @@ SOFTWARE.
   SDB_ABI_VERSION_MINOR:0x01
 
   Set the Module URL (63 Unicode Characters)
-  SDB_MODULE_URL:http://www.example.com
+  SDB_MODULE_URL:http://www.cospandesign.com
 
   Set the date of module YYYY/MM/DD
   SDB_DATE:2015/05/27
@@ -222,8 +222,10 @@ sata_stack sata(
   .clk                    (sata_75mhz_clk         ),   //clock used to run the stack
 
   .data_in_clk            (clk                    ),
+  //.data_in_clk            (1'b0                    ),
   .data_in_clk_valid      (data_in_clk_valid      ),
   .data_out_clk           (clk                    ),
+  //.data_out_clk           (1'b0                    ),
   .data_out_clk_valid     (data_out_clk_valid     ),
 
   .platform_ready         (i_platform_ready       ),   //the underlying physical platform is
@@ -403,6 +405,19 @@ sata_stack sata(
 
 //Asynchronous Logic
 assign  o_tx_isk                 = (tx_isk) ? 4'b1111 : 4'b0000;
+
+//Assigns are only for debugging
+assign  write_data_en            = 1'b0;
+assign  read_data_en             = 1'b0;
+assign  single_rdwr              = 1'b1;
+
+assign  user_din                = 32'h0;
+assign  user_din_stb            = 1'b0;
+assign  user_din_activate       = 2'b0;
+
+assign  user_dout_activate      = 1'b0;
+assign  user_dout_stb           = 1'b0;
+
 //Synchronous Logic
 
 always @ (posedge clk) begin
