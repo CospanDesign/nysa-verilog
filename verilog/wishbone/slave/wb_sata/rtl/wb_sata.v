@@ -87,14 +87,14 @@ module wb_sata (
   output  reg         o_wbs_int,
 
   output      [31:0]  o_tx_dout,
-  output      [3:0]   o_tx_isk,
+  output      [3:0]   o_tx_is_k,
   output              o_tx_comm_reset,
   output              o_tx_comm_wake,
   output              o_tx_elec_idle,
   input               i_tx_oob_complete,
 
   input       [31:0]  i_rx_din,
-  input       [3:0]   i_rx_isk,
+  input       [3:0]   i_rx_is_k,
   input               i_rx_elec_idle,
   input               i_comm_init_detect,
   input               i_comm_wake_detect,
@@ -115,7 +115,7 @@ localparam      HARD_DRIVE_ADDRESS_HIGH = 32'h00000005;
 //Local Registers/Wires
 reg   [31:0]    control;
 wire  [31:0]    status;
-wire            tx_isk;
+wire            tx_is_k;
 
 
 //wire  [23:0]  slw_in_data_addra;
@@ -215,7 +215,6 @@ reg           prev_set_device_bits_stb;
 reg           pos_edge_set_device_bits_stb;
 
 
-
 //Submodules
 sata_stack sata(
   .rst                    (rst                    ),   //reset
@@ -285,14 +284,14 @@ sata_stack sata(
   .phy_error              (i_phy_error            ),
 
   .tx_dout                (o_tx_dout              ),
-  .tx_isk                 (tx_isk                 ),
+  .tx_is_k                 (tx_is_k                 ),
   .tx_comm_reset          (o_tx_comm_reset        ),
   .tx_comm_wake           (o_tx_comm_wake         ),
   .tx_elec_idle           (o_tx_elec_idle         ),
   .tx_oob_complete        (i_tx_oob_complete      ),
 
   .rx_din                 (i_rx_din               ),
-  .rx_isk                 (i_rx_isk               ),
+  .rx_is_k                 (i_rx_is_k               ),
   .rx_elec_idle           (i_rx_elec_idle         ),
   .comm_init_detect       (i_comm_init_detect     ),
   .comm_wake_detect       (i_comm_wake_detect     ),
@@ -404,7 +403,7 @@ sata_stack sata(
 );
 
 //Asynchronous Logic
-assign  o_tx_isk                 = (tx_isk) ? 4'b1111 : 4'b0000;
+assign  o_tx_is_k                 = (tx_is_k) ? 4'b1111 : 4'b0000;
 
 //Assigns are only for debugging
 assign  write_data_en            = 1'b0;
