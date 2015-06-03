@@ -403,7 +403,7 @@ sata_stack sata(
 );
 
 //Asynchronous Logic
-assign  o_tx_is_k                 = (tx_is_k) ? 4'b1111 : 4'b0000;
+assign  o_tx_is_k                 = (tx_is_k) ? 4'b0001 : 4'b0000;
 
 //Assigns are only for debugging
 assign  write_data_en            = 1'b0;
