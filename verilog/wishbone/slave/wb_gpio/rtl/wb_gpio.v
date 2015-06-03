@@ -82,7 +82,7 @@ module wb_gpio#(
   input               clk,
   input               rst,
 
-  output      [31:0]  debug,
+  //output      [31:0]  debug,
   //Add signals to control your device here
 
   //Wishbone Bus Signals
@@ -260,6 +260,7 @@ initial begin
 end
 */
 
+/*
 assign  debug[0]  = gpio[2];
 assign  debug[1]  = gpio[3];
 
@@ -282,6 +283,7 @@ assign  debug[12] = interrupts[2];
 assign  debug[13] = interrupts[3];
 
 assign  debug[14] = clear_interrupts;
+*/
 
 
 always @ (posedge clk) begin
