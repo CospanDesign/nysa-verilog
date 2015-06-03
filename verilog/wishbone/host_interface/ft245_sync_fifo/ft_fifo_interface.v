@@ -3,7 +3,7 @@ Distributed under the MIT licesnse.
 Copyright (c) 2011 Dave McCoy (dave.mccoy@cospandesign.com)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
-this start_of_frametware and associated documentation files (the "Software"), 
+this start_of_frametware and associated documentation files (the "Software"),
 to deal in the Software without restriction, including without limitation the
 rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is furnished
@@ -63,7 +63,6 @@ module ft_fifo_interface (
   ftdi_rd_n,
   ftdi_rde_n,
   ftdi_oe_n,
-  ftdi_suspend_n,
   ftdi_siwu,
 
   debug
@@ -97,7 +96,6 @@ output              ftdi_wr_n;
 input               ftdi_rde_n;
 output              ftdi_oe_n;
 output              ftdi_rd_n;
-input               ftdi_suspend_n;
 output              ftdi_siwu;
 
 //Debug
@@ -113,7 +111,6 @@ wire                ftdi_write_strobe;
 //reg                 ftdi_write_strobe;
 wire                ftdi_read_strobe;
 reg                 ftdi_send_immediately;
-wire                ftdi_suspend;
 
 reg                 prev_ftdi_read_available;
 reg                 ftdi_start_of_frame;
@@ -236,7 +233,6 @@ assign  ftdi_oe_n           = ~ftdi_output_enable;
 assign  ftdi_wr_n           = ~ftdi_write_strobe;
 assign  ftdi_rd_n           = ~ftdi_read_strobe;
 assign  ftdi_siwu           = ~ftdi_send_immediately;
-assign  ftdi_suspend        = ~ftdi_suspend_n;
 
 //local wires for input FIFO to the external interface
 assign  if_read_strobe      = in_fifo_read;
@@ -253,7 +249,7 @@ assign  if_write_data[7:0]  = ftdi_data;
 assign  if_write_strobe     = ftdi_read_strobe;
 
 //output ppfifo
-assign  of_write_data       = out_fifo_data[7:0]; 
+assign  of_write_data       = out_fifo_data[7:0];
 assign  out_fifo_ready      = of_write_ready;
 assign  of_write_activate   = out_fifo_activate;
 assign  out_fifo_write_size = of_write_fifo_size;
@@ -316,12 +312,12 @@ end
 
 always @ (posedge ftdi_clk) begin
   if (rst) begin
-    read_state                <=  IDLE;    
+    read_state                <=  IDLE;
     ftdi_output_enable        <=  0;
     if_write_count            <=  0;
     if_write_activate         <=  0;
     enable_reading            <=  0;
-    
+
   end
   else begin
     enable_reading            <=  0;
@@ -335,7 +331,7 @@ always @ (posedge ftdi_clk) begin
           else begin
             if_write_activate[1]  <=  1;
           end
-          if_write_count          <=  if_write_fifo_size - 1;
+          if_write_count          <=  if_write_fifo_size - 24'h1;
           read_state              <=  WAIT_FOR_FTDI;
         end
       end
@@ -361,7 +357,7 @@ always @ (posedge ftdi_clk) begin
           read_state            <=  IDLE;
         end
         else if (if_write_strobe) begin
-          if_write_count  <=  if_write_count - 1;
+          if_write_count  <=  if_write_count - 24'h1;
         end
         //if the FTDI chip is empty release the write FIFO and disable the output enable
         if (!ftdi_read_available) begin
@@ -410,7 +406,7 @@ always @ (posedge ftdi_clk) begin
         end
         else if (of_read_strobe) begin
           //of_read_strobe    <=  1;
-          out_data_count    <=  out_data_count  - 1;
+          out_data_count    <=  out_data_count  - 24'h1;
         end
       end
       default: begin

@@ -98,7 +98,6 @@ reg                 out_fifo_write;
 wire    [23:0]      out_fifo_write_size;
 wire    [1:0]       out_fifo_ready;
 reg     [1:0]       out_fifo_activate;
-wire                out_fifo_starved;
 reg     [7:0]       out_fifo_data;
 reg     [23:0]      data_count;
 
@@ -141,7 +140,7 @@ reg     [3:0]       oh_status;
 
 //debug interface
 wire    [15:0]      ftdi_debug;
-wire    [15:0]      wdebug;
+//wire    [15:0]      wdebug;
 //reg     [15:0]      rdebug;
 //assign  debug       = wdebug;
 assign  o_ftdi_debug = ftdi_debug;
@@ -165,7 +164,7 @@ ft_fifo_interface ft (
   .out_fifo_write_size  (out_fifo_write_size ),
   .out_fifo_ready       (out_fifo_ready      ),
   .out_fifo_activate    (out_fifo_activate   ),
-  .out_fifo_starved     (out_fifo_starved    ),
+  .out_fifo_starved     (                    ),
   .out_fifo_data        (out_fifo_data       ),
 
   //FTDI FIFO interface
@@ -176,7 +175,6 @@ ft_fifo_interface ft (
   .ftdi_rd_n            (o_ftdi_rd_n         ),
   .ftdi_rde_n           (i_ftdi_rde_n        ),
   .ftdi_oe_n            (o_ftdi_oe_n         ),
-  .ftdi_suspend_n       (o_ftdi_suspend_n    ),
   .ftdi_siwu            (o_ftdi_siwu         ),
 
   .debug                (ftdi_debug          )
@@ -188,13 +186,15 @@ assign  dword_ready         = (assembler_state == WAIT_FOR_INPUT_HANDLER);
 
 
 //debug connections
-assign  wdebug[1:0]         = assembler_state;
+/*
+assign  wdebug[1:0]         = assembler_state[1:0];
 assign  wdebug[2]           = dword_ready;
 assign  wdebug[3]           = in_fifo_ready;
 assign  wdebug[4]           = in_fifo_activate;
 assign  wdebug[5]           = in_fifo_read;
 assign  wdebug[7:6]         = packet_count[1:0];
 assign  wdebug[15:8]        = in_fifo_data;
+*/
 
 //synchronous logic
 
@@ -363,27 +363,27 @@ always @ (posedge clk ) begin
       end
       WAIT_FOR_DATA: begin
         if (dword_ready && !o_ih_ready && i_master_ready) begin
-          read_dword          <=  1;
-          o_in_data             <=  input_dword;
+          read_dword              <=  1;
+          o_in_data               <=  input_dword;
           if(local_data_count > 0) begin
-              local_data_count  <=  local_data_count - 1;
+              local_data_count    <=  local_data_count - 24'h1;
           end
-          input_handler_state <=  NOTIFY_MASTER;
+          input_handler_state     <=  NOTIFY_MASTER;
         end
       end
       NOTIFY_MASTER: begin
         if (i_master_ready) begin
           o_ih_ready              <=  1;
           if (o_in_command[3:0] == `COMMAND_WRITE && local_data_count > 0) begin
-            input_handler_state <=  WAIT_FOR_DATA;
+            input_handler_state   <=  WAIT_FOR_DATA;
           end
           else begin
-            input_handler_state <=  IDLE;
+            input_handler_state   <=  IDLE;
           end
         end
       end
       default: begin
-        input_handler_state     <=  IDLE;
+        input_handler_state       <=  IDLE;
       end
     endcase
   end
@@ -442,14 +442,14 @@ always @ (posedge clk ) begin
           else begin
             out_fifo_activate[1]  <=  1;
           end
-          out_fifo_count        <=  out_fifo_write_size - 1;
+          out_fifo_count        <=  out_fifo_write_size - 24'h1;
           if ((     (oh_status == `READ_RESP) ||
                     (oh_status == `CORE_DUMP_RESP)
              ) && (data_count > 0)) begin
 
             output_handler_state <=  WRITE_MORE_DATA;
             out_packet_count     <=  0;
-            data_count           <= data_count - 1;
+            data_count           <= data_count - 24'h1;
           end
           else begin
             //send all data to the host
@@ -492,16 +492,16 @@ always @ (posedge clk ) begin
 
             //get the count for the data going out
           end
-          data_count            <=  i_out_data_count;
+          data_count            <=  i_out_data_count[23:0];
           position              <=  0;
           output_handler_state  <=  WRITE_TO_FIFO;
         end
       end
       WRITE_TO_FIFO: begin
         out_fifo_data           <=  out_packet[position];
-        position                <=  position + 1;
+        position                <=  position + 4'h1;
         out_fifo_write          <=  1;
-        out_fifo_count          <=  out_fifo_count - 1;
+        out_fifo_count          <=  out_fifo_count - 24'h1;
         if(position == out_packet_count) begin
           //were done sending the initial packet, check to see if there is more data to send
           //release this FIFO because the output FIFO is starving
