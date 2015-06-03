@@ -134,16 +134,11 @@ module wishbone_master (
   reg [31:0]          state             = IDLE;
   reg [31:0]          local_address     = 32'h0;
   reg [31:0]          local_data        = 32'h0;
-  reg [27:0]          local_data_count  = 27'h0;
+  reg [27:0]          local_data_count  = 28'h0;
   reg                 mem_bus_select;
 
   reg [31:0]          master_flags      = 32'h0;
-  reg [31:0]          rw_count          = 32'h0;
-  reg                 wait_for_slave    = 0;
-
-
   reg                 prev_int          = 0;
-
 
   reg [31:0]          interrupt_mask    = 32'h00000000;
 
@@ -179,7 +174,7 @@ module wishbone_master (
   wire                pos_edge_reset;
 
   // assigns
-  assign              o_data_count      = ((state == READ) || (state == DUMP_CORE)) ? local_data_count : 0;
+  assign              o_data_count      = ((state == READ) || (state == DUMP_CORE)) ? local_data_count : 28'h0;
   assign              command_flags     = i_command[31:16];
   assign              real_command      = i_command[15:0];
 
@@ -236,14 +231,11 @@ always @ (posedge clk) begin
     //o_data_count  <= 28'h0;
     local_address     <= 32'h0;
     //local_data        <= 32'h0;
-    local_data_count  <= 27'h0;
+    local_data_count  <= 28'h0;
     master_flags      <= 32'h0;
-    rw_count          <= 0;
     state             <= IDLE;
     mem_bus_select    <= 0;
     prev_int          <= 0;
-
-    wait_for_slave    <= 0;
 
     o_debug         <= 32'h00000000;
 
@@ -313,7 +305,7 @@ always @ (posedge clk) begin
               o_debug[9]  <=  ~o_debug[9];
               //finished the next double word
               nack_count    <= nack_timeout;
-              local_data_count  <= local_data_count - 1;
+              local_data_count  <= local_data_count - 28'h1;
               `ifdef MASTER_VERBOSE $display ("WBM: (burst mode) reading double word from memory"); `endif
               if ((command_flags & `FLAG_DISABLE_AUTO_INC) == 0) begin
                 o_mem_adr   <= o_mem_adr + 1;
@@ -347,7 +339,7 @@ always @ (posedge clk) begin
 //the nack count might need to be reset outside of these conditionals becuase
 //at this point we are waiting on the io handler
               nack_count          <= nack_timeout;
-              local_data_count    <= local_data_count - 1;
+              local_data_count    <= local_data_count - 28'h1;
               `ifdef MASTER_VERBOSE $display ("WBM: (burst mode) reading double word from peripheral"); `endif
               if ((command_flags & `FLAG_DISABLE_AUTO_INC) == 0) begin
                 o_per_adr           <= o_per_adr + 1;
@@ -387,7 +379,7 @@ always @ (posedge clk) begin
             o_master_ready          <=  1;
           end
           else if ((local_data_count > 1) && i_ready && (o_mem_stb == 0)) begin
-            local_data_count        <= local_data_count - 1;
+            local_data_count        <= local_data_count - 28'h1;
             `ifdef MASTER_VERBOSE $display ("WBM: (burst mode) writing another double word to memory"); `endif
             o_master_ready          <= 0;
             o_mem_stb               <= 1;
@@ -411,7 +403,7 @@ always @ (posedge clk) begin
             o_master_ready  <= 1;
           end
           else if ((local_data_count > 1) && i_ready && (o_per_stb == 0)) begin
-            local_data_count        <= local_data_count - 1;
+            local_data_count        <= local_data_count - 28'h1;
             o_debug[5]              <= ~o_debug[5];
             `ifdef MASTER_VERBOSE $display ("WBM: (burst mode) writing another double word to peripheral"); `endif
             o_master_ready          <=  0;
@@ -474,7 +466,7 @@ always @ (posedge clk) begin
             end
           endcase
           if (local_data_count > 0) begin
-             local_data_count <= local_data_count - 1;
+             local_data_count <= local_data_count - 28'h1;
            end
            else begin
             state                  <=  IDLE;
