@@ -270,6 +270,8 @@ always @ (posedge clk) begin
   end
 
   else begin
+    o_debug[0]      <=  1'b0;
+    o_debug[6]      <=  1'b0;
 
     //check for timeout conditions
     if (nack_count == 0) begin
@@ -483,7 +485,7 @@ always @ (posedge clk) begin
         o_master_ready             <= 1;
         mem_bus_select             <= 0;
         if (i_ready) begin
-          o_debug[6]               <= ~o_debug[6];
+          o_debug[6]               <= 1;
           mem_bus_select           <= 0;
           nack_count               <= nack_timeout;
 
@@ -496,7 +498,7 @@ always @ (posedge clk) begin
             `COMMAND_PING: begin
               `ifdef MASTER_VERBOSE $display ("WBM: ping"); `endif
               o_master_ready       <= 0;
-              o_debug[0]           <= ~o_debug[0];
+              o_debug[0]           <= 1'b1;
               o_status             <= ~i_command;
               o_address            <= 32'h00000000;
               o_data               <= S_PING_RESP;

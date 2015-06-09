@@ -83,6 +83,13 @@ module ft_master_interface (
 
 );
 
+
+wire ftdi_clk;
+BUFGP ftdi_bufg(
+  .I    (i_ftdi_clk   ),
+  .O    (ftdi_clk     )
+);
+
 //local wires/registers
 localparam           IDLE            = 0;
 
@@ -140,10 +147,10 @@ reg     [3:0]       oh_status;
 
 //debug interface
 wire    [15:0]      ftdi_debug;
-//wire    [15:0]      wdebug;
+wire    [15:0]      wdebug;
 //reg     [15:0]      rdebug;
-//assign  debug       = wdebug;
-assign  o_ftdi_debug = ftdi_debug;
+assign  o_ftdi_debug = wdebug;
+//assign  o_ftdi_debug = ftdi_debug;
 assign              o_ih_reset  = 0;
 
 //modules
@@ -168,7 +175,7 @@ ft_fifo_interface ft (
   .out_fifo_data        (out_fifo_data       ),
 
   //FTDI FIFO interface
-  .ftdi_clk             (i_ftdi_clk          ),
+  .ftdi_clk             (ftdi_clk            ),
   .ftdi_data            (io_ftdi_data        ),
   .ftdi_txe_n           (i_ftdi_txe_n        ),
   .ftdi_wr_n            (o_ftdi_wr_n         ),
@@ -186,15 +193,16 @@ assign  dword_ready         = (assembler_state == WAIT_FOR_INPUT_HANDLER);
 
 
 //debug connections
-/*
-assign  wdebug[1:0]         = assembler_state[1:0];
-assign  wdebug[2]           = dword_ready;
-assign  wdebug[3]           = in_fifo_ready;
+//assign  wdebug[1:0]         = assembler_state[1:0];
+assign  wdebug[0]           = (input_handler_state == NOTIFY_MASTER);
+assign  wdebug[1]           = (output_handler_state == WAIT_FOR_STATUS);
+//assign  wdebug[2]           = dword_ready;
+assign  wdebug[2]           = in_fifo_ready;
+assign  wdebug[3]           = (waiting_for_id);
 assign  wdebug[4]           = in_fifo_activate;
 assign  wdebug[5]           = in_fifo_read;
 assign  wdebug[7:6]         = packet_count[1:0];
 assign  wdebug[15:8]        = in_fifo_data;
-*/
 
 //synchronous logic
 
@@ -430,7 +438,7 @@ always @ (posedge clk ) begin
 
   end
   else begin
-    o_oh_ready                    <=  0;
+    o_oh_ready                  <=  0;
     out_fifo_write              <=  0;
     case (output_handler_state)
       IDLE: begin
