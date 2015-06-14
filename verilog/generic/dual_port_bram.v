@@ -42,11 +42,13 @@ output  reg   [DATA_WIDTH - 1: 0] b_dout;
 //Shared Memory
 reg     [DATA_WIDTH - 1: 0]       mem [(1 << ADDR_WIDTH) - 1: 0];
 
+generate
+if (MEM_FILE != "NOTHING") begin
 initial begin
-  if (MEM_FILE != "NOTHING") begin
     $readmemh(MEM_FILE, mem, 0, MEM_FILE_LENGTH - 1);
-  end
 end
+end
+endgenerate
 
 //Port A
 always @ (posedge a_clk) begin
