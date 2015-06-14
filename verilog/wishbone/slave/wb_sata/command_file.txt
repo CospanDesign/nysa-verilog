@@ -7,7 +7,17 @@
 +incdir+${NYSA_SATA}/rtl
 
 rtl/wb_sata_defines.v
+
+${NYSA}/verilog/generic/dpb.v
+${NYSA}/verilog/generic/cross_clock_strobe.v
+
 ${NYSA_SATA}/rtl/sata_defines.v
+
+${NYSA_SATA}/rtl/generic/cross_clock_enable.v
+
+${NYSA_SATA}/rtl/generic/blk_mem.v
+${NYSA_SATA}/rtl/generic/debounce.v
+${NYSA_SATA}/rtl/generic/ppfifo.v
 
 ${NYSA_SATA}/rtl/phy/oob_controller.v
 ${NYSA_SATA}/rtl/phy/sata_phy_layer.v
@@ -22,11 +32,6 @@ ${NYSA_SATA}/rtl/link/sata_link_layer.v
 ${NYSA_SATA}/rtl/transport/sata_transport_layer.v
 
 ${NYSA_SATA}/rtl/command/sata_command_layer.v
-
-${NYSA_SATA}/rtl/generic/blk_mem.v
-${NYSA_SATA}/rtl/generic/cross_clock_enable.v
-${NYSA_SATA}/rtl/generic/debounce.v
-${NYSA_SATA}/rtl/generic/ppfifo.v
 
 ${NYSA_SATA}/rtl/sata_stack.v
 

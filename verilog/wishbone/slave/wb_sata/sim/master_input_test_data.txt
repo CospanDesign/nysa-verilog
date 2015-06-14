@@ -7,6 +7,31 @@
 #Write one peice of data to the peripheral device 1, address 0, data 1
 00000000:00000001:01000000:00000001
 
+00000000:00000001:01000100:01234567
+#Write one peice of data to the peripheral device 1, address 0, data 1
+00000010:00000001:01000100:10000000
+11111111
+22222222
+33333333
+44444444
+55555555
+66666666
+77777777
+88888888
+99999999
+AAAAAAAA
+BBBBBBBB
+CCCCCCCC
+DDDDDDDD
+EEEEEEEE
+FFFFFFFF
+
+
+#Read a data back from the dual port ram
+00000010:00000002:01000100:00000000
+
+
+
 #Write three peices of data to the peripheral device 1, address 1, data A, B, C
 00000003:00000001:01000001:0000000A
 0000000B

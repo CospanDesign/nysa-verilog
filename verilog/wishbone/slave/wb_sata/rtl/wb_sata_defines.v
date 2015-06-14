@@ -9,6 +9,8 @@
 `define BIT_EN_INT_D2H_DATA_STB         6
 `define BIT_EN_INT_DMA_SETUP_STB        7
 `define BIT_EN_INT_SET_DEVICE_BITS_STB  9
+`define BIT_HD_RESET                    10
+`define BIT_EN_DMA_CONTROL              11
 
 
 //Status
@@ -22,16 +24,35 @@
 `define BIT_TRANSPORT_LAYER_READY       7
 `define BIT_HARD_DRIVE_ERROR            8
 `define BIT_PIO_DATA_READY              9
-
+`define BIT_RESET_ACTIVE                10
+`define BIT_RX_COMM_INIT_DETECT         11
+`define BIT_RX_COMM_WAKE_DETECT         12
+`define BIT_TX_COMM_RESET               13
+`define BIT_TX_COMM_WAKE                14
+`define BIT_TX_OOB_COMPLETE             15
 
 //Hard Drive Status
 `define BIT_D2H_INTERRUPT               0
 `define BIT_D2H_NOTIFICATION            1
 `define BIT_D2H_PMULT_LOW               4
 `define BIT_D2H_PMULT_HIGH              7
+`define BIT_D2H_FIS_LOW                 8
+`define BIT_D2H_FIS_HIGH                15
 `define BIT_D2H_STATUS_LOW              16
 `define BIT_D2H_STATUS_HIGH             23
 `define BIT_D2H_ERROR_LOW               24
 `define BIT_D2H_ERROR_HIGH              31
+
+`define BIT_OOB_STATE_HIGH              3
+`define BIT_OOB_STATE_LOW               0
+`define BIT_RESET_COUNT_HIGH            11
+`define BIT_RESET_COUNT_LOW             4
+
+//Local BUffer
+`define SATA_BUFFER_OFFSET              256
+`define SATA_BUFFER_WIDTH               9
+`define SATA_BUFFER_SIZE                (1 << (`SATA_BUFFER_WIDTH))
+
+
 
 `endif
