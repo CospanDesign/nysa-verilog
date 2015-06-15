@@ -11,7 +11,9 @@
 `define BIT_EN_INT_SET_DEVICE_BITS_STB  9
 `define BIT_HD_RESET                    10
 `define BIT_EN_DMA_CONTROL              11
-
+`define BIT_STB_WRITE_LOCAL_BUFFER      12
+`define BIT_STB_WRITE                   13
+`define BIT_STB_READ                    14
 
 //Status
 `define BIT_PLATFORM_READY              0
@@ -50,7 +52,7 @@
 
 //Local BUffer
 `define SATA_BUFFER_OFFSET              256
-`define SATA_BUFFER_WIDTH               9
+`define SATA_BUFFER_WIDTH               11
 `define SATA_BUFFER_SIZE                (1 << (`SATA_BUFFER_WIDTH))
 
 

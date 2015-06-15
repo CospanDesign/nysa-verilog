@@ -6,6 +6,7 @@
 //A parameterized inverable, dual-clock block ram
 
 
+`timescale 1ns/1ps
 
 module dpb #(
   parameter DATA_WIDTH = 32,
@@ -49,10 +50,10 @@ end
 
 //Port B
 always @ (posedge clkb) begin
-  doutb          <=              mem[addrb];
+  doutb          <=              #1 mem[addrb];
   if (web) begin
-    doutb        <=              dinb;
-    mem[addrb]   <=              dinb;
+    doutb        <=              #1 dinb;
+    mem[addrb]   <=              #1 dinb;
   end
 end
 

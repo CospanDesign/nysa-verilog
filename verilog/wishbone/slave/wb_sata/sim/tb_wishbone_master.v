@@ -51,6 +51,11 @@ SOFTWARE.
 `define CLK_HALF_PERIOD 10
 `define CLK_PERIOD (2 * `CLK_HALF_PERIOD)
 
+`define SATA_CLK_HALF_PERIOD 10
+`define SATA_CLK_PERIOD (2 * `SATA_CLK_HALF_PERIOD)
+
+
+
 `define SLEEP_HALF_CLK #(`CLK_HALF_PERIOD)
 `define SLEEP_FULL_CLK #(`CLK_PERIOD)
 
@@ -77,6 +82,10 @@ wire  [31:0]      w_out_address;
 wire  [31:0]      w_out_data;
 wire  [27:0]      w_out_data_count;
 reg               r_ih_reset      = 0;
+
+
+//SATA Defines
+reg               sata_clk        = 0;
 
 //wishbone signals
 wire              w_wbm_we;
@@ -147,6 +156,9 @@ reg               request_more_data;
 reg               request_more_data_ack;
 reg     [27:0]    data_write_count;
 reg     [27:0]    data_read_count;
+wire              start;
+
+wire              w_wbm_msk;
 
 //Submodules
 wishbone_master wm (
@@ -182,17 +194,21 @@ wishbone_master wm (
 //slave 1
 wb_sata s1 (
 
-  .clk        (clk                  ),
-  .rst        (rst                  ),
+  .clk                  (clk                  ),
+  .rst                  (rst                  ),
 
-  .i_wbs_we   (w_wbs1_we            ),
-  .i_wbs_cyc  (w_wbs1_cyc           ),
-  .i_wbs_dat  (w_wbs1_dat_i         ),
-  .i_wbs_stb  (w_wbs1_stb           ),
-  .o_wbs_ack  (w_wbs1_ack           ),
-  .o_wbs_dat  (w_wbs1_dat_o         ),
-  .i_wbs_adr  (w_wbs1_adr           ),
-  .o_wbs_int  (w_wbs1_int           )
+  .sata_75mhz_clk       (sata_clk             ),
+  .i_platform_ready     (1'b1                 ),
+
+  .i_wbs_we             (w_wbs1_we            ),
+  .i_wbs_sel            (4'b1111              ),
+  .i_wbs_cyc            (w_wbs1_cyc           ),
+  .i_wbs_dat            (w_wbs1_dat_i         ),
+  .i_wbs_stb            (w_wbs1_stb           ),
+  .o_wbs_ack            (w_wbs1_ack           ),
+  .o_wbs_dat            (w_wbs1_dat_o         ),
+  .i_wbs_adr            (w_wbs1_adr           ),
+  .o_wbs_int            (w_wbs1_int           )
 );
 
 wishbone_interconnect wi (
@@ -235,7 +251,8 @@ assign  w_wbs0_ack              = 0;
 assign  w_wbs0_dat_o            = 0;
 assign  start                   = 1;
 
-always #`CLK_HALF_PERIOD        clk = ~clk;
+always #`CLK_HALF_PERIOD        clk         = ~clk;
+always #`SATA_CLK_HALF_PERIOD   sata_clk    = ~sata_clk;
 
 initial begin
   fd_out                        = 0;
