@@ -354,35 +354,6 @@ sata_stack sata(
   .prim_scrambler_en      (1'b1                   ),
   .data_scrambler_en      (1'b1                   ),
 
-  .dbg_send_command_stb   (                       ),
-  .dbg_send_control_stb   (                       ),
-  .dbg_send_data_stb      (                       ),
-
-  .dbg_remote_abort       (                       ),
-  .dbg_xmit_error         (                       ),
-  .dbg_read_crc_error     (                       ),
-
-  .dbg_pio_response       (                       ),
-  .dbg_pio_direction      (                       ),
-  .dbg_pio_transfer_count (                       ),
-  .dbg_pio_e_status       (                       ),
-
-  .dbg_h2d_command        (                       ),
-  .dbg_h2d_features       (                       ),
-  .dbg_h2d_control        (                       ),
-  .dbg_h2d_port_mult      (                       ),
-  .dbg_h2d_device         (                       ),
-  .dbg_h2d_lba            (                       ),
-  .dbg_h2d_sector_count   (                       ),
-
-
-
-  .dbg_cl_if_ready        (                       ),
-  .dbg_cl_if_activate     (                       ),
-  .dbg_cl_if_size         (                       ),
-  .dbg_cl_if_strobe       (                       ),
-  .dbg_cl_if_data         (                       ),
-
   .dbg_cl_of_ready        (                       ),
   .dbg_cl_of_activate     (                       ),
   .dbg_cl_of_strobe       (                       ),
@@ -403,24 +374,7 @@ sata_stack sata(
 
   .dbg_ll_write_ready     (                       ),
   .dbg_ll_paw             (                       ),
-  .dbg_ll_write_start     (                       ),
-  .dbg_ll_write_strobe    (                       ),
-  .dbg_ll_write_finished  (                       ),
-  .dbg_ll_write_data      (                       ),
-  .dbg_ll_write_size      (                       ),
-  .dbg_ll_write_hold      (                       ),
-  .dbg_ll_write_abort     (                       ),
-
-  .dbg_ll_read_start      (                       ),
-  .dbg_ll_read_strobe     (                       ),
-  .dbg_ll_read_data       (                       ),
-  .dbg_ll_read_ready      (                       ),
-  .dbg_ll_read_finished   (                       ),
-  .dbg_ll_remote_abort    (                       ),
-  .dbg_ll_xmit_error      (                       ),
-
   .dbg_ll_send_crc        (                       ),
-
 
   .oob_state              (oob_state              ),
 
