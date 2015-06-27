@@ -110,13 +110,14 @@ localparam      STATUS                  = 32'h00000001;
 
 localparam      HARD_DRIVE_STATUS       = 32'h00000002;
 localparam      HARD_DRIVE_SECTOR_COUNT = 32'h00000003;
-localparam      HARD_DRIVE_ADDRESS_LOW  = 32'h00000004;
-localparam      HARD_DRIVE_ADDRESS_HIGH = 32'h00000005;
+localparam      HARD_DRIVE_ADDRESS_HIGH = 32'h00000004;
+localparam      HARD_DRIVE_ADDRESS_LOW  = 32'h00000005;
 localparam      DEBUG_STATUS            = 32'h00000006;
 localparam      DEBUG_LINKUP_DATA       = 32'h00000007;
 localparam      HARD_DRIVE_COMMAND      = 32'h00000008;
 localparam      HARD_DRIVE_FEATURES     = 32'h00000009;
 localparam      LOCAL_BUFFER_WRITE_SIZE = 32'h0000000A;
+localparam      DEBUG_HD_COUNTS         = 32'h0000000B;
 
 localparam      PLATFORM_RESET_TIMEOUT  = 8'hFF;
 
@@ -140,7 +141,6 @@ reg           data_in_clk_valid;
 reg           data_out_clk_valid;
 
 wire          platform_error;
-reg           hd_cmd_stb;
 
 reg           sata_reset;
 wire          sata_stack_reset;
@@ -153,7 +153,9 @@ reg   [15:0]  user_features;
 wire          hard_drive_error;
 
 reg           send_sync_escape;
-wire          send_user_command_stb;
+
+reg           execute_command_stb;
+wire          sata_execute_command_stb;
 reg           command_layer_reset;
 reg   [7:0]   hard_drive_command;
 
@@ -236,7 +238,7 @@ wire  [10:0]  local_buffer_addr;
 wire  [31:0]  local_buffer_douta;
 reg   [31:0]  local_buffer_dina;
 
-reg   [12:0]  local_buffer_write_size;
+reg   [13:0]  local_buffer_write_size;
 
 
 
@@ -248,23 +250,34 @@ reg           lcl_user_dout_stb;
 reg           lcl_user_dout_activate;
 
 reg           sata_lcl_web;
-reg   [23:0]  sata_lcl_addrb;
+reg   [10:0]  sata_lcl_addrb;
 reg   [31:0]  sata_lcl_dinb;
 wire  [31:0]  sata_lcl_doutb;
 
 reg           usr_stb_write_data;
 reg           usr_stb_read_data;
 
-wire          stb_write_data;
-wire          stb_read_data;
+//wire          stb_write_data;
+//wire          stb_read_data;
 
-wire          sata_write_data_stb;
-wire          sata_read_data_stb;
+//wire          sata_write_data_stb;
+//wire          sata_read_data_stb;
 
 reg   [3:0]   lcl_wr_state;
-reg   [12:0]  buffer_write_count;
+reg   [13:0]  buffer_write_count;
 reg   [23:0]  wr_count;
 reg   [23:0]  rd_count;
+
+wire  [3:0]   command_write_state;
+wire  [3:0]   transport_state;
+wire  [3:0]   ll_write_state;
+
+wire          dbg_detect_r_ok;
+reg   [7:0]   detect_r_ok_count;
+wire          dbg_detect_r_err;
+reg   [7:0]   detect_r_err_count;
+reg   [7:0]   dma_activate_count;
+reg   [3:0]   prev_write_state;
 
 
 
@@ -288,9 +301,9 @@ sata_stack sata(
 
   //Host to Device Control
   .hard_drive_command     (hard_drive_command     ),  //Hard Drive commands EX: DMA Read 0x25, DMA Write 0x35
-  .write_data_stb         (sata_write_data_stb    ),
-  .read_data_stb          (sata_read_data_stb     ),
-  .send_user_command_stb  (send_user_command_stb  ),
+//  .write_data_stb         (sata_write_data_stb    ),
+//  .read_data_stb          (sata_read_data_stb     ),
+  .execute_command_stb    (sata_execute_command_stb),
   .user_features          (user_features          ),
   .sector_count           (sector_count           ),
   .sector_address         (sector_address         ),
@@ -354,21 +367,14 @@ sata_stack sata(
   .prim_scrambler_en      (1'b1                   ),
   .data_scrambler_en      (1'b1                   ),
 
-  .dbg_cl_of_ready        (                       ),
-  .dbg_cl_of_activate     (                       ),
-  .dbg_cl_of_strobe       (                       ),
-  .dbg_cl_of_data         (                       ),
-  .dbg_cl_of_size         (                       ),
-
   .dbg_cc_lax_state       (                       ),
-  .dbg_cr_lax_state       (                       ),
-  .dbg_cw_lax_state       (                       ),
+  .dbg_cw_lax_state       (command_write_state    ),
 
-  .dbg_t_lax_state        (                       ),
+  .dbg_t_lax_state        (transport_state        ),
 
   .dbg_li_lax_state       (                       ),
   .dbg_lr_lax_state       (                       ),
-  .dbg_lw_lax_state       (                       ),
+  .dbg_lw_lax_state       (ll_write_state         ),
   .dbg_lw_lax_fstate      (                       ),
 
 
@@ -381,8 +387,8 @@ sata_stack sata(
   .dbg_detect_sync        (                       ),
   .dbg_detect_r_rdy       (                       ),
   .dbg_detect_r_ip        (                       ),
-  .dbg_detect_r_ok        (                       ),
-  .dbg_detect_r_err       (                       ),
+  .dbg_detect_r_ok        (dbg_detect_r_ok        ),
+  .dbg_detect_r_err       (dbg_detect_r_err       ),
   .dbg_detect_x_rdy       (                       ),
   .dbg_detect_sof         (                       ),
   .dbg_detect_eof         (                       ),
@@ -412,20 +418,23 @@ sata_stack sata(
 cross_clock_strobe cmd_stb (
   .rst                    (rst || !i_platform_ready ),
   .in_clk                 (clk                      ),
-  .in_stb                 (hd_cmd_stb               ),
+  .in_stb                 (execute_command_stb      ),
 
   .out_clk                (sata_75mhz_clk           ),
-  .out_stb                (send_user_command_stb    )
+  .out_stb                (sata_execute_command_stb )
 );
 
+/*
 cross_clock_strobe write_stb(
   .rst                    (rst || !i_platform_ready ),
   .in_clk                 (clk                      ),
-  .in_stb                 (stb_write_data           ),
+  .in_stb                 (stb_load_local_buffer    ),
 
   .out_clk                (sata_75mhz_clk           ),
-  .out_stb                (sata_write_data_stb      )
+  .out_stb                (sata_stb_load_local_buffer  )
 );
+*/
+/*
 
 cross_clock_strobe read_stb(
   .rst                    (rst || !i_platform_ready ),
@@ -435,6 +444,7 @@ cross_clock_strobe read_stb(
   .out_clk                (sata_75mhz_clk           ),
   .out_stb                (sata_read_data_stb       )
 );
+*/
 
 
 //Read/Write Data to a local buffer
@@ -452,8 +462,9 @@ dpb #(
 
   .clkb           (clk                  ),
   .web            (sata_lcl_web         ),
-  .addrb          (sata_lcl_addrb[10:0] ),
-  .dinb           (sata_lcl_dinb        ),
+  .addrb          (sata_lcl_addrb       ),
+  //.dinb           (sata_lcl_dinb        ),
+  .dinb           (user_dout            ),
   .doutb          (sata_lcl_doutb       )
 );
 
@@ -472,8 +483,8 @@ assign  user_dout_stb            = enable_dma_control ? 1'b0  : lcl_user_dout_st
 assign  user_dout_activate       = enable_dma_control ? 1'b0  : lcl_user_dout_activate;
 
 
-assign  stb_read_data            = enable_dma_control ? 1'b0  : usr_stb_write_data;
-assign  stb_write_data           = enable_dma_control ? 1'b0  : usr_stb_read_data;
+//assign  stb_read_data            = enable_dma_control ? 1'b0  : usr_stb_write_data;
+//assign  stb_write_data           = enable_dma_control ? 1'b0  : usr_stb_read_data;
 
 
 
@@ -489,11 +500,25 @@ assign  sata_stack_reset         = sata_reset || !i_platform_ready;
 always @ (posedge sata_75mhz_clk) begin
   if (rst) begin
     debug_rx_data               <=  0;
+    detect_r_ok_count           <=  0;
+    detect_r_err_count          <=  0;
+    dma_activate_count          <=  0;
+    prev_write_state            <=  0;
   end
   else begin
     if (!i_wbs_cyc && !i_rx_elec_idle) begin
       debug_rx_data             <= i_rx_din;
     end
+    if (dbg_detect_r_ok) begin
+        detect_r_ok_count       <=  detect_r_ok_count + 1;
+    end
+    if (dbg_detect_r_err) begin
+        detect_r_err_count      <=  detect_r_err_count + 1;
+    end
+    if ((prev_write_state == 1) && (command_write_state == 2)) begin
+        dma_activate_count      <=  dma_activate_count + 1;
+    end
+    prev_write_state            <=  command_write_state;
   end
 end
 
@@ -509,7 +534,7 @@ always @ (posedge clk) begin
     data_out_clk_valid           <= 0;
 
     command_layer_reset          <= 0;
-    hd_cmd_stb                   <= 0;
+    execute_command_stb          <= 0;
     hard_drive_command           <= 0;
 
     sector_count                 <= 0;
@@ -559,13 +584,14 @@ always @ (posedge clk) begin
 
   end
   else begin
-    hd_cmd_stb                   <= 0;
+    execute_command_stb          <= 0;
     local_buffer_wea             <= 0;
     data_in_clk_valid            <= 1;
     data_out_clk_valid           <= 1;
     stb_load_local_buffer        <= 0;
     usr_stb_write_data           <= 0;
     usr_stb_read_data            <= 0;
+    send_sync_escape             <= 0;
 
     //Deassert Strobes
     if (!prev_d2h_interrupt && d2h_interrupt) begin
@@ -619,18 +645,27 @@ always @ (posedge clk) begin
               stb_load_local_buffer      <= i_wbs_dat[`BIT_STB_WRITE_LOCAL_BUFFER             ];
               usr_stb_write_data         <= i_wbs_dat[`BIT_STB_WRITE                          ];
               usr_stb_read_data          <= i_wbs_dat[`BIT_STB_READ                           ];
+              send_sync_escape           <= i_wbs_dat[`BIT_STB_SYNC_ESCAPE                    ];
             end
             HARD_DRIVE_COMMAND: begin
               hard_drive_command         <= i_wbs_dat[7:0];
-              hd_cmd_stb                 <= 1;
+              execute_command_stb        <= 1;
             end
             HARD_DRIVE_FEATURES: begin
               user_features              <= i_wbs_dat[7:0];
             end
             LOCAL_BUFFER_WRITE_SIZE: begin
-              local_buffer_write_size    <= i_wbs_dat[12:0];
+              local_buffer_write_size    <= i_wbs_dat[13:0];
             end
-
+            HARD_DRIVE_ADDRESS_LOW: begin
+              sector_address[31:0]       <= i_wbs_dat;
+            end
+            HARD_DRIVE_ADDRESS_HIGH: begin
+              sector_address[47:32]      <= i_wbs_dat[15:0];
+            end
+            HARD_DRIVE_SECTOR_COUNT: begin
+              sector_count               <= i_wbs_dat[15:0];
+            end
             default: begin
               if (local_buffer_en) begin
                 local_buffer_wea         <= 1;
@@ -675,6 +710,8 @@ always @ (posedge clk) begin
               o_wbs_dat[`BIT_TX_COMM_RESET                      ] <= o_tx_comm_reset;
               o_wbs_dat[`BIT_TX_COMM_WAKE                       ] <= o_tx_comm_wake;
               o_wbs_dat[`BIT_TX_OOB_COMPLETE                    ] <= i_tx_oob_complete;
+              o_wbs_dat[`BIT_DIN_FIFO_READY0                    ] <= user_din_ready[0];
+              o_wbs_dat[`BIT_DIN_FIFO_READY1                    ] <= user_din_ready[1];
 
               o_wbs_int                                           <= 1'b0;
             end
@@ -698,9 +735,17 @@ always @ (posedge clk) begin
               o_wbs_dat[15:0]                                     <= d2h_lba[47:32];
             end
             DEBUG_STATUS: begin
-              o_wbs_dat                                           <= 32'h0;
-              o_wbs_dat[`BIT_OOB_STATE_HIGH:`BIT_OOB_STATE_LOW]   <= oob_state;
-              o_wbs_dat[`BIT_RESET_COUNT_HIGH:`BIT_RESET_COUNT_LOW] <=  platform_reset_timer;
+              o_wbs_dat                                             <= 32'h0;
+              o_wbs_dat[`BIT_OOB_STATE_HIGH:`BIT_OOB_STATE_LOW]     <= oob_state;
+              o_wbs_dat[`BIT_RESET_COUNT_HIGH:`BIT_RESET_COUNT_LOW] <= platform_reset_timer;
+              o_wbs_dat[`BIT_D2H_INTERRUPT_EN]                      <= pos_edge_d2h_interrupt;
+              o_wbs_dat[`BIT_DMA_ACTIVATE_EN]                       <= pos_edge_dma_activate_stb;
+              o_wbs_dat[`BIT_D2H_PIO_SETUP_EN]                      <= pos_edge_pio_setup_stb;
+              o_wbs_dat[`BIT_D2H_DATA_EN]                           <= pos_edge_d2h_data_stb;
+              o_wbs_dat[`BIT_DMA_SETUP_EN]                          <= pos_edge_dma_setup_stb;
+              o_wbs_dat[`BIT_LLW_ST_HIGH:`BIT_LLW_ST_LOW]           <= ll_write_state;
+              o_wbs_dat[`BIT_CMD_WR_ST_HIGH:`BIT_CMD_WR_ST_LOW]     <= command_write_state;
+              o_wbs_dat[`BIT_TRSPRT_HIGH:`BIT_TRSPRT_LOW]           <= transport_state;
             end
             DEBUG_LINKUP_DATA: begin
               o_wbs_dat                                           <= debug_rx_data;
@@ -712,7 +757,13 @@ always @ (posedge clk) begin
               o_wbs_dat                                           <= {24'h000, user_features};
             end
             LOCAL_BUFFER_WRITE_SIZE: begin
-              o_wbs_dat                                           <= local_buffer_write_size;
+              o_wbs_dat                                          <= {18'h00, local_buffer_write_size};
+            end
+            DEBUG_HD_COUNTS: begin
+              o_wbs_dat                                          <= {8'h00,
+                                                                     dma_activate_count,
+                                                                     detect_r_ok_count,
+                                                                     detect_r_err_count};
             end
             default: begin
               if (local_buffer_en) begin
@@ -755,6 +806,16 @@ always @ (posedge clk) begin
     end
 
 
+    if (usr_stb_write_data) begin
+        hard_drive_command    <=    `WRITE_DMA_EXT;
+        execute_command_stb   <=    1;
+    end
+    else if (usr_stb_read_data) begin
+        hard_drive_command    <=    `READ_DMA_EXT;
+        execute_command_stb   <=    1;
+    end
+
+
     prev_d2h_interrupt        <=  d2h_interrupt;
     prev_dma_activate_stb     <=  dma_activate_stb;
     prev_pio_setup_stb        <=  pio_setup_stb;
@@ -766,7 +827,7 @@ always @ (posedge clk) begin
 end
 
 
-always @ (posedge sata_75mhz_clk) begin
+always @ (posedge clk) begin
   if (rst || !i_platform_ready) begin
     lcl_user_din_stb          <=  0;
     lcl_user_din_activate     <=  0;
@@ -796,18 +857,17 @@ always @ (posedge sata_75mhz_clk) begin
             lcl_wr_state                  <=  WRITE_SETUP;
           end
           lcl_user_din_activate           <= 2'b0;
-          sata_lcl_addrb                  <= 0;
+          if (!lcl_user_dout_activate) begin
+            sata_lcl_addrb                <= 0;
+          end
           buffer_write_count              <= 0;
         end
         WRITE_SETUP: begin
-          if (buffer_write_count >= local_buffer_write_size) begin
-            lcl_wr_state                  <=  IDLE;
-          end
-          else begin
+          if (buffer_write_count < local_buffer_write_size) begin
             //Attempt to get one of the local ping pong FIFO buffer
             if ((user_din_ready > 0) && (lcl_user_din_activate == 0)) begin
+              wr_count                    <=  0;
               if (user_din_ready[0]) begin
-                wr_count                  <=  0;
                 lcl_user_din_activate[0]  <=  1;
               end
               else begin
@@ -817,14 +877,19 @@ always @ (posedge sata_75mhz_clk) begin
               sata_lcl_addrb              <= 0;
             end
           end
+          else begin
+            lcl_wr_state                  <=  IDLE;
+            wr_count                      <= 0;
+            lcl_user_din_activate         <= 0;
+          end
         end
         WRITE: begin
           if (buffer_write_count < local_buffer_write_size) begin
             if (wr_count < user_din_size) begin
-              sata_lcl_addrb              <= sata_lcl_addrb + 24'h1;
+              sata_lcl_addrb              <= sata_lcl_addrb + 1;
               lcl_user_din_stb            <= 1;
-              buffer_write_count          <= buffer_write_count + 12'h1;
-              wr_count                    <= wr_count + 24'b1;
+              buffer_write_count          <= buffer_write_count + 1;
+              wr_count                    <= wr_count + 1;
             end
             else begin
               lcl_user_din_activate       <= 0;
@@ -833,12 +898,16 @@ always @ (posedge sata_75mhz_clk) begin
             end
           end
           else begin
+            wr_count                      <= 0;
+            lcl_user_din_activate         <= 0;
             lcl_wr_state                  <= IDLE;
+            sata_lcl_addrb                <= 0;
           end
         end
         default: begin
         end
       endcase
+
 
       //Handle Reads from SATA and put them into local buffer
       if (user_dout_ready && !lcl_user_dout_activate) begin
@@ -847,24 +916,28 @@ always @ (posedge sata_75mhz_clk) begin
         sata_lcl_addrb                    <= 0;
       end
       else if (lcl_user_dout_activate) begin
-        if (rd_count < user_dout_size) begin
-          lcl_user_dout_stb                 <= 1;
-          sata_lcl_dinb                     <= user_dout;
-          rd_count                          <= rd_count + 24'b1;
+        if (sata_lcl_web) begin
+          if (rd_count < user_dout_size) begin
+            lcl_user_dout_stb             <= 1;
+            //sata_lcl_dinb                 <= user_dout;
+            rd_count                      <= rd_count + 1;
+            //sata_lcl_addrb                <= sata_lcl_addrb + 1;
+          end
+          else begin
+            lcl_user_dout_activate        <= 0;
+          end
         end
-        else begin
-          lcl_user_dout_activate            <= 0;
+        sata_lcl_web                      <= 1;
+        if (lcl_user_dout_stb) begin
+          sata_lcl_addrb                <= sata_lcl_addrb + 1;
         end
-
       end
     end
-
+    /*
     if (lcl_user_dout_stb) begin
-      sata_lcl_web                      <= 1;
+      sata_lcl_addrb                      <= sata_lcl_addrb + 11'h01;
     end
-    if (sata_lcl_web) begin
-      sata_lcl_addrb                    <= sata_lcl_addrb + 24'h01;
-    end
+    */
   end
 end
 

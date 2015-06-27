@@ -14,6 +14,7 @@
 `define BIT_STB_WRITE_LOCAL_BUFFER      12
 `define BIT_STB_WRITE                   13
 `define BIT_STB_READ                    14
+`define BIT_STB_SYNC_ESCAPE             15
 
 //Status
 `define BIT_PLATFORM_READY              0
@@ -32,6 +33,8 @@
 `define BIT_TX_COMM_RESET               13
 `define BIT_TX_COMM_WAKE                14
 `define BIT_TX_OOB_COMPLETE             15
+`define BIT_DIN_FIFO_READY0             16
+`define BIT_DIN_FIFO_READY1             17
 
 //Hard Drive Status
 `define BIT_D2H_INTERRUPT               0
@@ -49,12 +52,34 @@
 `define BIT_OOB_STATE_LOW               0
 `define BIT_RESET_COUNT_HIGH            11
 `define BIT_RESET_COUNT_LOW             4
+`define BIT_D2H_INTERRUPT_EN            12 
+`define BIT_DMA_ACTIVATE_EN             13
+`define BIT_D2H_PIO_SETUP_EN            14
+`define BIT_D2H_DATA_EN                 15
+`define BIT_DMA_SETUP_EN                16
+`define BIT_CMD_WR_ST_HIGH              31
+`define BIT_CMD_WR_ST_LOW               28
+`define BIT_TRSPRT_HIGH                 27
+`define BIT_TRSPRT_LOW                  24
+`define BIT_LLW_ST_HIGH                 23
+`define BIT_LLW_ST_LOW                  20
+
+`define BIT_ACTIVATE_COUNT_HIGH         23
+`define BIT_ACTIVATE_COUNT_LOW          16
+`define BIT_ROK_COUNT_HIGH              15
+`define BIT_ROK_COUNT_LOW               8
+`define BIT_RERR_COUNT_HIGH             7
+`define BIT_RERR_COUNT_LOW              0
+
 
 //Local BUffer
 `define SATA_BUFFER_OFFSET              256
 `define SATA_BUFFER_WIDTH               11
 `define SATA_BUFFER_SIZE                (1 << (`SATA_BUFFER_WIDTH))
+//`define SATA_BUFFER_SIZE                2048
 
 
+`define READ_DMA_EXT                    8'h25
+`define WRITE_DMA_EXT                   8'h35
 
 `endif
