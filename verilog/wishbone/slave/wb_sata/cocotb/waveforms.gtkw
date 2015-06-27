@@ -1,0 +1,157 @@
+[*]
+[*] GTKWave Analyzer v3.3.62 (w)1999-2014 BSI
+[*] Thu Jun 25 05:24:32 2015
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sata/cocotb/design.vcd"
+[dumpfile_mtime] "Thu Jun 25 05:19:17 2015"
+[dumpfile_size] 26591918
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sata/cocotb/waveforms.gtkw"
+[timestart] 40800
+[size] 1920 1058
+[pos] -1 -1
+*-11.673900 52860 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_cocotb.
+[treeopen] tb_cocotb.fshd.
+[treeopen] tb_cocotb.s1.
+[treeopen] tb_cocotb.s1.sata.
+[treeopen] tb_cocotb.s1.sata.scl.
+[sst_width] 248
+[signals_width] 204
+[sst_expanded] 1
+[sst_vpaned_height] 313
+@28
+[color] 5
+tb_cocotb.s1.clk
+[color] 5
+tb_cocotb.s1.rst
+@200
+-
+@22
+tb_cocotb.test_id[31:0]
+@200
+-
+@28
+tb_cocotb.sata_clk
+tb_cocotb.s1.sata_reset
+@200
+-
+@28
+tb_cocotb.hd_ready
+@200
+-
+@c00200
+-SATA PHY Layer
+@28
+tb_cocotb.rx_byte_is_aligned
+@22
+tb_cocotb.rx_din[31:0]
+@28
+tb_cocotb.rx_elec_idle
+@22
+tb_cocotb.rx_is_k[3:0]
+@28
+tb_cocotb.comm_init_detect
+tb_cocotb.comm_wake_detect
+@200
+-
+@28
+tb_cocotb.tx_comm_reset
+tb_cocotb.tx_comm_wake
+@22
+tb_cocotb.tx_dout[31:0]
+@28
+tb_cocotb.tx_elec_idle
+tb_cocotb.tx_is_k
+@200
+-
+@1401200
+-SATA PHY Layer
+@200
+-
+@800200
+-SATA
+-Command Layer
+@22
+tb_cocotb.s1.sata.scl.cntrl_state[3:0]
+tb_cocotb.s1.sata.scl.h2d_command[7:0]
+@28
+tb_cocotb.s1.sata.scl.t_dma_activate_stb
+@200
+-
+@28
+tb_cocotb.s1.sata.scl.command_layer_ready
+tb_cocotb.s1.sata.scl.sata_busy
+@200
+-
+@22
+tb_cocotb.s1.sata.scl.write_state[3:0]
+@28
+tb_cocotb.s1.stb_load_local_buffer
+tb_cocotb.s1.user_din_stb
+@200
+-
+@28
+tb_cocotb.s1.user_din_ready[1:0]
+tb_cocotb.s1.user_din_activate[1:0]
+@22
+tb_cocotb.s1.sector_count[15:0]
+tb_cocotb.s1.sector_address[47:0]
+@1000200
+-Command Layer
+-SATA
+@22
+tb_cocotb.r_in_data[31:0]
+@200
+-
+@28
+tb_cocotb.s1.i_wbs_cyc
+@22
+tb_cocotb.s1.i_wbs_adr[31:0]
+@23
+tb_cocotb.s1.i_wbs_dat[31:0]
+@200
+-
+@28
+tb_cocotb.s1.local_buffer.clka
+tb_cocotb.s1.local_buffer.clkb
+@22
+tb_cocotb.s1.local_buffer.addra[10:0]
+tb_cocotb.s1.local_buffer.dina[31:0]
+@28
+tb_cocotb.s1.local_buffer.wea
+@200
+-
+@22
+tb_cocotb.s1.sata.if_size[23:0]
+tb_cocotb.s1.local_buffer_write_size[13:0]
+tb_cocotb.s1.lcl_wr_state[3:0]
+tb_cocotb.s1.wr_count[23:0]
+tb_cocotb.s1.local_buffer.addrb[10:0]
+tb_cocotb.s1.local_buffer.doutb[31:0]
+@24
+tb_cocotb.s1.user_din[31:0]
+@28
+tb_cocotb.s1.user_din_activate[1:0]
+tb_cocotb.s1.user_din_ready[1:0]
+@22
+tb_cocotb.s1.user_din_size[23:0]
+@28
+tb_cocotb.s1.user_din_stb
+@200
+-
+@28
+tb_cocotb.h2u_read_enable
+tb_cocotb.r_h2u_read_enable
+tb_cocotb.user_2_hd_reader.enable
+tb_cocotb.h2u_read_busy
+tb_cocotb.h2u_read_error
+@22
+tb_cocotb.hd_data_from_host[31:0]
+tb_cocotb.h2u_read_total_count[23:0]
+@28
+tb_cocotb.u2h_read_error
+tb_cocotb.hd_read_from_host
+@22
+tb_cocotb.hd_data_from_host[31:0]
+[pattern_trace] 1
+[pattern_trace] 0
