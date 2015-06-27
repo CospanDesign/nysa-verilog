@@ -71,7 +71,7 @@ output              ext_sdram_clk
 
 
 wire                sdram_clock_ready;
-wire                sdram_clk;
+(* KEEP = "TRUE" *) wire            sdram_clk;
 assign              ext_sdram_clk = sdram_clk;
 
 //Generate the SDRAM Clock
