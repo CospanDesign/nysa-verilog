@@ -101,7 +101,42 @@ module wb_sata (
   input               i_comm_wake_detect,
   input               i_rx_byte_is_aligned,
 
-  input               i_phy_error
+  input               i_phy_error,
+
+  //DMA Interface
+
+  //Write Side
+  input               i_write_enable,
+  input       [63:0]  i_write_addr,
+  input               i_write_addr_inc,
+  input               i_write_addr_dec,
+  output              o_write_finished,
+  input       [23:0]  i_write_count,
+  input               i_write_flush,
+
+  output      [1:0]   o_write_ready,
+  input       [1:0]   i_write_activate,
+  output      [23:0]  o_write_size,
+  input               i_write_strobe,
+  input       [31:0]  i_write_data,
+
+  //Read Side
+  input               i_read_enable,
+  input       [63:0]  i_read_addr,
+  input               i_read_addr_inc,
+  input               i_read_addr_dec,
+  output              o_read_busy,
+  output              o_read_error,
+  input       [23:0]  i_read_count,
+  input               i_read_flush,
+
+  output              o_read_ready,
+  input               i_read_activate,
+  output      [23:0]  o_read_size,
+  output      [31:0]  o_read_data,
+  input               i_read_strobe
+
+
 );
 
 //Local Parameters
@@ -191,6 +226,7 @@ wire          user_din_stb;
 wire  [1:0]   user_din_ready;
 wire  [1:0]   user_din_activate;
 wire  [23:0]  user_din_size;
+wire          user_din_empty;
 
 wire  [31:0]  user_dout;
 wire          user_dout_ready;
@@ -280,6 +316,16 @@ reg   [7:0]   dma_activate_count;
 reg   [3:0]   prev_write_state;
 
 
+wire  [7:0]   dma_command;
+wire          dma_execute_command_stb;
+wire  [47:0]  dma_lba;
+wire  [15:0]  dma_sector_count;
+
+wire  [7:0]   sata_command;
+wire  [47:0]  sata_lba;
+wire  [15:0]  sata_sector_count;
+
+
 
 //Submodules
 sata_stack sata(
@@ -300,13 +346,11 @@ sata_stack sata(
   .pio_data_ready         (pio_data_ready         ),  //Peripheral IO has some data ready
 
   //Host to Device Control
-  .hard_drive_command     (hard_drive_command     ),  //Hard Drive commands EX: DMA Read 0x25, DMA Write 0x35
-//  .write_data_stb         (sata_write_data_stb    ),
-//  .read_data_stb          (sata_read_data_stb     ),
+  .hard_drive_command     (sata_command           ),  //Hard Drive commands EX: DMA Read 0x25, DMA Write 0x35
   .execute_command_stb    (sata_execute_command_stb),
   .user_features          (user_features          ),
-  .sector_count           (sector_count           ),
-  .sector_address         (sector_address         ),
+  .sector_count           (sata_sector_count      ),
+  .sector_address         (sata_lba               ),
 
   .dma_activate_stb       (dma_activate_stb       ),
   .d2h_reg_stb            (d2h_reg_stb            ),
@@ -333,6 +377,7 @@ sata_stack sata(
   .user_din_ready         (user_din_ready         ),  //If one of the 2 in FIFOs are ready
   .user_din_activate      (user_din_activate      ),  //Activate one of the 2 FIFOs
   .user_din_size          (user_din_size          ),  //Number of available spots within the FIFO
+  .user_din_empty         (user_din_empty         ),
 
   //Data from hard drive to host path
   .data_out_clk           (clk                    ),
@@ -415,36 +460,50 @@ sata_stack sata(
 
 );
 
+sata_dma_interface dma(
+  .rst                     (rst || !i_platform_ready),
+  .clk                     (clk                     ),
+
+  .enable                  (enable_dma_control      ),
+
+  //SATA Controller Interface
+  .sata_command            (dma_command             ),
+  .sata_execute_command_stb(dma_execute_command_stb ), //Execute Command Strobe
+  .sata_lba                (dma_lba                 ), //SATA Sector Address
+  .sata_sector_count       (dma_sector_count        ), //512 Increment
+
+  //Write Side
+  .write_enable             (i_write_enable         ),
+  .write_addr               (i_write_addr           ),
+  .write_finished           (o_write_finished       ),
+  .write_count              (i_write_count          ),
+  .write_flush              (i_write_flush          ),
+
+  .write_activate           (user_din_activate      ),
+  .write_strobe             (user_din_stb           ),
+  .write_empty              (user_din_empty         ),
+
+  //Read Side
+  .read_enable              (i_read_enable          ),
+  .read_addr                (i_read_addr            ),
+  .read_busy                (o_read_busy            ),
+  .read_error               (o_read_error           ),
+  .read_count               (i_read_count           ),
+  .read_flush               (i_read_flush           ),
+
+  .read_activate            (user_dout_activate     ),
+  .read_strobe              (user_dout_stb          )
+
+);
+
 cross_clock_strobe cmd_stb (
   .rst                    (rst || !i_platform_ready ),
   .in_clk                 (clk                      ),
-  .in_stb                 (execute_command_stb      ),
+  .in_stb                 (execute_command_stb || dma_execute_command_stb      ),
 
   .out_clk                (sata_75mhz_clk           ),
   .out_stb                (sata_execute_command_stb )
 );
-
-/*
-cross_clock_strobe write_stb(
-  .rst                    (rst || !i_platform_ready ),
-  .in_clk                 (clk                      ),
-  .in_stb                 (stb_load_local_buffer    ),
-
-  .out_clk                (sata_75mhz_clk           ),
-  .out_stb                (sata_stb_load_local_buffer  )
-);
-*/
-/*
-
-cross_clock_strobe read_stb(
-  .rst                    (rst || !i_platform_ready ),
-  .in_clk                 (clk                      ),
-  .in_stb                 (stb_read_data            ),
-
-  .out_clk                (sata_75mhz_clk           ),
-  .out_stb                (sata_read_data_stb       )
-);
-*/
 
 
 //Read/Write Data to a local buffer
@@ -475,19 +534,24 @@ dpb #(
 //Assigns are only for debugging
 
 //XXX: These are place holders for when the DMA Controller is implemented
-assign  user_din_stb             = enable_dma_control ? 1'b0  : lcl_user_din_stb;
-assign  user_din_activate        = enable_dma_control ? 2'b00 : lcl_user_din_activate;
-assign  user_din                 = enable_dma_control ? 32'h0 : sata_lcl_doutb;
+assign  user_din_stb             = enable_dma_control ? i_write_strobe    : lcl_user_din_stb;
+assign  user_din_activate        = enable_dma_control ? i_write_activate  : lcl_user_din_activate;
+assign  user_din                 = enable_dma_control ? i_write_data      : sata_lcl_doutb;
 
-assign  user_dout_stb            = enable_dma_control ? 1'b0  : lcl_user_dout_stb;
-assign  user_dout_activate       = enable_dma_control ? 1'b0  : lcl_user_dout_activate;
+assign  user_dout_stb            = enable_dma_control ? i_read_strobe     : lcl_user_dout_stb;
+assign  user_dout_activate       = enable_dma_control ? i_read_activate   : lcl_user_dout_activate;
+
+assign  o_write_ready            = enable_dma_control ? user_din_ready    : 2'b00;
+assign  o_write_size             = enable_dma_control ? user_din_size     : 24'h000000;
+
+assign  o_read_ready             = enable_dma_control ? user_dout_ready   : 1'b0;
+assign  o_read_size              = enable_dma_control ? user_dout_size    : 24'h000000;
+assign  o_read_data              = enable_dma_control ? user_dout         : 32'h00000000;
 
 
-//assign  stb_read_data            = enable_dma_control ? 1'b0  : usr_stb_write_data;
-//assign  stb_write_data           = enable_dma_control ? 1'b0  : usr_stb_read_data;
-
-
-
+assign  sata_command             = enable_dma_control ? dma_command       : hard_drive_command; 
+assign  sata_lba                 = enable_dma_control ? dma_lba           : sector_address;
+assign  sata_sector_count        = enable_dma_control ? dma_sector_count  : sector_count;
 
 //Synchronous Logic
 assign  local_buffer_en          = ((i_wbs_adr >= `SATA_BUFFER_OFFSET) &&

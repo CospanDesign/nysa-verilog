@@ -43,6 +43,7 @@ ${NYSA}/verilog/wishbone/master/wishbone_master.v
 #Example module from Xilinx
 #${XILINX}/ISE/verilog/src/glbl.v
 
+rtl/sata_dma_interface.v
 rtl/wb_sata.v
 sim/tb_wishbone_master.v
 

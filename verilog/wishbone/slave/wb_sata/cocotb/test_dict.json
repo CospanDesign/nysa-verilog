@@ -48,7 +48,16 @@
     "SLAVES":{
         "sata":{
             "filename":"wb_sata.v"
+        },
+        "dma":{
+            "filename":"wb_dma.v",
+            "BUS":{
+                "mem":"mem1"
+            },
+            "bind":{
+            }
         }
+
     },
     "MEMORY":{
         "mem1":{

@@ -1,22 +1,21 @@
 [*]
 [*] GTKWave Analyzer v3.3.62 (w)1999-2014 BSI
-[*] Thu Jun 25 05:24:32 2015
+[*] Sun Jun 28 18:25:18 2015
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sata/cocotb/design.vcd"
-[dumpfile_mtime] "Thu Jun 25 05:19:17 2015"
-[dumpfile_size] 26591918
+[dumpfile_mtime] "Sun Jun 28 18:25:16 2015"
+[dumpfile_size] 4100573
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sata/cocotb/waveforms.gtkw"
-[timestart] 40800
-[size] 1920 1058
+[timestart] 22070
+[size] 1918 1059
 [pos] -1 -1
-*-11.673900 52860 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-11.889673 37430 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
-[treeopen] tb_cocotb.fshd.
 [treeopen] tb_cocotb.s1.
-[treeopen] tb_cocotb.s1.sata.
-[treeopen] tb_cocotb.s1.sata.scl.
+[treeopen] tb_cocotb.s1.sata.sll.
+[treeopen] tb_cocotb.s2.
 [sst_width] 248
-[signals_width] 204
+[signals_width] 286
 [sst_expanded] 1
 [sst_vpaned_height] 313
 @28
@@ -68,8 +67,9 @@ tb_cocotb.tx_is_k
 -SATA PHY Layer
 @200
 -
-@800200
+@c00200
 -SATA
+@800200
 -Command Layer
 @22
 tb_cocotb.s1.sata.scl.cntrl_state[3:0]
@@ -98,7 +98,12 @@ tb_cocotb.s1.sector_count[15:0]
 tb_cocotb.s1.sector_address[47:0]
 @1000200
 -Command Layer
+@1401200
 -SATA
+@200
+-
+@c00200
+-Write Test
 @22
 tb_cocotb.r_in_data[31:0]
 @200
@@ -107,31 +112,92 @@ tb_cocotb.r_in_data[31:0]
 tb_cocotb.s1.i_wbs_cyc
 @22
 tb_cocotb.s1.i_wbs_adr[31:0]
-@23
 tb_cocotb.s1.i_wbs_dat[31:0]
 @200
 -
 @28
 tb_cocotb.s1.local_buffer.clka
 tb_cocotb.s1.local_buffer.clkb
+tb_cocotb.s1.sata.scl.t_send_command_stb
 @22
-tb_cocotb.s1.local_buffer.addra[10:0]
-tb_cocotb.s1.local_buffer.dina[31:0]
+tb_cocotb.s1.sata.scl.hard_drive_command[7:0]
+tb_cocotb.s1.sata.scl.d2h_sector_count[15:0]
 @28
-tb_cocotb.s1.local_buffer.wea
+tb_cocotb.s1.sata.scl.dma_send_data_stb
+@200
+-
+@28
+tb_cocotb.hd_2_user_generator.enable
+@22
+tb_cocotb.hd_2_user_generator.data[31:0]
+@200
+-
+@28
+tb_cocotb.fshd.ftl.detect_h2d_reg
+@22
+tb_cocotb.fshd.ftl.fis_id_state[3:0]
+@28
+tb_cocotb.fshd.ftl.send_data_stb
+tb_cocotb.s1.sata.stl.detect_fis
+tb_cocotb.s1.sata.stl.detect_d2h_data
+@22
+tb_cocotb.s1.sata.sll.slr.read_data[31:0]
 @200
 -
 @22
-tb_cocotb.s1.sata.if_size[23:0]
-tb_cocotb.s1.local_buffer_write_size[13:0]
 tb_cocotb.s1.lcl_wr_state[3:0]
-tb_cocotb.s1.wr_count[23:0]
-tb_cocotb.s1.local_buffer.addrb[10:0]
-tb_cocotb.s1.local_buffer.doutb[31:0]
-@24
+@28
+tb_cocotb.s1.user_din_stb
+@22
 tb_cocotb.s1.user_din[31:0]
 @28
 tb_cocotb.s1.user_din_activate[1:0]
+tb_cocotb.s1.user_din_ready[1:0]
+@22
+tb_cocotb.s1.user_din_size[23:0]
+@28
+tb_cocotb.s1.user_dout_ready
+tb_cocotb.s1.user_dout_activate
+@22
+tb_cocotb.s1.user_dout_size[23:0]
+@28
+tb_cocotb.s1.user_dout_stb
+@22
+tb_cocotb.s1.user_dout[31:0]
+tb_cocotb.s1.sata_lcl_addrb[10:0]
+@1401200
+-Write Test
+@200
+-
+@800200
+-DMA
+-Single Execute Single (TEST 5)
+@22
+tb_cocotb.s2.control[31:0]
+@28
+tb_cocotb.s2.dmacntrl.flag_channel_enable0
+@22
+tb_cocotb.s2.dmacntrl.cmd_count7[31:0]
+@200
+-
+@28
+tb_cocotb.s1.dma.enable
+@200
+-
+@28
+tb_cocotb.s1.dma.posedge_write_enable
+@200
+-
+@22
+tb_cocotb.s1.user_din[31:0]
+@28
+tb_cocotb.s1.user_din_activate[1:0]
+@22
+tb_cocotb.s1.dma.sata_write_count[23:0]
+@29
+tb_cocotb.s1.dma.write_finished
+@28
+tb_cocotb.s1.user_din_empty
 tb_cocotb.s1.user_din_ready[1:0]
 @22
 tb_cocotb.s1.user_din_size[23:0]
@@ -140,18 +206,28 @@ tb_cocotb.s1.user_din_stb
 @200
 -
 @28
-tb_cocotb.h2u_read_enable
-tb_cocotb.r_h2u_read_enable
-tb_cocotb.user_2_hd_reader.enable
-tb_cocotb.h2u_read_busy
-tb_cocotb.h2u_read_error
+tb_cocotb.s2.dmacntrl.i_snk3_ready[1:0]
 @22
-tb_cocotb.hd_data_from_host[31:0]
-tb_cocotb.h2u_read_total_count[23:0]
+tb_cocotb.s2.dmacntrl.i_snk3_size[23:0]
 @28
-tb_cocotb.u2h_read_error
-tb_cocotb.hd_read_from_host
+tb_cocotb.s2.dmacntrl.i_snk3_write_finished
 @22
-tb_cocotb.hd_data_from_host[31:0]
+tb_cocotb.s2.dmacntrl.i_snk3_control[31:0]
+@200
+-
+@28
+tb_cocotb.s1.sata_execute_command_stb
+@22
+tb_cocotb.s1.sector_address[47:0]
+tb_cocotb.s1.sata_sector_count[15:0]
+@200
+-
+@28
+tb_cocotb.s1.sata.execute_command_stb
+@22
+tb_cocotb.s1.sata.h2d_command[7:0]
+@1000200
+-Single Execute Single (TEST 5)
+-DMA
 [pattern_trace] 1
 [pattern_trace] 0
