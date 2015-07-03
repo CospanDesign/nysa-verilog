@@ -169,10 +169,6 @@ def read_test(dut):
     data = yield(cocotb.external(sata.read_local_buffer))()
     dut.h2u_read_enable = 0
 
-
-
-
-
 def get_register_range(signal, top_bit, bot_bit):
     #print "top_bit: %d" % top_bit
     mask = (((1 << (top_bit)) - (1 << bot_bit)) >> (bot_bit))
@@ -278,7 +274,7 @@ class ErrorMonitor(cocotb.monitors.Monitor):
             self._recv(1)
 
 @cocotb.test(skip = False)
-def test_execute_single_instruction(dut):
+def test_single_instruction_to_sata(dut):
     """
     Description:
         -Setup source and sink for 0x200 word transaction
@@ -307,10 +303,98 @@ def test_execute_single_instruction(dut):
     yield nysa.wait_clocks(10)
     yield cocotb.external(sata.enable_dma_control)(True)
 
-    WORD_COUNT = 0x1000
+    #WORD_COUNT = 0x880
+    #WORD_COUNT = 0x1000
+    WORD_COUNT = 0x0800
+    #WORD_COUNT = 0x1000
     CHANNEL_ADDR = 1
     SINK_ADDR = 3
     INST_ADDR = 7
+
+    SOURCE_ADDRESS  = 0x0000000000000000
+    DEST_ADDRESS    = 0x0000000000000000
+
+    source_error = get_source_error_signal(dut, CHANNEL_ADDR)
+    sink_error = get_sink_error_signal(dut, SINK_ADDR)
+    source_error_monitor = ErrorMonitor(dut, source_error)
+    sink_error_monitor = ErrorMonitor(dut, sink_error)
+
+    yield cocotb.external(dma.set_channel_sink_addr)            (CHANNEL_ADDR,  SINK_ADDR           )
+    yield nysa.wait_clocks(10)
+    yield cocotb.external(dma.set_channel_instruction_pointer)  (CHANNEL_ADDR,  INST_ADDR           )
+    yield nysa.wait_clocks(10)
+    yield cocotb.external(dma.enable_source_address_increment)  (CHANNEL_ADDR,  True                )
+    yield nysa.wait_clocks(10)
+    yield cocotb.external(dma.enable_dest_address_increment)    (SINK_ADDR,     True                )
+    yield nysa.wait_clocks(10)
+    yield cocotb.external(dma.enable_dest_respect_quantum)      (SINK_ADDR,     False              )
+    #yield cocotb.external(dma.enable_dest_respect_quantum)      (SINK_ADDR,     True                )
+    yield nysa.wait_clocks(10)
+    yield cocotb.external(dma.set_instruction_source_address)   (INST_ADDR,     SOURCE_ADDRESS      )
+    yield nysa.wait_clocks(10)
+    yield cocotb.external(dma.set_instruction_dest_address)     (INST_ADDR,     DEST_ADDRESS        )
+    yield nysa.wait_clocks(10)
+    yield cocotb.external(dma.set_instruction_data_count)       (INST_ADDR,     WORD_COUNT          )
+    yield nysa.wait_clocks(10)
+    yield cocotb.external(dma.set_channel_instruction_pointer)  (CHANNEL_ADDR,  INST_ADDR           )
+    yield nysa.wait_clocks(10)
+    #Start
+    yield cocotb.external(dma.enable_channel)                   (CHANNEL_ADDR,  True                )
+
+    yield nysa.wait_clocks(10000)
+    yield cocotb.external(dma.enable_channel)                   (CHANNEL_ADDR,  False               )
+    yield cocotb.external(dma.enable_dma)(False)
+    yield nysa.wait_clocks(10)
+    #dut.tdm0.m2f_data_error <= 1
+    #yield nysa.wait_clocks(10)
+
+    if len(source_error_monitor) > 0:
+        raise cocotb.result.TestFailure("Test %d Error on source %d write detected %d errors" % (dut.test_id, CHANNEL_ADDR, len(source_error_monitor)))
+
+    if len(sink_error_monitor) > 0:
+        raise cocotb.result.TestFailure("Test %d Error on source %d read detected %d errors" % (dut.test_id, SINK_ADDR, len(sink_error_monitor)))
+
+    source_error_monitor.kill()
+    sink_error_monitor.kill()
+
+
+@cocotb.test(skip = True)
+def test_single_instruction_from_sata(dut):
+    """
+    Description:
+        -Setup source and sink for 0x200 word transaction
+        -Setup the source address to increment
+        -Setup the sink address to increment
+        -setup instruction
+
+    Test ID: 5
+
+    Expected Results:
+        Data is all transferred from one memory device to the next
+    """
+    dut.test_id = 8
+    nysa = NysaSim(dut)
+    yield(nysa.reset())
+    nysa.read_sdb()
+    yield nysa.wait_clocks(2000)
+
+    dma = DMA(nysa, nysa.find_device(DMA)[0])
+    sata = SATADriver(nysa, nysa.find_device(SATADriver)[0])
+    setup_sata(dut)
+
+
+    yield cocotb.external(sata.enable_sata_reset)(False)
+    yield cocotb.external(dma.setup)()
+    yield cocotb.external(dma.enable_dma)(True)
+    yield nysa.wait_clocks(10)
+    yield cocotb.external(sata.enable_dma_control)(True)
+    dut.h2u_read_enable = 1
+
+    #WORD_COUNT = 0x880
+    WORD_COUNT = 0x800
+    CHANNEL_ADDR = 3
+    SINK_ADDR = 0
+    INST_ADDR = 0
 
     SOURCE_ADDRESS  = 0x0000000000000000
     DEST_ADDRESS    = 0x0000000000000200
@@ -342,7 +426,7 @@ def test_execute_single_instruction(dut):
     #Start
     yield cocotb.external(dma.enable_channel)                   (CHANNEL_ADDR,  True                )
 
-    yield nysa.wait_clocks(8000)
+    yield nysa.wait_clocks(10000)
     yield cocotb.external(dma.enable_channel)                   (CHANNEL_ADDR,  False               )
     yield cocotb.external(dma.enable_dma)(False)
     yield nysa.wait_clocks(10)
@@ -469,6 +553,9 @@ def test_double_buffer(dut):
     yield cocotb.external(dma.enable_dma)(True)
     #yield nysa.wait_clocks(10)
 
+    #Enable the hard drive data generator
+    dut.h2u_read_enable = 1
+
     #Instructions
     INST_START_ADDR    = 0
 
@@ -543,6 +630,7 @@ def test_double_buffer(dut):
     source_error_monitor.kill()
     sink_error_monitor.kill()
     yield nysa.wait_clocks(100)
+    dut.h2u_read_enable = 0
 
 
 

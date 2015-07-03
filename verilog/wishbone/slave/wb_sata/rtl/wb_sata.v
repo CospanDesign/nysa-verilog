@@ -461,38 +461,40 @@ sata_stack sata(
 );
 
 sata_dma_interface dma(
-  .rst                     (rst || !i_platform_ready),
-  .clk                     (clk                     ),
+  .rst                      (rst || !i_platform_ready ),
+  .clk                      (clk                      ),
 
-  .enable                  (enable_dma_control      ),
+  .enable                   (enable_dma_control       ),
 
   //SATA Controller Interface
-  .sata_command            (dma_command             ),
-  .sata_execute_command_stb(dma_execute_command_stb ), //Execute Command Strobe
-  .sata_lba                (dma_lba                 ), //SATA Sector Address
-  .sata_sector_count       (dma_sector_count        ), //512 Increment
+  .sata_command             (dma_command              ),
+  .sata_execute_command_stb (dma_execute_command_stb  ), //Execute Command Strobe
+  .sata_lba                 (dma_lba                  ), //SATA Sector Address
+  .sata_sector_count        (dma_sector_count         ), //512 Increment
+
+  .sata_busy                (sata_busy                ),
 
   //Write Side
-  .write_enable             (i_write_enable         ),
-  .write_addr               (i_write_addr           ),
-  .write_finished           (o_write_finished       ),
-  .write_count              (i_write_count          ),
-  .write_flush              (i_write_flush          ),
+  .write_enable             (i_write_enable           ),
+  .write_addr               (i_write_addr             ),
+  .write_finished           (o_write_finished         ),
+  .write_count              (i_write_count            ),
+  .write_flush              (i_write_flush            ),
 
-  .write_activate           (user_din_activate      ),
-  .write_strobe             (user_din_stb           ),
-  .write_empty              (user_din_empty         ),
+  .write_activate           (user_din_activate        ),
+  .write_strobe             (user_din_stb             ),
+  .write_empty              (user_din_empty           ),
 
   //Read Side
-  .read_enable              (i_read_enable          ),
-  .read_addr                (i_read_addr            ),
-  .read_busy                (o_read_busy            ),
-  .read_error               (o_read_error           ),
-  .read_count               (i_read_count           ),
-  .read_flush               (i_read_flush           ),
+  .read_enable              (i_read_enable            ),
+  .read_addr                (i_read_addr              ),
+  .read_busy                (o_read_busy              ),
+  .read_error               (o_read_error             ),
+  .read_count               (i_read_count             ),
+  .read_flush               (i_read_flush             ),
 
-  .read_activate            (user_dout_activate     ),
-  .read_strobe              (user_dout_stb          )
+  .read_activate            (user_dout_activate       ),
+  .read_strobe              (user_dout_stb            )
 
 );
 
@@ -549,7 +551,7 @@ assign  o_read_size              = enable_dma_control ? user_dout_size    : 24'h
 assign  o_read_data              = enable_dma_control ? user_dout         : 32'h00000000;
 
 
-assign  sata_command             = enable_dma_control ? dma_command       : hard_drive_command; 
+assign  sata_command             = enable_dma_control ? dma_command       : hard_drive_command;
 assign  sata_lba                 = enable_dma_control ? dma_lba           : sector_address;
 assign  sata_sector_count        = enable_dma_control ? dma_sector_count  : sector_count;
 

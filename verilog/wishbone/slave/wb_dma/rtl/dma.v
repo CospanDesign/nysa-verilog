@@ -934,9 +934,7 @@ always @ (posedge clk) begin
         ACTIVE: begin
           //src_address[i]                      <= curr_src_address[ip[i]];
           src_enable[i]                       <= 1;
-
           snk_enable[snka[i]]                 <= 1;
-
           inst_wait[ip[i]]                    <= 0;
           inst_busy[ip[i]]                    <= 0;
           inst_egress_ready[ip[i]]            <= 0;
