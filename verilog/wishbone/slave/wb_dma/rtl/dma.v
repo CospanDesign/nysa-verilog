@@ -696,10 +696,10 @@ assign channel_count1         = channel_count[1];
 assign channel_count2         = channel_count[2];
 assign channel_count3         = channel_count[3];
 
-assign flag_channel_enable0       = dma_enable[0];
-assign flag_channel_enable1       = dma_enable[1];
-assign flag_channel_enable2       = dma_enable[2];
-assign flag_channel_enable3       = dma_enable[3];
+assign flag_channel_enable0   = dma_enable[0];
+assign flag_channel_enable1   = dma_enable[1];
+assign flag_channel_enable2   = dma_enable[2];
+assign flag_channel_enable3   = dma_enable[3];
 
 assign curr_count0            = curr_count[0];
 assign curr_count1            = curr_count[1];
@@ -856,13 +856,13 @@ always @ (posedge clk) begin
             if (snk_activate[i] && (snk_count[i] < snk_size[i])) begin
               snk_strobe[i]                   <= 1;
               snk_count[i]                    <= snk_count[i] + 1;
-
-              snk_enable[i]                   <= 0;
-              snk_address[i]                  <= 0;
-              snk_busy[i]                     <= 0;
+              //snk_enable[i]                   <= 0;
+              //snk_address[i]                  <= 0;
+              snk_busy[i]                     <= 1;
             end
             else begin
               snk_activate[i]                 <= 0;
+              snk_busy[i]                     <= 0;
             end
           end
         end
@@ -998,6 +998,7 @@ always @ (posedge clk) begin
               end
             end
             //Reached the end of an instruction
+
 //XXX: Fix End Command
             if (channel_count[i] >= curr_count[i] && !snk_strobe[snka[i]]) begin
             //if (snk_finished[snka[i]]) begin
@@ -1090,6 +1091,7 @@ always @ (posedge clk) begin
           inst_egress_ready[ip[i]]            <=  0;
           src_dma_finished[i]                 <=  1;
           if (!dma_enable[i]) begin
+            snk_address[snka[i]]              <=  0;
             snk_in_use[snka[i]]               <=  0;
             state[i]                          <=  IDLE;
           end

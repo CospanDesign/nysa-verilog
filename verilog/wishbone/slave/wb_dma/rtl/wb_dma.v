@@ -235,6 +235,15 @@ localparam      SNK1_STATUS_ADDR        = 32'h00000011;
 localparam      SNK2_STATUS_ADDR        = 32'h00000012;
 localparam      SNK3_STATUS_ADDR        = 32'h00000013;
 
+localparam      SNK0_ADDRESS_ADDR_LOW   = 32'h00000016;
+localparam      SNK0_ADDRESS_ADDR_HIGH  = 32'h00000017;
+localparam      SNK1_ADDRESS_ADDR_LOW   = 32'h00000018;
+localparam      SNK1_ADDRESS_ADDR_HIGH  = 32'h00000019;
+localparam      SNK2_ADDRESS_ADDR_LOW   = 32'h0000001A;
+localparam      SNK2_ADDRESS_ADDR_HIGH  = 32'h0000001B;
+localparam      SNK3_ADDRESS_ADDR_LOW   = 32'h0000001C;
+localparam      SNK3_ADDRESS_ADDR_HIGH  = 32'h0000001D;
+
 localparam      PARAM_SRC_ADDR_LOW0     = 32'h00000020;
 localparam      PARAM_SRC_ADDR_HIGH0    = 32'h00000021;
 localparam      PARAM_DEST_ADDR_LOW0    = 32'h00000022;
@@ -1003,6 +1012,32 @@ always @ (posedge clk) begin
             end
             SNK3_STATUS_ADDR: begin
               o_wbs_dat <= snk3_status;
+            end
+
+            //Sink Address
+            SNK0_ADDRESS_ADDR_LOW: begin
+              o_wbs_dat <= o_snk0_write_addr[31:0];
+            end
+            SNK0_ADDRESS_ADDR_HIGH: begin
+              o_wbs_dat <= o_snk0_write_addr[63:32];
+            end
+            SNK1_ADDRESS_ADDR_LOW: begin
+              o_wbs_dat <= o_snk1_write_addr[31:0];
+            end
+            SNK1_ADDRESS_ADDR_HIGH: begin
+              o_wbs_dat <= o_snk1_write_addr[63:32];
+            end
+            SNK2_ADDRESS_ADDR_LOW: begin
+              o_wbs_dat <= o_snk2_write_addr[31:0];
+            end
+            SNK2_ADDRESS_ADDR_HIGH: begin
+              o_wbs_dat <= o_snk2_write_addr[63:32];
+            end
+            SNK3_ADDRESS_ADDR_LOW: begin
+              o_wbs_dat <= o_snk3_write_addr[31:0];
+            end
+            SNK3_ADDRESS_ADDR_HIGH: begin
+              o_wbs_dat <= o_snk3_write_addr[63:32];
             end
 
             //Address 0
