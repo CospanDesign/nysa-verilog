@@ -1,4 +1,5 @@
 `define MAX_SECTOR_COUNT 24'h10000
+//`define MAX_SECTOR_COUNT 24'h00040
 
 
 module sata_dma_interface (
@@ -26,6 +27,8 @@ module sata_dma_interface (
   input               write_strobe,
   input               write_empty,
 
+  output              enable_write_ready,
+
   //Read Side
   input               read_enable,
   input       [63:0]  read_addr,
@@ -51,23 +54,19 @@ localparam              READ            =   4'h7;
 localparam              READ_FINISHED   =   4'h8;
 
 //Registers/Wires
-reg                     prev_write_enable;
-wire                    posedge_write_enable;
-reg                     prev_read_enable;
-wire                    posedge_read_enable;
 //Can we reduce these two values to one?
 reg         [23:0]      sata_write_count;
 reg         [23:0]      sata_read_count;
 
 //Add a delay to allow the address and sector to be set up
-reg                     begin_command_stb;
-
 reg         [3:0]       state;
 reg         [23:0]      total_sector_count;
 reg         [23:0]      dword_count;
 wire        [23:0]      total_dword_size;
 reg                     write_finished;
 reg                     read_finished;
+
+reg                     enable_write_fifo;
 
 
 //Submodules
@@ -78,9 +77,10 @@ assign  read_error                  = 0;
 
 //NEW
 assign  total_dword_size            = (sata_sector_count == 16'h0000)   ?
-                                        24'h010000          << 7 :
+                                        `MAX_SECTOR_COUNT   << 7 :
                                         sata_sector_count   << 7;
 
+assign  enable_write_ready          = enable && enable_write_fifo;
 //Synchronous Logic
 always @ (posedge clk) begin
   if (rst || !enable) begin
@@ -96,63 +96,71 @@ always @ (posedge clk) begin
 
     write_finished              <=  0;
     read_finished               <=  0;
+    enable_write_fifo           <=  0;
 
   end
   else begin
     //Strobes
-    sata_execute_command_stb    <=  0;
-    begin_command_stb           <=  0;
-    write_finished              <=  0;
-    read_finished               <=  0;
+    sata_execute_command_stb          <=  0;
+    write_finished                    <=  0;
+    read_finished                     <=  0;
 
     case (state)
         IDLE: begin
             //If Write Enable is set transition to Write Setup
             if (write_enable) begin
-                total_sector_count  <=  write_count[23:7] + (write_count[6:0] > 0); //The extra '+' is to take care of overflow
-                sata_lba            <=  write_addr[55:6];
-                sata_command        <=  8'h35;
-                state               <=  WRITE_SETUP;
+                total_sector_count    <=  write_count[23:7] + (write_count[6:0] > 0); //The extra '+' is to take care of overflow
+                sata_lba              <=  write_addr[55:6];
+                sata_command          <=  8'h35;
+                state                 <=  WRITE_SETUP;
             end
             else if (read_enable) begin
-                total_sector_count  <=  read_count[23:7] + (read_count[6:0] > 0); //The extra '+' is to take care of overflow
-                sata_lba            <=  read_addr[55:6];
-                sata_command        <=  8'h25;
-                state               <=  READ_SETUP;
+                total_sector_count    <=  read_count[23:7] + (read_count[6:0] > 0); //The extra '+' is to take care of overflow
+                sata_lba              <=  read_addr[55:6];
+                sata_command          <=  8'h25;
+                state                 <=  READ_SETUP;
             end
         end
         WRITE_SETUP: begin
             //Given the address and size determine if we can send all or some of
             //of the data to the hard drive
             //Fall directly through to writing the command
-            if (total_sector_count  >= `MAX_SECTOR_COUNT) begin
-                sata_sector_count   <=  16'h0000;
-                total_sector_count  <=  total_sector_count - `MAX_SECTOR_COUNT;
+            if (!sata_busy) begin
+              if (total_sector_count  >= `MAX_SECTOR_COUNT) begin
+                  //sata_sector_count   <=  16'h0000;
+                  sata_sector_count   <=  `MAX_SECTOR_COUNT;
+                  total_sector_count  <=  total_sector_count - `MAX_SECTOR_COUNT;
+              end
+              else begin
+                  sata_sector_count   <=  total_sector_count;
+                  total_sector_count  <=  0;
+              end
+              dword_count             <=  0;
+              state                   <=  WRITE_COMMAND;
+              enable_write_fifo       <=  1;
             end
-            else begin
-                sata_sector_count   <=  total_sector_count;
-                total_sector_count  <=  0;
-            end
-            dword_count             <=  0;
-            state                   <=  WRITE_COMMAND;
         end
         WRITE_COMMAND: begin
             //Tell the hard drive to execute
-            sata_execute_command_stb<=  1;
-            state                   <=  WRITE;
+            sata_execute_command_stb  <=  1;
+            state                     <=  WRITE;
         end
         WRITE: begin
             //Write the entire chunk of data, track the write count
             if ((write_activate > 0) && write_strobe) begin
-                dword_count         <=  dword_count + 1;
+                dword_count           <=  dword_count + 1;
             end
-            if ((dword_count >= total_dword_size) && !sata_busy) begin
-                //Wait for the hard drive to finish it's transaction too
-                if (total_sector_count > 0) begin
-                    state           <=  WRITE_SETUP;
-                end
-                else begin
-                    state           <=  WRITE_FINISHED;
+            if (dword_count >= total_dword_size) begin
+                enable_write_fifo     <=  0;
+                if (!sata_busy) begin
+                    //Wait for the hard drive to finish it's transaction too
+                    if (total_sector_count > 0) begin
+                        state         <=  WRITE_SETUP;
+                        sata_lba      <=  sata_lba + `MAX_SECTOR_COUNT;
+                    end
+                    else begin
+                        state         <=  WRITE_FINISHED;
+                    end
                 end
             end
         end
@@ -168,16 +176,18 @@ always @ (posedge clk) begin
             //Given the address and size determine if we can read all or some of
             //of the data from the hard drive
             //Fall directly through to execute the command
-            if (total_sector_count  >= `MAX_SECTOR_COUNT) begin
-                sata_sector_count   <=  16'h0000;
-                total_sector_count  <=  total_sector_count - `MAX_SECTOR_COUNT;
+            if (!sata_busy) begin
+              if (total_sector_count  >= `MAX_SECTOR_COUNT) begin
+                  sata_sector_count   <=  16'h0000;
+                  total_sector_count  <=  total_sector_count - `MAX_SECTOR_COUNT;
+              end
+              else begin
+                  sata_sector_count   <=  total_sector_count;
+                  total_sector_count  <=  0;
+              end
+              dword_count             <=  0;
+              state                   <=  READ_COMMAND;
             end
-            else begin
-                sata_sector_count   <=  total_sector_count;
-                total_sector_count  <=  0;
-            end
-            dword_count             <=  0;
-            state                   <=  READ_COMMAND;
         end
         READ_COMMAND: begin
             //Initiate the transaction with the hard drive

@@ -305,8 +305,9 @@ def test_single_instruction_to_sata(dut):
 
     #WORD_COUNT = 0x880
     #WORD_COUNT = 0x1000
-    WORD_COUNT = 0x0800
-    #WORD_COUNT = 0x1000
+    #WORD_COUNT = 0x0800
+    WORD_COUNT = 0x3000
+    #WORD_COUNT = 0x800000
     CHANNEL_ADDR = 1
     SINK_ADDR = 3
     INST_ADDR = 7
@@ -341,7 +342,7 @@ def test_single_instruction_to_sata(dut):
     #Start
     yield cocotb.external(dma.enable_channel)                   (CHANNEL_ADDR,  True                )
 
-    yield nysa.wait_clocks(10000)
+    yield nysa.wait_clocks(30000)
     yield cocotb.external(dma.enable_channel)                   (CHANNEL_ADDR,  False               )
     yield cocotb.external(dma.enable_dma)(False)
     yield nysa.wait_clocks(10)

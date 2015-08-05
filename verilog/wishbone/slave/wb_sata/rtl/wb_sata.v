@@ -321,6 +321,8 @@ wire          dma_execute_command_stb;
 wire  [47:0]  dma_lba;
 wire  [15:0]  dma_sector_count;
 
+wire          enable_write_ready;
+
 wire  [7:0]   sata_command;
 wire  [47:0]  sata_lba;
 wire  [15:0]  sata_sector_count;
@@ -485,6 +487,8 @@ sata_dma_interface dma(
   .write_strobe             (user_din_stb             ),
   .write_empty              (user_din_empty           ),
 
+  .enable_write_ready       (enable_write_ready       ),
+
   //Read Side
   .read_enable              (i_read_enable            ),
   .read_addr                (i_read_addr              ),
@@ -543,7 +547,7 @@ assign  user_din                 = enable_dma_control ? i_write_data      : sata
 assign  user_dout_stb            = enable_dma_control ? i_read_strobe     : lcl_user_dout_stb;
 assign  user_dout_activate       = enable_dma_control ? i_read_activate   : lcl_user_dout_activate;
 
-assign  o_write_ready            = enable_dma_control ? user_din_ready    : 2'b00;
+assign  o_write_ready            = enable_write_ready ? user_din_ready    : 2'b00;
 assign  o_write_size             = enable_dma_control ? user_din_size     : 24'h000000;
 
 assign  o_read_ready             = enable_dma_control ? user_dout_ready   : 1'b0;
