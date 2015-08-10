@@ -27,12 +27,12 @@
 
 module apu_frame_counter
 (
-  input  wire       clk_in,              // system clock signal
-  input  wire       rst_in,              // reset signal
-  input  wire       cpu_cycle_pulse_in,  // 1 clk pulse on every cpu cycle
-  input  wire       apu_cycle_pulse_in,  // 1 clk pulse on every apu cycle
-  input  wire [1:0] mode_in,             // mode ([0] = IRQ inhibit, [1] = sequence mode)
-  input  wire       mode_wr_in,          // update mode
+  input             clk_in,              // system clock signal
+  input             rst_in,              // reset signal
+  input             cpu_cycle_pulse_in,  // 1 clk pulse on every cpu cycle
+  input             apu_cycle_pulse_in,  // 1 clk pulse on every apu cycle
+  input       [1:0] mode_in,             // mode ([0] = IRQ inhibit, [1] = sequence mode)
+  input             mode_wr_in,          // update mode
   output reg        e_pulse_out,         // envelope and linear counter pulse (~240 Hz)
   output reg        l_pulse_out,         // length counter and sweep pulse (~120 Hz)
   output reg        f_pulse_out          // frame pulse (~60Hz, should drive IRQ)

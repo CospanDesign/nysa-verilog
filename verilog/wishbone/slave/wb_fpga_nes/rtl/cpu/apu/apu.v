@@ -25,16 +25,15 @@
 *  Audio Processing Unit.
 ***************************************************************************************************/
 
-module apu
-(
-  input  wire        clk_in,    // system clock signal
-  input  wire        rst_in,    // reset signal
-  input  wire [ 3:0] mute_in,   // disable specific audio channels
-  input  wire [15:0] a_in,      // addr input bus
-  input  wire [ 7:0] d_in,      // data input bus
-  input  wire        r_nw_in,   // read/write select
-  output wire        audio_out, // pwm audio output
-  output wire [ 7:0] d_out      // data output bus
+module apu(
+  input         clk_in,    // system clock signal
+  input         rst_in,    // reset signal
+  input  [ 3:0] mute_in,   // disable specific audio channels
+  input  [15:0] a_in,      // addr input bus
+  input  [ 7:0] d_in,      // data input bus
+  input         r_nw_in,   // read/write select
+  output        audio_out, // pwm audio output
+  output [ 7:0] d_out      // data output bus
 );
 
 localparam [15:0] PULSE0_CHANNEL_CNTL_MMR_ADDR   = 16'h4000;

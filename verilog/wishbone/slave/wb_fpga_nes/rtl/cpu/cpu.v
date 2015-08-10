@@ -25,8 +25,7 @@
 *  6502 core implementation.
 ***************************************************************************************************/
 
-module cpu
-(
+module cpu (
   input  wire        clk_in,         // 100MHz system clock
   input  wire        rst_in,         // reset signal
   input  wire        ready_in,       // ready signal

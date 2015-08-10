@@ -39,7 +39,8 @@ reg   [23:0]        r_write_count;
 reg   [31:0]        r_write_data;
 
 //Submodules
-ppfifo # (
+ppfifo p2m
+#(
   .DATA_WIDTH       (32                 ),
   .ADDRESS_WIDTH    (BUFFER_SIZE        )
 )fifo        (

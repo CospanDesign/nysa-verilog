@@ -29,13 +29,13 @@
 
 module apu_envelope_generator
 (
-  input  wire       clk_in,       // system clock signal
-  input  wire       rst_in,       // reset signal
-  input  wire       eg_pulse_in,  // 1 clk pulse for every env gen update
-  input  wire [5:0] env_in,       // envelope value (e.g., via $4000)
-  input  wire       env_wr_in,    // envelope value write
-  input  wire       env_restart,  // envelope restart
-  output wire [3:0] env_out       // output volume
+  input        clk_in,       // system clock signal
+  input        rst_in,       // reset signal
+  input        eg_pulse_in,  // 1 clk pulse for every env gen update
+  input  [5:0] env_in,       // envelope value (e.g., via $4000)
+  input        env_wr_in,    // envelope value write
+  input        env_restart,  // envelope restart
+  output [3:0] env_out       // output volume
 );
 
 reg  [5:0] q_reg;

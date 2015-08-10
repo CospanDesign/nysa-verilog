@@ -25,14 +25,13 @@
 *  Work RAM module; implements 2KB of on-board WRAM as fpga block RAM.
 ***************************************************************************************************/
 
-module wram
-(
-  input  wire         clk_in,   // system clock
-  input  wire         en_in,    // chip enable
-  input  wire         r_nw_in,  // read/write select (read: 0, write: 1)
-  input  wire  [10:0] a_in,     // memory address
-  input  wire  [ 7:0] d_in,     // data input
-  output wire  [ 7:0] d_out     // data output
+module wram(
+  input         clk_in,   // system clock
+  input         en_in,    // chip enable
+  input         r_nw_in,  // read/write select (read: 0, write: 1)
+  input  [10:0] a_in,     // memory address
+  input  [ 7:0] d_in,     // data input
+  output [ 7:0] d_out     // data output
 );
 
 wire       wram_bram_we;

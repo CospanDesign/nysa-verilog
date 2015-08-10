@@ -28,12 +28,13 @@ SOFTWARE.
 
 
 module sdram_clkgen (
-	input clk,
-	input rst,
 
-	output locked,
-	output out_clk,
-	output phy_out_clk
+    input clk,
+    input rst,
+
+    output locked,
+    output out_clk,
+    output phy_out_clk
 );
 
 wire  clkfbout_buf;
@@ -47,7 +48,7 @@ wire  clkout5;
 wire  phy_bufout;
 
 
-PLL_BASE #(
+PLL_BASE sdram_pll #(
   .BANDWIDTH            ("OPTIMIZED"),
   .CLK_FEEDBACK         ("CLKFBOUT"),
   .COMPENSATION         ("SYSTEM_SYNCHRONOUS"),
@@ -102,7 +103,7 @@ BUFG phy_clock_out (
   .O(phy_bufout)
 );
 
-ODDR2 #(
+ODDR2 output_clk #(
 	.DDR_ALIGNMENT        ("NONE"),	//Sets output alignment to NON
 	.INIT                 (1'b0),			//Sets the inital state to 0
 	.SRTYPE               ("SYNC")			//Specified "SYNC" or "ASYNC" reset

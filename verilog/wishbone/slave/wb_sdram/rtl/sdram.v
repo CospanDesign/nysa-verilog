@@ -125,10 +125,10 @@ wire                wwfr;
 wire                rwfr;
 wire                of_starved;
 
-ppfifo#(
+ppfifo #(
   .DATA_WIDTH(36),
   .ADDRESS_WIDTH(9)
-)ppfifo_wr (
+) ppfifo_wr (
   .reset                     (rst || ~sdram_ready            ),
 
   //Write
@@ -213,10 +213,10 @@ wire        [31:0]  of_write_data;
 
 
 //Read FIFO
-ppfifo#(
+ppfifo #(
   .DATA_WIDTH(32),
   .ADDRESS_WIDTH(9)
-)ppfifo_rd (
+) ppfifo_rd (
   .reset(rst || ~sdram_ready || of_fifo_reset || i_wb_of_reset),
 
   //Write

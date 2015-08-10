@@ -36,12 +36,12 @@ module apu_div
   parameter PERIOD_BITS = 16
 )
 (
-  input  wire                   clk_in,     // system clock signal
-  input  wire                   rst_in,     // reset signal
-  input  wire                   pulse_in,   // input pulse
-  input  wire                   reload_in,  // reset counter to period_in (no pulse_out generated)
-  input  wire [PERIOD_BITS-1:0] period_in,  // new period value
-  output wire                   pulse_out   // divided output pulse
+  input                    clk_in,     // system clock signal
+  input                    rst_in,     // reset signal
+  input                    pulse_in,   // input pulse
+  input                    reload_in,  // reset counter to period_in (no pulse_out generated)
+  input  [PERIOD_BITS-1:0] period_in,  // new period value
+  output                   pulse_out   // divided output pulse
 );
 
 reg  [PERIOD_BITS-1:0] q_cnt;
