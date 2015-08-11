@@ -17,9 +17,9 @@ VERILOG_SOURCES += $(NYSA)/verilog/sim/wishbone/interconnect/example_2port_inter
 VERILOG_SOURCES += $(TOPDIR)/rtl/crc7.v
 VERILOG_SOURCES += $(TOPDIR)/rtl/crc16.v
 
-VERILOG_SOURCES += $(TOPDIR)/rtl/sdio_device_phy_sd_hs.v
-VERILOG_SOURCES += $(TOPDIR)/rtl/sdio_device_phy_sd_ls.v
-VERILOG_SOURCES += $(TOPDIR)/rtl/sdio_device_phy_spi.v
+#VERILOG_SOURCES += $(TOPDIR)/rtl/sdio_device_phy_sd_hs.v
+#VERILOG_SOURCES += $(TOPDIR)/rtl/sdio_device_phy_sd_ls.v
+#VERILOG_SOURCES += $(TOPDIR)/rtl/sdio_device_phy_spi.v
 VERILOG_SOURCES += $(TOPDIR)/rtl/sdio_device_phy.v
 VERILOG_SOURCES += $(TOPDIR)/rtl/sdio_device_data_link.v
 VERILOG_SOURCES += $(TOPDIR)/rtl/sdio_device_stack.v

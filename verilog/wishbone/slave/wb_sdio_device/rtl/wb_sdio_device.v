@@ -100,7 +100,7 @@ localparam     ADDR_2  = 32'h00000002;
 //Local Registers/Wires
 wire      [3:0]       sdio_state;
 //Submodules
-sdio_device_stack sdio_dev (
+sdio_device_stack sdev (
   .clk        (clk        ),
   .rst        (rst        ),
 

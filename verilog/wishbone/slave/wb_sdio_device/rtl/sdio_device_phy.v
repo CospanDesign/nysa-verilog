@@ -10,6 +10,8 @@ module sdio_device_phy (
   input               sd4_phy,
 
   //Data Link Interface
+  output              cmd_phy_idle,
+  output  reg         cmd_phy,
   output  reg         cmd_stb,
   output  reg         cmd_crc_good_stb,
   output  reg [5:0]   cmd,
@@ -68,6 +70,7 @@ crc7 crc_gen (
 //Asynchronous Logic
 assign  busy          = ((state != IDLE) || !sdio_cmd_in);
 assign  crc_bit       = sdio_cmd_dir ? sdio_cmd_out: sdio_cmd_in;
+assign  cmd_phy_idle  = !busy;
 //Synchronous Logic
 
 //XXX: this clock should probably be sdio_clk

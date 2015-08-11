@@ -22,7 +22,7 @@
 `define SD_CMD_SEND_RELATIVE_ADDR     (6'd3 )
 //`define SD_CMD_SET_DSR                (6'd4 )
 `define SD_CMD_IO_SEND_OP_CMD         (6'd5 )
-`define SD_CMD_SWITCH_FUNC            (6'd6 )
+//`define SD_CMD_SWITCH_FUNC            (6'd6 )
 `define SD_CMD_SEL_DESEL_CARD         (6'd7 )
 `define SD_CMD_SEND_IF_COND           (6'd8 )
 //`define SD_CMD_SEND_CSD               (6'd9 )
@@ -61,62 +61,69 @@
 //Relative Card Address
 `define RELATIVE_CARD_ADDRESS       (16'h0001)
 
+//Not SD_CURRENT_STATE shall always return 0x0F
+
 //Card Status
-`define CMD_RSP_CMD                (45:40)
+`define CMD_RSP_CMD                 45:40
 `define CMD_RSP_CRD_STS_START       (39)
 `define CMD_RSP_CRD_STS_END         (8)
 
-`define CARD_STS_OUT_OF_RANGE       (39)
-`define CARD_STS_COM_CRC_ERROR      (38)
-`define CARD_STS_ILLEGAL_COMMAND    (37)
-`define CARD_STS_ERROR              (48 - 19)
-`define CARD_CURRENT_STATE_START    (48 - 12)
-`define CARD_CURRENT_STATE_END      (48 -  9)
-
-//Not SD_CURRENT_STATE shall always return 0x0F
-
-//COMMAND SEL DESEL CARD
-`define CMD3_RSP_REL_ADDR_START     ()
-`define CMD3_RSP_REL_ADDR_END       ()
-
 //IO_SEND_OP_COND Response (R4 32 bits)
 `define CMD5_ARG_S18R               (24)
-`define CMD5_ARG_OCR_START          (23)
-`define CMD5_ARG_OCR_END            (0)
-
-`define CMD5_RSP_READY              (39)      /* Card is ready to operate */
-`define CMD5_RSP_NUM_FUNCS          (38:35)   /* Number of functions */
-`define CMD5_RSP_MEM_PRESENT        (34)      /* Memory is Also Availalbe */
-`define CMD5_RSP_UHSII_AVAILABLE    (33)      /* Ultra HS Mode II Available */
-`define CMD5_RSP_S18A               (32)      /* Accept switch to 1.8V */
-`define CMD5_RSP_IO_OCR             (31:8)    /* Operating Condition Range */
+`define CMD5_ARG_VHS                23:0
 
 `define VHS_DEFAULT_VALUE           (4'b0001)
 
 `define CMD8_ARG_VHS_START          (15)
 `define CMD8_ARG_VHS_END            (8)
-`define CMD8_ARG_PATTERN            (7:0)
-
-`define CMD8_RSP_VA                 (19:16)
-`define CMD8_RSP_PATTERN            (15:8)
-
+`define CMD8_ARG_PATTERN            7:0
 
 `define CMD52_ARG_RW_FLAG           (31)    /* 0 = Read 1 = Write */
-`define CMD52_ARG_FNUM              (30:27)
+`define CMD52_ARG_FNUM              30:27
 `define CMD52_ARG_RAW_FLAG          (26)    /* Read the value of the register after a write RW_FLAG = 1*/
-`define CMD52_ARG_REG_ADDR_START    (24:8)
-`define CMD52_ARG_WR_DATA           (7:0)
+`define CMD52_ARG_REG_ADDR          24:8
+`define CMD52_ARG_WR_DATA           7:0
 
 `define CMD52_RST_ADDR              (6)
 `define CMD52_RST_BIT               (3)
 
-`define CMD52_RSP_FLAGS_RANGE       (31:16)
-`define CMD52_RSP_DATA              (15:8)
-`define CMD52_RSP_FLAG_CRC_ERROR    (15)
-`define CMD52_RSP_INVALID_CMD       (14)
-`define CMD52_RSP_FLAG_CURR_STATE   (13:12)
-`define CMD52_RSP_FLAG_ERROR        (11)
-`define CMD52_RSP_INVALID_FNUM      (9)
-`define CMD52_RSP_OUT_OF_RANGE      (8)
+
+//COMMAND SEL DESEL CARD
+//Response R1
+`define R1_OUT_OF_RANGE             (39)
+`define R1_COM_CRC_ERROR            (38)
+`define R1_ILLEGAL_COMMAND          (37)
+`define R1_ERROR                    (19)
+`define R1_CURRENT_STATE            12:9
+
+//Respone R4
+`define R4_RSRVD                    45:40
+`define R4_READY                    (39)      /* Card is ready to operate */
+`define R4_NUM_FUNCS                38:36     /* Number of functions */
+`define R4_MEM_PRESENT              (35)      /* Memory is Also Availalbe */
+`define R4_UHSII_AVAILABLE          (34)      /* Ultra HS Mode II Available */
+`define R4_S18A                     (32)      /* Accept switch to 1.8V */
+`define R4_IO_OCR                   31:16     /* Operating Condition Range */
+
+//Response R5
+`define R5_FLAGS_RANGE              31:16
+`define R5_DATA                     15:8
+`define R5_FLAG_CRC_ERROR           (15)
+`define R5_INVALID_CMD              (14)
+`define R5_FLAG_CURR_STATE          13:12
+`define R5_FLAG_ERROR               (11)
+`define R5_INVALID_FNUM             (9)
+`define R5_OUT_OF_RANGE             (8)
+
+//Response R6
+`define R6_REL_ADDR                 39:24
+`define R6_STS_CRC_COMM_ERR         (23)
+`define R6_STS_ILLEGAL_CMD          (22)
+`define R6_STS_ERROR                (21)
+
+//Response 7
+`define R7_VHS                      19:16
+`define R7_PATTERN                  15:8
+
 
 `endif
