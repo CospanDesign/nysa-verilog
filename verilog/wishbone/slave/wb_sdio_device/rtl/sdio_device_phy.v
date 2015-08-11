@@ -17,6 +17,7 @@ module sdio_device_phy (
 
   input       [127:0] rsps,
   input       [7:0]   rsps_len,
+  input               rsps_fail,
 
   //XXX: Need to hook this up
   input               interrupt,
@@ -102,8 +103,6 @@ always @ (posedge sdio_clk) begin
     else begin
       bit_count     <=  0;
     end
-
-
     case (state)
       IDLE: begin
         sdio_cmd_out  <=  1;
@@ -153,7 +152,7 @@ always @ (posedge sdio_clk) begin
       end
       RESPONSE_CRC: begin
         sdio_cmd_out    <=  crc[6];
-        crc             <=  {crc[5:0], 1'b0};
+        cmd_crc          <=  {crc[5:0], 1'b0};
         if (bit_count >= 8'h7) begin
           state         <=  RESPONSE_FINISHED;
         end
@@ -167,6 +166,11 @@ always @ (posedge sdio_clk) begin
         state           <=  IDLE;
       end
     endcase
+    
+    if (rsps_fail) begin
+      //Do not respond when we detect a fail
+      state             <=  IDLE;
+    end
   end
 end
 endmodule
