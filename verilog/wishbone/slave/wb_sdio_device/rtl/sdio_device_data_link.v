@@ -301,7 +301,7 @@ always @ (posedge sdio_clk) begin
             if( cmd_arg[`CMD52_ARG_FNUM    ]                             &&
                 cmd_arg[`CMD52_ARG_REG_ADDR] == cmd_arg[`CMD52_RST_ADDR] &&
                !cmd_arg[`CMD52_ARG_RW_FLAG ]                             &&
-                cmd_arg[`CMD52_ARG_WR_DATA ][CMD52_RST_BIT]) begin
+                cmd_arg[`CMD52_RST_BIT     ]) begin
               state                 <= INITIALIZE;
             end
             rsps_stb                <=  1;
@@ -350,7 +350,7 @@ always @ (posedge sdio_clk) begin
             if( cmd_arg[`CMD52_ARG_FNUM    ]                             &&
                 cmd_arg[`CMD52_ARG_REG_ADDR] == cmd_arg[`CMD52_RST_ADDR] &&
                !cmd_arg[`CMD52_ARG_RW_FLAG ]                             &&
-                cmd_arg[`CMD52_ARG_WR_DATA ][CMD52_RST_BIT]) begin
+                cmd_arg[`CMD52_RST_BIT     ]) begin
               state                 <= INITIALIZE;
             end
             rsps_stb                <=  1;

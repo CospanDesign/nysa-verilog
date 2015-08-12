@@ -85,7 +85,7 @@
 `define CMD52_ARG_WR_DATA           7:0
 
 `define CMD52_RST_ADDR              (6)
-`define CMD52_RST_BIT               (3)
+`define CMD52_RST_BIT               3
 
 
 //COMMAND SEL DESEL CARD
