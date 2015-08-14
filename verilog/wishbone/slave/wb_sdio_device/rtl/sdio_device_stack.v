@@ -92,12 +92,13 @@ wire                  chip_select_n;
 wire                  func_dat_rdy;
 
 //Submodules
-sdio_device_data_link #(
+sdio_device_card_cnt #(
   .NUM_FUNCS        (1                      ),/* Number of SDIO Functions available */
   .MEM_PRESENT      (0                      ),/* Not supported yet */
   .UHSII_AVAILABLE  (0                      ),/* UHS Mode Not available yet */
   .IO_OCR           (24'hFFF0               ) /* Operating condition mode (voltage range) */
-) data_link (
+
+) card_controller (
   .sdio_clk         (sdio_clk               ),/* Run from the SDIO Clock */
   .rst              (rst                    ),
 

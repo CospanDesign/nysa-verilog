@@ -29,8 +29,10 @@ SOFTWARE.
  */
 
 module TEMPLATE (
-  input               clk,
-  input               rst
+  input                     clk,
+  input                     rst
+  //output  reg   [7:0]       o_reg_example
+  //input         [7:0]       i_reg_example
 
 );
 //local parameters

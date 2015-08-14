@@ -20,8 +20,9 @@ VERILOG_SOURCES += $(TOPDIR)/rtl/crc16.v
 #VERILOG_SOURCES += $(TOPDIR)/rtl/sdio_device_phy_sd_hs.v
 #VERILOG_SOURCES += $(TOPDIR)/rtl/sdio_device_phy_sd_ls.v
 #VERILOG_SOURCES += $(TOPDIR)/rtl/sdio_device_phy_spi.v
+VERILOG_SOURCES += $(TOPDIR)/rtl/sdio_device_cccr.v
 VERILOG_SOURCES += $(TOPDIR)/rtl/sdio_device_phy.v
-VERILOG_SOURCES += $(TOPDIR)/rtl/sdio_device_data_link.v
+VERILOG_SOURCES += $(TOPDIR)/rtl/sdio_device_card_cnt.v
 VERILOG_SOURCES += $(TOPDIR)/rtl/sdio_device_stack.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/wb_sdio_device.v
 #DUT
