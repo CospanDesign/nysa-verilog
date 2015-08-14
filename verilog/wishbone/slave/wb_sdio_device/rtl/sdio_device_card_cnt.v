@@ -43,12 +43,14 @@ module sdio_device_card_cnt #(
   parameter                 NUM_FUNCS       = 1,        /* Number of SDIO Functions available */
   parameter                 MEM_PRESENT     = 0,        /* Not supported yet */
   parameter                 UHSII_AVAILABLE = 0,        /* UHS Mode Not available yet */
-  parameter                 IO_OCR          = 24'hFFF0  /* Operating condition mode (voltage range) */
+  parameter                 IO_OCR          = 24'hFFF0, /* Operating condition mode (voltage range) */
+  parameter                 BUFFER_DEPTH    = 8,        /* 256 byte depth buffer */
+  parameter                 EN_8BIT_BUS     = 0         /* Enable 8-bit bus */
 )(
   input                     sdio_clk,
   input                     rst,
 
-  //Functio Interface
+  //Function Interface
   output  reg               func_stb,
   input                     func_ack_stb,
   output  reg               func_num,
@@ -60,6 +62,43 @@ module sdio_device_card_cnt #(
   output                    func_dat_rdy,
 
   output  reg               tunning_block,
+
+
+
+  //Function Interface From CCCR
+  output        [7:0]       o_func_enable,
+  input         [7:0]       i_func_ready,
+  output        [7:0]       o_func_int_enable,
+  input         [7:0]       i_func_int_pending,
+  input         [7:0]       i_func_ready_for_data,
+  output        [2:0]       o_func_abort_stb,
+  output        [3:0]       o_func_select,
+  input         [7:0]       i_func_exec_status,
+
+  output                    o_soft_reset,
+  output                    o_en_card_detect_n,
+  output                    o_en_4bit_block_int,
+  input                     i_func_active,
+  output                    o_bus_release_req_stb,
+  output        [15:0]      o_max_f0_block_size,
+
+  output                    o_1_bit_mode,
+  output                    o_4_bit_mode,
+  output                    o_8_bit_mode,
+
+  output                    o_sdr_12,
+  output                    o_sdr_25,
+  output                    o_sdr_50,
+  output                    o_ddr_50,
+  output                    o_sdr_104,
+
+  output                    o_driver_type_a,
+  output                    o_driver_type_b,
+  output                    o_driver_type_c,
+  output                    o_driver_type_d,
+  output                    o_enable_async_interrupt
+
+
 
   //PHY Interface
   input                     cmd_stb,
@@ -73,6 +112,7 @@ module sdio_device_card_cnt #(
   output        [135:0]     rsps,
   output        [7:0]       rsps_len,
   output  reg               rsps_stb
+
 );
 //local parameters
 localparam      NORMAL_RESPONSE     = 1'b0;
@@ -111,6 +151,12 @@ reg                         card_error;
 reg             [3:0]       response_index;
 
 wire            [1:0]       r5_cmd;
+wire            [15:0]      max_f0_block_size;
+wire                        enable_async_interrupt;
+wire                        data_txrx_in_progress_flag,
+
+reg             [3:0]       component_select;
+
 
 /*
  * Needed
@@ -125,8 +171,124 @@ wire            [1:0]       r5_cmd;
  *  CCCR
  */
 
+//Function to Controller
+wire  [7:0]                 fc_ready;         //(Bitmask) Function is ready to receive data
+
+//Controller to Function
+wire  [7:0]                 fc_activate;      //(Bitmask) Activate a function transaction
+wire                        cf_ready;         //Controller is ready to receive data
+wire                        cf_write_flag;    //This is a write transaction
+wire                        cf_inc_addr_flag; //Increment the Address
+wire  [17:0]                cf_address;       //Offset Removed, this will enable modular function
+
+
 //submodules
+sdio_device_cccr #(
+  .BUFFER_DEPTH   (BUFFER_DEPTH   ),
+  .EN_8BIT_BUS    (EN_8BIT_BUS    )
+) cccr (
+  .sdio_clk                 (sdio_clk               ),
+  .rst                      (rst                    ),
+
+  input                     i_activate,
+  input                     i_ready,
+  output  reg               o_ready,
+  output  reg               o_finished,
+  input                     i_write_flag,
+  input                     i_inc_addr,
+  input         [17:0]      i_address,
+  input                     i_data_stb,
+  input         [17:0]      i_data_count,
+  input         [7:0]       i_data_in,
+  output        [7:0]       o_data_out,
+  output  reg               o_data_stb,  //If reading, this strobes a new piece of data in, if writing strobes data out
+
+  //Function Interface
+  output        [7:0]       o_func_enable,
+  input         [7:0]       i_func_ready,
+  output        [7:0]       o_func_int_enable,
+  input         [7:0]       i_func_int_pending,
+  input         [7:0]       i_func_ready_for_data,
+  output        [2:0]       o_func_abort_stb,
+  output        [3:0]       o_func_select,
+  input         [7:0]       i_func_exec_status,
+
+  output                    o_en_card_detect_n,
+  output                    o_en_4bit_block_int,
+  input                     i_func_active,
+  output                    o_bus_release_req_stb,
+  .o_soft_reset                 (o_soft_reset               ),
+  .i_data_txrx_in_progress_flag (data_txrx_in_progress_flag ),
+
+  .o_max_f0_block_size          (max_f0_block_size          ),
+                                                            
+  .o_1_bit_mode                 (o_1_bit_mode               ),
+  .o_4_bit_mode                 (o_4_bit_mode               ),
+  .o_8_bit_mode                 (o_8_bit_mode               ),
+                                                            
+  .o_sdr                        (o_sdr_12                   ),
+  .o_sdr                        (o_sdr_25                   ),
+  .o_sdr                        (o_sdr_50                   ),
+  .o_ddr                        (o_ddr_50                   ),
+  .o_sdr                        (o_sdr_104                  ),
+                                                            
+  .o_driver_type_a              (o_driver_type_a            ),
+  .o_driver_type_b              (o_driver_type_b            ),
+  .o_driver_type_c              (o_driver_type_c            ),
+  .o_driver_type_d              (o_driver_type_d            ),
+  .o_enable_async_interrupt     (enable_async_interrupt     )
+
+);
+
+
 //asynchronous logic
+always @ (*) begin
+  if (rst || o_soft_rest) begin
+    component_select      <=  `NO_SELECT_INDEX;
+  end
+  else begin
+    if      ((func_reg_addr >= `CCCR_FUNCITON_START_ADDR)  && (func_reg_addr <= `CCCR_FUNCTION_END_ADDR )) begin
+      //CCCR Selected
+      component_select      <=  `CCCR_INDEX;
+    end
+    else if ((func_reg_addr >= `FUNCITON_1_START_ADDR)     && (func_reg_addr <= `FUNCTION_1_END_ADDR    )) begin
+      //Fuction 1 Sected
+      component_select      <=  `F1_INDEX;
+    end
+    else if ((func_reg_addr >= `FUNCITON_2_START_ADDR)     && (func_reg_addr <= `FUNCTION_2_END_ADDR    )) begin
+      //Fuction 2 Sected
+      component_select      <=  `F2_INDEX;
+    end                                                   
+    else if ((func_reg_addr >= `FUNCITON_3_START_ADDR)     && (func_reg_addr <= `FUNCTION_3_END_ADDR    )) begin
+      //Fuction 3 Sected
+      component_select      <=  `F3_INDEX;
+    end                                                   
+    else if ((func_reg_addr >= `FUNCITON_4_START_ADDR)     && (func_reg_addr <= `FUNCTION_4_END_ADDR    )) begin
+      //Fuction 4 Sected
+      component_select      <=  `F4_INDEX;
+    end                                                   
+    else if ((func_reg_addr >= `FUNCITON_5_START_ADDR)     && (func_reg_addr <= `FUNCTION_5_END_ADDR    )) begin
+      //Fuction 5 Sected
+      component_select      <=  `F5_INDEX;
+    end                                                   
+    else if ((func_reg_addr >= `FUNCITON_6_START_ADDR)     && (func_reg_addr <= `FUNCTION_6_END_ADDR    )) begin
+      //Fuction 6 Sected
+      component_select      <=  `F6_INDEX;
+    end                                                   
+    else if ((func_reg_addr >= `FUNCITON_7_START_ADDR)     && (func_reg_addr <= `FUNCTION_7_END_ADDR    )) begin
+      //Fuction 7 Sected
+      component_select      <=  `F7_INDEX;
+    end
+    else if ((func_reg_addr >= `MAIN_CIS_START_ADDR)       && (func_reg_addr <= `MAIN_CIS_END_ADDR      )) begin
+      //Main CIS Region
+      component_select      <=  `MAIN_CIS_INDEX;
+    end
+    else begin
+      component_select      <=  `NO_SELECT_INDEX;
+    end
+  end
+end
+
 assign  rsps[135]   = 1'b0; //Start bit
 assign  rsps[134]   = 1'b0; //Direction bit (to the host)
 assign  rsps[133:0] = response_type ? response_value_extended[133:0] : {response_value[45:0], 87'h0};
@@ -214,7 +376,7 @@ always @ (posedge sdio_clk) begin
   rsps_stb                  <=  0;
   func_stb                  <=  0;
 
-  if (rst) begin
+  if (rst || o_soft_reset) begin
     state                   <=  INITIALIZE;
     register_card_address   <=  16'h0001;       // Initializes the RCA to 0
     voltage_select          <=  `VHS_DEFAULT_VALUE;
@@ -299,13 +461,7 @@ always @ (posedge sdio_clk) begin
             func_reg_write_data     <= cmd_arg[`CMD52_ARG_WR_DATA ];
             func_stb                <= 1;
             busy                    <= 1;
-            if( cmd_arg[`CMD52_ARG_FNUM    ]                             &&
-                cmd_arg[`CMD52_ARG_REG_ADDR] == cmd_arg[`CMD52_RST_ADDR] &&
-               !cmd_arg[`CMD52_ARG_RW_FLAG ]                             &&
-                cmd_arg[`CMD52_RST_BIT     ]) begin
-              state                 <= INITIALIZE;
-            end
-            rsps_stb                <=  1;
+            rsps_stb                <= 1;
           end
           `SD_CMD_SEL_DESEL_CARD: begin
             if (register_card_address != cmd_arg[15:0]) begin
@@ -348,13 +504,7 @@ always @ (posedge sdio_clk) begin
             func_reg_write_data     <= cmd_arg[`CMD52_ARG_WR_DATA ];
             func_stb                <= 1;
             busy                    <= 1;
-            if( cmd_arg[`CMD52_ARG_FNUM    ]                             &&
-                cmd_arg[`CMD52_ARG_REG_ADDR] == cmd_arg[`CMD52_RST_ADDR] &&
-               !cmd_arg[`CMD52_ARG_RW_FLAG ]                             &&
-                cmd_arg[`CMD52_RST_BIT     ]) begin
-              state                 <= INITIALIZE;
-            end
-            rsps_stb                <=  1;
+            rsps_stb                <= 1;
           end
           default: begin
             illegal_command         <=  1;

@@ -62,14 +62,14 @@ module sdio_device_cccr #(
   output  reg   [7:0]       o_func_int_enable,
   input         [7:0]       i_func_int_pending,
   output  reg               o_soft_reset,
-  output  reg   [2:0]       o_fun_abort_stb,
+  output  reg   [2:0]       o_func_abort_stb,
   output  reg               o_en_card_detect_n,
   output  reg               o_en_4bit_block_int, /* Enable interrupts durring 4-bit block data mode */
   input                     i_func_active,
   output  reg               o_bus_release_req_stb,
   output  reg   [3:0]       o_func_select,
-  input                     i_data_in_progress_flag,
-  input         [7:0]       i_execution_status,
+  input                     i_data_txrx_in_progress_flag,
+  input         [7:0]       i_func_exec_status,
   input         [7:0]       i_func_ready_for_data,
   output  reg   [15:0]      o_max_f0_block_size,
 
@@ -105,10 +105,12 @@ output  reg     [1:0]       bus_width,
 reg             [2:0]       bus_speed_select;
 reg             [2:0]       abort_sel;
 wire            [17:0]      reg_addr;
+wire            [23:0]      main_cis_addr;
 
 
 //submodules
 //asynchronous logic
+assign  main_cis_addr = {6'b000000, `MAIN_CIS_START_ADDR};
 
 assign  reg_addr      = i_inc_addr ? i_address + data_count : i_address;
 
@@ -137,12 +139,12 @@ assign  cccr_map[INT_PENDING_ADDR     ] = i_func_int_pending;
 assign  cccr_map[IO_ABORT_ADDR        ] = {4'h0, o_soft_reset, abort_sel};
 assign  cccr_map[BUS_IF_CONTORL_ADDR  ] = {o_en_card_detect_n, `SCSI, `ECSI, EN_8BIT_BUS, bus_width};
 assign  cccr_map[CARD_COMPAT_ADDR     ] = {`S4BLS, `LSC, o_en_4bit_block_int, `S4MI, `SBS, `SRW, `SMB, `SDC};
-assign  cccr_map[CARD_CIS_PTR_0_ADDR  ] = {`CIS_HIGH};
-assign  cccr_map[CARD_CIS_PTR_1_ADDR  ] = {`CIS_MID};
-assign  cccr_map[CARD_CIS_PTR_2_ADDR  ] = {`CIS_LOW};
+assign  cccr_map[CARD_CIS_PTR_0_ADDR  ] = main_cis_addr[23:16];
+assign  cccr_map[CARD_CIS_PTR_1_ADDR  ] = main_cis_addr[15:8];
+assign  cccr_map[CARD_CIS_PTR_2_ADDR  ] = main_cis_addr[7:0];
 assign  cccr_map[BUS_SUSPEND_ADDR     ] = {6'b000000, o_bus_release_req_stb, i_func_active};
-assign  cccr_map[FUNC_SELECT_ADDR     ] = {i_data_in_progress_flag, 3'b000, o_func_select};
-assign  cccr_map[EXEC_SELECT_ADDR     ] = {i_execution_status};
+assign  cccr_map[FUNC_SELECT_ADDR     ] = {i_data_txrx_in_progress_flag, 3'b000, o_func_select};
+assign  cccr_map[EXEC_SELECT_ADDR     ] = {i_func_exec_status};
 assign  cccr_map[READY_SELECT_ADDR    ] = {i_func_ready_for_data};
 assign  cccr_map[FN0_BLOCK_SIZE_0_ADDR] = {o_max_f0_block_size[15:8]};
 assign  cccr_map[FN0_BLOCK_SIZE_1_ADDR] = {o_max_f0_block_size[7:0]};
@@ -157,7 +159,7 @@ always @ (posedge sdio_clk) begin
   //De-assert strobes
   o_data_stb                <=  0;
   o_soft_reset              <=  0;
-  o_fun_abort_stb           <=  8'h0;
+  o_func_abort_stb           <=  8'h0;
   abort_sel                 <=  0;
   o_bus_release_req_stb     <=  0;
   o_ready                   <=  0;
@@ -185,7 +187,7 @@ always @ (posedge sdio_clk) begin
 
   end
   else begin
-    o_fun_abort_stb[abort_sel]  <=  1;
+    o_func_abort_stb[abort_sel]  <=  1;
 
 
 

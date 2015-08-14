@@ -61,6 +61,45 @@
 //Relative Card Address
 `define RELATIVE_CARD_ADDRESS       (16'h0001)
 
+//Address of Functions
+`define CCCR_FUNCTION_START_ADDR    (18'h000000)
+`define CCCR_FUNCTION_END_ADDR      (18'h0000FF)
+`define CCCR_INDEX                  0
+
+`define FUNCTION_1_START_ADDR       (18'h000100)
+`define FUNCTION_1_END_ADDR         (18'h0001FF)
+`define F1_INDEX                    1
+
+`define FUNCTION_2_START_ADDR       (18'h000200)
+`define FUNCTION_2_END_ADDR         (18'h0002FF)
+`define F2_INDEX                    2
+
+`define FUNCTION_3_START_ADDR       (18'h000300)
+`define FUNCTION_3_END_ADDR         (18'h0003FF)
+`define F3_INDEX                    3
+
+`define FUNCTION_4_START_ADDR       (18'h000400)
+`define FUNCTION_4_END_ADDR         (18'h0004FF)
+`define F4_INDEX                    4
+
+`define FUNCTION_5_START_ADDR       (18'h000500)
+`define FUNCTION_5_END_ADDR         (18'h0005FF)
+`define F5_INDEX                    5
+
+`define FUNCTION_6_START_ADDR       (18'h000600)
+`define FUNCTION_6_END_ADDR         (18'h0006FF)
+`define F6_INDEX                    6
+
+`define FUNCTION_7_START_ADDR       (18'h000700)
+`define FUNCTION_7_END_ADDR         (18'h0007FF)
+`define F7_INDEX                    7
+
+`define MAIN_CIS_START_ADDR         (18'h001000)
+`define MAIN_CIS_END_ADDR           (18'h017FFF)
+`define MAIN_CIS_INDEX              8
+
+`define NO_SELECT_INDEX             15
+
 //Not SD_CURRENT_STATE shall always return 0x0F
 
 //Card Status

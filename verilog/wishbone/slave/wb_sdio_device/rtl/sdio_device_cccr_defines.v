@@ -1,6 +1,8 @@
 `ifndef SDIO_DEVICE_CCCR_DEFINES
 `define SDIO_DEVICE_CCCR_DEFINES
 
+`include "sdio_defines.v"
+
 //Addresses
 `define CCCR_SDIO_REV_ADDR    18'h00000
 `define SD_SPEC_ADDR          18'h00001
@@ -40,9 +42,6 @@
 `define S4MI                  1'b1    /* Support Interrupts ine 4-bit data transfer mode */
 `define LSC                   1'b0    /* Card is a low speed card only */
 `define S4BLS                 1'b0    /* Support 4-bit mode in low speed mode */
-`define CIS_HIGH              8'h01   /* CIS Address High */
-`define CIS_MID               8'h00   /* CIS Address Mid  */
-`define CIS_LOW               8'h00   /* CIS Address Low  */ 
 `define SMPC                  1'b0    /* Master Power Control Support (don't let the process control power)*/
 `define EMPC                  1'b0    /* Enable Power Control, This always returns 0, host has no control */
 `define TPC                   3'b000  /* No Total Power Control */
