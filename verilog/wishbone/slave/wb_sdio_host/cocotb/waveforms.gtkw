@@ -1,0 +1,21 @@
+[*]
+[*] GTKWave Analyzer v3.3.62 (w)1999-2014 BSI
+[*] Wed Aug  5 18:24:36 2015
+[*]
+[dumpfile] "design.vcd"
+[dumpfile_mtime] "Wed Aug  5 18:24:09 2015"
+[dumpfile_size] 133235
+[savefile] "waveforms.gtkw"
+[timestart] 0
+[size] 958 1059
+[pos] -1 -1
+*0.000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 213
+[signals_width] 78
+[sst_expanded] 1
+[sst_vpaned_height] 313
+@28
+tb_cocotb.s1.clk
+tb_cocotb.s1.rst
+[pattern_trace] 1
+[pattern_trace] 0
