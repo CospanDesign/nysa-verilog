@@ -64,6 +64,24 @@ SOFTWARE.
 */
 
 
+`define DEFAULT_MEM_0_BASE        32'h00000000
+`define DEFAULT_MEM_1_BASE        32'h00100000
+
+
+//control bit definition
+`define CONTROL_ENABLE_SDIO       0
+`define CONTROL_ENABLE_INTERRUPT  1
+`define CONTROL_ENABLE_DMA_WR     2
+`define CONTROL_ENABLE_DMA_RD     3
+
+//status bit definition
+`define STATUS_MEMORY_0_FINISHED  0
+`define STATUS_MEMORY_1_FINISHED  1
+`define STATUS_ENABLE             5
+`define STATUS_MEMORY_0_EMPTY     6
+`define STATUS_MEMORY_1_EMPTY     7
+
+
 module wb_sdio_host (
   input               clk,
   input               rst,
@@ -93,8 +111,7 @@ module wb_sdio_host (
 
 
   //This interrupt can be controlled from this module or a submodule
-  output  reg         o_wbs_int
-  //output              o_wbs_int
+  output              o_wbs_int
 );
 
 //Local Parameters
@@ -111,50 +128,65 @@ wire        [31:0]      status;
 
 wire                    w_mem_write_enable;
 wire                    w_mem_read_enable;
+wire                    w_interrupt_enable;
+reg                     w_int;
+
 wire        [31:0]      w_mem_write_debug;
 wire        [31:0]      w_mem_read_debug;
 
-wire                    w_rfifo_ready;
-wire                    w_rfifo_activate;
-wire                    w_rfifo_strobe;
-wire        [31:0]      w_rfifo_data;
-wire        [23:0]      w_rfifo_size;
+wire        [31:0]      w_default_mem_0_base;
+wire        [31:0]      w_default_mem_1_base;
 
 reg         [31:0]      r_memory_0_base;
 reg         [31:0]      r_memory_0_size;
-wire        [31:0]      w_memory_0_count;
 reg                     r_memory_0_ready;
-wire                    w_memory_0_finished;
-wire                    w_memory_0_empty;
 reg                     r_memory_0_new_data;
-
-wire        [31:0]      w_default_mem_0_base;
 
 reg         [31:0]      r_memory_1_base;
 reg         [31:0]      r_memory_1_size;
-wire        [31:0]      w_memory_1_count;
 reg                     r_memory_1_ready;
-wire                    w_memory_1_finished;
-wire                    w_memory_1_empty;
 reg                     r_memory_1_new_data;
 
-wire        [31:0]      w_default_mem_1_base;
+
+wire        [31:0]      w_p2m_0_count;
+wire                    w_p2m_0_finished;
+wire                    w_p2m_0_empty;
+
+wire        [31:0]      w_p2m_1_count;
+wire                    w_p2m_1_finished;
+wire                    w_p2m_1_empty;
+
+wire        [31:0]      w_m2p_0_count;
+wire                    w_m2p_0_finished;
+wire                    w_m2p_0_empty;
+
+wire        [31:0]      w_m2p_1_count;
+wire                    w_m2p_1_finished;
+wire                    w_m2p_1_empty;
+
 reg                     r_flush_memory;
 
 wire                    w_write_finished;
 wire                    w_memory_idle;
 
-wire        [23:0]      w_wfifo_size;
-wire        [1:0]       w_wfifo_ready;
+//SDIO Signals
+wire                    w_sdio_enable;
+
+wire                    w_rfifo_ready = 1'b0;
+wire                    w_rfifo_activate;
+wire        [23:0]      w_rfifo_size = 24'h0;
+wire                    w_rfifo_strobe;
+wire        [31:0]      w_rfifo_data  = 32'h00000000;
+
+
+wire        [1:0]       w_wfifo_ready =  1'b0;
 wire        [1:0]       w_wfifo_activate;
+wire        [23:0]      w_wfifo_size;
 wire                    w_wfifo_strobe;
 wire        [31:0]      w_wfifo_data;
 
 
-
-
 //Submodules
-
 wb_ppfifo_2_mem p2m(
 
   .clk                  (clk                      ),
@@ -167,19 +199,19 @@ wb_ppfifo_2_mem p2m(
 
   .i_memory_0_base      (r_memory_0_base          ),
   .i_memory_0_size      (r_memory_0_size          ),
-  .o_memory_0_count     (w_memory_0_count         ),
   .i_memory_0_ready     (r_memory_0_ready         ),
-  .o_memory_0_finished  (w_memory_0_finished      ),
-  .o_memory_0_empty     (w_memory_0_empty         ),
+  .o_memory_0_count     (w_p2m_0_count            ),
+  .o_memory_0_finished  (w_p2m_0_finished         ),
+  .o_memory_0_empty     (w_p2m_0_empty            ),
 
   .o_default_mem_0_base (w_default_mem_0_base     ),
 
   .i_memory_1_base      (r_memory_1_base          ),
   .i_memory_1_size      (r_memory_1_size          ),
-  .o_memory_1_count     (w_memory_1_count         ),
   .i_memory_1_ready     (r_memory_1_ready         ),
-  .o_memory_1_finished  (w_memory_1_finished      ),
-  .o_memory_1_empty     (w_memory_1_empty         ),
+  .o_memory_1_count     (w_p2m_1_count            ),
+  .o_memory_1_finished  (w_p2m_1_finished         ),
+  .o_memory_1_empty     (w_p2m_1_empty            ),
 
   .o_default_mem_1_base (w_default_mem_1_base     ),
 
@@ -216,17 +248,17 @@ wb_mem_2_ppfifo m2p(
 
   .i_memory_0_base      (r_memory_0_base          ),
   .i_memory_0_size      (r_memory_0_size          ),
-  .o_memory_0_count     (w_memory_0_count         ),
   .i_memory_0_new_data  (r_memory_0_new_data      ),
-  .o_memory_0_empty     (w_memory_0_empty         ),
+  .o_memory_0_count     (w_m2p_0_count            ),
+  .o_memory_0_empty     (w_m2p_0_empty            ),
 
   .o_default_mem_0_base (w_default_mem_0_base     ),
 
   .i_memory_1_base      (r_memory_1_base          ),
   .i_memory_1_size      (r_memory_1_size          ),
-  .o_memory_1_count     (w_memory_1_count         ),
   .i_memory_1_new_data  (r_memory_1_new_data      ),
-  .o_memory_1_empty     (w_memory_1_empty         ),
+  .o_memory_1_count     (w_m2p_1_count            ),
+  .o_memory_1_empty     (w_m2p_1_empty            ),
 
   .o_default_mem_1_base (w_default_mem_1_base     ),
 
@@ -251,9 +283,26 @@ wb_mem_2_ppfifo m2p(
   .o_ppfifo_data        (w_wfifo_data             )
 );
 
-
-
 //Asynchronous Logic
+assign  w_sdio_enable       = control[`CONTROL_ENABLE_SDIO];
+assign  w_interrupt_enable  = control[`CONTROL_ENABLE_INTERRUPT];
+assign  w_mem_write_enable  = control[`CONTROL_ENABLE_DMA_WR];
+assign  w_mem_read_enable   = control[`CONTROL_ENABLE_DMA_RD];
+
+assign  status[`STATUS_MEMORY_0_FINISHED] = w_mem_write_enable ? w_p2m_0_finished :
+                                            1'b0;
+
+assign  status[`STATUS_MEMORY_1_FINISHED] = w_mem_write_enable ? w_p2m_1_finished :
+                                            1'b0;
+assign  status[`STATUS_ENABLE]            = w_sdio_enable;
+assign  status[`STATUS_MEMORY_0_EMPTY]    = w_mem_write_enable ? w_p2m_0_empty    :
+                                            w_mem_read_enable  ? w_m2p_0_empty    :
+                                            1'b0;
+assign  status[`STATUS_MEMORY_1_EMPTY]    = w_mem_write_enable ? w_p2m_1_empty    :
+                                            w_mem_read_enable  ? w_m2p_1_empty    :
+                                            1'b0;
+
+assign  o_wbs_int           = w_interrupt_enable ? w_int : 1'b0;
 //Synchronous Logic
 
 always @ (posedge clk) begin
@@ -312,11 +361,11 @@ always @ (posedge clk) begin
             STATUS: begin
               $display("user read %h", STATUS);
               o_wbs_dat           <= status;
-              if (w_memory_0_finished) begin
+              if (w_m2p_0_finished) begin
                 $display ("Reset size 0");
                 r_memory_0_size   <=  0;
               end
-              if (w_memory_1_finished) begin
+              if (w_m2p_1_finished) begin
                 $display ("Reset size 1");
                 r_memory_1_size   <=  0;
               end
@@ -325,13 +374,29 @@ always @ (posedge clk) begin
               o_wbs_dat <=  r_memory_0_base;
             end
             REG_MEM_0_SIZE: begin
-              o_wbs_dat <=  w_memory_0_count;
+              if (w_mem_read_enable) begin
+                o_wbs_dat <=  w_m2p_0_count;
+              end
+              else if (w_mem_write_enable) begin
+                o_wbs_dat <=  w_p2m_0_count;
+              end
+              else begin
+                o_wbs_dat <=  r_memory_0_size;
+              end
             end
             REG_MEM_1_BASE: begin
               o_wbs_dat <=  r_memory_1_base;
             end
             REG_MEM_1_SIZE: begin
-              o_wbs_dat <=  w_memory_1_count;
+              if (w_mem_read_enable) begin
+                o_wbs_dat <=  w_m2p_1_count;
+              end
+              else if (w_mem_write_enable) begin
+                o_wbs_dat <=  w_p2m_1_count;
+              end
+              else begin
+                o_wbs_dat <=  r_memory_1_size;
+              end
             end
             default: begin
               o_wbs_dat <=  32'h00;
@@ -348,38 +413,37 @@ end
 //initerrupt controller
 always @ (posedge clk) begin
   if (rst) begin
-    o_wbs_int <=  0;
+    w_int <=  0;
   end
   //Memory Read Interface
   else if (w_mem_read_enable) begin
-    if (!w_memory_0_empty && !w_memory_1_empty) begin
-      o_wbs_int <=  0;
+    if (!w_m2p_0_empty && !w_m2p_1_empty) begin
+      w_int <=  0;
     end
     if (i_wbs_stb) begin
       //de-assert the interrupt on wbs transactions so I can launch another
       //interrupt when the wbs is de-asserted
-      o_wbs_int <=  0;
+      w_int <=  0;
     end
-    else if (w_memory_0_empty || w_memory_1_empty) begin
-      o_wbs_int <=  1;
+    else if (w_m2p_0_empty || w_m2p_1_empty) begin
+      w_int <=  1;
     end
   end
   //Write Memory Controller
   else if (w_mem_write_enable) begin
     if (i_wbs_stb) begin
-      o_wbs_int         <=  0;
+      w_int         <=  0;
     end
-    else if (w_memory_0_finished || w_memory_1_finished) begin
-      o_wbs_int         <=  1;
+    else if (w_p2m_0_finished || w_p2m_1_finished) begin
+      w_int         <=  1;
     end
-    else if (!w_memory_0_finished && !w_memory_1_finished) begin
-      o_wbs_int         <=  0;
+    else if (!w_p2m_0_finished && !w_p2m_1_finished) begin
+      w_int         <=  0;
     end
-
   end
   else begin
     //if we're not enable de-assert interrupt
-    o_wbs_int <=  0;
+    w_int <=  0;
   end
 end
 

@@ -36,17 +36,17 @@ module sd_cmd_master(
   input                 card_detect
 );
 
-`define CMDI            CMD_SET_REG[13:8]
-`define WORD_SELECT     CMD_SET_REG[7:6]
-`define CICE            CMD_SET_REG[4]
-`define CRCE            CMD_SET_REG[3]
-`define RTS             CMD_SET_REG[1:0]
-`define CTE             ERR_INT_REG[0]
-`define CCRCE           ERR_INT_REG[1]
-`define CIE             ERR_INT_REG[3]
-`define EI              NORMAL_INT_REG[15]
-`define CC              NORMAL_INT_REG[0]
-`define CICMD           STATUS_REG[0]
+`define CMDI            cmd_set_reg[13:8]
+`define WORD_SELECT     cmd_set_reg[7:6]
+`define CICE            cmd_set_reg[4]
+`define CRCE            cmd_set_reg[3]
+`define RTS             cmd_set_reg[1:0]
+`define CTE             err_int_reg[0]
+`define CCRCE           err_int_reg[1]
+`define CIE             err_int_reg[3]
+`define EI              normal_int_reg[15]
+`define CC              normal_int_reg[0]
+`define CICMD           status_reg[0]
 
 //Local Parameters
 localparam SIZE         =  3;
@@ -86,11 +86,11 @@ begin
   if (rst) begin
     req_q<=0;
     req_in_int<=0;
- end
-else begin
-  req_q<=req_in;
-  req_in_int<=req_q;
-end
+  end
+  else begin
+    req_q<=req_in;
+    req_in_int<=req_q;
+  end
 end
 
 always @ (posedge clk or posedge rst   )
@@ -98,100 +98,83 @@ begin
   if (rst) begin
     debounce<=0;
     card_present<=0;
- end
-else begin
-	if (!card_detect) begin//Card present
-		if (debounce!=4'b1111)
-			debounce<=debounce+1'b1;
-	end
-	else
-		 debounce<=0;
+  end
+  else begin
+    if (!card_detect) begin//Card present
+      if (debounce!=4'b1111)
+        debounce<=debounce+1'b1;
+    end
+    else
+      debounce<=0;
 
-	if (debounce==4'b1111)
-       card_present<=1'b1;
-	else
-	   card_present<=1'b0;
+    if (debounce==4'b1111)
+      card_present<=1'b1;
+    else
+      card_present<=1'b0;
+  end
 end
-end
-
-
 
 always @ (posedge clk or posedge rst   )
 begin
   if (rst) begin
     ack_q<=0;
     ack_in_int<=0;
- end
-else begin
-  ack_q<=ack_in;
-  ack_in_int<=ack_q;
+  end
+  else begin
+    ack_q<=ack_in;
+    ack_in_int<=ack_q;
+  end
 end
 
 
-end
 
-
-
-always @ ( state or new_cmd or complete or ack_in_int )
-begin : FSM_COMBO
-    next_state = 0;
-
- case(state)
- IDLE:   begin
+always @ ( state or new_cmd or complete or ack_in_int) begin : FSM_COMBO
+  next_state = 0;
+  case(state)
+    IDLE:   begin
       if (new_cmd) begin
-          next_state = SETUP;
+        next_state = SETUP;
       end
       else begin
-         next_state = IDLE;
+        next_state = IDLE;
       end
- end
- SETUP:begin
-    if (ack_in_int)
-       next_state = EXECUTE;
-     else
-       next_state = SETUP;
-   end
- EXECUTE:    begin
-       if (complete) begin
-          next_state = IDLE;
+    end
+    SETUP:begin
+      if (ack_in_int)
+        next_state = EXECUTE;
+      else
+        next_state = SETUP;
+    end
+    EXECUTE:    begin
+      if (complete) begin
+        next_state = IDLE;
       end
       else begin
-         next_state = EXECUTE;
+        next_state = EXECUTE;
       end
- end
-
-
- default : next_state  = IDLE;
-
- endcase
-
+    end
+    default : next_state  = IDLE;
+  endcase
 end
 
-
-
-
-always @ (posedge clk or posedge rst   )
-begin : FSM_SEQ
+always @ (posedge clk or posedge rst) begin : FSM_SEQ
   if (rst ) begin
     state <= #1 IDLE;
- end
- else begin
+  end
+  else begin
     state <= #1 next_state;
- end
+  end
 end
 
-
-
-always @ (posedge clk or posedge rst   )
-begin
+always @ (posedge clk or posedge rst)begin
   if (rst ) begin
     crc_check_enable=0;
     complete =0;
-    RESP_1_REG = 0;
+    resp_1_reg = 0;
 
-    ERR_INT_REG =0;
-    NORMAL_INT_REG=0;
-    STATUS_REG=0;
+    err_int_reg =0;
+    normal_int_reg=0;
+    status_reg=0;
     status=0;
     cmd_out =0 ;
     settings=0;
@@ -207,8 +190,8 @@ begin
     go_idle_o=0;
   end
   else begin
-    NORMAL_INT_REG[1] = card_present;
-    NORMAL_INT_REG[2] = ~card_present;
+    normal_int_reg[1] = card_present;
+    normal_int_reg[2] = ~card_present;
     complete=0;
     case(state)
       IDLE: begin
@@ -222,8 +205,8 @@ begin
         end
       end
       SETUP:  begin
-        NORMAL_INT_REG=0;
-        ERR_INT_REG =0;
+        normal_int_reg=0;
+        err_int_reg =0;
 
         index_check_enable = `CICE;
         crc_check_enable = `CRCE;
@@ -239,7 +222,7 @@ begin
         end
         cmd_out[39:38]=2'b01;
         cmd_out[37:32]=`CMDI;  //CMD_INDEX
-        cmd_out[31:0]= ARG_REG;           //CMD_Argument
+        cmd_out[31:0]= arg_reg;           //CMD_Argument
         settings[14:13]=`WORD_SELECT;             //Reserved
         settings[12] = data_read; //Type of command
         settings[11] = data_write;
@@ -251,7 +234,7 @@ begin
       end
       EXECUTE: begin
         watchdog_cnt = watchdog_cnt +1;
-        if (watchdog_cnt>TIMEOUT_REG) begin
+        if (watchdog_cnt>timeout_reg) begin
           `CTE=1;
           `EI = 1;
           if (ack_in == 1) begin
@@ -270,10 +253,10 @@ begin
         else if ( req_in_int == 1) begin
           status=serial_status;
           ack_out = 1;
-          if ( `dat_ava ) begin //Data avaible
+          if (dat_ava) begin //Data avaible
             complete=1;
             `EI = 0;
-            if (crc_check_enable & ~`crc_valid) begin
+            if (crc_check_enable & ~crc_valid) begin
               `CCRCE=1;
               `EI = 1;
             end
@@ -283,16 +266,16 @@ begin
             end
             `CC = 1;
             if (response_size !=0)
-              RESP_1_REG=cmd_in[31:0];
+              resp_1_reg=cmd_in[31:0];
             // end
           end ////Data avaible
         end //Status change
       end //EXECUTE state
     endcase
-    if (ERR_INT_RST)
-      ERR_INT_REG=0;
-    if (NORMAL_INT_RST)
-      NORMAL_INT_REG=0;
+    if (err_int_rst)
+      err_int_reg=0;
+    if (normal_int_rst)
+      normal_int_reg=0;
   end
 end
 
