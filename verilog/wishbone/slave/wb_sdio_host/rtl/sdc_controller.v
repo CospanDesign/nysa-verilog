@@ -216,9 +216,9 @@ wire [39:0] cmd_out_master;
 wire [39:0] cmd_in_host;
 
 sd_cmd_master cmd_master_1(
-  .CLK_PAD_IO       (wb_clk_i                         ),
-  .RST_PAD_I        (wb_rst_i | software_reset_reg[0] ),
-  .New_CMD          (new_cmd                          ),
+  .clk              (wb_clk_i                         ),
+  .rst              (wb_rst_i | software_reset_reg[0] ),
+  .new_cmd          (new_cmd                          ),
   .data_write       (d_write                          ),
   .data_read        (d_read                           ),
   .ARG_REG          (argument_reg                     ),
