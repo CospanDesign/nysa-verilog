@@ -46,8 +46,8 @@
         }
     },
     "SLAVES":{
-        "wb_sdio_host":{
-            "filename":"wb_sdio_host.v"
+        "wb_sd_host":{
+            "filename":"wb_sd_host.v"
         }
     },
     "MEMORY":{

@@ -17,6 +17,6 @@ ${NYSA}/verilog/wishbone/master/wishbone_master.v
 #The generic directory contains a lot of non-platform specific verilog code
 #${NYSA}/verilog/generic/<some name here>.v
 
-rtl/wb_sdio_host.v
+rtl/wb_sd_host.v
 sim/tb_wishbone_master.v
 

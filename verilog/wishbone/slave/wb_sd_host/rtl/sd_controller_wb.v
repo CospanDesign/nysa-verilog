@@ -1,4 +1,5 @@
 `include "sd_defines.v"
+
 module sd_controller_wb(
   // WISHBONE common
   input                           wb_clk_i,     // WISHBONE clock

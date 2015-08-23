@@ -1,4 +1,4 @@
-//wb_sdio_host.v
+//wb_sd_host.v
 /*
 Distributed under the MIT license.
 Copyright (c) 2015 Dave McCoy (dave.mccoy@cospandesign.com)
@@ -33,7 +33,7 @@ SOFTWARE.
   SDB_CORE_VERSION:00.000.001
 
   Set the Device Name: 19 UNICODE characters
-  SDB_NAME:wb_sdio_host
+  SDB_NAME:wb_sd_host
 
   Set the class of the device (16 bits) Set as 0
   SDB_ABI_CLASS:0
@@ -82,7 +82,7 @@ SOFTWARE.
 `define STATUS_MEMORY_1_EMPTY     7
 
 
-module wb_sdio_host (
+module wb_sd_host (
   input               clk,
   input               rst,
 
@@ -123,7 +123,7 @@ localparam          REG_MEM_1_BASE      = 32'h00000004;
 localparam          REG_MEM_1_SIZE      = 32'h00000005;
 
 //Local Registers/Wires
-reg         [31:0]      control;
+reg         [31:0]      control         = 32'h00000000;
 wire        [31:0]      status;
 
 wire                    w_mem_write_enable;
@@ -185,8 +185,30 @@ wire        [23:0]      w_wfifo_size;
 wire                    w_wfifo_strobe;
 wire        [31:0]      w_wfifo_data;
 
+wire                    m2p_mem_o_we;
+wire                    m2p_mem_o_stb;
+wire                    m2p_mem_o_cyc;
+wire        [3:0]       m2p_mem_o_sel;
+wire        [31:0]      m2p_mem_o_adr;
+wire        [31:0]      m2p_mem_o_dat;
+
+wire                    p2m_mem_o_we;
+wire                    p2m_mem_o_stb;
+wire                    p2m_mem_o_cyc;
+wire        [3:0]       p2m_mem_o_sel;
+wire        [31:0]      p2m_mem_o_adr;
+wire        [31:0]      p2m_mem_o_dat;
+
 
 //Submodules
+sdio_host_stack (
+  .clk                  (clk                      ),
+  .rst                  (rst                      ),
+
+
+
+  .o_interrupt          (sd_host_interrupt        )
+);
 wb_ppfifo_2_mem p2m(
 
   .clk                  (clk                      ),
@@ -218,12 +240,12 @@ wb_ppfifo_2_mem p2m(
   .o_write_finished     (w_write_finished         ),
 
   //master control signal for memory arbitration
-  .o_mem_we             (mem_o_we                 ),
-  .o_mem_stb            (mem_o_stb                ),
-  .o_mem_cyc            (mem_o_cyc                ),
-  .o_mem_sel            (mem_o_sel                ),
-  .o_mem_adr            (mem_o_adr                ),
-  .o_mem_dat            (mem_o_dat                ),
+  .o_mem_we             (p2m_mem_o_we             ),
+  .o_mem_stb            (p2m_mem_o_stb            ),
+  .o_mem_cyc            (p2m_mem_o_cyc            ),
+  .o_mem_sel            (p2m_mem_o_sel            ),
+  .o_mem_adr            (p2m_mem_o_adr            ),
+  .o_mem_dat            (p2m_mem_o_dat            ),
   .i_mem_dat            (mem_i_dat                ),
   .i_mem_ack            (mem_i_ack                ),
   .i_mem_int            (mem_i_int                ),
@@ -265,12 +287,12 @@ wb_mem_2_ppfifo m2p(
   .o_read_finished      (w_read_finished          ),
 
   //master control signal for memory arbitration
-  .o_mem_we             (mem_o_we                 ),
-  .o_mem_stb            (mem_o_stb                ),
-  .o_mem_cyc            (mem_o_cyc                ),
-  .o_mem_sel            (mem_o_sel                ),
-  .o_mem_adr            (mem_o_adr                ),
-  .o_mem_dat            (mem_o_dat                ),
+  .o_mem_we             (m2p_mem_o_we             ),
+  .o_mem_stb            (m2p_mem_o_stb            ),
+  .o_mem_cyc            (m2p_mem_o_cyc            ),
+  .o_mem_sel            (m2p_mem_o_sel            ),
+  .o_mem_adr            (m2p_mem_o_adr            ),
+  .o_mem_dat            (m2p_mem_o_dat            ),
   .i_mem_dat            (mem_i_dat                ),
   .i_mem_ack            (mem_i_ack                ),
   .i_mem_int            (mem_i_int                ),
@@ -302,7 +324,28 @@ assign  status[`STATUS_MEMORY_1_EMPTY]    = w_mem_write_enable ? w_p2m_1_empty  
                                             w_mem_read_enable  ? w_m2p_1_empty    :
                                             1'b0;
 
-assign  o_wbs_int           = w_interrupt_enable ? w_int : 1'b0;
+assign  o_wbs_int                           = w_interrupt_enable ? w_int : 1'b0;
+
+assign  mem_o_we                            = w_mem_write_enable ? m2p_mem_o_we :
+                                              w_mem_read_enable  ? p2m_mem_o_we :
+                                              1'b0;
+assign  mem_o_stb                           = w_mem_write_enable ? m2p_mem_o_stb :
+                                              w_mem_read_enable  ? p2m_mem_o_stb :
+                                              1'b0;
+assign  mem_o_cyc                           = w_mem_write_enable ? m2p_mem_o_cyc :
+                                              w_mem_read_enable  ? p2m_mem_o_cyc :
+                                              1'b0;
+assign  mem_o_sel                           = w_mem_write_enable ? m2p_mem_o_sel :
+                                              w_mem_read_enable  ? p2m_mem_o_sel :
+                                              4'b0000;
+assign  mem_o_adr                           = w_mem_write_enable ? m2p_mem_o_adr :
+                                              w_mem_read_enable  ? p2m_mem_o_adr :
+                                              31'h00000000;
+assign  mem_o_dat                           = w_mem_write_enable ? m2p_mem_o_dat :
+                                              w_mem_read_enable  ? p2m_mem_o_dat :
+                                              4'b0000;
+
+
 //Synchronous Logic
 
 always @ (posedge clk) begin

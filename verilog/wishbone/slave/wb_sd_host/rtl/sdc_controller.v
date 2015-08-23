@@ -118,56 +118,53 @@ wire int_busy;
 
 
 //Wires from SD_CMD_MASTER Module
-wire [15:0] status_reg_w;
-wire [31:0] cmd_resp_1_w;
-wire [15:0]normal_int_status_reg_w;
-wire [4:0]error_int_status_reg_w;
+wire [15:0]  status_reg_w;
+wire [31:0]  cmd_resp_1_w;
+wire [15:0]  normal_int_status_reg_w;
+wire [4:0]   error_int_status_reg_w;
 
 
-wire[31:0]  argument_reg;
-wire[15:0]  cmd_setting_reg;
-reg[15:0]   status_reg;
-reg[31:0]   cmd_resp_1;
-wire[7:0]   software_reset_reg;
-wire[15:0]  time_out_reg;
-reg[15:0]   normal_int_status_reg;
-reg[15:0]   error_int_status_reg;
-wire[15:0]  normal_int_signal_enable_reg;
-wire[15:0]  error_int_signal_enable_reg;
-wire[7:0]   clock_divider;
-reg[15:0]   Bd_Status_reg;
-reg[7:0]    Bd_isr_reg;
-wire[7:0]   Bd_isr_enable_reg;
-
+wire [31:0]  argument_reg;
+wire [15:0]  cmd_setting_reg;
+reg  [15:0]  status_reg;
+reg  [31:0]  cmd_resp_1;
+wire [7:0]   software_reset_reg;
+wire [15:0]  time_out_reg;
+reg  [15:0]  normal_int_status_reg;
+reg  [15:0]  error_int_status_reg;
+wire [15:0]  normal_int_signal_enable_reg;
+wire [15:0]  error_int_signal_enable_reg;
+wire [7:0]   clock_divider;
+reg  [15:0]  Bd_Status_reg;
+reg  [7:0]   Bd_isr_reg;
+wire [7:0]   Bd_isr_enable_reg;
 
 //Rx Buffer  Descriptor internal signals
 
-
-
-wire [`BD_WIDTH-1 :0] free_bd_rx_bd; //NO free Rx_bd
-wire new_rx_bd;  // New Bd writen
+wire [`BD_WIDTH-1 :0]     free_bd_rx_bd; //NO free Rx_bd
+wire                      new_rx_bd;  // New Bd writen
 wire [`RAM_MEM_WIDTH-1:0] dat_out_s_rx_bd; //Data out from Rx_bd to Slave
 
 //Tx Buffer Descriptor internal signals
 wire [`RAM_MEM_WIDTH-1:0] dat_in_m_rx_bd; //Data in to Rx_bd from Master
 wire [`RAM_MEM_WIDTH-1:0] dat_in_m_tx_bd;
-wire [`BD_WIDTH-1 :0] free_bd_tx_bd;
-wire new_tx_bd;
+wire [`BD_WIDTH-1 :0]     free_bd_tx_bd;
+wire                      new_tx_bd;
 wire [`RAM_MEM_WIDTH-1:0] dat_out_s_tx_bd;
-wire [7:0] bd_int_st_w; //Wire to BD status register
+wire [7:0]                bd_int_st_w; //Wire to BD status register
 
 //Wires for connecting Bd registers with the SD_Data_master module
-wire re_s_tx_bd_w;
-wire a_cmp_tx_bd_w;
-wire re_s_rx_bd_w;
-wire a_cmp_rx_bd_w;
-wire write_req_s; //SD_Data_master want acces to the CMD line.
-wire cmd_busy; //CMD line busy no access granted
+wire                      re_s_tx_bd_w;
+wire                      a_cmp_tx_bd_w;
+wire                      re_s_rx_bd_w;
+wire                      a_cmp_rx_bd_w;
+wire                      write_req_s; //SD_Data_master want acces to the CMD line.
+wire                      cmd_busy; //CMD line busy no access granted
 
-wire [31:0] cmd_arg_s; //SD_Data_master CMD Argument
-wire [15:0] cmd_set_s; //SD_Data_master Settings Argument
-wire [31:0] sys_adr; //System addres the DMA whil Read/Write to/from
-wire [1:0]start_dat_t; //Start data transfer
+wire [31:0]               cmd_arg_s; //SD_Data_master CMD Argument
+wire [15:0]               cmd_set_s; //SD_Data_master Settings Argument
+wire [31:0]               sys_adr; //System addres the DMA whil Read/Write to/from
+wire [1:0]                start_dat_t; //Start data transfer
 
 //Signals to Syncronize busy signaling betwen Wishbone access and SD_Data_master access to the CMD line (Also manage the status reg uppdate)
 

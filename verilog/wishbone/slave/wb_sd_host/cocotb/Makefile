@@ -2,12 +2,13 @@
 TOPLEVEL_LANG ?= verilog
 PWD=$(shell pwd)
 TOPDIR=$(PWD)/..
-COCOTB 	:= $(shell $(python) nysa paths -c -s)
-NYSA 	:= $(shell $(python) nysa paths -s -v nysa-verilog)
+COCOTB	:= $(shell $(python) nysa paths -c -s)
+NYSA		:= $(shell $(python) nysa paths -s -v nysa-verilog)
+XILINX 	:= $(shell $(python) nysa paths -s -x)
 PYTHONPATH := ./model:$(PYTHONPATH)
 export PYTHONPATH
 
-EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/
+EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/ -I${NYSA}/verilog/wishbone/slave/wb_sdram/rtl/ -DSIMULATION
 
 #Dependencies
 VERILOG_SOURCES = $(NYSA)/verilog/wishbone/master/wishbone_master.v
@@ -15,8 +16,12 @@ VERILOG_SOURCES += $(NYSA)/verilog/sim/wishbone/interconnect/example_2port_inter
 
 #Simulation Devices
 
+#SDRAM
+VERILOG_SOURCES += ${NYSA}/verilog/generic/bram.v
+VERILOG_SOURCES += ${NYSA}/verilog/wishbone/slave/wb_bram/rtl/wb_bram.v
 
-
+VERILOG_SOURCES += ${TOPDIR}/sim/arbiter_2_masters.v
+VERILOG_SOURCES += ${TOPDIR}/sim/wishbone_mem_interconnect.v
 VERILOG_SOURCES += ${NYSA}/verilog/wishbone/common/wb_mem_2_ppfifo/rtl/wb_mem_2_ppfifo.v
 VERILOG_SOURCES += ${NYSA}/verilog/wishbone/common/wb_ppfifo_2_mem/rtl/wb_ppfifo_2_mem.v
 VERILOG_SOURCES += ${NYSA}/verilog/generic/cross_clock_enable.v
@@ -38,10 +43,9 @@ VERILOG_SOURCES += ${TOPDIR}/rtl/sd_tx_fifo.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/sd_fifo_rx_filler.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/sd_fifo_tx_filler.v
 #VERILOG_SOURCES += ${TOPDIR}/rtl/sdc_controller.v
+VERILOG_SOURCES += ${TOPDIR}/rtl/wb_sd_host.v
 
-VERILOG_SOURCES += ${TOPDIR}/rtl/wb_sdio_host.v
 #DUT
-#Test Benches
 VERILOG_SOURCES += $(TOPDIR)/cocotb/tb_cocotb.v
 
 TOPLEVEL = tb_cocotb

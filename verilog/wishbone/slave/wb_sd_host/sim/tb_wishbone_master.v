@@ -181,7 +181,7 @@ wishbone_master wm (
 );
 
 //slave 1
-wb_sdio_host s1 (
+wb_sd_host s1 (
 
   .clk        (clk                  ),
   .rst        (rst                  ),

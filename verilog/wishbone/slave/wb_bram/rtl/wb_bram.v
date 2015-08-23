@@ -117,19 +117,18 @@ bram#(
 //blocks
 always @ (posedge clk) begin
   if (rst) begin
-    o_wbs_dat <= 32'h0;
-    o_wbs_ack <= 0;
-    o_wbs_int <= 0;
-    ram_sleep <= SLEEP_COUNT;
-    ram_adr   <= 0;
-    en_ram    <= 0;
+    o_wbs_dat       <= 32'h0;
+    o_wbs_ack       <= 0;
+    o_wbs_int       <= 0;
+    ram_sleep       <= SLEEP_COUNT;
+    ram_adr         <= 0;
+    en_ram          <= 0;
   end
-
   else begin
     //when the master acks our ack, then put our ack down
-    if (o_wbs_ack & ~i_wbs_stb)begin
-      o_wbs_ack <= 0;
-      en_ram <= 0;
+    if (o_wbs_ack & !i_wbs_stb)begin
+      o_wbs_ack     <= 0;
+      en_ram        <= 0;
     end
 
     if (i_wbs_stb & i_wbs_cyc) begin

@@ -1,7 +1,7 @@
 #PUT LICENCE HERE!
 
 """
-wb_sdio_host Driver
+wb_sd_host Driver
 
 """
 
@@ -24,11 +24,11 @@ SDB_VENDOR_ID           = 0x800000000000C594
 CONTROL_ADDR            = 0x00000000
 ZERO_BIT                = 0
 
-class wb_sdio_hostDriver(driver.Driver):
+class wb_sd_hostDriver(driver.Driver):
 
-    """ wb_sdio_host
+    """ wb_sd_host
 
-        Communication with a DutDriver wb_sdio_host Core
+        Communication with a DutDriver wb_sd_host Core
     """
     @staticmethod
     def get_abi_class():
@@ -47,7 +47,7 @@ class wb_sdio_hostDriver(driver.Driver):
         return SDB_VENDOR_ID
 
     def __init__(self, nysa, urn, debug = False):
-        super(wb_sdio_hostDriver, self).__init__(nysa, urn, debug)
+        super(wb_sd_hostDriver, self).__init__(nysa, urn, debug)
 
     def set_control(self, control):
         self.write_register(CONTROL_ADDR, control)

@@ -8,7 +8,7 @@ from nysa.host.sim.sim_host import NysaSim
 from cocotb.clock import Clock
 import time
 from array import array as Array
-from dut_driver import wb_sdio_hostDriver
+from dut_driver import wb_sd_hostDriver
 
 SIM_CONFIG = "sim_config.json"
 
@@ -43,8 +43,6 @@ def first_test(dut):
     Expected Results:
         Write to all registers
     """
-
-
     dut.test_id = 0
     print "module path: %s" % MODULE_PATH
     nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
@@ -53,12 +51,17 @@ def first_test(dut):
     nysa.read_sdb()
     yield (nysa.wait_clocks(10))
     nysa.pretty_print_sdb()
-    driver = wb_sdio_hostDriver(nysa, nysa.find_device(wb_sdio_hostDriver)[0])
-    print "here!"
+    driver = wb_sd_hostDriver(nysa, nysa.find_device(wb_sd_hostDriver)[0])
     yield cocotb.external(driver.set_control)(0x01)
     yield (nysa.wait_clocks(100))
     v = yield cocotb.external(driver.get_control)()
     dut.log.info("V: %d" % v)
     dut.log.info("DUT Opened!")
     dut.log.info("Ready")
+    test_data = [0x00, 0x01, 0x02, 0x03]
+    yield cocotb.external(nysa.write_memory)(0x00, test_data)
+    yield (nysa.wait_clocks(10))
+    dut.log.info("Wrote %s to memory" % (test_data))
+    data = yield cocotb.external(nysa.read_memory)(0x00, 1)
+    dut.log.info("Read back %s from memory" % test_data)
 
