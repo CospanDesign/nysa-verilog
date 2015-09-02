@@ -4,11 +4,12 @@ PWD=$(shell pwd)
 TOPDIR=$(PWD)/..
 COCOTB	:= $(shell $(python) nysa paths -c -s)
 NYSA		:= $(shell $(python) nysa paths -s -v nysa-verilog)
+SDIO_DEV:= $(shell $(python) nysa paths -s -v sdio-device)
 XILINX 	:= $(shell $(python) nysa paths -s -x)
 PYTHONPATH := ./model:$(PYTHONPATH)
 export PYTHONPATH
 
-EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/ -DSIMULATION -DCOCOTB_WORKAROUND
+EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/ -DSIMULATION -DCOCOTB_WORKAROUND -I${SDIO_DEV}/rtl/ -I${SDIO_DEV}/rtl/cia
 COMPILE_ARGS+= -D COCOTB_SIMULATION
 SIM_ARGS+=
 
@@ -19,13 +20,6 @@ VERILOG_SOURCES += $(NYSA)/verilog/sim/wishbone/interconnect/example_2port_inter
 #Simulation Devices
 
 #RAM
-#VERILOG_SOURCES += ${XILINX}/ISE/verilog/src/glbl.v
-#VERILOG_SOURCES += ${XILINX}/ISE/verilog/src/unisims/STARTUP_SPARTAN6.v
-#VERILOG_SOURCES += ${XILINX}/ISE/verilog/src/unisims/BUFG.v
-#VERILOG_SOURCES += ${XILINX}/ISE/verilog/src/unisims/ODDR2.v
-#VERILOG_SOURCES += ${XILINX}/ISE/verilog/src/unisims/PLL_BASE.v
-#VERILOG_SOURCES += ${XILINX}/ISE/verilog/src/unisims/PLL_ADV.v
-
 VERILOG_SOURCES += ${NYSA}/verilog/generic/bram.v
 VERILOG_SOURCES += ${NYSA}/verilog/wishbone/slave/wb_bram/rtl/wb_bram.v
 
@@ -36,11 +30,25 @@ VERILOG_SOURCES += ${NYSA}/verilog/wishbone/common/wb_ppfifo_2_mem/rtl/wb_ppfifo
 VERILOG_SOURCES += ${NYSA}/verilog/generic/cross_clock_enable.v
 VERILOG_SOURCES += ${NYSA}/verilog/generic/blk_mem.v
 VERILOG_SOURCES += ${NYSA}/verilog/generic/ppfifo.v
-#VERILOG_SOURCES += ${TOPDIR}/rtl/sd_clock_divider.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/generic/sd_crc_16.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/generic/sd_crc_7.v
 
-#VERILOG_SOURCES += ${TOPDIR}/rtl/sd_clk_gen.v
+#SDIO Device
+VERILOG_SOURCES += ${SDIO_DEV}/rtl/platform/sd_dev_platform_cocotb.v
+VERILOG_SOURCES += $(SDIO_DEV)/sim/demo_function.v
+VERILOG_SOURCES += $(SDIO_DEV)/rtl/generic/crc7.v
+VERILOG_SOURCES += $(SDIO_DEV)/rtl/generic/crc16.v
+VERILOG_SOURCES += $(SDIO_DEV)/rtl/cia/sdio_fbr.v
+VERILOG_SOURCES += $(SDIO_DEV)/rtl/cia/sdio_cccr.v
+VERILOG_SOURCES += $(SDIO_DEV)/rtl/cia/sdio_cis.v
+VERILOG_SOURCES += $(SDIO_DEV)/rtl/cia/sdio_cia.v
+VERILOG_SOURCES += $(SDIO_DEV)/rtl/control/sdio_card_control.v
+VERILOG_SOURCES += $(SDIO_DEV)/rtl/phy/sdio_phy.v
+VERILOG_SOURCES += $(SDIO_DEV)/rtl/sdio_device_stack.v
+
+
+
+#SD Host
 VERILOG_SOURCES += ${TOPDIR}/rtl/platform/sd_host_platform_cocotb.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/sd_host_defines.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/phy/sd_sd4_phy.v
@@ -48,6 +56,7 @@ VERILOG_SOURCES += ${TOPDIR}/rtl/phy/sd_phy_layer.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/cmd/sd_cmd_layer.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/sd_host_stack.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/wb_sd_host.v
+
 
 #DUT
 VERILOG_SOURCES += $(TOPDIR)/cocotb/tb_cocotb.v

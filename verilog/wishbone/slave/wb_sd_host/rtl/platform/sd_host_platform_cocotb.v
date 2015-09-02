@@ -36,7 +36,7 @@ input               rst,
 output              o_locked,
 output  reg         o_out_clk,
 output              o_out_clk_x2,
-                    
+
 input               i_sd_cmd_dir,
 output              o_sd_cmd_in,
 input               i_sd_cmd_out,

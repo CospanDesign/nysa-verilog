@@ -89,14 +89,14 @@ SOFTWARE.
 
 `define COMMAND_BIT_CMD_TOP                   6
 `define COMMAND_BIT_CMD_BOT                   0
-                                              
+
 `define COMMAND_BIT_GO                        16
 `define COMMAND_BIT_RSP_LONG_FLG              17
 
 
 `define CONFIGURE_EN_CRC                      4
-                                              
-                                              
+
+
 `define SD_ERROR_NO_ERROR                     0
 `define SD_ERROR_TIMEOUT                      1
 `define SD_ERROR_BAD_CRC                      2
@@ -292,7 +292,7 @@ sd_host_platform_cocotb cocotb_platform(
   .o_phy_out_clk        (o_sd_clk                 ),
   .io_phy_sd_cmd        (io_sd_cmd                ),
   .io_phy_sd_data       (io_sd_data               )
-  
+
 );
 `else
 `endif
