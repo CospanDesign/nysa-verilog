@@ -1,9 +1,9 @@
 module sd_crc_7(
- input              BITVAL,     // Next input bit
- input              Enable,
- input              CLK,        // Current bit valid (Clock)
- input              RST,        // Init CRC value
- output reg [6:0]   CRC         // Current output CRC value
+ input              bitval,     // Next input bit
+ input              en,
+ input              clk,        // Current bit valid (Clock)
+ input              rst,        // Init crc value
+ output reg [6:0]   crc         // Current output crc value
 );
 
 //Local Parameters
@@ -14,21 +14,21 @@ wire         inv;
 //Asynchronous Logic
 //Synchronous Logic
 
-assign inv = BITVAL ^ CRC[6];                   // XOR required?
+assign inv = bitval ^ crc[6];                   // XOR required?
 
-always @(posedge CLK or posedge RST) begin
-  if (RST) begin
-    CRC = 0;
+always @(posedge clk or posedge rst) begin
+  if (rst) begin
+    crc = 0;
   end
   else begin
-    if (Enable==1) begin
-      CRC[6] = CRC[5];
-      CRC[5] = CRC[4];
-      CRC[4] = CRC[3];
-      CRC[3] = CRC[2] ^ inv;
-      CRC[2] = CRC[1];
-      CRC[1] = CRC[0];
-      CRC[0] = inv;
+    if (en==1) begin
+      crc[6] = crc[5];
+      crc[5] = crc[4];
+      crc[4] = crc[3];
+      crc[3] = crc[2] ^ inv;
+      crc[2] = crc[1];
+      crc[1] = crc[0];
+      crc[0] = inv;
     end
   end
 end

@@ -7,13 +7,12 @@ module sd_clock_divider (
 );
 
 //Local Parameters
-
 //Registers/Wires
 reg [7:0] clock_div;
-
 //Submodules
 //Asynchronous Logic
 //Synchronous Logic
+
 always @ (posedge clk or posedge rst) begin
   if (rst) begin
     clock_div   <= 8'b0000_0000;

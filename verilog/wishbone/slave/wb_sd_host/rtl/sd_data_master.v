@@ -1,54 +1,53 @@
 `include "sd_defines.v"
 
 module sd_data_master (
-  input clk,
-  input rst,
+  input                       clk,
+  input                       rst,
   //Tx Bd
 
-  input [`RAM_MEM_WIDTH-1:0] dat_in_tx,
-  input [`BD_WIDTH-1:0] free_tx_bd,
-  input ack_i_s_tx,
-  output reg re_s_tx,
-  output reg a_cmp_tx,
+  input [`RAM_MEM_WIDTH-1:0]  dat_in_tx,
+  input [`BD_WIDTH-1:0]       free_tx_bd,
+  input                       ack_i_s_tx,
+  output reg                  re_s_tx,
+  output reg                  a_cmp_tx,
   //Rx Bd
 
-  input [`RAM_MEM_WIDTH-1:0] dat_in_rx,
-  input [`BD_WIDTH-1:0] free_rx_bd,
-  input ack_i_s_rx,
-  output reg re_s_rx,
-  output reg a_cmp_rx,
+  input [`RAM_MEM_WIDTH-1:0]  dat_in_rx,
+  input [`BD_WIDTH-1:0]       free_rx_bd,
+  input                       ack_i_s_rx,
+  output reg                  re_s_rx,
+  output reg                  a_cmp_rx,
   //Input from SD-Host Reg
-  input  cmd_busy, //STATUS_REG[0] and mux
+  input                       cmd_busy, //STATUS_REG[0] and mux
   //Output to SD-Host Reg
-  output reg we_req,
-  input we_ack,
-  output reg d_write,
-  output reg d_read,
-  output reg [31:0] cmd_arg,
-  output reg [15:0] cmd_set,
-  input cmd_tsf_err,
-  input [4:0] card_status,
+  output reg                  we_req,
+  input                       we_ack,
+  output reg                  d_write,
+  output reg                  d_read,
+  output reg [31:0]           cmd_arg,
+  output reg [15:0]           cmd_set,
+  input                       cmd_tsf_err,
+  input [4:0]                 card_status,
   //To fifo filler
-  output reg start_tx_fifo,
-  output reg start_rx_fifo,
-  output reg [31:0] sys_adr,
-  input tx_empt,
-  input tx_full,
-  input rx_full,
+  output reg                  start_tx_fifo,
+  output reg                  start_rx_fifo,
+  output reg [31:0]           sys_adr,
+  input                       tx_empt,
+  input                       tx_full,
+  input                       rx_full,
 
   //SD-DATA_Host
-  input busy_n     ,
-  input transm_complete ,
-  input crc_ok,
-  output reg ack_transfer,
+  input                       busy_n     ,
+  input                       transm_complete ,
+  input                       crc_ok,
+  output reg                  ack_transfer,
   //status output
-  output reg  [7:0] data_int_status ,
-  input data_int_status_rst,
-  output reg  CIDAT,
-  input [1:0] transfer_type
+  output reg  [7:0]           data_int_status ,
+  input                       data_int_status_rst,
+  output reg                  CIDAT,
+  input [1:0]                 transfer_type
+);
 
-
-  );
 `define RESEND_MAX_CNT 3
 `ifdef RAM_MEM_WIDTH_32
       `define READ_CYCLE 2
@@ -68,24 +67,24 @@ reg tx_cycle;
 reg rx_cycle;
 reg [2:0] resend_try_cnt;
 
-parameter CMD24            = 16'h181A ; // 011000 0001 1010
-parameter CMD17            = 16'h111A; //  010001 0001 1010
-parameter CMD12            = 16'hC1A ; //  001100 0001 1010
-parameter ACMD13           = 16'hD1A ; // 001101 0001 1010  //SD STATUS
-parameter ACMD51           = 16'h331A ; //110011 0001 1010 //SCR Register
+parameter CMD24            = 16'h181A;  //011000 0001 1010
+parameter CMD17            = 16'h111A;  //010001 0001 1010
+parameter CMD12            = 16'hC1A;   //001100 0001 1010
+parameter ACMD13           = 16'hD1A;   //001101 0001 1010  //SD STATUS
+parameter ACMD51           = 16'h331A;  //110011 0001 1010  //SCR Register
 
 parameter SIZE             = 9;
 reg [SIZE-1:0] state;
 reg [SIZE-1:0] next_state;
-parameter IDLE             =  9'b000000001;
-parameter GET_TX_BD        =  9'b000000010;
-parameter GET_RX_BD        =  9'b000000100;
-parameter SEND_CMD         =  9'b000001000;
-parameter RECIVE_CMD       =  9'b000010000;
-parameter DATA_TRANSFER    =  9'b000100000;
-parameter STOP             =  9'b001000000;
-parameter STOP_SEND        =  9'b010000000;
-parameter STOP_RECIVE_CMD  =  9'b100000000;
+parameter IDLE             = 9'b000000001;
+parameter GET_TX_BD        = 9'b000000010;
+parameter GET_RX_BD        = 9'b000000100;
+parameter SEND_CMD         = 9'b000001000;
+parameter RECIVE_CMD       = 9'b000010000;
+parameter DATA_TRANSFER    = 9'b000100000;
+parameter STOP             = 9'b001000000;
+parameter STOP_SEND        = 9'b010000000;
+parameter STOP_RECIVE_CMD  = 9'b100000000;
 
 reg trans_done;
 reg trans_failed;
@@ -342,12 +341,12 @@ begin
             end
             else if ( bd_cnt == 1)  begin
               sys_adr [31:16] <= dat_in_tx;
-              bd_cnt <= bd_cnt+1;    
+              bd_cnt <= bd_cnt+1;
             end
             else if ( bd_cnt == 2) begin
               cmd_arg [15:0] <= dat_in_tx;
               re_s_tx <= 0;
-              bd_cnt <= bd_cnt+1;    
+              bd_cnt <= bd_cnt+1;
             end
             else if ( bd_cnt == 3) begin
               cmd_arg [31:16] <= dat_in_tx;
@@ -426,10 +425,10 @@ begin
           if (tx_empt) begin
             data_int_status[2]      <= 1;
             trans_failed            <= 1;
-          end                       
-        end                         
-        else begin                  
-          if (rx_full) begin        
+          end
+        end
+        else begin
+          if (rx_full) begin
             data_int_status[2]      <= 1;
             trans_failed            <= 1;
           end
@@ -476,9 +475,9 @@ begin
         resend_try_cnt=resend_try_cnt+1;
         if (resend_try_cnt==`RESEND_MAX_CNT)
           data_int_status[1]         <= 1;
-        if (!cmd_busy)               
+        if (!cmd_busy)
           we_req                     <= 1;
-        if (we_ack)                  
+        if (we_ack)
           send_done                  <= 1;
       end
 

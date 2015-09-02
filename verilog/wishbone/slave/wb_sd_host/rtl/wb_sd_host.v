@@ -69,20 +69,46 @@ SOFTWARE.
 
 
 //control bit definition
-`define CONTROL_ENABLE_SDIO       0
-`define CONTROL_ENABLE_INTERRUPT  1
-`define CONTROL_ENABLE_DMA_WR     2
-`define CONTROL_ENABLE_DMA_RD     3
+`define CONTROL_ENABLE_SDIO                   0
+`define CONTROL_ENABLE_INTERRUPT              1
+`define CONTROL_ENABLE_DMA_WR                 2
+`define CONTROL_ENABLE_DMA_RD                 3
+//TODO Implement Finished transaction interrupt
+`define CONTROL_ENABLE_SD_FINISHED_INTERRUPT  4
+
 
 //status bit definition
-`define STATUS_MEMORY_0_FINISHED  0
-`define STATUS_MEMORY_1_FINISHED  1
-`define STATUS_ENABLE             5
-`define STATUS_MEMORY_0_EMPTY     6
-`define STATUS_MEMORY_1_EMPTY     7
+`define STATUS_MEMORY_0_FINISHED              0
+`define STATUS_MEMORY_1_FINISHED              1
+`define STATUS_ENABLE                         5
+`define STATUS_MEMORY_0_EMPTY                 6
+`define STATUS_MEMORY_1_EMPTY                 7
+`define STATUS_SD_BUSY                        8
+`define STATUS_ERROR_BIT_TOP                  31
+`define STATUS_ERROR_BIT_BOT                  24
+
+`define COMMAND_BIT_CMD_TOP                   6
+`define COMMAND_BIT_CMD_BOT                   0
+                                              
+`define COMMAND_BIT_GO                        16
+`define COMMAND_BIT_RSP_LONG_FLG              17
 
 
-module wb_sd_host (
+`define CONFIGURE_EN_CRC                      4
+                                              
+                                              
+`define SD_ERROR_NO_ERROR                     0
+`define SD_ERROR_TIMEOUT                      1
+`define SD_ERROR_BAD_CRC                      2
+
+
+
+module wb_sd_host #(
+  parameter                 SD_MODE       = 1,
+  parameter                 FOUR_BIT_DATA = 1,
+  parameter                 DDR_EN        = 1,
+  parameter                 BUFFER_DEPTH  = 11  //2048
+)(
   input               clk,
   input               rst,
 
@@ -111,7 +137,11 @@ module wb_sd_host (
 
 
   //This interrupt can be controlled from this module or a submodule
-  output              o_wbs_int
+  output              o_wbs_int,
+
+  output              o_sd_clk,
+  inout               io_sd_cmd,
+  inout       [3:0]   io_sd_data
 );
 
 //Local Parameters
@@ -121,6 +151,15 @@ localparam          REG_MEM_0_BASE      = 32'h00000002;
 localparam          REG_MEM_0_SIZE      = 32'h00000003;
 localparam          REG_MEM_1_BASE      = 32'h00000004;
 localparam          REG_MEM_1_SIZE      = 32'h00000005;
+
+localparam          SD_ARGUMENT         = 32'h00000006;
+localparam          SD_COMMAND          = 32'h00000007;
+localparam          SD_CONFIGURE        = 32'h00000008;
+localparam          SD_RESPONSE0        = 32'h00000009;
+localparam          SD_RESPOSNE1        = 32'h0000000A;
+localparam          SD_RESPONSE2        = 32'h0000000B;
+localparam          SD_RESPONSE3        = 32'h0000000C;
+localparam          SD_RESPONSE4        = 32'h0000000D;
 
 //Local Registers/Wires
 reg         [31:0]      control         = 32'h00000000;
@@ -170,16 +209,15 @@ wire                    w_write_finished;
 wire                    w_memory_idle;
 
 //SDIO Signals
-wire                    w_sdio_enable;
+wire                    w_sd_enable;
 
-wire                    w_rfifo_ready = 1'b0;
+wire                    w_rfifo_ready;
 wire                    w_rfifo_activate;
-wire        [23:0]      w_rfifo_size = 24'h0;
+wire        [23:0]      w_rfifo_size;
 wire                    w_rfifo_strobe;
-wire        [31:0]      w_rfifo_data  = 32'h00000000;
+wire        [31:0]      w_rfifo_data;
 
-
-wire        [1:0]       w_wfifo_ready =  1'b0;
+wire        [1:0]       w_wfifo_ready;
 wire        [1:0]       w_wfifo_activate;
 wire        [23:0]      w_wfifo_size;
 wire                    w_wfifo_strobe;
@@ -201,14 +239,124 @@ wire        [31:0]      p2m_mem_o_dat;
 
 
 //Submodules
-sdio_host_stack (
+wire                    sd_ready;
+reg         [15:0]      sd_timeout;
+wire                    sd_card_detect;
+
+reg                     sd_cmd_en;
+wire                    sd_cmd_finished_en;
+reg         [5:0]       sd_cmd;
+reg         [31:0]      sd_cmd_arg;
+
+reg                     sd_cmd_rsp_long_flag;
+
+wire        [7:0]       sd_error;
+wire        [135:0]     sd_rsp;
+reg                     enable_crc;
+
+
+reg                     ddr_en_flag;
+reg                     sd1_phy_flag;
+reg                     sd4_phy_flag;
+wire                    pll_locked;
+
+wire                    sd_cmd_dir;
+wire                    sd_cmd_in;
+wire                    sd_cmd_out;
+
+wire                    sd_data_dir;
+wire        [7:0]       sd_data_out;
+wire        [7:0]       sd_data_in;
+
+
+//Possibly replace with a generate statement using an input parameter
+`ifdef COCOTB_SIMULATION
+sd_host_platform_cocotb cocotb_platform(
   .clk                  (clk                      ),
   .rst                  (rst                      ),
 
+  //Stack Interface
+  .o_locked             (pll_locked               ),
+  .o_out_clk            (sd_clk                   ),
+  .o_out_clk_x2         (sd_clk_x2                ),
 
+  .i_sd_cmd_dir         (sd_cmd_dir               ),
+  .o_sd_cmd_in          (sd_cmd_in                ),
+  .i_sd_cmd_out         (sd_cmd_out               ),
 
-  .o_interrupt          (sd_host_interrupt        )
+  .i_sd_data_dir        (sd_data_dir              ),
+  .i_sd_data_out        (sd_data_out              ),
+  .o_sd_data_in         (sd_data_in               ),
+
+  //Physical Signals
+  .o_phy_out_clk        (o_sd_clk                 ),
+  .io_phy_sd_cmd        (io_sd_cmd                ),
+  .io_phy_sd_data       (io_sd_data               )
+  
 );
+`else
+`endif
+
+sd_host_stack #(
+  .SD_MODE              (SD_MODE                  ),
+  .FOUR_BIT_DATA        (FOUR_BIT_DATA            ),
+  .DDR_EN               (DDR_EN                   ),
+  .BUFFER_DEPTH         (BUFFER_DEPTH             )
+)sd_stack(
+  .clk                  (clk                      ),
+  .rst                  (rst                      ),
+
+  //Control/Status/Error
+  .o_sd_ready           (sd_ready                 ),
+  .i_card_detect        (sd_card_detect           ),
+  .i_timeout            (sd_timeout               ),
+
+  .o_error_flag         (sd_error_flag            ),  //If an SD Error occured this flag
+                                                      // will be high when sd_cmd_ack_stb goes high
+  .o_error              (sd_error                 ),  //If Error flag is high when sd_cmd_ack_stb
+                                                      // this is strobed, this is the error code
+
+  //Command/Response Interface
+  .i_cmd_en             (sd_cmd_en                ),
+  .o_cmd_finished_en    (sd_cmd_finished_en       ),
+
+  .i_cmd                (sd_cmd                   ),
+  .i_cmd_arg            (sd_cmd_arg               ),
+  .i_rsp_long_flag      (sd_rsp_long_flag         ),
+  .o_rsp                (sd_rsp                   ),
+
+  //Data From Host to SD Interface
+  .o_h2s_wfifo_ready    (w_wfifo_ready            ),
+  .i_h2s_wfifo_activate (w_wfifo_activate         ),
+  .o_h2s_wfifo_size     (w_wfifo_size             ),
+  .i_h2s_wfifo_stb      (w_wfifo_strobe           ),
+  .i_h2s_wfifo_data     (w_wfifo_data             ),
+
+  //Data From SD to Host Interface
+  .o_s2h_rfifo_ready    (w_rfifo_ready            ),
+  .i_s2h_rfifo_activate (w_rfifo_activate         ),
+  .o_s2h_rfifo_size     (w_rfifo_size             ),
+  .i_s2h_rfifo_stb      (w_rfifo_strobe           ),
+  .o_s2h_rfifo_data     (w_rfifo_data             ),
+
+  //Interrupt
+  .o_interrupt          (sd_host_interrupt        ),
+
+
+  //Phy Interface
+  .i_sd_clk             (sd_clk                   ),
+  .i_sd_clk_x2          (sd_clk_x2                ),
+
+  .o_sd_cmd_dir         (sd_cmd_dir               ),
+  .i_sd_cmd             (sd_cmd_in                ),
+  .o_sd_cmd             (sd_cmd_out               ),
+
+  .o_sd_data_dir        (sd_data_dir              ),
+  .i_sd_data            (sd_data_in               ),
+  .o_sd_data            (sd_data_out              )
+);
+
+
 wb_ppfifo_2_mem p2m(
 
   .clk                  (clk                      ),
@@ -306,54 +454,63 @@ wb_mem_2_ppfifo m2p(
 );
 
 //Asynchronous Logic
-assign  w_sdio_enable       = control[`CONTROL_ENABLE_SDIO];
-assign  w_interrupt_enable  = control[`CONTROL_ENABLE_INTERRUPT];
-assign  w_mem_write_enable  = control[`CONTROL_ENABLE_DMA_WR];
-assign  w_mem_read_enable   = control[`CONTROL_ENABLE_DMA_RD];
+assign  w_sd_enable           = control[`CONTROL_ENABLE_SDIO      ];
+assign  w_interrupt_enable    = control[`CONTROL_ENABLE_INTERRUPT ];
+assign  w_mem_write_enable    = control[`CONTROL_ENABLE_DMA_WR    ];
+assign  w_mem_read_enable     = control[`CONTROL_ENABLE_DMA_RD    ];
 
 assign  status[`STATUS_MEMORY_0_FINISHED] = w_mem_write_enable ? w_p2m_0_finished :
                                             1'b0;
 
 assign  status[`STATUS_MEMORY_1_FINISHED] = w_mem_write_enable ? w_p2m_1_finished :
                                             1'b0;
-assign  status[`STATUS_ENABLE]            = w_sdio_enable;
+assign  status[`STATUS_ENABLE]            = w_sd_enable;
 assign  status[`STATUS_MEMORY_0_EMPTY]    = w_mem_write_enable ? w_p2m_0_empty    :
                                             w_mem_read_enable  ? w_m2p_0_empty    :
                                             1'b0;
 assign  status[`STATUS_MEMORY_1_EMPTY]    = w_mem_write_enable ? w_p2m_1_empty    :
                                             w_mem_read_enable  ? w_m2p_1_empty    :
                                             1'b0;
+assign  status[`STATUS_SD_BUSY]           = sd_cmd_en;
 
-assign  o_wbs_int                           = w_interrupt_enable ? w_int : 1'b0;
+assign  status[`STATUS_ERROR_BIT_TOP:`STATUS_ERROR_BIT_BOT] = sd_error;
 
-assign  mem_o_we                            = w_mem_write_enable ? m2p_mem_o_we :
-                                              w_mem_read_enable  ? p2m_mem_o_we :
-                                              1'b0;
-assign  mem_o_stb                           = w_mem_write_enable ? m2p_mem_o_stb :
-                                              w_mem_read_enable  ? p2m_mem_o_stb :
-                                              1'b0;
-assign  mem_o_cyc                           = w_mem_write_enable ? m2p_mem_o_cyc :
-                                              w_mem_read_enable  ? p2m_mem_o_cyc :
-                                              1'b0;
-assign  mem_o_sel                           = w_mem_write_enable ? m2p_mem_o_sel :
-                                              w_mem_read_enable  ? p2m_mem_o_sel :
-                                              4'b0000;
-assign  mem_o_adr                           = w_mem_write_enable ? m2p_mem_o_adr :
-                                              w_mem_read_enable  ? p2m_mem_o_adr :
-                                              31'h00000000;
-assign  mem_o_dat                           = w_mem_write_enable ? m2p_mem_o_dat :
-                                              w_mem_read_enable  ? p2m_mem_o_dat :
-                                              4'b0000;
+assign  o_wbs_int                         = w_interrupt_enable ? w_int : 1'b0;
+assign  mem_o_we                          = w_mem_write_enable ? m2p_mem_o_we :
+                                            w_mem_read_enable  ? p2m_mem_o_we :
+                                            1'b0;
+assign  mem_o_stb                         = w_mem_write_enable ? m2p_mem_o_stb :
+                                            w_mem_read_enable  ? p2m_mem_o_stb :
+                                            1'b0;
+assign  mem_o_cyc                         = w_mem_write_enable ? m2p_mem_o_cyc :
+                                            w_mem_read_enable  ? p2m_mem_o_cyc :
+                                            1'b0;
+assign  mem_o_sel                         = w_mem_write_enable ? m2p_mem_o_sel :
+                                            w_mem_read_enable  ? p2m_mem_o_sel :
+                                            4'b0000;
+assign  mem_o_adr                         = w_mem_write_enable ? m2p_mem_o_adr :
+                                            w_mem_read_enable  ? p2m_mem_o_adr :
+                                            31'h00000000;
+assign  mem_o_dat                         = w_mem_write_enable ? m2p_mem_o_dat :
+                                            w_mem_read_enable  ? p2m_mem_o_dat :
+                                            4'b0000;
 
 
 //Synchronous Logic
 
 always @ (posedge clk) begin
+
   if (rst) begin
-    o_wbs_dat <= 32'h0;
-    o_wbs_ack <= 0;
+    o_wbs_dat             <= 32'h0;
+    o_wbs_ack             <= 0;
+    sd_cmd_en             <= 0;
+    sd_cmd                <= 6'h0;
+    sd_cmd_arg            <= 32'h0;
+    sd_cmd_rsp_long_flag  <= 1'b0;
+    enable_crc            <= 1'b1;
   end
   else begin
+
     //when the master acks our ack, then put our ack down
     if (o_wbs_ack && ~i_wbs_stb)begin
       o_wbs_ack <= 0;
@@ -389,6 +546,18 @@ always @ (posedge clk) begin
               if (i_wbs_dat > 0) begin
                 r_memory_1_ready    <=  1;
               end
+            end
+            SD_ARGUMENT: begin
+              sd_cmd_arg            <=  i_wbs_dat;
+            end
+            SD_COMMAND: begin
+              sd_cmd_en             <=  i_wbs_dat[`COMMAND_BIT_GO];
+              sd_cmd_rsp_long_flag  <=  i_wbs_dat[`COMMAND_BIT_RSP_LONG_FLG];
+              sd_cmd                <=  i_wbs_dat[`COMMAND_BIT_CMD_TOP:`COMMAND_BIT_CMD_BOT];
+            end
+            SD_CONFIGURE: begin
+              enable_crc            <=  i_wbs_dat[`CONFIGURE_EN_CRC];
+
             end
             default: begin
             end
@@ -447,8 +616,13 @@ always @ (posedge clk) begin
 
           endcase
         end
-      o_wbs_ack <= 1;
+        o_wbs_ack <= 1;
+      end
     end
+
+    //Stack Says We're finished so put down our enable/busy signal
+    if (sd_cmd_finished_en) begin
+      sd_cmd_en   <=  0;
     end
   end
 end

@@ -11,8 +11,6 @@ module sd_cmd_master(
   input                 data_write,
   input                 data_read,
 
-
-
   input      [31:0]     arg_reg,
   input      [13:0]     cmd_set_reg,
   input      [15:0]     timeout_reg,
@@ -220,16 +218,16 @@ always @ (posedge clk or posedge rst)begin
         else begin
           response_size=0;
         end
-        cmd_out[39:38]=2'b01;
-        cmd_out[37:32]=`CMDI;  //CMD_INDEX
-        cmd_out[31:0]= arg_reg;           //CMD_Argument
-        settings[14:13]=`WORD_SELECT;             //Reserved
-        settings[12] = data_read; //Type of command
-        settings[11] = data_write;
-        settings[10:8]=3'b111;            //Delay
-        settings[7]=`CRCE;         //CRC-check
-        settings[6:0]=response_size;   //response size
-        watchdog_cnt = 0;
+        cmd_out[39:38]  = 2'b01;
+        cmd_out[37:32]  = `CMDI;          //CMD_INDEX
+        cmd_out[31:0]   = arg_reg;        //CMD_Argument
+        settings[14:13] = `WORD_SELECT;   //Reserved
+        settings[12]    = data_read;      //Type of command
+        settings[11]    = data_write;
+        settings[10:8]  = 3'b111;         //Delay
+        settings[7]     = `CRCE;          //CRC-check
+        settings[6:0]   = response_size;  //response size
+        watchdog_cnt    = 0;
         `CICMD =1;
       end
       EXECUTE: begin

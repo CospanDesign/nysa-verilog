@@ -1,9 +1,11 @@
 `timescale 1ns/1ps
 
+
 module tb_cocotb (
 
 //Virtual Host Interface Signals
-input             clk,
+input             cocotb_clk,
+input             in_clk,
 input             rst,
 output            master_ready,
 
@@ -36,6 +38,7 @@ reg   [31:0]      r_in_data;
 reg   [27:0]      r_in_data_count;
 reg               r_out_ready;
 reg               r_ih_reset;
+reg               clk;
 
 
 //There is a bug in COCOTB when stiumlating a signal, sometimes it can be corrupted if not registered
@@ -47,6 +50,7 @@ always @ (*) r_in_data       = in_data;
 always @ (*) r_in_data_count = in_data_count;
 always @ (*) r_out_ready     = out_ready;
 always @ (*) r_ih_reset      = ih_reset;
+always @ (*) clk             = in_clk;
 
 //wishbone signals
 wire              w_wbp_we;

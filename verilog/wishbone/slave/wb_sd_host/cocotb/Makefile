@@ -8,7 +8,9 @@ XILINX 	:= $(shell $(python) nysa paths -s -x)
 PYTHONPATH := ./model:$(PYTHONPATH)
 export PYTHONPATH
 
-EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/ -I${NYSA}/verilog/wishbone/slave/wb_sdram/rtl/ -DSIMULATION
+EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/ -DSIMULATION -DCOCOTB_WORKAROUND
+COMPILE_ARGS+= -D COCOTB_SIMULATION
+SIM_ARGS+=
 
 #Dependencies
 VERILOG_SOURCES = $(NYSA)/verilog/wishbone/master/wishbone_master.v
@@ -16,7 +18,14 @@ VERILOG_SOURCES += $(NYSA)/verilog/sim/wishbone/interconnect/example_2port_inter
 
 #Simulation Devices
 
-#SDRAM
+#RAM
+#VERILOG_SOURCES += ${XILINX}/ISE/verilog/src/glbl.v
+#VERILOG_SOURCES += ${XILINX}/ISE/verilog/src/unisims/STARTUP_SPARTAN6.v
+#VERILOG_SOURCES += ${XILINX}/ISE/verilog/src/unisims/BUFG.v
+#VERILOG_SOURCES += ${XILINX}/ISE/verilog/src/unisims/ODDR2.v
+#VERILOG_SOURCES += ${XILINX}/ISE/verilog/src/unisims/PLL_BASE.v
+#VERILOG_SOURCES += ${XILINX}/ISE/verilog/src/unisims/PLL_ADV.v
+
 VERILOG_SOURCES += ${NYSA}/verilog/generic/bram.v
 VERILOG_SOURCES += ${NYSA}/verilog/wishbone/slave/wb_bram/rtl/wb_bram.v
 
@@ -27,22 +36,17 @@ VERILOG_SOURCES += ${NYSA}/verilog/wishbone/common/wb_ppfifo_2_mem/rtl/wb_ppfifo
 VERILOG_SOURCES += ${NYSA}/verilog/generic/cross_clock_enable.v
 VERILOG_SOURCES += ${NYSA}/verilog/generic/blk_mem.v
 VERILOG_SOURCES += ${NYSA}/verilog/generic/ppfifo.v
-VERILOG_SOURCES += ${TOPDIR}/rtl/sd_bd.v
-VERILOG_SOURCES += ${TOPDIR}/rtl/sd_clock_divider.v
-VERILOG_SOURCES += ${TOPDIR}/rtl/sd_cmd_master.v
+#VERILOG_SOURCES += ${TOPDIR}/rtl/sd_clock_divider.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/sd_crc_16.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/sd_crc_7.v
-VERILOG_SOURCES += ${TOPDIR}/rtl/sd_cmd_serial_host.v
-VERILOG_SOURCES += ${TOPDIR}/rtl/sd_controller_wb.v
-VERILOG_SOURCES += ${TOPDIR}/rtl/sd_data_master.v
-VERILOG_SOURCES += ${TOPDIR}/rtl/sd_data_serial_host.v
 
-VERILOG_SOURCES += ${TOPDIR}/rtl/sd_rx_fifo.v
-#VERILOG_SOURCES += ${TOPDIR}/rtl/sd_rx_fifo_tb.v
-VERILOG_SOURCES += ${TOPDIR}/rtl/sd_tx_fifo.v
-VERILOG_SOURCES += ${TOPDIR}/rtl/sd_fifo_rx_filler.v
-VERILOG_SOURCES += ${TOPDIR}/rtl/sd_fifo_tx_filler.v
-#VERILOG_SOURCES += ${TOPDIR}/rtl/sdc_controller.v
+#VERILOG_SOURCES += ${TOPDIR}/rtl/sd_clk_gen.v
+VERILOG_SOURCES += ${TOPDIR}/rtl/platform/sd_host_platform_cocotb.v
+VERILOG_SOURCES += ${TOPDIR}/rtl/sd_host_defines.v
+VERILOG_SOURCES += ${TOPDIR}/rtl/sd_sd4_phy.v
+VERILOG_SOURCES += ${TOPDIR}/rtl/sd_phy_layer.v
+VERILOG_SOURCES += ${TOPDIR}/rtl/sd_cmd_layer.v
+VERILOG_SOURCES += ${TOPDIR}/rtl/sd_host_stack.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/wb_sd_host.v
 
 #DUT

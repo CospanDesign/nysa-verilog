@@ -20,7 +20,7 @@ MODULE_PATH = os.path.abspath(MODULE_PATH)
 
 
 def setup_dut(dut):
-    cocotb.fork(Clock(dut.clk, CLK_PERIOD).start())
+    cocotb.fork(Clock(dut.in_clk, CLK_PERIOD).start())
 
 @cocotb.coroutine
 def wait_ready(nysa, dut):
@@ -31,7 +31,7 @@ def wait_ready(nysa, dut):
     #yield(nysa.wait_clocks(100))
     pass
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def first_test(dut):
     """
     Description:
@@ -64,4 +64,31 @@ def first_test(dut):
     dut.log.info("Wrote %s to memory" % (test_data))
     data = yield cocotb.external(nysa.read_memory)(0x00, 1)
     dut.log.info("Read back %s from memory" % test_data)
+
+
+@cocotb.test(skip = False)
+def send_simple_command(dut):
+    """
+    Description:
+        Initiate an SD transaction
+
+    Test ID: 1
+
+    Expected Results:
+        Enable an SD Transaction
+    """
+    dut.test_id = 1
+    print "module path: %s" % MODULE_PATH
+    nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
+    setup_dut(dut)
+    yield(nysa.reset())
+    nysa.read_sdb()
+    yield (nysa.wait_clocks(10))
+    nysa.pretty_print_sdb()
+    driver = wb_sd_hostDriver(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    yield cocotb.external(driver.set_control)(0x01)
+    yield (nysa.wait_clocks(100))
+    yield cocotb.external(driver.send_command)(0x01, 0x01234)
+    yield (nysa.wait_clocks(100))
+
 

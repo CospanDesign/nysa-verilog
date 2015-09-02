@@ -20,7 +20,7 @@
 00000002:00000002:01000001:00000000
 
 #Sleep
-00000008
+00000010
 
 #Read one (1 and 0 are the same for data count) from peripheral 1 address 0
 00000001:00000002:01000000:00000000
