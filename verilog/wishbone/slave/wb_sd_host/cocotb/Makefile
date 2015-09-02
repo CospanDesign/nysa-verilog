@@ -37,15 +37,15 @@ VERILOG_SOURCES += ${NYSA}/verilog/generic/cross_clock_enable.v
 VERILOG_SOURCES += ${NYSA}/verilog/generic/blk_mem.v
 VERILOG_SOURCES += ${NYSA}/verilog/generic/ppfifo.v
 #VERILOG_SOURCES += ${TOPDIR}/rtl/sd_clock_divider.v
-VERILOG_SOURCES += ${TOPDIR}/rtl/sd_crc_16.v
-VERILOG_SOURCES += ${TOPDIR}/rtl/sd_crc_7.v
+VERILOG_SOURCES += ${TOPDIR}/rtl/generic/sd_crc_16.v
+VERILOG_SOURCES += ${TOPDIR}/rtl/generic/sd_crc_7.v
 
 #VERILOG_SOURCES += ${TOPDIR}/rtl/sd_clk_gen.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/platform/sd_host_platform_cocotb.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/sd_host_defines.v
-VERILOG_SOURCES += ${TOPDIR}/rtl/sd_sd4_phy.v
-VERILOG_SOURCES += ${TOPDIR}/rtl/sd_phy_layer.v
-VERILOG_SOURCES += ${TOPDIR}/rtl/sd_cmd_layer.v
+VERILOG_SOURCES += ${TOPDIR}/rtl/phy/sd_sd4_phy.v
+VERILOG_SOURCES += ${TOPDIR}/rtl/phy/sd_phy_layer.v
+VERILOG_SOURCES += ${TOPDIR}/rtl/cmd/sd_cmd_layer.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/sd_host_stack.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/wb_sd_host.v
 
