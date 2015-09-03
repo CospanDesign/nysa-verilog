@@ -429,15 +429,15 @@ sd_dev_platform_cocotb sdio_dev_plat(
   .o_out_clk      (               ),
   .o_out_clk_x2   (               ),
 
-  .i_sd_cmd_dir   (i_sd_cmd_dir   ),
-  .o_sd_cmd_in    (o_sd_cmd_in    ),
-  .i_sd_cmd_out   (i_sd_cmd_out   ),
+  .i_sd_cmd_dir   (dev_sd_cmd_dir   ),
+  .o_sd_cmd_in    (dev_sd_cmd_in    ),
+  .i_sd_cmd_out   (dev_sd_cmd_out   ),
 
-  .i_sd_data_dir  (i_sd_data_dir  ),
-  .o_sd_data_in   (o_sd_data_in   ),
-  .i_sd_data_out  (i_sd_data_out  ),
+  .i_sd_data_dir  (dev_sd_data_dir  ),
+  .o_sd_data_in   (dev_sd_data_in   ),
+  .i_sd_data_out  (dev_sd_data_out  ),
 
-  .i_phy_out_clk  (sd_clk         ),
+  .i_phy_clk      (sd_clk         ),
   .io_phy_sd_cmd  (phy_sd_cmd     ),
   .io_phy_sd_data (phy_sd_data    )
 );
@@ -445,67 +445,78 @@ sd_dev_platform_cocotb sdio_dev_plat(
 //TODO ADAPT sdio_device to use the platform based phy_sd_cmd and phy_sd_data
 
 sdio_device_stack sdio_device (
-  .sdio_clk            (sd_clk              ),
-  .rst                 (rst                 ),
+  .sdio_clk             (sd_clk               ),
+  .rst                  (rst                  ),
 
-  // Function Interface From CIA
-  .o_fbr1_csa_en       (fbr1_csa_en         ),
-  .o_fbr1_pwr_mode     (fbr1_pwr_mode       ),
-  .o_fbr1_block_size   (fbr1_block_size     ),
+  // Function Interfacee From CIA
+  .o_fbr1_csa_en        (fbr1_csa_en          ),
+  .o_fbr1_pwr_mode      (fbr1_pwr_mode        ),
+  .o_fbr1_block_size    (fbr1_block_size      ),
 
-  .o_fbr2_csa_en       (fbr2_csa_en         ),
-  .o_fbr2_pwr_mode     (fbr2_pwr_mode       ),
-  .o_fbr2_block_size   (fbr2_block_size     ),
+  .o_fbr2_csa_en        (fbr2_csa_en          ),
+  .o_fbr2_pwr_mode      (fbr2_pwr_mode        ),
+  .o_fbr2_block_size    (fbr2_block_size      ),
 
-  .o_fbr3_csa_en       (fbr3_csa_en         ),
-  .o_fbr3_pwr_mode     (fbr3_pwr_mode       ),
-  .o_fbr3_block_size   (fbr3_block_size     ),
+  .o_fbr3_csa_en        (fbr3_csa_en          ),
+  .o_fbr3_pwr_mode      (fbr3_pwr_mode        ),
+  .o_fbr3_block_size    (fbr3_block_size      ),
 
-  .o_fbr4_csa_en       (fbr4_csa_en         ),
-  .o_fbr4_pwr_mode     (fbr4_pwr_mode       ),
-  .o_fbr4_block_size   (fbr4_block_size     ),
+  .o_fbr4_csa_en        (fbr4_csa_en          ),
+  .o_fbr4_pwr_mode      (fbr4_pwr_mode        ),
+  .o_fbr4_block_size    (fbr4_block_size      ),
 
-  .o_fbr5_csa_en       (fbr5_csa_en         ),
-  .o_fbr5_pwr_mode     (fbr5_pwr_mode       ),
-  .o_fbr5_block_size   (fbr5_block_size     ),
+  .o_fbr5_csa_en        (fbr5_csa_en          ),
+  .o_fbr5_pwr_mode      (fbr5_pwr_mode        ),
+  .o_fbr5_block_size    (fbr5_block_size      ),
 
-  .o_fbr6_csa_en       (fbr6_csa_en         ),
-  .o_fbr6_pwr_mode     (fbr6_pwr_mode       ),
-  .o_fbr6_block_size   (fbr6_block_size     ),
+  .o_fbr6_csa_en        (fbr6_csa_en          ),
+  .o_fbr6_pwr_mode      (fbr6_pwr_mode        ),
+  .o_fbr6_block_size    (fbr6_block_size      ),
 
-  .o_fbr7_csa_en       (fbr7_csa_en         ),
-  .o_fbr7_pwr_mode     (fbr7_pwr_mode       ),
-  .o_fbr7_block_size   (fbr7_block_size     ),
+  .o_fbr7_csa_en        (fbr7_csa_en          ),
+  .o_fbr7_pwr_mode      (fbr7_pwr_mode        ),
+  .o_fbr7_block_size    (fbr7_block_size      ),
 
 
 
-  .o_func_enable       (function_enable     ),
-  .i_func_ready        (function_ready      ),
-  .o_func_abort        (function_abort      ),
-  .o_func_int_en       (function_int_en     ),
-  .i_func_int_pending  (function_int_pend   ),
-  .i_func_exec_status  (function_exec_status),
+  .o_func_enable        (function_enable      ),
+  .i_func_ready         (function_ready       ),
+  .o_func_abort         (function_abort       ),
+  .o_func_int_en        (function_int_en      ),
+  .i_func_int_pending   (function_int_pend    ),
+  .i_func_exec_status   (function_exec_status ),
 
-  .o_func_activate     (o_func_activate     ),
-  .i_func_finished     (i_func_finished     ),
+  .o_func_activate      (o_func_activate      ),
+  .i_func_finished      (i_func_finished      ),
 
-  .o_func_inc_addr     (o_func_inc_addr     ),
-  .o_func_block_mode   (o_func_block_mode   ),
+  .o_func_inc_addr      (o_func_inc_addr      ),
+  .o_func_block_mode    (o_func_block_mode    ),
 
-  .o_func_num          (func_num            ),
-  .o_func_write_flag   (func_write_flag     ),
-  .o_func_rd_after_wr  (func_rd_after_wr    ),
-  .o_func_addr         (func_addr           ),
-  .o_func_write_data   (func_write_data     ),
-  .i_func_read_data    (func_read_data      ),
-  .o_func_data_rdy     (func_data_rdy       ),
-  .i_func_host_rdy     (func_host_rdy       ),
-  .o_func_data_count   (func_data_count     ),
+  .o_func_num           (func_num             ),
+  .o_func_write_flag    (func_write_flag      ),
+  .o_func_rd_after_wr   (func_rd_after_wr     ),
+  .o_func_addr          (func_addr            ),
+  .o_func_write_data    (func_write_data      ),
+  .i_func_read_data     (func_read_data       ),
+  .o_func_data_rdy      (func_data_rdy        ),
+  .i_func_host_rdy      (func_host_rdy        ),
+  .o_func_data_count    (func_data_count      ),
 
-  .i_interrupt         (function_interrupt  ),
+  .i_interrupt          (function_interrupt   ),
 
-  .io_sdio_cmd         (sd_cmd              ),
-  .io_sdio_data        (sd_data             )
+  /*
+  .io_sdio_cmd          (sd_cmd               ),
+  .io_sdio_data         (sd_data              ),
+  */
+
+  .o_sd_cmd_dir         (dev_sd_cmd_dir       ),
+  .i_sd_cmd_in          (dev_sd_cmd_in        ),
+  .o_sd_cmd_out         (dev_sd_cmd_out       ),
+
+  .o_sd_data_dir        (dev_sd_data_dir      ),
+  .o_sd_data_out        (dev_sd_data_out      ),
+  .i_sd_data_in         (dev_sd_data_in       )
+
 );
 
 demo_function demo (

@@ -89,6 +89,6 @@ def send_simple_command(dut):
     yield cocotb.external(driver.set_control)(0x01)
     yield (nysa.wait_clocks(100))
     yield cocotb.external(driver.send_command)(0x01, 0x01234)
-    yield (nysa.wait_clocks(100))
+    yield (nysa.wait_clocks(1000))
 
 
