@@ -88,7 +88,8 @@ def send_simple_command(dut):
     driver = wb_sd_hostDriver(nysa, nysa.find_device(wb_sd_hostDriver)[0])
     yield cocotb.external(driver.set_control)(0x01)
     yield (nysa.wait_clocks(100))
-    yield cocotb.external(driver.send_command)(0x01, 0x01234)
+    #yield cocotb.external(driver.send_command)(0x05, 0x01234)
+    yield cocotb.external(driver.send_command)(0x05, 0x00000)
     yield (nysa.wait_clocks(1000))
 
 

@@ -79,7 +79,8 @@ module sd_phy_layer #(
   input                     i_sd_clk_x2,
 
 
-  output                    o_sd_cmd_dir,
+  //output                    o_sd_cmd_dir,
+  output  reg               o_sd_cmd_dir,
   input                     i_sd_cmd,
   output  reg               o_sd_cmd,
 
@@ -199,10 +200,12 @@ assign  spi_data[7]   = spi_cs_n;
 assign  spi_data[0]   = spi_mosi;
 assign  spi_data[4]   = spi_mosi;
 assign  spi_miso      = i_sd_cmd;
+/*
 assign  o_sd_cmd_dir  = ((state == IDLE)             ||
                          (state == SEND_COMMAND)     ||
                          (state == SEND_CRC));
 
+*/
 //synchronous logic
 always @ (posedge i_sd_clk) begin
   //De-assert Strobes
@@ -364,10 +367,14 @@ always @ (posedge i_sd_clk) begin
     o_crc_err             <=  0;
     o_rsp_finished_en     <=  0;
     o_sd_cmd              <=  1;
+    crc_en                <=  0;
+    o_sd_cmd_dir          <=  1;
   end
   else begin
     case (state)
       IDLE: begin
+        o_sd_cmd_dir      <=  1;
+        crc_en            <=  0;
         spi_cs_n          <=  1'b1;        //Disable SPI
         rst_crc           <=  1;
         o_crc_err         <=  0;
@@ -417,6 +424,7 @@ always @ (posedge i_sd_clk) begin
         rst_crc           <=  0;
         o_sd_cmd          <=  1'b1;
         state             <=  WAIT_FOR_RESPONSE;
+        o_sd_cmd_dir      <=  0;
       end
       WAIT_FOR_RESPONSE: begin
         if (i_sd_cmd    ==  1'b0) begin
@@ -439,7 +447,7 @@ always @ (posedge i_sd_clk) begin
       end
       READ_CRC: begin
         r_crc7            <=  {r_crc7[5:0], i_sd_cmd};
-        if (cmd_count < 6) begin
+        if (cmd_count < 7) begin
           cmd_count       <=  cmd_count + 1;
         end
         else begin
@@ -450,6 +458,8 @@ always @ (posedge i_sd_clk) begin
         if (r_crc7 != crc7) begin
           o_crc_err      <=  1;
         end
+        o_sd_cmd_dir     <=  1;
+        o_sd_cmd         <=  1'b1;
         state            <=  FINISHED;
       end
       FINISHED: begin

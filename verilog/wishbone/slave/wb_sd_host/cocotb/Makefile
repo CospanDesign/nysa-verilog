@@ -9,9 +9,7 @@ XILINX 	:= $(shell $(python) nysa paths -s -x)
 PYTHONPATH := ./model:$(PYTHONPATH)
 export PYTHONPATH
 
-EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/ -DSIMULATION -DCOCOTB_WORKAROUND -I${SDIO_DEV}/rtl/ -I${SDIO_DEV}/rtl/cia
-COMPILE_ARGS+= -D COCOTB_SIMULATION
-SIM_ARGS+=
+EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/ -DSIMULATION -DCOCOTB_WORKAROUND -I${SDIO_DEV}/rtl/ -I${SDIO_DEV}/rtl/cia -D COCOTB_SIMULATION
 
 #Dependencies
 VERILOG_SOURCES = $(NYSA)/verilog/wishbone/master/wishbone_master.v

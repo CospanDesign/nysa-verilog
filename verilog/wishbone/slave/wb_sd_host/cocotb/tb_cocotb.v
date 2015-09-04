@@ -407,7 +407,7 @@ wb_bram #(
   .ADDR_WIDTH (10                   )
 )bram(
   .clk        (clk                  ),
-  .rst        (rst                  ),
+  .rst        (r_rst                ),
 
   .i_wbs_we   (w_arb0_i_wbs_we      ),
   .i_wbs_sel  (w_arb0_i_wbs_sel     ),
@@ -423,7 +423,7 @@ wb_bram #(
 
 sd_dev_platform_cocotb sdio_dev_plat(
   .clk            (clk            ),
-  .rst            (rst            ),
+  .rst            (r_rst          ),
 
   .o_locked       (dev_pll_locked ),
   .o_out_clk      (               ),
@@ -446,7 +446,7 @@ sd_dev_platform_cocotb sdio_dev_plat(
 
 sdio_device_stack sdio_device (
   .sdio_clk             (sd_clk               ),
-  .rst                  (rst                  ),
+  .rst                  (r_rst || !dev_pll_locked),
 
   // Function Interfacee From CIA
   .o_fbr1_csa_en        (fbr1_csa_en          ),
