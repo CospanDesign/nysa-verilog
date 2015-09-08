@@ -148,9 +148,92 @@ def send_byte_test(dut):
     yield cocotb.external(driver.cmd_get_relative_card_address)()
     yield cocotb.external(driver.cmd_enable_card)(True)
 
-    yield cocotb.external(driver.send_config_byte)(0x00, 0x00)
+    yield cocotb.external(driver.write_config_byte)(0x02, 0x01)
     yield (nysa.wait_clocks(1000))
 
 
+
+@cocotb.test(skip = False)
+def receive_byte_test(dut):
+    """
+    Description:
+        Initiate an SD transaction
+
+    Test ID: 3
+
+    Expected Results:
+        Single Data Read
+    """
+    dut.test_id = 3
+    SDIO_PATH = get_verilog_path("sdio-device")
+    sdio_config = os.path.join(SDIO_PATH, "sdio_configuration.json")
+    config = None
+    with open (sdio_config, "r") as f:
+        dut.log.warning("Run %s before running this function" % os.path.join(SDIO_PATH, "tools", "generate_config.py"))
+        config = json.load(f)
+
+    #print "SDIO PATH: %s" % SDIO_PATH
+    #print "module path: %s" % MODULE_PATH
+    nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
+    setup_dut(dut)
+    yield(nysa.reset())
+    nysa.read_sdb()
+    yield (nysa.wait_clocks(10))
+    #nysa.pretty_print_sdb()
+    driver = wb_sd_hostDriver(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    #Enable SDIO
+    yield cocotb.external(driver.enable_sd_host)(True)
+    yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
+    yield cocotb.external(driver.cmd_get_relative_card_address)()
+    yield cocotb.external(driver.cmd_enable_card)(True)
+
+    value = yield cocotb.external(driver.read_config_byte)(0x00)
+    dut.log.info("Read value: 0x%02X" % value)
+    value = yield cocotb.external(driver.read_config_byte)(0x01)
+    dut.log.info("Read value: 0x%02X" % value)
+    value = yield cocotb.external(driver.read_config_byte)(0x02)
+    dut.log.info("Read value: 0x%02X" % value)
+
+
+    yield (nysa.wait_clocks(1000))
+
+
+@cocotb.test(skip = False)
+def small_multi_byte_data_write(dut):
+    """
+    Description:
+        Perform a small write on the data bus
+
+    Test ID: 4
+
+    Expected Results:
+        Multi byte data transfer, this will use the data bus, not FIFO mode
+    """
+    dut.test_id = 4
+    SDIO_PATH = get_verilog_path("sdio-device")
+    sdio_config = os.path.join(SDIO_PATH, "sdio_configuration.json")
+    config = None
+    with open (sdio_config, "r") as f:
+        dut.log.warning("Run %s before running this function" % os.path.join(SDIO_PATH, "tools", "generate_config.py"))
+        config = json.load(f)
+
+    #print "SDIO PATH: %s" % SDIO_PATH
+    #print "module path: %s" % MODULE_PATH
+    nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
+    setup_dut(dut)
+    yield(nysa.reset())
+    nysa.read_sdb()
+    yield (nysa.wait_clocks(10))
+    #nysa.pretty_print_sdb()
+    driver = wb_sd_hostDriver(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    #Enable SDIO
+    yield cocotb.external(driver.enable_sd_host)(True)
+    yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
+    yield cocotb.external(driver.cmd_get_relative_card_address)()
+    yield cocotb.external(driver.cmd_enable_card)(True)
+
+    yield cocotb.external(driver.write_sd_data)(0, 0x00, [0, 1, 2, 3, 4, 5, 6, 7], fifo_mode = False, read_after_write = False)
+
+    yield (nysa.wait_clocks(1000))
 
 

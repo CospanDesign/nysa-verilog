@@ -486,9 +486,6 @@ sdio_device_stack sdio_device (
   .i_func_int_pending   (function_int_pend    ),
   .i_func_exec_status   (function_exec_status ),
 
-  .o_func_activate      (o_func_activate      ),
-  .i_func_finished      (i_func_finished      ),
-
   .o_func_inc_addr      (o_func_inc_addr      ),
   .o_func_block_mode    (o_func_block_mode    ),
 

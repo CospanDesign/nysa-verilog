@@ -424,14 +424,19 @@ class wb_sd_hostDriver(driver.Driver):
         self.inactive = True
         print "Inactive State, reset to continue"
 
-    def send_config_byte(self, address, data, read_after_write = False):
+    def write_config_byte(self, address, data, read_after_write = False):
         data = [data] 
-        return self.send_data(function_id = 0,
+        return self.write_sd_data(function_id = 0,
                               address = address,
                               data = data,
                               read_after_write = read_after_write)
 
-    def send_data(self, function_id, address, data, fifo_mode = False, read_after_write = False):
+    def read_config_byte(self, address):
+        return self.read_sd_data(function_id = 0,
+                                address = address,
+                                count = 1)
+
+    def write_sd_data(self, function_id, address, data, fifo_mode = False, read_after_write = False):
         if len(data) == 1:
             #This seems overly complicated but I chose to add this to exercise the SDIO Device Core
             return self.rw_byte(True, function_id, address, data[0], read_after_write)
@@ -442,6 +447,16 @@ class wb_sd_hostDriver(driver.Driver):
             return self.rw_multiple_bytes(True, function_id, address, data, fifo_mode)
 
         return self.rw_block(True, function_id, address, data, fifo_mode)
+
+    def read_sd_data(self, function_id, address, count = 1, fifo_mode = False):
+        if count == 1:
+            return self.rw_byte(False, function_id, address, [0], False)
+        
+        if count <= 512:
+            return self.rw_multiple_bytes(False, function_id, address, [0], fifo_mode)
+
+        return self.rw_block(False, function_id, address, data, fifo_mode) 
+            
 
     def rw_byte(self, rw_flag, function_id, address, data, read_after_write):
         command_arg = 0
@@ -460,7 +475,7 @@ class wb_sd_hostDriver(driver.Driver):
         block_mode = False
         if rw_flag:
             command_arg |= (1 << DATA_RW_FLAG)
-        command_arg |= ((function_id & FUNC_BITMASK) << DATA_FUNC_INDEX)
+        command_arg |= ((function_id & DATA_FUNC_BITMASK) << DATA_FUNC_INDEX)
         command_arg |= ((address & DATA_ADDR_BITMASK) << DATA_ADDR)
         if not fifo_mode:
             command_arg |= (1 << DATA_RW_OP_CODE)
@@ -468,10 +483,13 @@ class wb_sd_hostDriver(driver.Driver):
         command_arg |= (len(data) & DATA_RW_COUNT_BITMODE)
         self.send_command(CMD_DATA_RW, command_arg)
         resp = self.read_response()
-        self.parse_response()
+        self.parse_response(5, resp)
         if rw_flag:
             #TODO
+            print "Initiate Data Transfer (Outbound)"
             pass
+        else:
+            print "Initiate Data Transfer (Inbound)"
 
     def rw_block(self, rw_flags, function_id, address, data, fifo_mode):
         command_arg = 0
@@ -490,6 +508,4 @@ class wb_sd_hostDriver(driver.Driver):
         write_flag = DATA_RW_FLAG
         cmd = CMD_SINGLE_DATA_RW
 
-    def read_data(self, address, data):
-        pass
 
