@@ -55,7 +55,7 @@ module sd_host_stack #(
   //Flags
   input                     i_rsp_long_flag,
 
-  output      [135:0]       o_rsp,
+  output      [127:0]       o_rsp,
 
   //Data From Host to SD Interface
   output      [1:0]         o_h2s_wfifo_ready,
@@ -118,7 +118,7 @@ wire                        sd_cmd_en;
 wire                        sd_cmd_finished_en;
 
 cross_clock_enable ccstb_cmd_enable(
-  .rst                (rst && !i_sd_pll_locked    ),
+  .rst                (rst || !i_sd_pll_locked    ),
   .in_en              (i_cmd_en                   ),
 
   .out_clk            (i_sd_clk                   ),
@@ -127,7 +127,7 @@ cross_clock_enable ccstb_cmd_enable(
 
 
 cross_clock_enable ccstb_cmd_finished_en(
-  .rst                (rst && !i_sd_pll_locked    ),
+  .rst                (rst || !i_sd_pll_locked    ),
   .in_en              (sd_cmd_finished_en         ),
 
   .out_clk            (i_sd_clk                   ),
@@ -142,7 +142,7 @@ ppfifo #(
   .DATA_WIDTH         (32                         ),
   .ADDRESS_WIDTH      (BUFFER_DEPTH               )
 )h2s(
-  .reset              (rst  && !i_sd_pll_locked   ),
+  .reset              (rst  || !i_sd_pll_locked   ),
   .write_clock        (clk                        ),
   .write_ready        (o_h2s_wfifo_ready          ),
   .write_activate     (i_h2s_wfifo_activate       ),
@@ -165,7 +165,7 @@ ppfifo #(
   .DATA_WIDTH         (32                         ),
   .ADDRESS_WIDTH      (BUFFER_DEPTH               )
 )s2h(
-  .reset              (rst  && !i_sd_pll_locked   ),
+  .reset              (rst  || !i_sd_pll_locked   ),
   .write_clock        (i_sd_clk                   ),
   .write_ready        (wfifo_rdy                  ),
   .write_activate     (wfifo_act                  ),
@@ -186,8 +186,8 @@ ppfifo #(
 
 
 sd_cmd_layer cmd(
-  .clk                  (clk                      ),
-  .rst                  (rst  && !i_sd_pll_locked ),
+  .clk                  (i_sd_clk                 ),
+  .rst                  (rst  || !i_sd_pll_locked ),
 
   //Initiate a command
   .o_sd_ready           (o_sd_ready               ),
@@ -230,7 +230,7 @@ sd_phy_layer #(
   .DDR_EN               (DDR_EN                   )
 
 )phy (
-  .rst                  (rst  && !i_sd_pll_locked ),
+  .rst                  (rst  || !i_sd_pll_locked ),
 
   //Coniguration
   //Command/Response Interface

@@ -366,6 +366,7 @@ always @ (posedge i_sd_clk) begin
     rst_crc               <=  1;
     o_crc_err             <=  0;
     o_rsp_finished_en     <=  0;
+    o_rsp                 <=  0;
     o_sd_cmd              <=  1;
     crc_en                <=  0;
     o_sd_cmd_dir          <=  1;
@@ -381,9 +382,11 @@ always @ (posedge i_sd_clk) begin
         o_rsp_finished_en <=  0;
         o_sd_cmd          <=  1;
         if (i_cmd_en) begin
+          o_rsp           <=  0;
           rst_crc         <=  0;
           cmd_count       <=  0;
           cmd             <=  i_cmd;
+          //$display("Command: %h", i_cmd);
           if (SD_MODE) begin
             //SD Mode
             state         <=  SEND_COMMAND;
@@ -468,8 +471,6 @@ always @ (posedge i_sd_clk) begin
       default: begin
       end
     endcase
-
-
     //Out of band break of command enable
     //This is done this way se we won't get stuck in a frozen state machine
     if (!i_cmd_en) begin

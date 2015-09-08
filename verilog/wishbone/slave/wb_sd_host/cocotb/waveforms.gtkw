@@ -1,76 +1,151 @@
 [*]
 [*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Mon Aug 31 23:29:00 2015
+[*] Tue Sep  8 14:57:50 2015
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/cocotb/design.vcd"
-[dumpfile_mtime] "Mon Aug 31 23:28:38 2015"
-[dumpfile_size] 75826
+[dumpfile_mtime] "Tue Sep  8 14:57:18 2015"
+[dumpfile_size] 590035
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/cocotb/waveforms.gtkw"
 [timestart] 0
-[size] 1918 1059
+[size] 1920 1080
 [pos] -1 -1
-*-9.646780 1103 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-13.492567 2466 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
-[treeopen] tb_cocotb.s1.
+[treeopen] tb_cocotb.demo.
 [treeopen] tb_cocotb.s1.sd_stack.
+[treeopen] tb_cocotb.s1.sd_stack.phy.genblk1.
+[treeopen] tb_cocotb.sdio_device.
+[treeopen] tb_cocotb.sdio_device.card_controller.
+[treeopen] tb_cocotb.sdio_device.phy.
 [sst_width] 213
-[signals_width] 190
+[signals_width] 246
 [sst_expanded] 1
-[sst_vpaned_height] 313
+[sst_vpaned_height] 328
 @28
 tb_cocotb.s1.clk
 tb_cocotb.s1.rst
 @22
 [color] 3
 tb_cocotb.test_id[31:0]
+@200
+-
+-
+@c00200
+-SD Host
 @28
-tb_cocotb.ih_reset
+tb_cocotb.s1.sd_stack.cmd.clk
 @22
-tb_cocotb.in_address[31:0]
-tb_cocotb.in_command[31:0]
-tb_cocotb.in_data[31:0]
-tb_cocotb.in_data_count[27:0]
+tb_cocotb.s1.sd_stack.cmd.o_phy_cmd[39:0]
 @28
-tb_cocotb.in_ready
+tb_cocotb.s1.sd_stack.i_sd_pll_locked
+tb_cocotb.s1.sd_stack.cmd.rst
+@800200
+-phy
+@28
+tb_cocotb.s1.sd_stack.phy.o_rsp_finished_en
+tb_cocotb.s1.sd_stack.phy.crc_en
+@22
+tb_cocotb.s1.sd_stack.phy.crc7[6:0]
+tb_cocotb.s1.sd_stack.phy.r_crc7[6:0]
+tb_cocotb.s1.sd_stack.phy.i_cmd[39:0]
+tb_cocotb.s1.sd_stack.phy.o_rsp[135:0]
+@1000200
+-phy
+@1401200
+-SD Host
+@200
+-
+@800200
+-SDIO Device
+@200
+-
+@c00200
+-Command
+@28
+tb_cocotb.sdio_device.card_controller.v1p8_sel
+@22
+tb_cocotb.sdio_device.card_controller.voltage_select[23:0]
+@28
+tb_cocotb.sdio_device.phy.o_cmd_stb
+tb_cocotb.sdio_device.phy.o_cmd_crc_good_stb
+@22
+tb_cocotb.sdio_device.phy.o_cmd[5:0]
+tb_cocotb.sdio_device.phy.o_cmd_arg[31:0]
+@28
+tb_cocotb.sdio_device.phy.o_cmd_crc_good_stb
+@22
+tb_cocotb.sdio_device.card_controller.response_index[3:0]
+tb_cocotb.sdio_device.card_controller.register_card_address[15:0]
+tb_cocotb.sdio_device.card_controller.o_rsps[39:0]
+@1401200
+-Command
+@200
+-
+@800200
+-Data Bus
+@28
+tb_cocotb.sdio_device.data_bus_interconnect.i_cmd_bus_sel
+@200
+-
+@28
+tb_cocotb.sdio_device.data_bus_interconnect.i_cmd_hst_rdy
+tb_cocotb.sdio_device.data_bus_interconnect.o_cmd_com_rdy
+tb_cocotb.sdio_device.data_bus_interconnect.o_cmd_rd_stb
+@22
+tb_cocotb.sdio_device.data_bus_interconnect.o_cmd_rd_data[7:0]
+tb_cocotb.sdio_device.data_bus_interconnect.i_cmd_wr_data[7:0]
+@28
+tb_cocotb.sdio_device.data_bus_interconnect.i_cmd_wr_stb
+@200
+-
+@28
+tb_cocotb.sdio_device.data_bus_interconnect.i_cia_com_rdy
+@22
+tb_cocotb.sdio_device.data_bus_interconnect.i_cia_rd_data[7:0]
+@28
+tb_cocotb.sdio_device.data_bus_interconnect.i_cia_rd_stb
+tb_cocotb.sdio_device.data_bus_interconnect.o_cia_hst_rdy
+@22
+tb_cocotb.sdio_device.data_bus_interconnect.o_cia_wr_data[7:0]
+@28
+tb_cocotb.sdio_device.data_bus_interconnect.o_cia_wr_stb
 @200
 -
 @22
-tb_cocotb.out_address[31:0]
-tb_cocotb.out_data[31:0]
-tb_cocotb.out_data_count[27:0]
-@28
-tb_cocotb.out_en
-tb_cocotb.out_ready
+tb_cocotb.sdio_device.card_controller.o_func_data_count[9:0]
+tb_cocotb.sdio_device.card_controller.data_count[17:0]
+@29
+tb_cocotb.sdio_device.card_controller.o_cmd_func_write_stb
+@1000200
+-Data Bus
+@200
+-
+@c00200
+-Phy
 @22
-tb_cocotb.out_status[31:0]
-@200
--
+tb_cocotb.sdio_device.phy.i_rsps[39:0]
+tb_cocotb.sdio_device.phy.state[3:0]
 @28
-tb_cocotb.wm.i_mem_ack
-tb_cocotb.wm.o_mem_stb
-tb_cocotb.wm.i_ready
+tb_cocotb.sdio_device.phy.crc_rst
+tb_cocotb.sdio_device.phy.crc_en
 @22
-tb_cocotb.wm.state[31:0]
+tb_cocotb.sdio_device.phy.crc[6:0]
+tb_cocotb.sdio_device.phy.r_crc[6:0]
 @28
-tb_cocotb.wm.i_out_ready
-tb_cocotb.wm.o_mem_stb
-@200
--
-@28
-tb_cocotb.s1.sd_stack.clkgen.clkout0
-tb_cocotb.s1.sd_stack.clkgen.rst
-tb_cocotb.s1.sd_stack.clkgen.locked
-tb_cocotb.s1.sd_stack.clkgen.clkout0
-tb_cocotb.s1.sd_stack.clkgen.clkout1
-tb_cocotb.s1.sd_stack.sd_clk
-@200
--
+tb_cocotb.sdio_device.phy.o_sdio_cmd_dir
+tb_cocotb.sdio_device.phy.o_sdio_cmd_out
+@c00200
+-Response
 @22
-tb_cocotb.s1.sd_cmd_arg[31:0]
-tb_cocotb.s1.sd_cmd[5:0]
+tb_cocotb.sdio_device.phy.i_rsps_len[7:0]
+tb_cocotb.sdio_device.phy.i_rsps[39:0]
+tb_cocotb.sdio_device.phy.lcl_rsps[39:0]
 @28
-tb_cocotb.s1.sd_cmd_en
-@200
--
+tb_cocotb.sdio_device.phy.i_rsps_fail
+@1401200
+-Response
+-Phy
+@1000200
+-SDIO Device
 [pattern_trace] 1
 [pattern_trace] 0

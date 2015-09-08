@@ -69,21 +69,21 @@ SOFTWARE.
 
 
 //control bit definition
-`define CONTROL_ENABLE_SDIO                   0
-`define CONTROL_ENABLE_INTERRUPT              1
-`define CONTROL_ENABLE_DMA_WR                 2
-`define CONTROL_ENABLE_DMA_RD                 3
+`define CONTROL_ENABLE_SD          0
+`define CONTROL_ENABLE_INTERRUPT   1
+`define CONTROL_ENABLE_DMA_WR      2
+`define CONTROL_ENABLE_DMA_RD      3
 //TODO Implement Finished transaction interrupt
-`define CONTROL_ENABLE_SD_FINISHED_INTERRUPT  4
+`define CONTROL_ENABLE_SD_FIN_INT  4
 
 
 //status bit definition
 `define STATUS_MEMORY_0_FINISHED              0
 `define STATUS_MEMORY_1_FINISHED              1
-`define STATUS_ENABLE                         5
-`define STATUS_MEMORY_0_EMPTY                 6
-`define STATUS_MEMORY_1_EMPTY                 7
-`define STATUS_SD_BUSY                        8
+`define STATUS_MEMORY_0_EMPTY                 2
+`define STATUS_MEMORY_1_EMPTY                 3
+`define STATUS_ENABLE                         4
+`define STATUS_SD_BUSY                        5
 `define STATUS_ERROR_BIT_TOP                  31
 `define STATUS_ERROR_BIT_BOT                  24
 
@@ -156,10 +156,9 @@ localparam          SD_ARGUMENT         = 32'h00000006;
 localparam          SD_COMMAND          = 32'h00000007;
 localparam          SD_CONFIGURE        = 32'h00000008;
 localparam          SD_RESPONSE0        = 32'h00000009;
-localparam          SD_RESPOSNE1        = 32'h0000000A;
+localparam          SD_RESPONSE1        = 32'h0000000A;
 localparam          SD_RESPONSE2        = 32'h0000000B;
 localparam          SD_RESPONSE3        = 32'h0000000C;
-localparam          SD_RESPONSE4        = 32'h0000000D;
 
 //Local Registers/Wires
 reg         [31:0]      control         = 32'h00000000;
@@ -251,7 +250,7 @@ reg         [31:0]      sd_cmd_arg;
 reg                     sd_cmd_rsp_long_flag;
 
 wire        [7:0]       sd_error;
-wire        [135:0]     sd_rsp;
+wire        [127:0]     sd_rsp;
 reg                     enable_crc;
 
 
@@ -344,6 +343,7 @@ sd_host_stack #(
 
 
   //Phy Interface
+  .i_sd_pll_locked      (pll_locked               ),
   .i_sd_clk             (sd_clk                   ),
   .i_sd_clk_x2          (sd_clk_x2                ),
 
@@ -454,10 +454,11 @@ wb_mem_2_ppfifo m2p(
 );
 
 //Asynchronous Logic
-assign  w_sd_enable           = control[`CONTROL_ENABLE_SDIO      ];
+assign  w_sd_enable           = control[`CONTROL_ENABLE_SD        ];
 assign  w_interrupt_enable    = control[`CONTROL_ENABLE_INTERRUPT ];
 assign  w_mem_write_enable    = control[`CONTROL_ENABLE_DMA_WR    ];
 assign  w_mem_read_enable     = control[`CONTROL_ENABLE_DMA_RD    ];
+
 
 assign  status[`STATUS_MEMORY_0_FINISHED] = w_mem_write_enable ? w_p2m_0_finished :
                                             1'b0;
@@ -472,6 +473,7 @@ assign  status[`STATUS_MEMORY_1_EMPTY]    = w_mem_write_enable ? w_p2m_1_empty  
                                             w_mem_read_enable  ? w_m2p_1_empty    :
                                             1'b0;
 assign  status[`STATUS_SD_BUSY]           = sd_cmd_en;
+
 
 assign  status[`STATUS_ERROR_BIT_TOP:`STATUS_ERROR_BIT_BOT] = sd_error;
 
@@ -571,8 +573,19 @@ always @ (posedge clk) begin
               o_wbs_dat           <= control;
             end
             STATUS: begin
-              $display("user read %h", STATUS);
-              o_wbs_dat           <= status;
+              //o_wbs_dat           <= status;
+              o_wbs_dat             <=  0;
+              o_wbs_dat[`STATUS_MEMORY_0_FINISHED] <= w_mem_write_enable ? w_p2m_0_finished : 1'b0;
+              o_wbs_dat[`STATUS_MEMORY_1_FINISHED] <= w_mem_write_enable ? w_p2m_1_finished : 1'b0;
+              o_wbs_dat[`STATUS_ENABLE]            <= w_sd_enable;
+              o_wbs_dat[`STATUS_MEMORY_0_EMPTY]    <= w_mem_write_enable ? w_p2m_0_empty    :
+                                                      w_mem_read_enable  ? w_m2p_0_empty    :
+                                                      1'b0;
+              o_wbs_dat[`STATUS_MEMORY_1_EMPTY]    <= w_mem_write_enable ? w_p2m_1_empty    :
+                                                      w_mem_read_enable  ? w_m2p_1_empty    :
+                                                      1'b0;
+              o_wbs_dat[`STATUS_SD_BUSY]                              <= sd_cmd_en;
+              o_wbs_dat[`STATUS_ERROR_BIT_TOP:`STATUS_ERROR_BIT_BOT]  <= sd_error;
               if (w_m2p_0_finished) begin
                 $display ("Reset size 0");
                 r_memory_0_size   <=  0;
@@ -609,6 +622,18 @@ always @ (posedge clk) begin
               else begin
                 o_wbs_dat <=  r_memory_1_size;
               end
+            end
+            SD_RESPONSE0: begin
+              o_wbs_dat   <=  sd_rsp[127:96];
+            end
+            SD_RESPONSE1: begin
+              o_wbs_dat   <=  sd_rsp[95:64];
+            end
+            SD_RESPONSE2: begin
+              o_wbs_dat   <=  sd_rsp[63:32];
+            end
+            SD_RESPONSE3: begin
+              o_wbs_dat   <=  sd_rsp[31:0];
             end
             default: begin
               o_wbs_dat <=  32'h00;

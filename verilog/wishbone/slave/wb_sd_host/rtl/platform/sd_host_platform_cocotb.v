@@ -52,7 +52,7 @@ inout         [3:0] io_phy_sd_data
 
 );
 
-reg           [3:0] lock_count;
+reg           [7:0] lock_count;
 
 assign  o_out_clk_x2 = clk;
 

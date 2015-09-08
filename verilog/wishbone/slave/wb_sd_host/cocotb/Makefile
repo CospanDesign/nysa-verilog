@@ -33,6 +33,7 @@ VERILOG_SOURCES += ${TOPDIR}/rtl/generic/sd_crc_7.v
 
 #SDIO Device
 VERILOG_SOURCES += ${SDIO_DEV}/rtl/platform/sd_dev_platform_cocotb.v
+VERILOG_SOURCES += ${SDIO_DEV}/rtl/sdio_data_control.v
 VERILOG_SOURCES += $(SDIO_DEV)/sim/demo_function.v
 VERILOG_SOURCES += $(SDIO_DEV)/rtl/generic/crc7.v
 VERILOG_SOURCES += $(SDIO_DEV)/rtl/generic/crc16.v

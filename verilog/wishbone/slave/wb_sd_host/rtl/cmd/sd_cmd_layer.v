@@ -52,7 +52,7 @@ module sd_cmd_layer (
   //Flags
   input                     i_rsp_type,
   output                    o_rsp_stb,
-  output      [135:0]       o_rsp,
+  output      [127:0]       o_rsp,
 
   //Interrupt From the Card
   output                    o_interrupt,
@@ -78,6 +78,7 @@ reg           [3:0]         state;
 //submodules
 //asynchronous logic
 assign                      o_phy_cmd_len   = 40;
+assign                      o_rsp           = i_phy_rsp[127:0];
 always @ (*) begin
   if (rst) begin
     o_phy_rsp_len               = 40;

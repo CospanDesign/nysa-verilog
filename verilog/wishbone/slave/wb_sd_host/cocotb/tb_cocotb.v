@@ -125,7 +125,7 @@ wire              func_data_rdy;
 wire              func_wr_data_stb;
 wire              func_host_rdy;
 wire    [17:0]    func_addr;
-wire    [17:0]    func_data_count;
+wire    [9:0]     func_data_count;
 wire              func_rd_data_stb;
 wire              func_block_mode;
 
@@ -493,21 +493,11 @@ sdio_device_stack sdio_device (
   .o_func_block_mode    (o_func_block_mode    ),
 
   .o_func_num           (func_num             ),
-  .o_func_write_flag    (func_write_flag      ),
   .o_func_rd_after_wr   (func_rd_after_wr     ),
   .o_func_addr          (func_addr            ),
-  .o_func_write_data    (func_write_data      ),
-  .i_func_read_data     (func_read_data       ),
-  .o_func_data_rdy      (func_data_rdy        ),
-  .i_func_host_rdy      (func_host_rdy        ),
   .o_func_data_count    (func_data_count      ),
 
   .i_interrupt          (function_interrupt   ),
-
-  /*
-  .io_sdio_cmd          (sd_cmd               ),
-  .io_sdio_data         (sd_data              ),
-  */
 
   .o_sd_cmd_dir         (dev_sd_cmd_dir       ),
   .i_sd_cmd_in          (dev_sd_cmd_in        ),
@@ -539,6 +529,7 @@ demo_function demo (
   .i_block_mode         (demo_func_block_mode),
 
 
+/*
   .i_write_flag         (func_write_flag     ),
   .i_rd_after_wr        (func_rd_after_wr    ),
   .i_addr               (func_addr           ),
@@ -549,6 +540,7 @@ demo_function demo (
   .i_host_rdy           (func_host_rdy       ),
   .i_data_count         (func_data_count     ),
   .o_data_stb           (func_rd_data_stb    ),
+*/
 
 
   .o_read_wait          (demo_func_read_wait ),
