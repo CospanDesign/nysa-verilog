@@ -157,24 +157,25 @@ sd_crc_7 crc (
 generate
 if (SD_MODE && FOUR_BIT_DATA) begin
 sd_sd4_phy sd4 (
-  .clk          (i_sd_clk         ),
-  .clk_x2       (i_sd_clk_x2      ),
-  .rst          (rst              ),
-
-  .i_en         (data_txrx_en     ),
-  .o_finished   (data_finished    ),
-  .i_write_flag (data_write_flag  ),
-
-  .o_crc_err    (data_read_crc_err),      //Detected a CRC error during read
-
-  .o_data_stb   (data_byte_req_stb),
-  .i_data_count (i_data_byte_count),
-  .i_data_h2s   (data_h2s         ),
-  .o_data_s2h   (data_s2h         ),
-
-  .o_sd_data_dir(sd4_sd_data_dir  ),
-  .i_sd_data    (i_sd_data        ),
-  .o_sd_data    (sd4_data         )
+  .clk          (i_sd_clk                 ),
+  .clk_x2       (i_sd_clk_x2              ),
+  .rst          (rst                      ),
+                                          
+  .i_en         (data_txrx_en             ),
+  //.o_finished   (o_data_txrx_finished     ),
+  //.i_write_flag (i_data_write_flag        ),
+  .i_write_flag (write_flag               ),
+                                         
+  .o_crc_err    (data_read_crc_err        ),      //Detected a CRC error during read
+                                          
+  .o_data_stb   (data_byte_req_stb        ),
+  .i_data_count (i_data_byte_count        ),
+  .i_data_h2s   (data_h2s                 ),
+  .o_data_s2h   (data_s2h                 ),
+                                          
+  .o_sd_data_dir(sd4_data_dir             ),
+  .i_sd_data    (i_sd_data                ),
+  .o_sd_data    (sd4_data                 )
 );
 end
 endgenerate
@@ -213,7 +214,7 @@ always @ (posedge i_sd_clk) begin
 
   if (rst) begin
     data_count                        <=  0;
-    write_flag                        <=  0;
+    write_flag                        <=  1;
     data_state                        <=  IDLE;
     o_data_txrx_finished              <=  0;
     byte_index                        <=  2'b11;
@@ -228,6 +229,7 @@ always @ (posedge i_sd_clk) begin
         o_data_txrx_finished          <=  0;
         byte_index                    <=  2'b11;
         total_byte_count              <=  0;
+        write_flag                    <=  1;
         if (i_data_txrx_stb) begin
           if (i_data_write_flag) begin
             data_state                <=  SETUP_WRITE_FIFO;
@@ -239,6 +241,7 @@ always @ (posedge i_sd_clk) begin
       end
       SETUP_WRITE_FIFO: begin
         //Start Writing
+        write_flag                <=  1;
         if (i_h2s_fifo_ready && !o_h2s_fifo_activate) begin
           o_h2s_fifo_activate     <=  1;
           data_count              <=  0;
@@ -253,6 +256,7 @@ always @ (posedge i_sd_clk) begin
       end
       SETUP_READ_FIFO: begin
         //Start Reading
+        write_flag                <=  0;
         if ((i_s2h_fifo_ready > 0) && (o_s2h_fifo_activate == 0)) begin
           data_count              <=  0;
           if (i_s2h_fifo_ready[0]) begin
@@ -350,9 +354,11 @@ always @ (posedge i_sd_clk) begin
       end
     endcase
 
+/*
     if (data_txrx_en) begin
       write_flag      <=  i_data_write_flag;
     end
+*/
   end
 end
 

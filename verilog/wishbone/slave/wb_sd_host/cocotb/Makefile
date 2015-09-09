@@ -43,9 +43,8 @@ VERILOG_SOURCES += $(SDIO_DEV)/rtl/cia/sdio_cis.v
 VERILOG_SOURCES += $(SDIO_DEV)/rtl/cia/sdio_cia.v
 VERILOG_SOURCES += $(SDIO_DEV)/rtl/control/sdio_card_control.v
 VERILOG_SOURCES += $(SDIO_DEV)/rtl/phy/sdio_phy.v
+VERILOG_SOURCES += $(SDIO_DEV)/rtl/phy/sdio_data_phy.v
 VERILOG_SOURCES += $(SDIO_DEV)/rtl/sdio_device_stack.v
-
-
 
 #SD Host
 VERILOG_SOURCES += ${TOPDIR}/rtl/platform/sd_host_platform_cocotb.v

@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.62 (w)1999-2014 BSI
-[*] Tue Sep  8 18:29:09 2015
+[*] Wed Sep  9 17:56:57 2015
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/cocotb/design.vcd"
-[dumpfile_mtime] "Tue Sep  8 18:26:12 2015"
-[dumpfile_size] 868544
+[dumpfile_mtime] "Wed Sep  9 17:56:41 2015"
+[dumpfile_size] 1468920
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/cocotb/waveforms.gtkw"
 [timestart] 0
 [size] 1918 1059
 [pos] -1 -1
-*-12.889812 13840 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-13.623949 75902 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.demo.
 [treeopen] tb_cocotb.s1.sd_stack.
@@ -29,7 +29,6 @@ tb_cocotb.s1.rst
 [color] 3
 tb_cocotb.test_id[31:0]
 @200
--
 -
 @c00200
 -SD Host
@@ -76,74 +75,53 @@ tb_cocotb.sdio_device.phy.o_cmd_arg[31:0]
 tb_cocotb.sdio_device.phy.o_cmd_crc_good_stb
 @22
 tb_cocotb.sdio_device.card_controller.response_index[3:0]
-tb_cocotb.sdio_device.card_controller.register_card_address[15:0]
 tb_cocotb.sdio_device.card_controller.o_rsps[39:0]
+tb_cocotb.sdio_device.card_controller.o_func_addr[17:0]
+@200
+-
+@28
+tb_cocotb.sdio_device.card_controller.o_func_activate
+tb_cocotb.sdio_device.card_controller.i_func_finished
+@22
+tb_cocotb.sdio_device.card_controller.state[3:0]
+tb_cocotb.sdio_device.card_controller.i_func_read_data[7:0]
 @1000200
 -Command
 @200
 -
-@800200
+@800201
 -Data Bus
-@28
-tb_cocotb.sdio_device.data_bus_interconnect.i_cmd_bus_sel
-@200
--
-@28
-tb_cocotb.sdio_device.data_bus_interconnect.i_cmd_hst_rdy
-tb_cocotb.sdio_device.data_bus_interconnect.o_cmd_com_rdy
-tb_cocotb.sdio_device.data_bus_interconnect.o_cmd_rd_stb
-@22
-tb_cocotb.sdio_device.data_bus_interconnect.o_cmd_rd_data[7:0]
-tb_cocotb.sdio_device.data_bus_interconnect.i_cmd_wr_data[7:0]
-@28
-tb_cocotb.sdio_device.data_bus_interconnect.i_cmd_wr_stb
-@200
--
-@28
-tb_cocotb.sdio_device.data_bus_interconnect.i_cia_com_rdy
-@22
-tb_cocotb.sdio_device.data_bus_interconnect.i_cia_rd_data[7:0]
-@28
-tb_cocotb.sdio_device.data_bus_interconnect.i_cia_rd_stb
-tb_cocotb.sdio_device.data_bus_interconnect.o_cia_hst_rdy
-@22
-tb_cocotb.sdio_device.data_bus_interconnect.o_cia_wr_data[7:0]
-@28
-tb_cocotb.sdio_device.data_bus_interconnect.o_cia_wr_stb
-@200
--
-@22
-tb_cocotb.sdio_device.card_controller.o_func_data_count[9:0]
-tb_cocotb.sdio_device.card_controller.data_count[17:0]
-@28
-tb_cocotb.sdio_device.card_controller.o_cmd_func_write_stb
-@200
--
-@800200
--CIA
-@28
-tb_cocotb.sdio_device.cia.i_activate
+@23
+tb_cocotb.sdio_device.data_bus_interconnect.state[3:0]
 @29
-tb_cocotb.sdio_device.cia.o_finished
-@22
-tb_cocotb.sdio_device.cia.func_sel[3:0]
-tb_cocotb.sdio_device.cia.address[17:0]
-@800200
--CCCR
-@22
-tb_cocotb.sdio_device.cia.i_address[17:0]
-@28
-tb_cocotb.sdio_device.cia.i_write_flag
-@22
-tb_cocotb.sdio_device.cia.o_data_out[7:0]
-tb_cocotb.sdio_device.cia.cccr.o_func_enable[7:0]
-tb_cocotb.sdio_device.cia.i_data_in[7:0]
-@1000200
--CCCR
--CIA
--Data Bus
-@200
+tb_cocotb.sdio_device.data_bus_interconnect.i_write_flg
+tb_cocotb.sdio_device.data_bus_interconnect.i_activate
+tb_cocotb.sdio_device.data_bus_interconnect.o_finished
+@201
 -
+@23
+tb_cocotb.sdio_device.data_bus_interconnect.ld_state[3:0]
+@29
+tb_cocotb.sdio_device.data_bus_interconnect.lcl_wr_stb
+@23
+tb_cocotb.sdio_device.data_bus_interconnect.o_address[17:0]
+@201
+-
+@23
+tb_cocotb.sdio_device.data_bus_interconnect.i_cmd_wr_data[7:0]
+tb_cocotb.sdio_device.data_bus_interconnect.o_cia_wr_data[7:0]
+tb_cocotb.sdio_device.data_bus_interconnect.i_cia_rd_data[7:0]
+@201
+-
+@29
+tb_cocotb.sdio_device.data_bus_interconnect.o_cia_wr_stb
+@201
+-
+@23
+tb_cocotb.sdio_device.data_bus_interconnect.i_data_cnt[8:0]
+tb_cocotb.sdio_device.data_bus_interconnect.o_total_data_cnt[9:0]
+@1000201
+-Data Bus
 @c00200
 -Phy
 @22
