@@ -54,6 +54,14 @@ module sd_cmd_layer (
   output                    o_rsp_stb,
   output      [127:0]       o_rsp,
 
+
+  input                     i_data_txrx,
+  input                     i_data_write_flag,
+  input       [23:0]        i_data_size,
+  output  reg               o_data_txrx_finished,
+  input                     i_data_write_stb,
+  input                     i_data_read_stb,
+
   //Interrupt From the Card
   output                    o_interrupt,
 
@@ -66,19 +74,32 @@ module sd_cmd_layer (
   input       [135:0]       i_phy_rsp,
   output  reg [7:0]         o_phy_rsp_len,
 
-  input                     i_phy_crc_bad
+  input                     i_phy_crc_bad,
+
+  output  reg               o_data_txrx_activate,
+  input                     i_data_txrx_finished,
+  output      [11:0]        o_data_byte_count,
+  output                    o_data_write_flag,
+  input                     i_data_crc_read_err
+
 );
 //local parameters
 localparam    IDLE          = 4'h0;
-localparam    WAIT_RESPONSE = 4'h1;
-localparam    FINISHED      = 4'h2;
+localparam    SEND_BLOCK    = 4'h1;
+localparam    WAIT_RESPONSE = 4'h2;
+localparam    FINISHED      = 4'h3;
+
 
 //registes/wires
 reg           [3:0]         state;
+reg           [3:0]         data_state;
+reg           [23:0]        data_count;
 //submodules
 //asynchronous logic
-assign                      o_phy_cmd_len   = 40;
-assign                      o_rsp           = i_phy_rsp[127:0];
+assign                      o_phy_cmd_len     = 40;
+assign                      o_rsp             = i_phy_rsp[127:0];
+assign                      o_data_byte_count = (i_data_size << 2);
+assign                      o_data_write_flag = i_data_write_flag;
 always @ (*) begin
   if (rst) begin
     o_phy_rsp_len               = 40;
@@ -139,6 +160,68 @@ always @ (posedge clk) begin
     //Won't get stuck if something goes buggered
     if (!i_cmd_en) begin
       state                     <=  IDLE;
+    end
+  end
+end
+
+/*
+  input                     i_data_txrx,
+  input                     i_data_write_flag,
+  input       [31:0]        i_data_size,
+  output  reg               o_data_txrx_finished,
+
+
+  output                    o_data_txrx_activate,
+  input                     i_data_txrx_finished,
+  output      [11:0]        o_data_byte_count,
+  output                    o_data_write_flag,
+  input                     i_data_crc_read_err
+*/
+
+
+always @ (posedge clk) begin
+  if (rst) begin
+    o_data_txrx_finished        <=  0;
+    o_data_txrx_activate        <=  0;
+    data_state                  <=  IDLE;
+    data_count                  <=  0;
+  end
+  else begin
+    case (data_state)
+      IDLE: begin
+        o_data_txrx_finished    <=  0;
+        o_data_txrx_activate    <=  0;
+        data_count              <=  0;
+        if (i_data_txrx) begin
+          data_state            <=  SEND_BLOCK;
+        end
+      end
+      SEND_BLOCK: begin
+        o_data_txrx_activate    <=  1;
+        data_state              <=  WAIT_RESPONSE;
+      end
+      WAIT_RESPONSE: begin
+        if (i_data_write_stb || i_data_read_stb) begin
+          data_count            <=  data_count + 1; 
+        end
+        if (i_data_txrx_finished) begin
+          o_data_txrx_activate  <=  0;
+          if (data_count < i_data_size) begin
+            data_state          <=  SEND_BLOCK;
+          end
+          else begin
+            data_state          <=  FINISHED;
+          end
+        end
+      end
+      FINISHED: begin
+        o_data_txrx_finished    <=  1;
+      end
+      default: begin
+      end
+    endcase
+    if (!i_data_txrx) begin
+      data_state              <=  IDLE;
     end
   end
 end

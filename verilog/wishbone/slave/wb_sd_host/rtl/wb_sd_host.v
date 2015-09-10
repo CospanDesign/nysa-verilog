@@ -69,13 +69,13 @@ SOFTWARE.
 
 
 //control bit definition
-`define CONTROL_ENABLE_SD          0
-`define CONTROL_ENABLE_INTERRUPT   1
-`define CONTROL_ENABLE_DMA_WR      2
-`define CONTROL_ENABLE_DMA_RD      3
+`define CONTROL_ENABLE_SD                     0
+`define CONTROL_ENABLE_INTERRUPT              1
+`define CONTROL_ENABLE_DMA_WR                 2
+`define CONTROL_ENABLE_DMA_RD                 3
 //TODO Implement Finished transaction interrupt
-`define CONTROL_ENABLE_SD_FIN_INT  4
-
+`define CONTROL_ENABLE_SD_FIN_INT             4
+`define CONTROL_DATA_WRITE_FLAG               5
 
 //status bit definition
 `define STATUS_MEMORY_0_FINISHED              0
@@ -84,6 +84,7 @@ SOFTWARE.
 `define STATUS_MEMORY_1_EMPTY                 3
 `define STATUS_ENABLE                         4
 `define STATUS_SD_BUSY                        5
+`define STATUS_SD_DATA_BUSY                   6
 `define STATUS_ERROR_BIT_TOP                  31
 `define STATUS_ERROR_BIT_BOT                  24
 
@@ -92,10 +93,9 @@ SOFTWARE.
 
 `define COMMAND_BIT_GO                        16
 `define COMMAND_BIT_RSP_LONG_FLG              17
-
+`define COMMAND_DATA_BIT_GO                   18
 
 `define CONFIGURE_EN_CRC                      4
-
 
 `define SD_ERROR_NO_ERROR                     0
 `define SD_ERROR_TIMEOUT                      1
@@ -159,6 +159,7 @@ localparam          SD_RESPONSE0        = 32'h00000009;
 localparam          SD_RESPONSE1        = 32'h0000000A;
 localparam          SD_RESPONSE2        = 32'h0000000B;
 localparam          SD_RESPONSE3        = 32'h0000000C;
+localparam          SD_DATA_SIZE        = 32'h0000000D;
 
 //Local Registers/Wires
 reg         [31:0]      control         = 32'h00000000;
@@ -267,6 +268,11 @@ wire                    sd_data_dir;
 wire        [7:0]       sd_data_out;
 wire        [7:0]       sd_data_in;
 
+//Data Interface
+reg                     data_txrx_en;
+wire                    data_write_flag;
+reg         [23:0]      data_size;
+wire                    data_txrx_finished;
 
 //Possibly replace with a generate statement using an input parameter
 `ifdef COCOTB_SIMULATION
@@ -324,6 +330,12 @@ sd_host_stack #(
   .i_rsp_long_flag      (sd_rsp_long_flag         ),
   .o_rsp                (sd_rsp                   ),
 
+  //Data Interface
+  .i_data_txrx          (data_txrx_en             ),
+  .i_data_write_flag    (data_write_flag          ),
+  .i_data_size          (data_size                ),
+  .o_data_txrx_finished (data_txrx_finished       ),
+
   //Data From Host to SD Interface
   .o_h2s_wfifo_ready    (w_wfifo_ready            ),
   .i_h2s_wfifo_activate (w_wfifo_activate         ),
@@ -361,10 +373,10 @@ wb_ppfifo_2_mem p2m(
 
   .clk                  (clk                      ),
   .rst                  (rst                      ),
-  .debug                (w_mem_write_debug        ),
+  .debug                (w_mem_read_debug         ),
 
   //Control
-  .i_enable             (w_mem_write_enable       ),
+  .i_enable             (w_mem_read_enable       ),
   .i_flush              (r_flush_memory           ),
 
   .i_memory_0_base      (r_memory_0_base          ),
@@ -411,10 +423,10 @@ wb_mem_2_ppfifo m2p(
 
   .clk                  (clk                      ),
   .rst                  (rst                      ),
-  .debug                (w_mem_read_debug         ),
+  .debug                (w_mem_write_debug        ),
 
   //Control
-  .i_enable             (w_mem_read_enable        ),
+  .i_enable             (w_mem_write_enable       ),
 
   .i_memory_0_base      (r_memory_0_base          ),
   .i_memory_0_size      (r_memory_0_size          ),
@@ -458,6 +470,7 @@ assign  w_sd_enable           = control[`CONTROL_ENABLE_SD        ];
 assign  w_interrupt_enable    = control[`CONTROL_ENABLE_INTERRUPT ];
 assign  w_mem_write_enable    = control[`CONTROL_ENABLE_DMA_WR    ];
 assign  w_mem_read_enable     = control[`CONTROL_ENABLE_DMA_RD    ];
+assign  data_write_flag       = control[`CONTROL_DATA_WRITE_FLAG  ];
 
 
 assign  status[`STATUS_MEMORY_0_FINISHED] = w_mem_write_enable ? w_p2m_0_finished :
@@ -510,8 +523,28 @@ always @ (posedge clk) begin
     sd_cmd_arg            <= 32'h0;
     sd_cmd_rsp_long_flag  <= 1'b0;
     enable_crc            <= 1'b1;
+    data_txrx_en          <= 1'b0;
+    data_size             <= 0;
+
+
+    r_memory_0_base       <= 0;
+    r_memory_0_size       <= 0;
+    r_memory_0_ready      <= 0;
+    r_memory_0_new_data   <= 0;
+                          
+    r_memory_1_base       <= 0;
+    r_memory_1_size       <= 0;
+    r_memory_1_ready      <= 0;
+    r_memory_1_new_data   <= 0;
+
+
   end
   else begin
+    r_memory_0_new_data <=  0;
+    r_memory_1_new_data <=  0;
+    r_memory_0_ready    <=  0;
+    r_memory_1_ready    <=  0;
+
 
     //when the master acks our ack, then put our ack down
     if (o_wbs_ack && ~i_wbs_stb)begin
@@ -537,7 +570,12 @@ always @ (posedge clk) begin
             REG_MEM_0_SIZE: begin
               r_memory_0_size       <=  i_wbs_dat;
               if (i_wbs_dat > 0) begin
-                r_memory_0_ready    <=  1;
+                if (w_mem_write_enable) begin
+                  r_memory_0_new_data <=  1;
+                end
+                else if (w_mem_read_enable) begin
+                  r_memory_0_ready    <=  1;
+                end
               end
             end
             REG_MEM_1_BASE: begin
@@ -546,7 +584,12 @@ always @ (posedge clk) begin
             REG_MEM_1_SIZE: begin
               r_memory_1_size       <=  i_wbs_dat;
               if (i_wbs_dat > 0) begin
-                r_memory_1_ready    <=  1;
+                if (w_mem_write_enable) begin
+                  r_memory_1_new_data <=  1;
+                end
+                else if (w_mem_read_enable) begin
+                  r_memory_1_ready    <=  1;
+                end
               end
             end
             SD_ARGUMENT: begin
@@ -556,10 +599,13 @@ always @ (posedge clk) begin
               sd_cmd_en             <=  i_wbs_dat[`COMMAND_BIT_GO];
               sd_cmd_rsp_long_flag  <=  i_wbs_dat[`COMMAND_BIT_RSP_LONG_FLG];
               sd_cmd                <=  i_wbs_dat[`COMMAND_BIT_CMD_TOP:`COMMAND_BIT_CMD_BOT];
+              data_txrx_en          <=  i_wbs_dat[`COMMAND_DATA_BIT_GO];
             end
             SD_CONFIGURE: begin
               enable_crc            <=  i_wbs_dat[`CONFIGURE_EN_CRC];
-
+            end
+            SD_DATA_SIZE: begin
+              data_size             <=  i_wbs_dat[23:0];
             end
             default: begin
             end
@@ -586,6 +632,7 @@ always @ (posedge clk) begin
                                                       1'b0;
               o_wbs_dat[`STATUS_SD_BUSY]                              <= sd_cmd_en;
               o_wbs_dat[`STATUS_ERROR_BIT_TOP:`STATUS_ERROR_BIT_BOT]  <= sd_error;
+              o_wbs_dat[`STATUS_SD_DATA_BUSY]                         <= data_txrx_en;
               if (w_m2p_0_finished) begin
                 $display ("Reset size 0");
                 r_memory_0_size   <=  0;
@@ -635,10 +682,12 @@ always @ (posedge clk) begin
             SD_RESPONSE3: begin
               o_wbs_dat   <=  sd_rsp[31:0];
             end
+            SD_DATA_SIZE: begin
+              o_wbs_dat   <=  {8'h00, data_size};
+            end
             default: begin
               o_wbs_dat <=  32'h00;
             end
-
           endcase
         end
         o_wbs_ack <= 1;
@@ -648,6 +697,9 @@ always @ (posedge clk) begin
     //Stack Says We're finished so put down our enable/busy signal
     if (sd_cmd_finished_en) begin
       sd_cmd_en   <=  0;
+    end
+    if (data_txrx_finished) begin
+      data_txrx_en  <=  0;
     end
   end
 end

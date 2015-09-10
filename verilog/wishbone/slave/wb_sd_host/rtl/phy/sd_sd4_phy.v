@@ -103,6 +103,21 @@ reg       [7:0]             sd_data;
 wire                        sd_data_bit;
 wire      [15:0]            gen_crc[0:3];
 reg       [15:0]            crc[0:3];
+reg       [15:0]            prev_crc[0:3];
+wire      [15:0]            crc0;
+wire      [15:0]            crc1;
+wire      [15:0]            crc2;
+wire      [15:0]            crc3;
+wire      [15:0]            prev_crc0;
+wire      [15:0]            prev_crc1;
+wire      [15:0]            prev_crc2;
+wire      [15:0]            prev_crc3;
+
+wire      [15:0]            gen_crc0;
+wire      [15:0]            gen_crc1;
+wire      [15:0]            gen_crc2;
+wire      [15:0]            gen_crc3;
+
 reg                         crc_rst;
 reg                         crc_en;
 wire                        sd_clk;
@@ -116,22 +131,39 @@ integer                     i = 0;
 //submodules
 
 //Generate 4 Copies of the CRC, data will be read in and out in parallel
-genvar gv_crc;
+genvar gv;
 generate
-for (gv_crc = 0; gv_crc > 3; gv_crc = gv_crc + 1) begin
+for (gv = 0; gv < 4; gv = gv + 1) begin
 sd_crc_16 crc16 (
   .clk          (clk_x2             ),
   .rst          (crc_rst            ),
   .en           (crc_en             ),  //Need to make sure this CRC_EN goes low when a new clock cycle starts, may need mealy state machine
-  .bitval       (crc_sd_bit[gv_crc] ),
-  .crc          (gen_crc[gv_crc]    )
+  .bitval       (crc_sd_bit[gv]     ),
+  .crc          (gen_crc[gv]        )
 );
-assign  crc_sd_bit  = posedge_clk ? io_sd_data[7 - gv_crc] : io_sd_data[7 - gv_crc - 4];
+assign  crc_sd_bit[gv]  = posedge_clk ? sd_data[7 - gv] : sd_data[7 - gv - 4];
 
 end
 endgenerate
 
 //asynchronous logic
+assign  prev_crc0  = prev_crc[0];
+assign  prev_crc1  = prev_crc[1];
+assign  prev_crc2  = prev_crc[2];
+assign  prev_crc3  = prev_crc[3];
+
+assign  crc0  = crc[0];
+assign  crc1  = crc[1];
+assign  crc2  = crc[2];
+assign  crc3  = crc[3];
+
+assign  gen_crc0  = gen_crc[0];
+assign  gen_crc1  = gen_crc[1];
+assign  gen_crc2  = gen_crc[2];
+assign  gen_crc3  = gen_crc[3];
+
+
+
 assign  o_sd_data_dir = i_write_flag;
 assign  in_remap   = { i_sd_data[0],
                        i_sd_data[1],
@@ -154,6 +186,18 @@ assign  o_sd_data  = { sd_data[0],
 
 
 //synchronous logic
+always @ (posedge clk_x2) begin
+  if (rst) begin
+    prev_crc[i] <=  0;
+  end
+  else begin
+    if (crc_en) begin
+      for (i = 0; i < 4; i = i + 1) begin
+        prev_crc[i]        <=  gen_crc[i];
+      end
+    end
+  end
+end
 always @ (posedge clk_x2) begin
   if (clk) begin
     posedge_clk   <=  1;
@@ -192,8 +236,8 @@ always @ (posedge clk) begin
           crc_rst     <=  0;
           if(i_write_flag) begin
             state     <=  WRITE;
-            sd_data   <=  8'h00;  //Is this only on the positive edge we need this start bit to be set?
-            crc_en    <=  1;
+            sd_data   <=  8'hF0;  //Is this only on the positive edge we need this start bit to be set?
+            o_data_stb  <=  1;
           end
           else begin
             state     <=  READ_START;
@@ -201,26 +245,44 @@ always @ (posedge clk) begin
         end
       end
       WRITE: begin
-        sd_data           <=  i_data_h2s;
-        data_count        <=  data_count + 1;
-        o_data_stb        <=  1;
-        if (data_count >= i_data_count) begin
-          state           <=  WRITE_CRC;
-          for (i = 0; i < 4; i = i + 1) begin
-            crc[i]        <=  gen_crc[i];
-          end
-          crc_en          <=  0;
-          data_count      <=  0;
+        if (data_count < i_data_count - 1) begin
+          crc_en      <=  1;
+          sd_data     <=  i_data_h2s;
+          data_count  <=  data_count + 1;
+          o_data_stb  <=  1;
+        end
+        else begin
+          sd_data     <=  i_data_h2s;
+          data_count  <=  0;
+          state       <=  WRITE_CRC;
         end
       end
       WRITE_CRC: begin
-        sd_data           <=  {crc[0][0], crc[1][0], crc[2][0], crc[3][0],
-                               crc[0][1], crc[1][1], crc[2][1], crc[3][1]};
-        for (i = 0; i < 4; i = i + 1) begin
-          crc[i]          <=  {crc[i][13:0], 2'b0};
+        crc_en        <=  0;
+        if (data_count == 0) begin
+          sd_data         <=  {gen_crc0[15], gen_crc1[15], gen_crc2[15], gen_crc3[15],
+                               gen_crc0[14], gen_crc1[14], gen_crc2[14], gen_crc3[14]};
+          for (i = 0; i < 4; i = i + 1) begin
+            //crc[i]        <=  gen_crc[i];
+            //crc[i]        <=  gen_crc[i];
+            crc[i]        <=  {gen_crc[i][13:0], 2'b0};
+          end
+          data_count      <=  data_count + 1;
+          $display("CRC: %X %X %X %X", gen_crc0, gen_crc1, gen_crc2, gen_crc3);
+          $display("Bus Value: %X", {gen_crc0[15], gen_crc1[15], gen_crc2[15], gen_crc3[15],
+                                     gen_crc0[14], gen_crc1[14], gen_crc2[14], gen_crc3[14]});
+
         end
-        data_count        <=  data_count + 1;
-        if (data_count >= 7) begin
+        else if (data_count < 7) begin
+          $display("SD Data: %X", sd_data);
+          sd_data         <=  {crc0[15], crc1[15], crc2[15], crc3[15],
+                               crc0[14], crc1[14], crc2[14], crc3[14]};
+          for (i = 0; i < 4; i = i + 1) begin
+            crc[i]        <=  {crc[i][13:0], 2'b0};
+          end
+          data_count      <=  data_count + 1;
+        end
+        else begin
           state           <=  WRITE_FINISHED;
         end
       end

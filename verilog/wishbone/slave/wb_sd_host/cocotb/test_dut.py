@@ -232,7 +232,12 @@ def small_multi_byte_data_write(dut):
     yield cocotb.external(driver.cmd_get_relative_card_address)()
     yield cocotb.external(driver.cmd_enable_card)(True)
 
-    yield cocotb.external(driver.write_sd_data)(0, 0x00, [0, 1, 2, 3, 4, 5, 6, 7], fifo_mode = False, read_after_write = False)
+    #data = Array('B')
+    #for i in range (2):
+    #    data.append(0xFF)
+    yield cocotb.external(driver.write_sd_data)(0, 0x00, [0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF], fifo_mode = False, read_after_write = False)
+    #yield cocotb.external(driver.write_sd_data)(0, 0x00, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF], fifo_mode = False, read_after_write = False)
+    #yield cocotb.external(driver.write_sd_data)(0, 0x00, data, fifo_mode = False, read_after_write = False)
 
     yield (nysa.wait_clocks(1000))
 

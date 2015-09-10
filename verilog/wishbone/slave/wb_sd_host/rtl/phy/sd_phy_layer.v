@@ -54,7 +54,7 @@ module sd_phy_layer #(
   output  reg               o_crc_err,
 
   //Data Interface
-  input                     i_data_txrx_stb,
+  input                     i_data_txrx_activate,
   output  reg               o_data_txrx_finished,
   output        [11:0]      i_data_byte_count,
   input                     i_data_write_flag,
@@ -93,12 +93,13 @@ module sd_phy_layer #(
 localparam  IDLE              = 4'h0;
 localparam  SEND_COMMAND      = 4'h1;
 localparam  SEND_CRC          = 4'h2;
-localparam  FINISH_COMMAND    = 4'h3;
+localparam  FINISHED_COMMAND  = 4'h3;
 localparam  WAIT_FOR_RESPONSE = 4'h4;
 localparam  READ_RESPONSE     = 4'h5;
 localparam  READ_CRC          = 4'h6;
 localparam  CHECK_CRC         = 4'h7;
-localparam  FINISHED          = 4'h8; //This may not be needed
+localparam  END_TRANSACTION   = 4'h8; //This may not be needed
+localparam  FINISHED          = 4'h9;
 
 localparam  SETUP_WRITE_FIFO  = 4'h1;
 localparam  SETUP_READ_FIFO   = 4'h2;
@@ -207,10 +208,26 @@ assign  o_sd_cmd_dir  = ((state == IDLE)             ||
                          (state == SEND_CRC));
 
 */
+
+always @ (*) begin
+  if (rst) begin
+    data_h2s        = 0;
+  end
+  else begin
+    case (byte_index)
+      0: data_h2s   = i_h2s_fifo_data[7:0];
+      1: data_h2s   = i_h2s_fifo_data[15:8];
+      2: data_h2s   = i_h2s_fifo_data[23:16];
+      3: data_h2s   = i_h2s_fifo_data[31:24];
+    endcase
+  end
+end
+
 //synchronous logic
 always @ (posedge i_sd_clk) begin
   //De-assert Strobes
   o_h2s_fifo_stb                      <=  0;
+  o_s2h_fifo_stb                      <=  0;
 
   if (rst) begin
     data_count                        <=  0;
@@ -218,9 +235,11 @@ always @ (posedge i_sd_clk) begin
     data_state                        <=  IDLE;
     o_data_txrx_finished              <=  0;
     byte_index                        <=  2'b11;
-    data_h2s                          <=  8'h00;
+    //data_h2s                          <=  8'h00;
     total_byte_count                  <=  12'h000;
     data_txrx_en                      <=  0;
+    o_h2s_fifo_activate               <=  0;
+    o_s2h_fifo_activate               <=  0;
   end
   else begin
     //Write FIFO
@@ -230,7 +249,7 @@ always @ (posedge i_sd_clk) begin
         byte_index                    <=  2'b11;
         total_byte_count              <=  0;
         write_flag                    <=  1;
-        if (i_data_txrx_stb) begin
+        if (i_data_txrx_activate) begin
           if (i_data_write_flag) begin
             data_state                <=  SETUP_WRITE_FIFO;
           end
@@ -249,8 +268,9 @@ always @ (posedge i_sd_clk) begin
         if (o_h2s_fifo_activate) begin
           //got a reference to a FIFO
           data_state              <=  WRITE_DATA;
-          data_h2s                <=  i_h2s_fifo_data[31:24];
-          byte_index              <=  2;
+          //data_h2s                <=  i_h2s_fifo_data[31:24];
+          data_count              <=  1;  //We already have the fist piece of data
+          byte_index              <=  3;
           data_txrx_en            <=  1;
         end
       end
@@ -276,6 +296,7 @@ always @ (posedge i_sd_clk) begin
         if (data_byte_req_stb) begin
           total_byte_count            <=  total_byte_count + 1;
           byte_index                  <=  byte_index - 1;
+          /*
           case (byte_index)
             0: begin
               data_h2s                <=  i_h2s_fifo_data[7:0];
@@ -290,14 +311,17 @@ always @ (posedge i_sd_clk) begin
               data_h2s                <=  i_h2s_fifo_data[31:24];
             end
           endcase
+          */
+          if (byte_index == 1) begin
+              o_h2s_fifo_stb          <=  1;
+          end
           if (byte_index == 0) begin
             byte_index                <=  2'h3;
-            o_h2s_fifo_stb            <=  1;
             if (data_count < i_h2s_fifo_size) begin
               data_count              <=  data_count + 1;
             end
             else begin
-              data_state              <=  FINISHED;
+              data_state              <=  END_TRANSACTION;
             end
           end
         end
@@ -327,12 +351,12 @@ always @ (posedge i_sd_clk) begin
               data_count              <=  data_count + 1;
             end
             else begin
-              data_state              <=  FINISHED;
+              data_state              <=  END_TRANSACTION;
             end
           end
         end
       end
-      FINISHED: begin
+      END_TRANSACTION: begin
         //Deactivate any FIFOs
         o_s2h_fifo_activate     <=  0;
         o_h2s_fifo_activate     <=  0;
@@ -346,14 +370,19 @@ always @ (posedge i_sd_clk) begin
           end
         end
         else begin
-          o_data_txrx_finished  <=  1;
-          data_state            <=  IDLE;
+          data_state            <=  FINISHED;
         end
+      end
+      FINISHED: begin
+        o_data_txrx_finished    <=  1;
       end
       default: begin
       end
     endcase
 
+    if (!i_data_txrx_activate) begin
+      data_state                <=  IDLE;
+    end
 /*
     if (data_txrx_en) begin
       write_flag      <=  i_data_write_flag;
@@ -426,10 +455,10 @@ always @ (posedge i_sd_clk) begin
         end
         else begin
           rst_crc         <=  1;
-          state           <=  FINISH_COMMAND;
+          state           <=  FINISHED_COMMAND;
         end
       end
-      FINISH_COMMAND: begin
+      FINISHED_COMMAND: begin
         rst_crc           <=  0;
         o_sd_cmd          <=  1'b1;
         state             <=  WAIT_FOR_RESPONSE;

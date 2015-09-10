@@ -57,6 +57,12 @@ module sd_host_stack #(
 
   output      [127:0]       o_rsp,
 
+  //Data Interface
+  input                     i_data_txrx,
+  input                     i_data_write_flag,
+  input       [23:0]        i_data_size,
+  output                    o_data_txrx_finished,
+
   //Data From Host to SD Interface
   output      [1:0]         o_h2s_wfifo_ready,
   input       [1:0]         i_h2s_wfifo_activate,
@@ -74,12 +80,12 @@ module sd_host_stack #(
   //Interrupt From the Card
   output                    o_interrupt,
 
-  
+
   //Phy Interface
   input                     i_sd_pll_locked,
   input                     i_sd_clk,
   input                     i_sd_clk_x2,
-  
+
   output                    o_sd_cmd_dir,
   input                     i_sd_cmd,
   output                    o_sd_cmd,
@@ -116,6 +122,16 @@ wire                        sd_clk_locked;
 
 wire                        sd_cmd_en;
 wire                        sd_cmd_finished_en;
+
+wire                        data_txrx_activate;
+wire                        data_txrx_finished;
+wire          [11:0]        data_byte_count;
+wire                        data_write_flag;
+wire                        data_crc_read_err;
+
+
+
+
 
 cross_clock_enable ccstb_cmd_enable(
   .rst                (rst || !i_sd_pll_locked    ),
@@ -198,6 +214,15 @@ sd_cmd_layer cmd(
   .o_error_flag         (o_error_flag             ),
   .o_error              (o_error                  ),
 
+
+  //Data Interface
+  .i_data_read_stb      (rfifo_stb                ),
+  .i_data_write_stb     (wfifo_stb                ),
+  .i_data_txrx          (i_data_txrx              ),
+  .i_data_write_flag    (i_data_write_flag        ),
+  .i_data_size          (i_data_size              ),
+  .o_data_txrx_finished (o_data_txrx_finished     ),
+
   //User Command/Response Interface
   .i_cmd_en             (sd_cmd_en                ),
   .o_cmd_finished_en    (sd_cmd_finished_en       ),
@@ -221,7 +246,15 @@ sd_cmd_layer cmd(
   .i_phy_rsp            (phy_rsp                  ),
   .o_phy_rsp_len        (phy_rsp_len              ),
 
-  .i_phy_crc_bad        (phy_crc_bad              )
+  .i_phy_crc_bad        (phy_crc_bad              ),
+
+
+  .o_data_txrx_activate (data_txrx_activate       ),
+  .i_data_txrx_finished (data_txrx_finished       ),
+  .o_data_byte_count    (data_byte_count          ),
+  .o_data_write_flag    (data_write_flag          ),
+  .i_data_crc_read_err  (data_crc_read_err        )
+
 );
 
 sd_phy_layer #(
@@ -242,9 +275,18 @@ sd_phy_layer #(
   .i_rsp_len            (phy_rsp_len              ),
   .o_rsp_finished_en    (phy_rsp_finished_en      ),
 
+
+  //Data Control
+  .i_data_txrx_activate (data_txrx_activate       ),
+  .o_data_txrx_finished (data_txrx_finished       ),
+  .i_data_byte_count    (data_byte_count          ),
+  .i_data_write_flag    (data_write_flag          ),
+  .o_data_crc_read_err  (data_crc_read_err        ),
+
+
   //Data From Host to SD Interface
-  .i_h2s_fifo_ready     (rfifo_ready              ),
-  .o_h2s_fifo_activate  (rfifo_activate           ),
+  .i_h2s_fifo_ready     (rfifo_rdy                ),
+  .o_h2s_fifo_activate  (rfifo_act                ),
   .i_h2s_fifo_size      (rfifo_size               ),
   .o_h2s_fifo_stb       (rfifo_stb                ),
   .i_h2s_fifo_data      (rfifo_data               ),

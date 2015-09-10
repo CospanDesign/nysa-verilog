@@ -53,13 +53,11 @@ inout         [3:0] io_phy_sd_data
 );
 
 reg           [7:0] lock_count;
-wire                pos_edge_clk;
-reg                 prev_phy_clk;
+reg                 pos_edge_clk;
 wire          [3:0] data_out;
 
 
 assign  o_out_clk_x2 = clk;
-assign  pos_edge_clk  = (clk & !prev_phy_clk);
 
 assign  io_phy_sd_cmd = i_sd_cmd_dir  ? i_sd_cmd_out : 1'hZ;
 assign  o_sd_cmd_in   = io_phy_sd_cmd;
@@ -68,35 +66,40 @@ assign  io_phy_sd_data= i_sd_data_dir ? data_out: 8'hZ;
 assign  o_sd_data_in  = io_phy_sd_data;
 
 
-assign  data_out      = pos_edge_clk ?  { i_sd_data_out[0],
-                                          i_sd_data_out[2],
-                                          i_sd_data_out[4],
-                                          i_sd_data_out[6]} :
-                                        { i_sd_data_out[1],
-                                          i_sd_data_out[3],
+assign  data_out      = pos_edge_clk ?  { i_sd_data_out[7],
+                                          i_sd_data_out[6],
                                           i_sd_data_out[5],
-                                          i_sd_data_out[7]};
-assign  o_sd_data_in  = pos_edge_clk ?  { io_phy_sd_data[0],
-                                          io_phy_sd_data[2],
-                                          io_phy_sd_data[4],
-                                          io_phy_sd_data[6]} :
-                                        { io_phy_sd_data[1],
-                                          io_phy_sd_data[3],
+                                          i_sd_data_out[4]} :
+                                        { i_sd_data_out[3],
+                                          i_sd_data_out[2],
+                                          i_sd_data_out[1],
+                                          i_sd_data_out[0]};
+assign  o_sd_data_in  = pos_edge_clk ?  { io_phy_sd_data[7],
+                                          io_phy_sd_data[6],
                                           io_phy_sd_data[5],
-                                          io_phy_sd_data[7]};
+                                          io_phy_sd_data[4]} :
+                                        { io_phy_sd_data[3],
+                                          io_phy_sd_data[2],
+                                          io_phy_sd_data[1],
+                                          io_phy_sd_data[0]};
 
+always @ (posedge o_out_clk_x2) begin
+  if (o_phy_out_clk) begin
+    pos_edge_clk    <=  1;
+  end
+  else begin
+    pos_edge_clk    <=  0;
+  end
+end
 
-
-always @ (posedge clk) begin
+always @ (posedge o_out_clk_x2) begin
   if (rst) begin
     o_out_clk     <=  0;
     o_phy_out_clk <=  0;
     lock_count    <=  0;
     o_locked      <=  0;
-    prev_phy_clk  <=  0;
   end
   else begin
-    prev_phy_clk  <=  o_phy_out_clk;
     o_out_clk     <= ~o_out_clk;
     o_phy_out_clk <= ~o_phy_out_clk;
     if (lock_count < 4'hF) begin
