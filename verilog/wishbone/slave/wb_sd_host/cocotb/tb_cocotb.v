@@ -426,8 +426,6 @@ sd_dev_platform_cocotb sdio_dev_plat(
   .rst            (r_rst          ),
 
   .o_locked       (dev_pll_locked ),
-  .o_out_clk      (               ),
-  .o_out_clk_x2   (               ),
 
   .i_sd_cmd_dir   (dev_sd_cmd_dir   ),
   .o_sd_cmd_in    (dev_sd_cmd_in    ),
@@ -446,6 +444,7 @@ sd_dev_platform_cocotb sdio_dev_plat(
 
 sdio_device_stack sdio_device (
   .sdio_clk             (sd_clk               ),
+  .sdio_clk_x2          (clk                  ),
   .rst                  (r_rst || !dev_pll_locked),
 
   // Function Interfacee From CIA

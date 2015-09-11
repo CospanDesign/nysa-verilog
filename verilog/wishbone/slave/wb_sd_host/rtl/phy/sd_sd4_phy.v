@@ -236,7 +236,7 @@ always @ (posedge clk) begin
           crc_rst     <=  0;
           if(i_write_flag) begin
             state     <=  WRITE;
-            sd_data   <=  8'hF0;  //Is this only on the positive edge we need this start bit to be set?
+            sd_data   <=  8'h00;  //Is this only on the positive edge we need this start bit to be set?
             o_data_stb  <=  1;
           end
           else begin
