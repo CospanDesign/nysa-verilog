@@ -495,7 +495,6 @@ class wb_sd_hostDriver(driver.Driver):
 
         return self.rw_block(False, function_id, address, data, fifo_mode)
 
-
     def rw_byte(self, rw_flag, function_id, address, data, read_after_write):
         command_arg = 0
         if rw_flag:
@@ -515,10 +514,12 @@ class wb_sd_hostDriver(driver.Driver):
             command_arg |= (1 << DATA_RW_FLAG)
         command_arg |= ((function_id & DATA_FUNC_BITMASK) << DATA_FUNC_INDEX)
         command_arg |= ((address & DATA_ADDR_BITMASK) << DATA_ADDR)
-        if not fifo_mode:
-            command_arg |= (1 << DATA_RW_OP_CODE)
-        command_arg |= ((address & DATA_ADDR_BITMASK) << DATA_ADDR)
         command_arg |= (len(data) & DATA_RW_COUNT_BITMODE)
+        if not fifo_mode:
+            print "Increment Address!"
+            command_arg |= (1 << DATA_RW_OP_CODE)
+        #command_arg |= ((address & DATA_ADDR_BITMASK) << DATA_ADDR)
+        print "\tCommand: 0x%08X" % command_arg
         self.send_command(CMD_DATA_RW, command_arg)
         resp = self.read_response()
         self.parse_response(5, resp)
@@ -547,6 +548,7 @@ class wb_sd_hostDriver(driver.Driver):
             self.clear_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
 
     def rw_block(self, rw_flags, function_id, address, data, fifo_mode):
+        print "RW Block"
         command_arg = 0
         block_mode = True
         if rw_flag:
