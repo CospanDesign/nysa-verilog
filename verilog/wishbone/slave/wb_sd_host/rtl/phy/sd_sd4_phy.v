@@ -165,6 +165,7 @@ assign  gen_crc3  = gen_crc[3];
 
 
 assign  o_sd_data_dir = i_write_flag;
+
 assign  in_remap   = { i_sd_data[0],
                        i_sd_data[1],
                        i_sd_data[2],
@@ -174,6 +175,7 @@ assign  in_remap   = { i_sd_data[0],
                        i_sd_data[6],
                        i_sd_data[7]};
 
+/*
 assign  o_sd_data  = { sd_data[0],
                        sd_data[1],
                        sd_data[2],
@@ -182,8 +184,8 @@ assign  o_sd_data  = { sd_data[0],
                        sd_data[5],
                        sd_data[6],
                        sd_data[7]};
-
-
+*/
+assign  o_sd_data  =  sd_data;
 
 //synchronous logic
 always @ (posedge clk_x2) begin
@@ -263,8 +265,6 @@ always @ (posedge clk) begin
           sd_data         <=  {gen_crc0[15], gen_crc1[15], gen_crc2[15], gen_crc3[15],
                                gen_crc0[14], gen_crc1[14], gen_crc2[14], gen_crc3[14]};
           for (i = 0; i < 4; i = i + 1) begin
-            //crc[i]        <=  gen_crc[i];
-            //crc[i]        <=  gen_crc[i];
             crc[i]        <=  {gen_crc[i][13:0], 2'b0};
           end
           data_count      <=  data_count + 1;
@@ -283,6 +283,7 @@ always @ (posedge clk) begin
           data_count      <=  data_count + 1;
         end
         else begin
+          sd_data         <=  8'hFF;
           state           <=  WRITE_FINISHED;
         end
       end

@@ -66,7 +66,7 @@ assign  io_phy_sd_data= i_sd_data_dir ? data_out: 8'hZ;
 assign  o_sd_data_in  = io_phy_sd_data;
 
 
-assign  data_out      = pos_edge_clk ?  { i_sd_data_out[7],
+assign  data_out      = !pos_edge_clk ? { i_sd_data_out[7],
                                           i_sd_data_out[6],
                                           i_sd_data_out[5],
                                           i_sd_data_out[4]} :
