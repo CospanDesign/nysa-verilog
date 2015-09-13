@@ -273,7 +273,7 @@ always @ (posedge clk) begin
                                      gen_crc0[14], gen_crc1[14], gen_crc2[14], gen_crc3[14]});
 
         end
-        else if (data_count < 7) begin
+        else if (data_count < 8) begin
           $display("SD Data: %X", sd_data);
           sd_data         <=  {crc0[15], crc1[15], crc2[15], crc3[15],
                                crc0[14], crc1[14], crc2[14], crc3[14]};
