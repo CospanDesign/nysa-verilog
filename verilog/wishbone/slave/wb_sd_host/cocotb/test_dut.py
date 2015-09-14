@@ -199,7 +199,7 @@ def receive_byte_test(dut):
     yield (nysa.wait_clocks(1000))
 
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def small_multi_byte_data_write(dut):
     """
     Description:
