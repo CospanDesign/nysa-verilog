@@ -25,6 +25,7 @@ MODULE_PATH = os.path.abspath(MODULE_PATH)
 
 def setup_dut(dut):
     cocotb.fork(Clock(dut.in_clk, CLK_PERIOD).start())
+    dut.request_interrupt =   0
 
 @cocotb.coroutine
 def wait_ready(nysa, dut):
@@ -114,7 +115,7 @@ def send_simple_command(dut):
 
     yield (nysa.wait_clocks(20))
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def send_byte_test(dut):
     """
     Description:
@@ -153,7 +154,7 @@ def send_byte_test(dut):
 
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def receive_byte_test(dut):
     """
     Description:
@@ -198,7 +199,7 @@ def receive_byte_test(dut):
     yield (nysa.wait_clocks(1000))
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def small_multi_byte_data_write(dut):
     """
     Description:
@@ -242,4 +243,43 @@ def small_multi_byte_data_write(dut):
 
     yield (nysa.wait_clocks(1000))
 
+
+@cocotb.test(skip = False)
+def small_multi_byte_data_read(dut):
+    """
+    Description:
+        Perform a small read on the data bus
+
+    Test ID: 5
+
+    Expected Results:
+        Multi byte data transfer, this will use the data bus, not CMC mode
+    """
+    dut.test_id = 5
+    SDIO_PATH = get_verilog_path("sdio-device")
+    sdio_config = os.path.join(SDIO_PATH, "sdio_configuration.json")
+    config = None
+    with open (sdio_config, "r") as f:
+        dut.log.warning("Run %s before running this function" % os.path.join(SDIO_PATH, "tools", "generate_config.py"))
+        config = json.load(f)
+
+    nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
+    setup_dut(dut)
+    yield(nysa.reset())
+    nysa.read_sdb()
+    yield (nysa.wait_clocks(10))
+    driver = wb_sd_hostDriver(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+
+    #Enable SDIO
+    yield cocotb.external(driver.enable_sd_host)(True)
+    yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
+    yield cocotb.external(driver.cmd_get_relative_card_address)()
+    yield cocotb.external(driver.cmd_enable_card)(True)
+
+    data = yield cocotb.external(driver.read_sd_data)(  function_id = 0,
+                                                        address     = 0x00,
+                                                        byte_count  = 8,
+                                                        fifo_mode   = False)
+
+    yield (nysa.wait_clocks(1000))
 

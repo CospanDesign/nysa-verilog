@@ -558,11 +558,9 @@ always @ (posedge clk) begin
           //write request
           case (i_wbs_adr)
             CONTROL: begin
-              $display("ADDR: %h user wrote %h", i_wbs_adr, i_wbs_dat);
               control               <=  i_wbs_dat;
             end
             STATUS: begin
-              $display("ADDR: %h user wrote %h", i_wbs_adr, i_wbs_dat);
             end
             REG_MEM_0_BASE: begin
               r_memory_0_base       <=  i_wbs_dat;
@@ -600,6 +598,7 @@ always @ (posedge clk) begin
               sd_cmd_rsp_long_flag  <=  i_wbs_dat[`COMMAND_BIT_RSP_LONG_FLG];
               sd_cmd                <=  i_wbs_dat[`COMMAND_BIT_CMD_TOP:`COMMAND_BIT_CMD_BOT];
               data_txrx_en          <=  i_wbs_dat[`COMMAND_DATA_BIT_GO];
+              $display ("Command: %X, Go Bit: %X", sd_cmd, sd_cmd_en);
             end
             SD_CONFIGURE: begin
               enable_crc            <=  i_wbs_dat[`CONFIGURE_EN_CRC];
@@ -615,7 +614,6 @@ always @ (posedge clk) begin
           //read request
           case (i_wbs_adr)
             CONTROL: begin
-              $display("user read %h", CONTROL);
               o_wbs_dat           <= control;
             end
             STATUS: begin

@@ -104,10 +104,10 @@ wire    [15:0]    fbr7_block_size;
 
 
 wire    [7:0]     function_enable;
-reg     [7:0]     function_ready;
+wire    [7:0]     function_ready;
 wire    [2:0]     function_abort;
 wire    [7:0]     function_int_en;
-reg     [7:0]     function_int_pend;
+wire    [7:0]     function_int_pend;
 reg     [7:0]     function_exec_status;
 
 wire              function_activate;
@@ -135,9 +135,7 @@ wire              o_read_wait;
 wire              o_interrupt;
 
 wire              demo_func_ready;
-wire              demo_func_enable;
 wire              demo_func_abort;
-wire              demo_func_int_en;
 wire              demo_func_int_pend;
 wire              demo_func_busy;
 
@@ -481,7 +479,7 @@ sdio_device_stack sdio_device (
   .o_func_enable        (function_enable      ),
   .i_func_ready         (function_ready       ),
   .o_func_abort         (function_abort       ),
-  .o_func_int_en        (function_int_en      ),
+  .o_func_int_enable    (function_int_en      ),
   .i_func_int_pending   (function_int_pend    ),
   .i_func_exec_status   (function_exec_status ),
 
@@ -511,10 +509,10 @@ demo_function demo (
 
   .i_csa_en             (fbr1_csa_en         ),
   .i_block_size         (fbr1_block_size     ),
-  .i_enable             (demo_func_enable    ),
+  .i_enable             (function_enable[0]  ),
   .o_ready              (demo_func_ready     ),
   .i_abort              (demo_func_abort     ),
-  .i_interrupt_enable   (demo_func_int_en    ),
+  .i_interrupt_enable   (function_int_en[0]  ),
   .o_interrupt_pending  (demo_func_int_pend  ),
   .o_busy               (demo_func_busy      ),
 
@@ -558,6 +556,8 @@ demo_function demo (
 assign  w_wbs0_ack              = 0;
 assign  w_wbs0_dat_o            = 0;
 assign  start                   = 1;
+assign  function_ready          = {7'b0000000, demo_func_ready};
+assign  function_int_pend       = {7'b0000000, demo_func_int_pend};
 
 //Submodules
 //Asynchronous Logic

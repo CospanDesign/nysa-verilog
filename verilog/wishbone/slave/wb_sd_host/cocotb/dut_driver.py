@@ -471,8 +471,7 @@ class wb_sd_hostDriver(driver.Driver):
 
     def read_config_byte(self, address):
         return self.read_sd_data(function_id = 0,
-                                address = address,
-                                count = 1)
+                                address = address)
 
     def write_sd_data(self, function_id, address, data, fifo_mode = False, read_after_write = False):
         if len(data) == 1:
@@ -486,14 +485,20 @@ class wb_sd_hostDriver(driver.Driver):
 
         return self.rw_block(True, function_id, address, data, fifo_mode)
 
-    def read_sd_data(self, function_id, address, count = 1, fifo_mode = False):
-        if count == 1:
+    def read_sd_data(self, function_id, address, byte_count = 1, fifo_mode = False):
+        if byte_count == 1:
             return self.rw_byte(False, function_id, address, [0], False)
 
-        if count <= 512:
-            return self.rw_multiple_bytes(False, function_id, address, [0], fifo_mode)
+        if byte_count <= 512:
+            return self.rw_multiple_bytes(rw_flag = False,
+                                          function_id = function_id,
+                                          address = address,
+                                          data = [0],
+                                          byte_count = byte_count,
+                                          fifo_mode = fifo_mode)
 
-        return self.rw_block(False, function_id, address, data, fifo_mode)
+        raise Exception("Not implemented yet")
+        #return self.rw_block(False, function_id, address, data, fifo_mode)
 
     def rw_byte(self, rw_flag, function_id, address, data, read_after_write):
         command_arg = 0
@@ -507,22 +512,34 @@ class wb_sd_hostDriver(driver.Driver):
         self.parse_response(5, resp)
         return self.read_data_byte
 
-    def rw_multiple_bytes(self, rw_flag, function_id, address, data, fifo_mode, timeout = 0.2):
+    def rw_multiple_bytes(self, rw_flag, function_id, address, data, fifo_mode, byte_count = 1, timeout = 0.2):
         command_arg = 0
-        block_mode = False
         if rw_flag:
             command_arg |= (1 << DATA_RW_FLAG)
+            command_arg |= (len(data) & DATA_RW_COUNT_BITMODE)
+        else:
+            command_arg |= (byte_count & DATA_RW_COUNT_BITMODE)
+
         command_arg |= ((function_id & DATA_FUNC_BITMASK) << DATA_FUNC_INDEX)
         command_arg |= ((address & DATA_ADDR_BITMASK) << DATA_ADDR)
-        command_arg |= (len(data) & DATA_RW_COUNT_BITMODE)
         if not fifo_mode:
             print "Increment Address!"
             command_arg |= (1 << DATA_RW_OP_CODE)
         #command_arg |= ((address & DATA_ADDR_BITMASK) << DATA_ADDR)
-        print "\tCommand: 0x%08X" % command_arg
+        print "\t(HEX) CMD:ARG %02X:%08X" % (CMD_DATA_RW, command_arg)
         self.send_command(CMD_DATA_RW, command_arg)
+        print "Sent command..."
         resp = self.read_response()
         self.parse_response(5, resp)
+        print "Response:"
+        '''
+        print "\tCRC Error: %s" % str(self.error_crc)
+        print "\tIllegal Command: %s" % str(self.error_illegal_cmd)
+        print "\tCurrent State: %s" % str(self.current_state)
+        print "\tUnknown Error: %s" % str(self.error_unknown)
+        print "\tFunction Error: %s" % str(self.error_function)
+        print "\tOut of Range: %s" % str(self.error_out_of_range)
+        '''
         if rw_flag:
             #TODO
             print "Initiate Data Transfer (Outbound)"
@@ -538,14 +555,31 @@ class wb_sd_hostDriver(driver.Driver):
             while (time.time() < to) and self.is_sd_busy():
                 print ".",
             print ""
-
-
             #Disable the DMA Write Flag
             self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_WR)
 
         else:
             print "Initiate Data Transfer (Inbound)"
+            word_count = byte_count / 4
+            if word_count == 0:
+                word_count = 1
+
             self.clear_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
+            self.set_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
+            self.write_register(REG_MEM_0_SIZE, byte_count / 4)
+
+            self.set_register_bit(SD_COMMAND, COMMAND_DATA_BIT_GO)
+
+            to = time.time() + timeout
+            while (time.time() < to) and self.is_sd_busy():
+                print ".",
+            print ""
+
+
+            #Disable the DMA Write Flag
+            self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
+
+
 
     def rw_block(self, rw_flags, function_id, address, data, fifo_mode):
         print "RW Block"
