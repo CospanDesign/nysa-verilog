@@ -85,7 +85,7 @@ module sd_cmd_layer (
 );
 //local parameters
 localparam    IDLE          = 4'h0;
-localparam    SEND_BLOCK    = 4'h1;
+localparam    TXRX_BLOCK    = 4'h1;
 localparam    WAIT_RESPONSE = 4'h2;
 localparam    FINISHED      = 4'h3;
 
@@ -193,10 +193,10 @@ always @ (posedge clk) begin
         o_data_txrx_activate    <=  0;
         data_count              <=  0;
         if (i_data_txrx) begin
-          data_state            <=  SEND_BLOCK;
+          data_state            <=  TXRX_BLOCK;
         end
       end
-      SEND_BLOCK: begin
+      TXRX_BLOCK: begin
         o_data_txrx_activate    <=  1;
         data_state              <=  WAIT_RESPONSE;
       end
@@ -207,7 +207,7 @@ always @ (posedge clk) begin
         if (i_data_txrx_finished) begin
           o_data_txrx_activate  <=  0;
           if (data_count < i_data_size) begin
-            data_state          <=  SEND_BLOCK;
+            data_state          <=  TXRX_BLOCK;
           end
           else begin
             data_state          <=  FINISHED;

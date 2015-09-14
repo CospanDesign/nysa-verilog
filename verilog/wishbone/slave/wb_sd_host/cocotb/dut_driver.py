@@ -514,33 +514,25 @@ class wb_sd_hostDriver(driver.Driver):
 
     def rw_multiple_bytes(self, rw_flag, function_id, address, data, fifo_mode, byte_count = 1, timeout = 0.2):
         command_arg = 0
-        if rw_flag:
-            command_arg |= (1 << DATA_RW_FLAG)
-            command_arg |= (len(data) & DATA_RW_COUNT_BITMODE)
-        else:
-            command_arg |= (byte_count & DATA_RW_COUNT_BITMODE)
-
         command_arg |= ((function_id & DATA_FUNC_BITMASK) << DATA_FUNC_INDEX)
         command_arg |= ((address & DATA_ADDR_BITMASK) << DATA_ADDR)
+
+
+
         if not fifo_mode:
             print "Increment Address!"
             command_arg |= (1 << DATA_RW_OP_CODE)
-        #command_arg |= ((address & DATA_ADDR_BITMASK) << DATA_ADDR)
-        print "\t(HEX) CMD:ARG %02X:%08X" % (CMD_DATA_RW, command_arg)
-        self.send_command(CMD_DATA_RW, command_arg)
-        print "Sent command..."
-        resp = self.read_response()
-        self.parse_response(5, resp)
-        print "Response:"
-        '''
-        print "\tCRC Error: %s" % str(self.error_crc)
-        print "\tIllegal Command: %s" % str(self.error_illegal_cmd)
-        print "\tCurrent State: %s" % str(self.current_state)
-        print "\tUnknown Error: %s" % str(self.error_unknown)
-        print "\tFunction Error: %s" % str(self.error_function)
-        print "\tOut of Range: %s" % str(self.error_out_of_range)
-        '''
+
+
+
         if rw_flag:
+            command_arg |= (1 << DATA_RW_FLAG)
+            command_arg |= (len(data) & DATA_RW_COUNT_BITMODE)
+
+            self.send_command(CMD_DATA_RW, command_arg)
+            resp = self.read_response()
+            self.parse_response(5, resp)
+
             #TODO
             print "Initiate Data Transfer (Outbound)"
             self.write_memory(self.MEM_BASE_0, data)
@@ -559,17 +551,25 @@ class wb_sd_hostDriver(driver.Driver):
             self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_WR)
 
         else:
-            print "Initiate Data Transfer (Inbound)"
-            word_count = byte_count / 4
-            if word_count == 0:
-                word_count = 1
+            command_arg |= (byte_count & DATA_RW_COUNT_BITMODE)
 
             self.clear_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
             self.set_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
             self.write_register(REG_MEM_0_SIZE, byte_count / 4)
 
-            self.set_register_bit(SD_COMMAND, COMMAND_DATA_BIT_GO)
 
+            self.send_command(CMD_DATA_RW, command_arg)
+
+            resp = self.read_response()
+            self.parse_response(5, resp)
+
+
+            print "Initiate Data Transfer (Inbound)"
+            word_count = byte_count / 4
+            if word_count == 0:
+                word_count = 1
+
+            self.set_register_bit(SD_COMMAND, COMMAND_DATA_BIT_GO)
             to = time.time() + timeout
             while (time.time() < to) and self.is_sd_busy():
                 print ".",
