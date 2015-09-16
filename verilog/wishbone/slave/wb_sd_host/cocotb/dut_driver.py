@@ -17,12 +17,12 @@ from nysa.host.driver import driver
 
 #Sub Module ID
 #Use 'nysa devices' to get a list of different available devices
-DEVICE_TYPE             = "SD Host"
-SDB_ABI_VERSION_MINOR   = 1
-SDB_VENDOR_ID           = 0x800000000000C594
+DEVICE_TYPE                 = "SD Host"
+SDB_ABI_VERSION_MINOR       = 1
+SDB_VENDOR_ID               = 0x800000000000C594
 
 #Register Constants
-ZERO_BIT                = 0
+ZERO_BIT                    = 0
 
 
 
@@ -39,7 +39,7 @@ SD_RESPONSE0                = 9
 SD_RESPONSE1                = 10
 SD_RESPONSE2                = 11
 SD_RESPONSE3                = 12
-SD_DATA_SIZE                = 0x0D
+SD_DATA_BYTE_COUNT          = 13
 
 CONTROL_ENABLE_SD           = 0
 CONTROL_ENABLE_INTERRUPT    = 1
@@ -47,10 +47,10 @@ CONTROL_ENABLE_DMA_WR       = 2
 CONTROL_ENABLE_DMA_RD       = 3
 CONTROL_ENABLE_SD_FIN_INT   = 4
 CONTROL_DATA_WRITE_FLAG     = 5
+CONTROL_DATA_BIT_ACTIVATE   = 6
 
 COMMAND_BIT_GO              = 16
 COMMAND_BIT_RSP_LONG_FLG    = 17
-COMMAND_DATA_BIT_GO         = 18
 
 CONFIGURE_EN_CRC            = 4
 
@@ -154,26 +154,11 @@ class wb_sd_hostDriver(driver.Driver):
         size = 512
         self.MEM_BASE_0 = 0x000
         self.MEM_BASE_1 = 0x200
-        '''
-        self.dma_writer = driver.DMAWriteController(device     = self,
-                                            mem_base0  = MEM_BASE_0,
-                                            #mem_base1  = 0x00100000,
-                                            mem_base1  = MEM_BASE_1,
-                                            size       = MEM_BASE_1 - MEM_BASE_0,
-                                            reg_status = STATUS,
-                                            reg_base0  = REG_MEM_0_BASE,
-                                            reg_size0  = REG_MEM_0_SIZE,
-                                            reg_base1  = REG_MEM_1_BASE,
-                                            reg_size1  = REG_MEM_1_SIZE,
-                                            timeout    = 3,
-                                            empty0     = STATUS_MEMORY_0_EMPTY,
-                                            empty1     = STATUS_MEMORY_1_EMPTY)
-
+        self.set_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
         self.dma_reader = driver.DMAReadController(device     = self,
-
-                                            mem_base0  = MEM_BASE_0,
-                                            mem_base1  = MEM_BASE_1,
-                                            size       = MEM_BASE_1 - MEM_BASE_0,
+                                            mem_base0  = self.MEM_BASE_0,
+                                            mem_base1  = self.MEM_BASE_1,
+                                            size       = self.MEM_BASE_1 - self.MEM_BASE_0,
                                             reg_status = STATUS,
                                             reg_base0  = REG_MEM_0_BASE,
                                             reg_size0  = REG_MEM_0_SIZE,
@@ -185,7 +170,21 @@ class wb_sd_hostDriver(driver.Driver):
                                             empty0     = STATUS_MEMORY_0_EMPTY,
                                             empty1     = STATUS_MEMORY_1_EMPTY)
 
-        '''
+        self.dma_writer = driver.DMAWriteController(device     = self,
+                                            mem_base0  = self.MEM_BASE_0,
+                                            #mem_base1  = 0x00100000,
+                                            mem_base1  = self.MEM_BASE_1,
+                                            size       = self.MEM_BASE_1 - self.MEM_BASE_0,
+                                            reg_status = STATUS,
+                                            reg_base0  = REG_MEM_0_BASE,
+                                            reg_size0  = REG_MEM_0_SIZE,
+                                            reg_base1  = REG_MEM_1_BASE,
+                                            reg_size1  = REG_MEM_1_SIZE,
+                                            timeout    = 3,
+                                            empty0     = STATUS_MEMORY_0_EMPTY,
+                                            empty1     = STATUS_MEMORY_1_EMPTY)
+
+
         #Error Conditions
         self.error_crc = False
         self.error_illegal_cmd = False
@@ -540,9 +539,8 @@ class wb_sd_hostDriver(driver.Driver):
             self.set_register_bit(CONTROL, CONTROL_ENABLE_DMA_WR)
             #Initiate transfer from memory to FIFO
             self.write_register(REG_MEM_0_SIZE, len(data) / 4)
-            self.write_register(SD_DATA_SIZE, len(data) / 4)
-            self.set_register_bit(SD_COMMAND, COMMAND_DATA_BIT_GO)
-
+            self.write_register(SD_DATA_BYTE_COUNT, len(data))
+            self.set_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
             to = time.time() + timeout
             while (time.time() < to) and self.is_sd_busy():
                 print ".",
@@ -555,6 +553,9 @@ class wb_sd_hostDriver(driver.Driver):
 
             self.clear_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
             self.set_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
+            self.set_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
+            print "byte count: %d" % byte_count
+            self.write_register(SD_DATA_BYTE_COUNT, byte_count)
             self.write_register(REG_MEM_0_SIZE, byte_count / 4)
 
 
@@ -569,15 +570,15 @@ class wb_sd_hostDriver(driver.Driver):
             if word_count == 0:
                 word_count = 1
 
-            self.set_register_bit(SD_COMMAND, COMMAND_DATA_BIT_GO)
-            to = time.time() + timeout
-            while (time.time() < to) and self.is_sd_busy():
-                print ".",
-            print ""
+            #to = time.time() + timeout
+            #while (time.time() < to) and self.is_sd_busy():
+            #    print ".",
+            #print ""
 
 
             #Disable the DMA Write Flag
             self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
+            self.set_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
 
 
 
@@ -599,4 +600,7 @@ class wb_sd_hostDriver(driver.Driver):
         write_flag = DATA_RW_FLAG
         cmd = CMD_SINGLE_DATA_RW
 
+
+    def set_data_bus_dir_output(self, enable):
+        self.enable_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG, enable)
 

@@ -56,7 +56,7 @@ module sd_phy_layer #(
   //Data Interface
   input                     i_data_txrx_activate,
   output  reg               o_data_txrx_finished,
-  output        [11:0]      i_data_byte_count,
+  input         [11:0]      i_data_byte_count,
   input                     i_data_write_flag,
 
   output                    o_data_crc_read_err,
@@ -327,6 +327,7 @@ always @ (posedge i_sd_clk) begin
         end
       end
       READ_DATA: begin
+        /*
         if (data_byte_req_stb) begin
           total_byte_count            <=  total_byte_count + 1;
           byte_index                  <=  byte_index - 1;
@@ -355,6 +356,7 @@ always @ (posedge i_sd_clk) begin
             end
           end
         end
+        */
       end
       END_TRANSACTION: begin
         //Deactivate any FIFOs

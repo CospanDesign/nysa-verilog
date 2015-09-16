@@ -59,7 +59,7 @@ always @ (*) r_request_interrupt    =   request_interrupt;
 
 
 wire              phy_sd_cmd;
-wire    [3:0]     phy_sd_data;
+tri1    [3:0]     phy_sd_data;
 
 wire              dev_pll_locked;
 

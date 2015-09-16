@@ -76,6 +76,7 @@ SOFTWARE.
 //TODO Implement Finished transaction interrupt
 `define CONTROL_ENABLE_SD_FIN_INT             4
 `define CONTROL_DATA_WRITE_FLAG               5
+`define CONTROL_DATA_BIT_ACTIVATE             6
 
 //status bit definition
 `define STATUS_MEMORY_0_FINISHED              0
@@ -93,7 +94,6 @@ SOFTWARE.
 
 `define COMMAND_BIT_GO                        16
 `define COMMAND_BIT_RSP_LONG_FLG              17
-`define COMMAND_DATA_BIT_GO                   18
 
 `define CONFIGURE_EN_CRC                      4
 
@@ -159,7 +159,7 @@ localparam          SD_RESPONSE0        = 32'h00000009;
 localparam          SD_RESPONSE1        = 32'h0000000A;
 localparam          SD_RESPONSE2        = 32'h0000000B;
 localparam          SD_RESPONSE3        = 32'h0000000C;
-localparam          SD_DATA_SIZE        = 32'h0000000D;
+localparam          SD_DATA_BYTE_COUNT  = 32'h0000000D;
 
 //Local Registers/Wires
 reg         [31:0]      control         = 32'h00000000;
@@ -531,7 +531,7 @@ always @ (posedge clk) begin
     r_memory_0_size       <= 0;
     r_memory_0_ready      <= 0;
     r_memory_0_new_data   <= 0;
-                          
+
     r_memory_1_base       <= 0;
     r_memory_1_size       <= 0;
     r_memory_1_ready      <= 0;
@@ -558,15 +558,18 @@ always @ (posedge clk) begin
           //write request
           case (i_wbs_adr)
             CONTROL: begin
-              control               <=  i_wbs_dat;
+//TODO: Remove Verbose Messages
+              $display ("Control: %X", i_wbs_dat);
+              control                 <=  i_wbs_dat;
+              data_txrx_en            <=  i_wbs_dat[`CONTROL_DATA_BIT_ACTIVATE];
             end
             STATUS: begin
             end
             REG_MEM_0_BASE: begin
-              r_memory_0_base       <=  i_wbs_dat;
+              r_memory_0_base         <=  i_wbs_dat;
             end
             REG_MEM_0_SIZE: begin
-              r_memory_0_size       <=  i_wbs_dat;
+              r_memory_0_size         <=  i_wbs_dat;
               if (i_wbs_dat > 0) begin
                 if (w_mem_write_enable) begin
                   r_memory_0_new_data <=  1;
@@ -577,10 +580,10 @@ always @ (posedge clk) begin
               end
             end
             REG_MEM_1_BASE: begin
-              r_memory_1_base       <=  i_wbs_dat;
+              r_memory_1_base         <=  i_wbs_dat;
             end
             REG_MEM_1_SIZE: begin
-              r_memory_1_size       <=  i_wbs_dat;
+              r_memory_1_size         <=  i_wbs_dat;
               if (i_wbs_dat > 0) begin
                 if (w_mem_write_enable) begin
                   r_memory_1_new_data <=  1;
@@ -591,20 +594,20 @@ always @ (posedge clk) begin
               end
             end
             SD_ARGUMENT: begin
-              sd_cmd_arg            <=  i_wbs_dat;
+              sd_cmd_arg              <=  i_wbs_dat;
             end
             SD_COMMAND: begin
-              sd_cmd_en             <=  i_wbs_dat[`COMMAND_BIT_GO];
-              sd_cmd_rsp_long_flag  <=  i_wbs_dat[`COMMAND_BIT_RSP_LONG_FLG];
-              sd_cmd                <=  i_wbs_dat[`COMMAND_BIT_CMD_TOP:`COMMAND_BIT_CMD_BOT];
-              data_txrx_en          <=  i_wbs_dat[`COMMAND_DATA_BIT_GO];
+              sd_cmd_en               <=  i_wbs_dat[`COMMAND_BIT_GO];
+              sd_cmd_rsp_long_flag    <=  i_wbs_dat[`COMMAND_BIT_RSP_LONG_FLG];
+              sd_cmd                  <=  i_wbs_dat[`COMMAND_BIT_CMD_TOP:`COMMAND_BIT_CMD_BOT];
+//TODO: Remove Verbose Messages
               $display ("Command: %X, Go Bit: %X", sd_cmd, sd_cmd_en);
             end
             SD_CONFIGURE: begin
-              enable_crc            <=  i_wbs_dat[`CONFIGURE_EN_CRC];
+              enable_crc              <=  i_wbs_dat[`CONFIGURE_EN_CRC];
             end
-            SD_DATA_SIZE: begin
-              data_size             <=  i_wbs_dat[23:0];
+            SD_DATA_BYTE_COUNT: begin
+              data_size               <=  i_wbs_dat[23:0];
             end
             default: begin
             end
@@ -630,7 +633,6 @@ always @ (posedge clk) begin
                                                       1'b0;
               o_wbs_dat[`STATUS_SD_BUSY]                              <= sd_cmd_en;
               o_wbs_dat[`STATUS_ERROR_BIT_TOP:`STATUS_ERROR_BIT_BOT]  <= sd_error;
-              o_wbs_dat[`STATUS_SD_DATA_BUSY]                         <= data_txrx_en;
               if (w_m2p_0_finished) begin
                 $display ("Reset size 0");
                 r_memory_0_size   <=  0;
@@ -680,7 +682,7 @@ always @ (posedge clk) begin
             SD_RESPONSE3: begin
               o_wbs_dat   <=  sd_rsp[31:0];
             end
-            SD_DATA_SIZE: begin
+            SD_DATA_BYTE_COUNT: begin
               o_wbs_dat   <=  {8'h00, data_size};
             end
             default: begin

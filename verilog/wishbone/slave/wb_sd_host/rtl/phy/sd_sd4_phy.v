@@ -123,7 +123,7 @@ reg                         crc_en;
 wire                        sd_clk;
 reg                         posedge_clk;
 wire      [3:0]             crc_sd_bit;
-wire      [7:0]             in_remap;
+//wire      [7:0]             in_remap;
 reg       [11:0]            data_count;
 
 integer                     i = 0;
@@ -166,6 +166,7 @@ assign  gen_crc3  = gen_crc[3];
 
 assign  o_sd_data_dir = i_write_flag;
 
+/*
 assign  in_remap   = { i_sd_data[0],
                        i_sd_data[1],
                        i_sd_data[2],
@@ -175,6 +176,7 @@ assign  in_remap   = { i_sd_data[0],
                        i_sd_data[6],
                        i_sd_data[7]};
 
+*/
 /*
 assign  o_sd_data  = { sd_data[0],
                        sd_data[1],
@@ -221,6 +223,7 @@ always @ (posedge clk) begin
     o_finished        <=  0;
     data_count        <=  0;
     o_crc_err         <=  0;
+    o_data_s2h        <=  0;
     for (i = 0; i < 4; i = i + 1) begin
       crc[i]          <=  16'h0000;
     end
@@ -293,16 +296,17 @@ always @ (posedge clk) begin
       end
       READ_START: begin
         //Wait for data bit to go low
-        if (!in_remap[0]) begin
+        if (!i_sd_data[0]) begin
           crc_en          <=  1;
           state           <=  READ;
+          o_data_stb      <=  1;
         end
       end
       READ: begin
         //Shift the bits in
-        o_data_s2h        <=  in_remap;
-        o_data_stb        <=  1;  //Will this give me enough time for the new data to get clocked in?
-        if (data_count < i_data_count) begin
+        o_data_s2h        <=  i_sd_data;
+        o_data_stb        <=  1;
+        if (data_count < i_data_count - 1) begin
           data_count      <=  data_count + 1;
         end
         else begin
@@ -313,37 +317,20 @@ always @ (posedge clk) begin
         end
       end
       READ_CRC: begin
-        crc[0][0]         <=  in_remap[0];
-        crc[0][1]         <=  in_remap[1];
-        crc[1][0]         <=  in_remap[2];
-        crc[1][1]         <=  in_remap[3];
-        crc[2][0]         <=  in_remap[4];
-        crc[2][1]         <=  in_remap[5];
-        crc[3][0]         <=  in_remap[6];
-        crc[3][1]         <=  in_remap[7];
-
-        for (i = 0; i < 4; i = i + 1) begin
-          crc[i]          <=  {crc[i][13:0], 2'b0};
+        if (data_count < 7) begin
+          data_count      <=  data_count  + 1;
+          crc[0]          <=  {crc[0][13:0], i_sd_data[7], i_sd_data[3]};
+          crc[1]          <=  {crc[1][13:0], i_sd_data[6], i_sd_data[2]};
+          crc[2]          <=  {crc[2][13:0], i_sd_data[5], i_sd_data[1]};
+          crc[3]          <=  {crc[3][13:0], i_sd_data[4], i_sd_data[0]};
         end
-        if (data_count >= 7) begin
+        else begin
+
           state           <=  FINISHED;
         end
       end
       FINISHED: begin
         o_finished        <=  1;
-        if (crc[0]        <=  gen_crc[0]) begin
-          o_crc_err       <=  1;
-        end
-        if (crc[1]        <=  gen_crc[1]) begin
-          o_crc_err       <=  1;
-        end
-        if (crc[2]        <=  gen_crc[2]) begin
-          o_crc_err       <=  1;
-        end
-        if (crc[3]        <=  gen_crc[3]) begin
-          o_crc_err       <=  1;
-        end
-
         if (!i_en) begin
           o_finished      <=  0;
           state           <=  IDLE;

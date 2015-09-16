@@ -98,7 +98,7 @@ reg           [23:0]        data_count;
 //asynchronous logic
 assign                      o_phy_cmd_len     = 40;
 assign                      o_rsp             = i_phy_rsp[127:0];
-assign                      o_data_byte_count = (i_data_size << 2);
+assign                      o_data_byte_count = i_data_size[11:0];
 assign                      o_data_write_flag = i_data_write_flag;
 always @ (*) begin
   if (rst) begin
@@ -163,21 +163,6 @@ always @ (posedge clk) begin
     end
   end
 end
-
-/*
-  input                     i_data_txrx,
-  input                     i_data_write_flag,
-  input       [31:0]        i_data_size,
-  output  reg               o_data_txrx_finished,
-
-
-  output                    o_data_txrx_activate,
-  input                     i_data_txrx_finished,
-  output      [11:0]        o_data_byte_count,
-  output                    o_data_write_flag,
-  input                     i_data_crc_read_err
-*/
-
 
 always @ (posedge clk) begin
   if (rst) begin
