@@ -153,7 +153,7 @@ class wb_sd_hostDriver(driver.Driver):
         super(wb_sd_hostDriver, self).__init__(nysa, urn, debug)
         size = 512
         self.MEM_BASE_0 = 0x000
-        self.MEM_BASE_1 = 0x200
+        self.MEM_BASE_1 = self.MEM_BASE_0 + size
         self.set_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
         self.dma_reader = driver.DMAReadController(device     = self,
                                             mem_base0  = self.MEM_BASE_0,
@@ -516,13 +516,9 @@ class wb_sd_hostDriver(driver.Driver):
         command_arg |= ((function_id & DATA_FUNC_BITMASK) << DATA_FUNC_INDEX)
         command_arg |= ((address & DATA_ADDR_BITMASK) << DATA_ADDR)
 
-
-
         if not fifo_mode:
             print "Increment Address!"
             command_arg |= (1 << DATA_RW_OP_CODE)
-
-
 
         if rw_flag:
             command_arg |= (1 << DATA_RW_FLAG)
@@ -540,6 +536,7 @@ class wb_sd_hostDriver(driver.Driver):
             #Initiate transfer from memory to FIFO
             self.write_register(REG_MEM_0_SIZE, len(data) / 4)
             self.write_register(SD_DATA_BYTE_COUNT, len(data))
+            #time.sleep(0.1)
             self.set_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
             to = time.time() + timeout
             while (time.time() < to) and self.is_sd_busy():
@@ -600,7 +597,7 @@ class wb_sd_hostDriver(driver.Driver):
         write_flag = DATA_RW_FLAG
         cmd = CMD_SINGLE_DATA_RW
 
-
     def set_data_bus_dir_output(self, enable):
         self.enable_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG, enable)
+
 

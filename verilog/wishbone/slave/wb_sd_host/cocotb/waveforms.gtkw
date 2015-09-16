@@ -1,17 +1,18 @@
 [*]
-[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Sun Sep 13 15:09:18 2015
+[*] GTKWave Analyzer v3.3.62 (w)1999-2014 BSI
+[*] Wed Sep 16 15:58:23 2015
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/cocotb/design.vcd"
-[dumpfile_mtime] "Sun Sep 13 15:07:28 2015"
-[dumpfile_size] 2365548
+[dumpfile_mtime] "Wed Sep 16 15:58:20 2015"
+[dumpfile_size] 726477
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/cocotb/waveforms.gtkw"
-[timestart] 45450
+[timestart] 29275
 [size] 1918 1059
 [pos] -1 -1
-*-12.651944 80682 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-9.181217 31320 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.s1.
+[treeopen] tb_cocotb.s1.sd_stack.
 [treeopen] tb_cocotb.s1.sd_stack.phy.
 [treeopen] tb_cocotb.s1.sd_stack.phy.genblk1.
 [treeopen] tb_cocotb.s1.sd_stack.phy.genblk1.sd4.
@@ -31,7 +32,7 @@ tb_cocotb.s1.rst
 tb_cocotb.test_id[31:0]
 @200
 -
-@800200
+@c00200
 -SD Host
 @28
 tb_cocotb.s1.sd_stack.cmd.clk
@@ -40,7 +41,7 @@ tb_cocotb.s1.sd_stack.cmd.o_phy_cmd[39:0]
 @28
 tb_cocotb.s1.sd_stack.i_sd_pll_locked
 tb_cocotb.s1.sd_stack.cmd.rst
-@c00201
+@800200
 -phy
 @28
 tb_cocotb.s1.sd_stack.phy.o_rsp_finished_en
@@ -59,6 +60,11 @@ tb_cocotb.s1.sd_stack.phy.genblk1.sd4.clk
 tb_cocotb.s1.sd_stack.phy.genblk1.sd4.clk_x2
 @22
 tb_cocotb.s1.sd_stack.phy.genblk1.sd4.i_data_h2s[7:0]
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.i_data_count[11:0]
+@28
+tb_cocotb.s1.sd_stack.data_txrx_activate
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.i_en
+tb_cocotb.s1.sd_stack.phy.i_h2s_fifo_ready
 @200
 -
 @22
@@ -86,32 +92,76 @@ tb_cocotb.s1.sd_stack.phy.genblk1.sd4.sd_data[7:0]
 -
 @1401200
 -group_end
+@200
+-
 @22
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-@c00022
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.i_sd_data[7:0]
 @28
-(0)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
-(1)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
-(2)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
-(3)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
-(4)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
-(5)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
-(6)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
-(7)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
-(8)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
-(9)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
-(10)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
-(11)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
-(12)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
-(13)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
-(14)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
-(15)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.o_data_stb
+@c00022
+tb_cocotb.s1.cocotb_platform.io_phy_sd_data[3:0]
+@28
+(0)tb_cocotb.s1.cocotb_platform.io_phy_sd_data[3:0]
+(1)tb_cocotb.s1.cocotb_platform.io_phy_sd_data[3:0]
+(2)tb_cocotb.s1.cocotb_platform.io_phy_sd_data[3:0]
+(3)tb_cocotb.s1.cocotb_platform.io_phy_sd_data[3:0]
 @1401200
 -group_end
+@200
+-
 @22
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.o_data_s2h[7:0]
+@200
+-
+@22
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.crc0[15:0]
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.crc1[15:0]
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.crc2[15:0]
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.crc3[15:0]
+@200
+-
+@28
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.crc_rst
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.crc_en
+@c00022
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+@28
+(0)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+(1)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+(2)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+(3)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+(4)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+(5)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+(6)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+(7)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+(8)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+(9)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+(10)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+(11)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+(12)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+(13)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+(14)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+(15)tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+@1401200
+-group_end
+@200
+-
+@22
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.crc_bit0[3:0]
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.crc_bit1[3:0]
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.crc_bit2[3:0]
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.crc_bit3[3:0]
+@200
+-
+@22
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
 tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc2[15:0]
 tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc3[15:0]
+@200
+-
+@28
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.o_crc_err
 @c00200
 -cocotb platform
 @28
@@ -144,9 +194,9 @@ tb_cocotb.s1.sd_stack.phy.genblk1.sd4.sd_data[7:0]
 @1401200
 -cocotb platform
 -SD4
-@1401201
--phy
 @1000200
+-phy
+@1401200
 -SD Host
 @200
 -
@@ -364,5 +414,23 @@ tb_cocotb.sdio_device.cia.i_data_count[9:0]
 -
 @1000200
 -SDIO Device
+@29
+tb_cocotb.s1.i_wbs_cyc
+@28
+tb_cocotb.s1.w_wfifo_ready[1:0]
+tb_cocotb.s1.w_wfifo_activate[1:0]
+@22
+tb_cocotb.s1.w_wfifo_data[31:0]
+@28
+tb_cocotb.s1.w_wfifo_strobe
+@22
+tb_cocotb.s1.m2p.i_memory_0_size[31:0]
+tb_cocotb.s1.m2p.r_mem_read_size[31:0]
+tb_cocotb.s1.m2p.i_ppfifo_size[23:0]
+tb_cocotb.s1.m2p.r_ppfifo_count[23:0]
+@28
+tb_cocotb.s1.m2p.r_memory_ready
+tb_cocotb.s1.m2p.i_enable
+tb_cocotb.s1.w_mem_write_enable
 [pattern_trace] 1
 [pattern_trace] 0

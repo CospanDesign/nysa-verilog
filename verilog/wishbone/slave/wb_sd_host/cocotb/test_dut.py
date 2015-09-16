@@ -203,7 +203,7 @@ def receive_byte_test(dut):
     yield (nysa.wait_clocks(1000))
 
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def small_multi_byte_data_write(dut):
     """
     Description:
@@ -241,15 +241,20 @@ def small_multi_byte_data_write(dut):
     #data = Array('B')
     #for i in range (2):
     #    data.append(0xFF)
-    yield cocotb.external(driver.write_sd_data)(0, 0x00, [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07], fifo_mode = False, read_after_write = False)
+    #yield cocotb.external(driver.write_sd_data)(0, 0x00, [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07], fifo_mode = False, read_after_write = False)
     #yield cocotb.external(driver.write_sd_data)(0, 0x00, [0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF], fifo_mode = False, read_after_write = False)
     #yield cocotb.external(driver.write_sd_data)(0, 0x00, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF], fifo_mode = False, read_after_write = False)
     #yield cocotb.external(driver.write_sd_data)(0, 0x00, [0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF], fifo_mode = False, read_after_write = False)
 
+    data = Array ('B')
+    for i in range (128):
+        value = i % 256
+        data.append(value)
+    yield cocotb.external(driver.write_sd_data)(0, 0x00, data, fifo_mode = False, read_after_write = False)
     yield (nysa.wait_clocks(1000))
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def small_multi_byte_data_read(dut):
     """
     Description:

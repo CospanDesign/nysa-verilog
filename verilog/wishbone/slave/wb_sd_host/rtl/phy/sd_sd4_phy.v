@@ -123,6 +123,11 @@ reg                         crc_en;
 wire                        sd_clk;
 reg                         posedge_clk;
 wire      [3:0]             crc_sd_bit;
+
+wire      [3:0]             crc_bit0;
+wire      [3:0]             crc_bit1;
+wire      [3:0]             crc_bit2;
+wire      [3:0]             crc_bit3;
 //wire      [7:0]             in_remap;
 reg       [11:0]            data_count;
 
@@ -141,10 +146,17 @@ sd_crc_16 crc16 (
   .bitval       (crc_sd_bit[gv]     ),
   .crc          (gen_crc[gv]        )
 );
-assign  crc_sd_bit[gv]  = posedge_clk ? sd_data[7 - gv] : sd_data[7 - gv - 4];
+assign  crc_sd_bit[gv]  = i_write_flag ?
+                            posedge_clk ? sd_data  [7 - gv] : sd_data  [7 - gv - 4] :
+                            clk         ? i_sd_data[7 - gv] : i_sd_data[7 - gv - 4];
 
 end
 endgenerate
+
+assign  crc_bit0  = crc_sd_bit[0];
+assign  crc_bit1  = crc_sd_bit[1];
+assign  crc_bit2  = crc_sd_bit[2];
+assign  crc_bit3  = crc_sd_bit[3];
 
 //asynchronous logic
 assign  prev_crc0  = prev_crc[0];
@@ -297,27 +309,26 @@ always @ (posedge clk) begin
       READ_START: begin
         //Wait for data bit to go low
         if (!i_sd_data[0]) begin
-          crc_en          <=  1;
           state           <=  READ;
-          o_data_stb      <=  1;
         end
       end
       READ: begin
         //Shift the bits in
         o_data_s2h        <=  i_sd_data;
         o_data_stb        <=  1;
+        crc_en            <=  1;
         if (data_count < i_data_count - 1) begin
           data_count      <=  data_count + 1;
         end
         else begin
           //Finished reading all bytes
           state           <=  READ_CRC;
-          crc_en          <=  0;    //XXX: should this be in the previous state??
           data_count      <=  0;
         end
       end
       READ_CRC: begin
-        if (data_count < 7) begin
+        crc_en            <=  0;
+        if (data_count < 8) begin
           data_count      <=  data_count  + 1;
           crc[0]          <=  {crc[0][13:0], i_sd_data[7], i_sd_data[3]};
           crc[1]          <=  {crc[1][13:0], i_sd_data[6], i_sd_data[2]};
@@ -331,6 +342,10 @@ always @ (posedge clk) begin
       end
       FINISHED: begin
         o_finished        <=  1;
+        o_crc_err         <= !( (crc[0] == gen_crc[0]) &&
+                                (crc[1] == gen_crc[1]) &&
+                                (crc[2] == gen_crc[2]) &&
+                                (crc[3] == gen_crc[3]));
         if (!i_en) begin
           o_finished      <=  0;
           state           <=  IDLE;
