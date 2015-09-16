@@ -543,6 +543,12 @@ class wb_sd_hostDriver(driver.Driver):
                 print ".",
             print ""
             #Disable the DMA Write Flag
+            print "Waiting till data has finished sending..."
+            to = time.time() + timeout
+            while (time.time() < to) and (self.dma_writer.get_available_memory_blocks() != 3):
+                print ".",
+            print ""
+                
             self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_WR)
 
         else:

@@ -125,7 +125,7 @@ wire              func_data_rdy;
 wire              func_wr_data_stb;
 wire              func_host_rdy;
 wire    [17:0]    func_addr;
-wire    [9:0]     func_data_count;
+wire    [12:0]    func_data_count;
 wire              func_rd_data_stb;
 wire              func_block_mode;
 
