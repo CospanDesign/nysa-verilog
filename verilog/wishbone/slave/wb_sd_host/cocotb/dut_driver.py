@@ -119,9 +119,18 @@ R6_STS_CRC_COMM_ERR         = 15
 R6_STS_ILLEGAL_CMD          = 13
 R6_STS_ERROR                = 12
 
+RESPONSE_DICT = {CMD_PHY_MODE           : 1,
+                 CMD_SEND_RELATIVE_ADDR : 6,
+                 CMD_OP_COND            : 4,
+                 CMD_SEL_DESEL_CARD     : 1,
+                 CMD_GO_INACTIVE        : None,
+                 CMD_SINGLE_DATA_RW     : 5,
+                 CMD_DATA_RW            : 5}
+                
 
 
-class SD_HOST_EXCEPTION(Exception):
+
+class SDHostException(Exception):
     pass
 
 
@@ -151,7 +160,7 @@ class wb_sd_hostDriver(driver.Driver):
 
     def __init__(self, nysa, urn, debug = False):
         super(wb_sd_hostDriver, self).__init__(nysa, urn, debug)
-        size = 512
+        size = 2048
         self.MEM_BASE_0 = 0x000
         self.MEM_BASE_1 = self.MEM_BASE_0 + size
         self.set_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
@@ -184,6 +193,15 @@ class wb_sd_hostDriver(driver.Driver):
                                             empty0     = STATUS_MEMORY_0_EMPTY,
                                             empty1     = STATUS_MEMORY_1_EMPTY)
 
+        self.func_block_size = {}
+        self.func_block_size[0] = 0
+        self.func_block_size[1] = 0
+        self.func_block_size[2] = 0
+        self.func_block_size[3] = 0
+        self.func_block_size[4] = 0
+        self.func_block_size[5] = 0
+        self.func_block_size[6] = 0
+        self.func_block_size[7] = 0
 
         #Error Conditions
         self.error_crc = False
@@ -280,7 +298,15 @@ class wb_sd_hostDriver(driver.Driver):
             print "Cancel command"
             cmd_reg &= (1 << COMMAND_BIT_GO)
             self.write_register(SD_COMMAND, cmd_reg)
-            raise SD_HOST_EXCEPTION("Timeout when sending command: 0x%02X" % cmd)
+            raise SDHostException("Timeout when sending command: 0x%02X" % cmd)
+
+        response_index = RESPONSE_DICT[cmd]
+        if response_index is None:
+            return
+        resp = self.read_response()
+        self.parse_response(response_index, resp)
+
+
 
     def get_status(self):
         return self.read_register(STATUS)
@@ -303,9 +329,9 @@ class wb_sd_hostDriver(driver.Driver):
         if response_index == 1:
             self.parse_r1_resp(response)
         elif response_index == 2:
-            raise SD_HOST_EXCEPTION("R2 Response is not finished")
+            raise SDHostException("R2 Response is not finished")
         elif response_index == 3:
-            raise SD_HOST_EXCEPTION("R3 Response is not finished")
+            raise SDHostException("R3 Response is not finished")
         elif response_index == 4:
             self.parse_r4_resp(response)
         elif response_index == 5:
@@ -372,7 +398,7 @@ class wb_sd_hostDriver(driver.Driver):
     def set_voltage_range(self, vmin = 2.0, vmax = 3.6):
         #print "Voltage Range: %f - %f" % (vmin, vmax)
         if vmin >= vmax:
-            raise SD_HOST_EXCEPTION("Vmin is greater than Vmax")
+            raise SDHostException("Vmin is greater than Vmax")
 
         for key in self.voltage_range.keys():
             self.voltage_range[key] = False
@@ -410,12 +436,14 @@ class wb_sd_hostDriver(driver.Driver):
     def cmd_phy_sel(self, spi_mode = False):
         try:
             self.send_command(CMD_PHY_MODE)
-        except SD_HOST_EXCEPTION:
+        except SDHostException:
             print "No Response"
             return
             pass
+        '''
         resp = self.read_response()
         self.parse_response(1, resp)
+        '''
 
     def cmd_io_send_op_cond(self, enable_1p8v):
         command_arg = 0x00
@@ -428,15 +456,19 @@ class wb_sd_hostDriver(driver.Driver):
             pos += 1
 
         self.send_command(CMD_OP_COND, command_arg)
+        '''
         resp = self.read_response()
         self.parse_response(4, resp)
+        '''
 
     def cmd_get_relative_card_address(self):
         command_arg = 0x00
 
         self.send_command(CMD_SEND_RELATIVE_ADDR)
+        '''
         resp = self.read_response()
         self.parse_response(6, resp)
+        '''
 
     def cmd_enable_card(self, select_enable):
         if self.relative_card_address == 0:
@@ -449,13 +481,13 @@ class wb_sd_hostDriver(driver.Driver):
 
         try:
             self.send_command(CMD_SEL_DESEL_CARD, command_arg)
-        except SD_HOST_EXCEPTION:
+        except SDHostException:
             return
 
     def cmd_go_inactive_state(self):
         try:
             self.send_command(CMD_GO_INACTIVE)
-        except SD_HOST_EXCEPTION:
+        except SDHostException:
             pass
 
         self.inactive = True
@@ -477,18 +509,21 @@ class wb_sd_hostDriver(driver.Driver):
             #This seems overly complicated but I chose to add this to exercise the SDIO Device Core
             return self.rw_byte(True, function_id, address, data[0], read_after_write)
 
-        if len(data) <= 512:
+        if  self.func_block_size[function_id] == 0 or               \
+            ( len(data) <= self.func_block_size[function_id] and    \
+              len(data) <= 512):
+
             #Block mode
             print "Go to write multiple bytes"
             return self.rw_multiple_bytes(True, function_id, address, data, fifo_mode)
 
-        return self.rw_block(True, function_id, address, data, fifo_mode)
+        return self.rw_block(True, function_id, address, data, byte_count = 0, fifo_mode = fifo_mode)
 
     def read_sd_data(self, function_id, address, byte_count = 1, fifo_mode = False):
         if byte_count == 1:
             return self.rw_byte(False, function_id, address, [0], False)
 
-        if byte_count <= 512:
+        if (self.func_block_size[function_id] == 0) or (byte_count < self.func_block_size[function_id]):
             return self.rw_multiple_bytes(rw_flag = False,
                                           function_id = function_id,
                                           address = address,
@@ -507,8 +542,10 @@ class wb_sd_hostDriver(driver.Driver):
         command_arg |= ((function_id & DATA_FUNC_BITMASK) << DATA_FUNC_INDEX)
         command_arg |= ((address & DATA_ADDR_BITMASK) << DATA_ADDR)
         self.send_command(CMD_SINGLE_DATA_RW, command_arg)
+        '''
         resp = self.read_response()
         self.parse_response(5, resp)
+        '''
         return self.read_data_byte
 
     def rw_multiple_bytes(self, rw_flag, function_id, address, data, fifo_mode, byte_count = 1, timeout = 0.2):
@@ -521,12 +558,15 @@ class wb_sd_hostDriver(driver.Driver):
             command_arg |= (1 << DATA_RW_OP_CODE)
 
         if rw_flag:
+            self.dma_writer.set_size(512)
             command_arg |= (1 << DATA_RW_FLAG)
             command_arg |= (len(data) & DATA_RW_COUNT_BITMODE)
 
             self.send_command(CMD_DATA_RW, command_arg)
+            '''
             resp = self.read_response()
             self.parse_response(5, resp)
+            '''
 
             #TODO
             print "Initiate Data Transfer (Outbound)"
@@ -546,57 +586,121 @@ class wb_sd_hostDriver(driver.Driver):
             print "Waiting till data has finished sending..."
             to = time.time() + timeout
             while (time.time() < to) and (self.dma_writer.get_available_memory_blocks() != 3):
-                print ".",
-            print ""
-                
+                print "This should change to an asynchrounous Wait"
+                time.sleep(0.01)
+
             self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_WR)
 
         else:
+            print "Initiate Data Transfer (Inbound)"
+            self.dma_reader(512)
             command_arg |= (byte_count & DATA_RW_COUNT_BITMODE)
 
             self.clear_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
             self.set_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
             self.set_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
-            print "byte count: %d" % byte_count
             self.write_register(SD_DATA_BYTE_COUNT, byte_count)
             self.write_register(REG_MEM_0_SIZE, byte_count / 4)
 
-
             self.send_command(CMD_DATA_RW, command_arg)
 
+            '''
             resp = self.read_response()
             self.parse_response(5, resp)
+            '''
 
 
-            print "Initiate Data Transfer (Inbound)"
             word_count = byte_count / 4
             if word_count == 0:
                 word_count = 1
-
-            #to = time.time() + timeout
-            #while (time.time() < to) and self.is_sd_busy():
-            #    print ".",
-            #print ""
-
 
             #Disable the DMA Write Flag
             self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
             self.set_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
 
+    def set_function_block_size(self, func_num, block_size):
+        '''
+        Sets the read/write block size for the specified function.
+        When user performs a read/write command with the block mode set to true
+        Then this value must be set. The value can be anything between 1 - 2048
 
+        Users must not use block mode without setting this value!
 
-    def rw_block(self, rw_flags, function_id, address, data, fifo_mode):
+        Args:
+            func_num (Integer): Function between 0 - 7
+            block_size (Integer): Size of block to read/write
+
+        Returns:
+            Nothing
+
+        Raises:
+            SDHostException:
+                Value besides 1 - 2048 was given
+        '''
+        if func_num < 0:
+            raise SDHostException("Only function number between 0 and 7 allowed: %d not valid" % func_num)
+
+        if func_num > 7:
+            raise SDHostException("Only function number between 0 and 7 allowed: %d not valid" % func_num)
+
+        if block_size > 2048:
+            raise SDHostException("Only values between 1 - 2048 allowed: %d not valid" % block_size)
+
+        if block_size < 1:
+            raise SDHostException("Only values between 1 - 2048 allowed: %d not valid" % block_size)
+
+        address = 0x100 * func_num + 0x10
+
+        lower_byte = block_size & 0xFF
+        upper_byte = ((block_size >> 8) & 0xFF)
+        self.write_config_byte(address, lower_byte)
+        self.write_config_byte(address + 1, upper_byte)
+        self.func_block_size[func_num] = block_size
+
+    def rw_block(self, rw_flag, function_id, address, data, byte_count, fifo_mode):
         print "RW Block"
         command_arg = 0
-        block_mode = True
-        if rw_flag:
-            command_arg |= (1 << DATA_RW_FLAG)
+        command_arg |= ((function_id & DATA_FUNC_BITMASK) << DATA_FUNC_INDEX)
+        command_arg |= ((address & DATA_ADDR_BITMASK) << DATA_ADDR)
+
+        #Set Block Transfer Mode
+        command_arg |= (1 << DATA_RW_BLOCK_MODE)
+
         if not fifo_mode:
+            print "Increment Address!"
             command_arg |= (1 << DATA_RW_OP_CODE)
 
-        command_arg |= ((address & DATA_ADDR_BITMASK) << DATA_ADDR)
-        command_arg |= (1 << DATA_RW_BLOCK_MODE)
-        command_arg |= (len(data) & DATA_RW_COUNT_BITMODE)
+
+        if rw_flag:
+            #Setup the DMA Read or Write Block Size
+            self.dma_writer.set_size(self.func_block_size[function_id])
+            command_arg |= (len(data) & DATA_RW_COUNT_BITMODE)
+            command_arg |= (1 << DATA_RW_FLAG)
+            self.send_command(CMD_DATA_RW, command_arg)
+            '''
+            resp = self.read_response()
+            self.parse_response(5, resp)
+            '''
+
+            print "Initiate Data Transfer (Outbound)"
+            self.set_register_bit(CONTROL, CONTROL_ENABLE_DMA_WR)
+            self.write_register(SD_DATA_BYTE_COUNT, len(data))
+            self.set_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
+            self.set_register_bit(CONTROL, CONTROL_ENABLE_INTERRUPT)
+            self.dma_writer.write(data)
+            self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_WR)
+            self.clear_register_bit(CONTROL, CONTROL_ENABLE_INTERRUPT)
+
+        else:
+            self.dma_reader.set_size(self.func_block_size[function_id])
+            command_arg |= (byte_count & DATA_RW_COUNT_BITMODE)
+            self.send_command(CMD_DATA_RW, command_arg)
+            '''
+            resp = self.read_response()
+            self.parse_response(5, resp)
+            '''
+
+            self.write_register(SD_DATA_BYTE_COUNT, len(data))
 
     def send_single_byte(self, function_id, address, data, read_after_write):
         command_arg = 0

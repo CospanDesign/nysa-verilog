@@ -26,7 +26,8 @@ input   [31:0]    test_id,
 input             ih_reset,
 
 input             request_read_wait,
-input             request_interrupt
+input             request_interrupt,
+output            device_interrupt
 );
 
 //Parameters
@@ -223,6 +224,7 @@ wire              mem_i_ack;
 wire              mem_i_int;
 
 
+assign  device_interrupt  = w_wbs1_int;
 
 
 //Submodules
