@@ -324,9 +324,9 @@ def data_block_write(dut):
     yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
     yield cocotb.external(driver.cmd_get_relative_card_address)()
     yield cocotb.external(driver.cmd_enable_card)(True)
-    yield cocotb.external(driver.set_function_block_size)(0, 0x04)
+    yield cocotb.external(driver.set_function_block_size)(0, 0x08)
 
-    data = [0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00]
+    data = [0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
     '''
     data = Array ('B')
     for i in range (128):

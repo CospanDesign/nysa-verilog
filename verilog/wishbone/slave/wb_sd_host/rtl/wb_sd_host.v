@@ -196,11 +196,9 @@ wire                    w_p2m_1_finished;
 wire                    w_p2m_1_empty;
 
 wire        [31:0]      w_m2p_0_count;
-wire                    w_m2p_0_finished;
 wire                    w_m2p_0_empty;
 
 wire        [31:0]      w_m2p_1_count;
-wire                    w_m2p_1_finished;
 wire                    w_m2p_1_empty;
 
 reg                     r_flush_memory;
@@ -472,7 +470,7 @@ assign  w_mem_write_enable    = control[`CONTROL_ENABLE_DMA_WR    ];
 assign  w_mem_read_enable     = control[`CONTROL_ENABLE_DMA_RD    ];
 assign  data_write_flag       = control[`CONTROL_DATA_WRITE_FLAG  ];
 
-
+/*
 assign  status[`STATUS_MEMORY_0_FINISHED] = w_mem_write_enable ? w_p2m_0_finished :
                                             1'b0;
 
@@ -487,8 +485,10 @@ assign  status[`STATUS_MEMORY_1_EMPTY]    = w_mem_write_enable ? w_p2m_1_empty  
                                             1'b0;
 assign  status[`STATUS_SD_BUSY]           = sd_cmd_en;
 
-
 assign  status[`STATUS_ERROR_BIT_TOP:`STATUS_ERROR_BIT_BOT] = sd_error;
+assign  status[23:7]                      = 0;
+assign  status[30:25]                     = 0;
+*/
 
 assign  o_wbs_int                         = w_interrupt_enable ? w_int : 1'b0;
 assign  mem_o_we                          = w_mem_write_enable ? m2p_mem_o_we :
@@ -622,22 +622,22 @@ always @ (posedge clk) begin
             STATUS: begin
               //o_wbs_dat           <= status;
               o_wbs_dat             <=  0;
-              o_wbs_dat[`STATUS_MEMORY_0_FINISHED] <= w_mem_write_enable ? w_p2m_0_finished : 1'b0;
-              o_wbs_dat[`STATUS_MEMORY_1_FINISHED] <= w_mem_write_enable ? w_p2m_1_finished : 1'b0;
+              o_wbs_dat[`STATUS_MEMORY_0_FINISHED] <= w_mem_read_enable ? w_p2m_0_finished : 1'b0;
+              o_wbs_dat[`STATUS_MEMORY_1_FINISHED] <= w_mem_read_enable ? w_p2m_1_finished : 1'b0;
               o_wbs_dat[`STATUS_ENABLE]            <= w_sd_enable;
-              o_wbs_dat[`STATUS_MEMORY_0_EMPTY]    <= w_mem_write_enable ? w_p2m_0_empty    :
-                                                      w_mem_read_enable  ? w_m2p_0_empty    :
+              o_wbs_dat[`STATUS_MEMORY_0_EMPTY]    <= w_mem_write_enable ? w_m2p_0_empty    :
+                                                      w_mem_read_enable  ? w_p2m_0_empty    :
                                                       1'b0;
-              o_wbs_dat[`STATUS_MEMORY_1_EMPTY]    <= w_mem_write_enable ? w_p2m_1_empty    :
-                                                      w_mem_read_enable  ? w_m2p_1_empty    :
+              o_wbs_dat[`STATUS_MEMORY_1_EMPTY]    <= w_mem_write_enable ? w_m2p_1_empty    :
+                                                      w_mem_read_enable  ? w_p2m_1_empty    :
                                                       1'b0;
               o_wbs_dat[`STATUS_SD_BUSY]                              <= sd_cmd_en;
               o_wbs_dat[`STATUS_ERROR_BIT_TOP:`STATUS_ERROR_BIT_BOT]  <= sd_error;
-              if (w_m2p_0_finished) begin
+              if (w_p2m_0_finished) begin
                 $display ("Reset size 0");
                 r_memory_0_size   <=  0;
               end
-              if (w_m2p_1_finished) begin
+              if (w_p2m_1_finished) begin
                 $display ("Reset size 1");
                 r_memory_1_size   <=  0;
               end
@@ -646,10 +646,10 @@ always @ (posedge clk) begin
               o_wbs_dat <=  r_memory_0_base;
             end
             REG_MEM_0_SIZE: begin
-              if (w_mem_read_enable) begin
+              if (w_mem_write_enable) begin
                 o_wbs_dat <=  w_m2p_0_count;
               end
-              else if (w_mem_write_enable) begin
+              else if (w_mem_read_enable) begin
                 o_wbs_dat <=  w_p2m_0_count;
               end
               else begin
@@ -660,10 +660,10 @@ always @ (posedge clk) begin
               o_wbs_dat <=  r_memory_1_base;
             end
             REG_MEM_1_SIZE: begin
-              if (w_mem_read_enable) begin
+              if (w_mem_write_enable) begin
                 o_wbs_dat <=  w_m2p_1_count;
               end
-              else if (w_mem_write_enable) begin
+              else if (w_mem_read_enable) begin
                 o_wbs_dat <=  w_p2m_1_count;
               end
               else begin

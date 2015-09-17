@@ -225,57 +225,57 @@ end
 
 always @ (posedge clk) begin
   //De-assert Strobes
-  o_data_stb          <=  0;
+  o_data_stb              <=  0;
 
   if (rst) begin
-    sd_data           <=  0;
-    state             <=  IDLE;
-    crc_rst           <=  1;
-    crc_en            <=  0;
-    o_finished        <=  0;
-    data_count        <=  0;
-    o_crc_err         <=  0;
-    o_data_s2h        <=  0;
+    sd_data               <=  0;
+    state                 <=  IDLE;
+    crc_rst               <=  1;
+    crc_en                <=  0;
+    o_finished            <=  0;
+    data_count            <=  0;
+    o_crc_err             <=  0;
+    o_data_s2h            <=  0;
     for (i = 0; i < 4; i = i + 1) begin
-      crc[i]          <=  16'h0000;
+      crc[i]              <=  16'h0000;
     end
   end
   else begin
     case (state)
       IDLE: begin
-        crc_en        <=  0;
-        crc_rst       <=  1;
-        o_finished    <=  0;
-        data_count    <=  0;
-        o_crc_err     <=  0;
-        sd_data       <=  8'hFF;
+        crc_en            <=  0;
+        crc_rst           <=  1;
+        o_finished        <=  0;
+        data_count        <=  0;
+        o_crc_err         <=  0;
+        sd_data           <=  8'hFF;
         if (i_en) begin
-          crc_rst     <=  0;
+          crc_rst         <=  0;
           if(i_write_flag) begin
-            state     <=  WRITE;
-            sd_data   <=  8'h00;  //Is this only on the positive edge we need this start bit to be set?
-            o_data_stb  <=  1;
+            state         <=  WRITE;
+            sd_data       <=  8'h00;  //Is this only on the positive edge we need this start bit to be set?
+            o_data_stb    <=  1;
           end
           else begin
-            state     <=  READ_START;
+            state         <=  READ_START;
           end
         end
       end
       WRITE: begin
         if (data_count < i_data_count - 1) begin
-          crc_en      <=  1;
-          sd_data     <=  i_data_h2s;
-          data_count  <=  data_count + 1;
-          o_data_stb  <=  1;
+          crc_en          <=  1;
+          sd_data         <=  i_data_h2s;
+          data_count      <=  data_count + 1;
+          o_data_stb      <=  1;
         end
         else begin
-          sd_data     <=  i_data_h2s;
-          data_count  <=  0;
-          state       <=  WRITE_CRC;
+          sd_data         <=  i_data_h2s;
+          data_count      <=  0;
+          state           <=  WRITE_CRC;
         end
       end
       WRITE_CRC: begin
-        crc_en        <=  0;
+        crc_en            <=  0;
         if (data_count == 0) begin
           sd_data         <=  {gen_crc0[15], gen_crc1[15], gen_crc2[15], gen_crc3[15],
                                gen_crc0[14], gen_crc1[14], gen_crc2[14], gen_crc3[14]};
