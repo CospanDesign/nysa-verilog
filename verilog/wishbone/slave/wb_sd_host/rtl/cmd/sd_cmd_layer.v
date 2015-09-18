@@ -54,7 +54,6 @@ module sd_cmd_layer (
   output                    o_rsp_stb,
   output      [127:0]       o_rsp,
 
-
   //User control side
   input                     i_data_txrx,
   input                     i_data_write_flag,
@@ -108,13 +107,17 @@ localparam    FINISHED      = 4'h3;
 reg           [3:0]         state;
 reg           [3:0]         data_state;
 reg           [23:0]        data_count;
+reg                         infinite_data_txrx;
+reg           [23:0]        transfer_count;
+reg           [23:0]        block_count;
 
-wire          [23:0]        func_block_size [2:0];
+wire          [23:0]        func_block_size [0:7];
 //submodules
 //asynchronous logic
 assign                      o_phy_cmd_len     = 40;
 assign                      o_rsp             = i_phy_rsp[127:0];
-assign                      o_data_byte_count = i_data_size[11:0];
+//assign                      o_data_byte_count = i_data_size[11:0];
+assign                      o_data_byte_count = transfer_count[11:0];
 assign                      o_data_write_flag = i_data_write_flag;
 
 assign                      func_block_size[0]  = i_f0_block_size;
@@ -196,32 +199,52 @@ always @ (posedge clk) begin
     o_data_txrx_activate        <=  0;
     data_state                  <=  IDLE;
     data_count                  <=  0;
+    transfer_count              <=  0;
+    infinite_data_txrx          <=  0;
+    block_count                 <=  0;
   end
   else begin
     case (data_state)
       IDLE: begin
+        infinite_data_txrx      <=  0;
         o_data_txrx_finished    <=  0;
         o_data_txrx_activate    <=  0;
         data_count              <=  0;
         if (i_data_txrx) begin
           data_state            <=  TXRX_BLOCK;
+          if (i_data_block_mode) begin
+            if (i_data_size == 0) begin
+              infinite_data_txrx <=  1;
+            end
+            transfer_count        <=  func_block_size[i_func_addr];
+            block_count           <=  0;
+          end
+          else begin
+            transfer_count        <=  i_data_size;
+          end
         end
       end
       TXRX_BLOCK: begin
         o_data_txrx_activate    <=  1;
         data_state              <=  WAIT_RESPONSE;
-        if (i_data_block_mode) begin
-          
-        end
+        block_count             <=  block_count + 1;
       end
       WAIT_RESPONSE: begin
-        if (i_data_write_stb || i_data_read_stb) begin
-          data_count            <=  data_count + 1; 
-        end
+        //if (i_data_write_stb || i_data_read_stb) begin
+        //  data_count            <=  data_count + 1; 
+        //end
         if (i_data_txrx_finished) begin
           o_data_txrx_activate  <=  0;
-          if (data_count < i_data_size) begin
-            data_state          <=  TXRX_BLOCK;
+          if (i_data_block_mode) begin
+            if (infinite_data_txrx) begin
+              data_state        <=  TXRX_BLOCK;
+            end
+            else if (block_count < i_data_size) begin
+              data_state        <=  TXRX_BLOCK;
+            end
+            else begin
+              data_state        <=  FINISHED;
+            end
           end
           else begin
             data_state          <=  FINISHED;

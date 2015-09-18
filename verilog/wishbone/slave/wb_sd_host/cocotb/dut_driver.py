@@ -140,7 +140,7 @@ RESPONSE_DICT = {CMD_PHY_MODE           : 1,
                  CMD_GO_INACTIVE        : None,
                  CMD_SINGLE_DATA_RW     : 5,
                  CMD_DATA_RW            : 5}
-                
+
 
 
 
@@ -666,12 +666,12 @@ class wb_sd_hostDriver(driver.Driver):
             print "Initiate Data Transfer (Outbound)"
             #XXX: All these transactions with the control register can be consolodated to one function call
             self.set_register_bit(CONTROL, CONTROL_ENABLE_DMA_WR)
-            self.write_register(SD_DATA_BYTE_COUNT, len(data))
-            self.set_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
+            self.write_register(SD_DATA_BYTE_COUNT, (len(data) / block_size))
+            self.set_register_bit(CONTROL, CONTROL_DATA_BLOCK_MODE)
             self.set_register_bit(CONTROL, CONTROL_ENABLE_INTERRUPT)
             self.write_register_bit_range(CONTROL, CONTROL_FUNCTION_ADDRESS_HIGH, CONTROL_FUNCTION_ADDRESS_LOW, function_id)
-            self.set_register_bit(CONTROL, CONTROL_DATA_BLOCK_MODE)
-            
+            self.set_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
+
             self.dma_writer.write(data)
 
             to = time.time() + timeout
@@ -679,6 +679,7 @@ class wb_sd_hostDriver(driver.Driver):
                 print "This should change to an asynchrounous Wait"
                 time.sleep(0.01)
 
+            self.clear_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
             self.clear_register_bit(CONTROL, CONTROL_DATA_BLOCK_MODE)
             self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_WR)
             self.clear_register_bit(CONTROL, CONTROL_ENABLE_INTERRUPT)
