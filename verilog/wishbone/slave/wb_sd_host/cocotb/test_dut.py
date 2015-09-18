@@ -320,11 +320,12 @@ def data_block_write(dut):
     yield (nysa.wait_clocks(10))
     driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
     #Enable SDIO
+    FUNCTION = 0
     yield cocotb.external(driver.enable_sd_host)(True)
     yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
     yield cocotb.external(driver.cmd_get_relative_card_address)()
     yield cocotb.external(driver.cmd_enable_card)(True)
-    yield cocotb.external(driver.set_function_block_size)(0, 0x08)
+    yield cocotb.external(driver.set_function_block_size)(FUNCTION, 0x08)
 
     data = [0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
     '''
@@ -333,7 +334,7 @@ def data_block_write(dut):
         value = i % 256
         data.append(value)
     '''
-    yield cocotb.external(driver.write_sd_data)(0, 0x00, data, fifo_mode = False, read_after_write = False)
+    yield cocotb.external(driver.write_sd_data)(FUNCTION, 0x00, data, fifo_mode = False, read_after_write = False)
     yield (nysa.wait_clocks(1000))
 
 

@@ -62,6 +62,19 @@ module sd_host_stack #(
   input                     i_data_write_flag,
   input       [23:0]        i_data_size,
   output                    o_data_txrx_finished,
+  input       [2:0]         i_func_addr,
+  input                     i_data_block_mode,
+
+  input       [23:0]        i_f0_block_size,
+  input       [23:0]        i_f1_block_size,
+  input       [23:0]        i_f2_block_size,
+  input       [23:0]        i_f3_block_size,
+  input       [23:0]        i_f4_block_size,
+  input       [23:0]        i_f5_block_size,
+  input       [23:0]        i_f6_block_size,
+  input       [23:0]        i_f7_block_size,
+  input       [23:0]        i_mem_block_size,
+
 
   //Data From Host to SD Interface
   output      [1:0]         o_h2s_wfifo_ready,
@@ -79,7 +92,6 @@ module sd_host_stack #(
 
   //Interrupt From the Card
   output                    o_interrupt,
-
 
   //Phy Interface
   input                     i_sd_pll_locked,
@@ -222,6 +234,8 @@ sd_cmd_layer cmd(
   .i_data_write_flag    (i_data_write_flag        ),
   .i_data_size          (i_data_size              ),
   .o_data_txrx_finished (o_data_txrx_finished     ),
+  .i_data_block_mode    (i_data_block_mode        ),
+  .i_func_addr          (i_func_addr              ),
 
   //User Command/Response Interface
   .i_cmd_en             (sd_cmd_en                ),
@@ -236,6 +250,17 @@ sd_cmd_layer cmd(
 
   //Interrupt From the Card
   .o_interrupt          (o_interrupt              ),
+
+  //Block Size for layers
+  .i_f0_block_size      (i_f0_block_size          ),
+  .i_f1_block_size      (i_f1_block_size          ),
+  .i_f2_block_size      (i_f2_block_size          ),
+  .i_f3_block_size      (i_f3_block_size          ),
+  .i_f4_block_size      (i_f4_block_size          ),
+  .i_f5_block_size      (i_f5_block_size          ),
+  .i_f6_block_size      (i_f6_block_size          ),
+  .i_f7_block_size      (i_f7_block_size          ),
+  .i_mem_block_size     (i_mem_block_size         ),
 
   //PHY Layer
   .o_phy_cmd_en         (phy_cmd_en               ),

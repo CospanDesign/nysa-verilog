@@ -55,12 +55,26 @@ module sd_cmd_layer (
   output      [127:0]       o_rsp,
 
 
+  //User control side
   input                     i_data_txrx,
   input                     i_data_write_flag,
   input       [23:0]        i_data_size,
   output  reg               o_data_txrx_finished,
   input                     i_data_write_stb,
   input                     i_data_read_stb,
+
+  input       [2:0]         i_func_addr,
+  input                     i_data_block_mode,
+
+  input       [23:0]        i_f0_block_size,
+  input       [23:0]        i_f1_block_size,
+  input       [23:0]        i_f2_block_size,
+  input       [23:0]        i_f3_block_size,
+  input       [23:0]        i_f4_block_size,
+  input       [23:0]        i_f5_block_size,
+  input       [23:0]        i_f6_block_size,
+  input       [23:0]        i_f7_block_size,
+  input       [23:0]        i_mem_block_size,
 
   //Interrupt From the Card
   output                    o_interrupt,
@@ -94,12 +108,24 @@ localparam    FINISHED      = 4'h3;
 reg           [3:0]         state;
 reg           [3:0]         data_state;
 reg           [23:0]        data_count;
+
+wire          [23:0]        func_block_size [2:0];
 //submodules
 //asynchronous logic
 assign                      o_phy_cmd_len     = 40;
 assign                      o_rsp             = i_phy_rsp[127:0];
 assign                      o_data_byte_count = i_data_size[11:0];
 assign                      o_data_write_flag = i_data_write_flag;
+
+assign                      func_block_size[0]  = i_f0_block_size;
+assign                      func_block_size[1]  = i_f1_block_size;
+assign                      func_block_size[2]  = i_f2_block_size;
+assign                      func_block_size[3]  = i_f3_block_size;
+assign                      func_block_size[4]  = i_f4_block_size;
+assign                      func_block_size[5]  = i_f5_block_size;
+assign                      func_block_size[6]  = i_f6_block_size;
+assign                      func_block_size[7]  = i_f7_block_size;
+
 always @ (*) begin
   if (rst) begin
     o_phy_rsp_len               = 40;
@@ -184,6 +210,9 @@ always @ (posedge clk) begin
       TXRX_BLOCK: begin
         o_data_txrx_activate    <=  1;
         data_state              <=  WAIT_RESPONSE;
+        if (i_data_block_mode) begin
+          
+        end
       end
       WAIT_RESPONSE: begin
         if (i_data_write_stb || i_data_read_stb) begin

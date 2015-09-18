@@ -77,6 +77,8 @@ SOFTWARE.
 `define CONTROL_ENABLE_SD_FIN_INT             4
 `define CONTROL_DATA_WRITE_FLAG               5
 `define CONTROL_DATA_BIT_ACTIVATE             6
+`define CONTROL_DATA_BLOCK_MODE               7
+`define CONTROL_FUNCTION_ADDRESS              10:8
 
 //status bit definition
 `define STATUS_MEMORY_0_FINISHED              0
@@ -160,6 +162,15 @@ localparam          SD_RESPONSE1        = 32'h0000000A;
 localparam          SD_RESPONSE2        = 32'h0000000B;
 localparam          SD_RESPONSE3        = 32'h0000000C;
 localparam          SD_DATA_BYTE_COUNT  = 32'h0000000D;
+localparam          SD_F0_BLOCK_SIZE    = 32'h00000010;
+localparam          SD_F1_BLOCK_SIZE    = 32'h00000011;
+localparam          SD_F2_BLOCK_SIZE    = 32'h00000012;
+localparam          SD_F3_BLOCK_SIZE    = 32'h00000013;
+localparam          SD_F4_BLOCK_SIZE    = 32'h00000014;
+localparam          SD_F5_BLOCK_SIZE    = 32'h00000015;
+localparam          SD_F6_BLOCK_SIZE    = 32'h00000016;
+localparam          SD_F7_BLOCK_SIZE    = 32'h00000017;
+localparam          SD_MEM_BLOCK_SIZE   = 32'h00000018;
 
 //Local Registers/Wires
 reg         [31:0]      control         = 32'h00000000;
@@ -267,10 +278,22 @@ wire        [7:0]       sd_data_out;
 wire        [7:0]       sd_data_in;
 
 //Data Interface
-reg                     data_txrx_en;
+wire                    data_txrx_en;
 wire                    data_write_flag;
 reg         [23:0]      data_size;
 wire                    data_txrx_finished;
+wire        [2:0]       function_address;
+wire                    data_block_mode;
+
+reg         [23:0]      f0_block_size;
+reg         [23:0]      f1_block_size;
+reg         [23:0]      f2_block_size;
+reg         [23:0]      f3_block_size;
+reg         [23:0]      f4_block_size;
+reg         [23:0]      f5_block_size;
+reg         [23:0]      f6_block_size;
+reg         [23:0]      f7_block_size;
+reg         [23:0]      mem_block_size;
 
 //Possibly replace with a generate statement using an input parameter
 `ifdef COCOTB_SIMULATION
@@ -333,6 +356,18 @@ sd_host_stack #(
   .i_data_write_flag    (data_write_flag          ),
   .i_data_size          (data_size                ),
   .o_data_txrx_finished (data_txrx_finished       ),
+  .i_func_addr          (function_address         ),
+  .i_data_block_mode    (data_block_mode          ),
+  .i_f0_block_size      (f0_block_size            ),
+  .i_f1_block_size      (f1_block_size            ),
+  .i_f2_block_size      (f2_block_size            ),
+  .i_f3_block_size      (f3_block_size            ),
+  .i_f4_block_size      (f4_block_size            ),
+  .i_f5_block_size      (f5_block_size            ),
+  .i_f6_block_size      (f6_block_size            ),
+  .i_f7_block_size      (f7_block_size            ),
+  .i_mem_block_size     (mem_block_size           ),
+
 
   //Data From Host to SD Interface
   .o_h2s_wfifo_ready    (w_wfifo_ready            ),
@@ -352,7 +387,7 @@ sd_host_stack #(
   .o_interrupt          (sd_host_interrupt        ),
 
 
-  //Phy Interface
+   //Phy Interface
   .i_sd_pll_locked      (pll_locked               ),
   .i_sd_clk             (sd_clk                   ),
   .i_sd_clk_x2          (sd_clk_x2                ),
@@ -464,31 +499,14 @@ wb_mem_2_ppfifo m2p(
 );
 
 //Asynchronous Logic
-assign  w_sd_enable           = control[`CONTROL_ENABLE_SD        ];
-assign  w_interrupt_enable    = control[`CONTROL_ENABLE_INTERRUPT ];
-assign  w_mem_write_enable    = control[`CONTROL_ENABLE_DMA_WR    ];
-assign  w_mem_read_enable     = control[`CONTROL_ENABLE_DMA_RD    ];
-assign  data_write_flag       = control[`CONTROL_DATA_WRITE_FLAG  ];
-
-/*
-assign  status[`STATUS_MEMORY_0_FINISHED] = w_mem_write_enable ? w_p2m_0_finished :
-                                            1'b0;
-
-assign  status[`STATUS_MEMORY_1_FINISHED] = w_mem_write_enable ? w_p2m_1_finished :
-                                            1'b0;
-assign  status[`STATUS_ENABLE]            = w_sd_enable;
-assign  status[`STATUS_MEMORY_0_EMPTY]    = w_mem_write_enable ? w_p2m_0_empty    :
-                                            w_mem_read_enable  ? w_m2p_0_empty    :
-                                            1'b0;
-assign  status[`STATUS_MEMORY_1_EMPTY]    = w_mem_write_enable ? w_p2m_1_empty    :
-                                            w_mem_read_enable  ? w_m2p_1_empty    :
-                                            1'b0;
-assign  status[`STATUS_SD_BUSY]           = sd_cmd_en;
-
-assign  status[`STATUS_ERROR_BIT_TOP:`STATUS_ERROR_BIT_BOT] = sd_error;
-assign  status[23:7]                      = 0;
-assign  status[30:25]                     = 0;
-*/
+assign  w_sd_enable                       = control[`CONTROL_ENABLE_SD        ];
+assign  w_interrupt_enable                = control[`CONTROL_ENABLE_INTERRUPT ];
+assign  w_mem_write_enable                = control[`CONTROL_ENABLE_DMA_WR    ];
+assign  w_mem_read_enable                 = control[`CONTROL_ENABLE_DMA_RD    ];
+assign  data_write_flag                   = control[`CONTROL_DATA_WRITE_FLAG  ];
+assign  data_block_mode                   = control[`CONTROL_DATA_BLOCK_MODE  ];
+assign  function_address                  = control[`CONTROL_FUNCTION_ADDRESS ];
+assign  data_txrx_en                      = control[`CONTROL_DATA_BIT_ACTIVATE];
 
 assign  o_wbs_int                         = w_interrupt_enable ? w_int : 1'b0;
 assign  mem_o_we                          = w_mem_write_enable ? m2p_mem_o_we :
@@ -523,9 +541,17 @@ always @ (posedge clk) begin
     sd_cmd_arg            <= 32'h0;
     sd_cmd_rsp_long_flag  <= 1'b0;
     enable_crc            <= 1'b1;
-    data_txrx_en          <= 1'b0;
     data_size             <= 0;
 
+    f0_block_size         <= 0;
+    f1_block_size         <= 0;
+    f2_block_size         <= 0;
+    f3_block_size         <= 0;
+    f4_block_size         <= 0;
+    f5_block_size         <= 0;
+    f6_block_size         <= 0;
+    f7_block_size         <= 0;
+    mem_block_size        <= 0;
 
     r_memory_0_base       <= 0;
     r_memory_0_size       <= 0;
@@ -561,7 +587,6 @@ always @ (posedge clk) begin
 //TODO: Remove Verbose Messages
               $display ("Control: %X", i_wbs_dat);
               control                 <=  i_wbs_dat;
-              data_txrx_en            <=  i_wbs_dat[`CONTROL_DATA_BIT_ACTIVATE];
             end
             STATUS: begin
             end
@@ -608,6 +633,33 @@ always @ (posedge clk) begin
             end
             SD_DATA_BYTE_COUNT: begin
               data_size               <=  i_wbs_dat[23:0];
+            end
+            SD_F0_BLOCK_SIZE: begin
+              f0_block_size           <=  i_wbs_dat[23:0];
+            end
+            SD_F1_BLOCK_SIZE: begin
+              f1_block_size           <=  i_wbs_dat[23:0];
+            end
+            SD_F2_BLOCK_SIZE: begin
+              f2_block_size           <=  i_wbs_dat[23:0];
+            end
+            SD_F3_BLOCK_SIZE: begin
+              f3_block_size           <=  i_wbs_dat[23:0];
+            end
+            SD_F4_BLOCK_SIZE: begin
+              f4_block_size           <=  i_wbs_dat[23:0];
+            end
+            SD_F5_BLOCK_SIZE: begin
+              f5_block_size           <=  i_wbs_dat[23:0];
+            end
+            SD_F6_BLOCK_SIZE: begin
+              f6_block_size           <=  i_wbs_dat[23:0];
+            end
+            SD_F7_BLOCK_SIZE: begin
+              f7_block_size           <=  i_wbs_dat[23:0];
+            end
+            SD_MEM_BLOCK_SIZE: begin
+              mem_block_size          <=  i_wbs_dat[23:0];
             end
             default: begin
             end
@@ -685,6 +737,33 @@ always @ (posedge clk) begin
             SD_DATA_BYTE_COUNT: begin
               o_wbs_dat   <=  {8'h00, data_size};
             end
+            SD_F0_BLOCK_SIZE: begin
+              o_wbs_dat   <=  {8'h00, f0_block_size};
+            end
+            SD_F1_BLOCK_SIZE: begin
+              o_wbs_dat   <=  {8'h00, f1_block_size};
+            end
+            SD_F2_BLOCK_SIZE: begin
+              o_wbs_dat   <=  {8'h00, f2_block_size};
+            end
+            SD_F3_BLOCK_SIZE: begin
+              o_wbs_dat   <=  {8'h00, f3_block_size};
+            end
+            SD_F4_BLOCK_SIZE: begin
+              o_wbs_dat   <=  {8'h00, f4_block_size};
+            end
+            SD_F5_BLOCK_SIZE: begin
+              o_wbs_dat   <=  {8'h00, f5_block_size};
+            end
+            SD_F6_BLOCK_SIZE: begin
+              o_wbs_dat   <=  {8'h00, f6_block_size};
+            end
+            SD_F7_BLOCK_SIZE: begin
+              o_wbs_dat   <=  {8'h00, f7_block_size};
+            end
+            SD_MEM_BLOCK_SIZE: begin
+              o_wbs_dat   <=  {8'h00, mem_block_size};
+            end
             default: begin
               o_wbs_dat <=  32'h00;
             end
@@ -699,7 +778,7 @@ always @ (posedge clk) begin
       sd_cmd_en   <=  0;
     end
     if (data_txrx_finished) begin
-      data_txrx_en  <=  0;
+      control[`CONTROL_DATA_BIT_ACTIVATE] <=  0;
     end
   end
 end
