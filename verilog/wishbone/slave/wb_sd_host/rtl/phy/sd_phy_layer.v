@@ -131,6 +131,7 @@ reg     [3:0]               data_state;
 reg     [39:0]              cmd;
 
 
+wire                        sd4_finished;
 wire                        sd4_data_dir;
 wire    [7:0]               sd4_data;
 wire    [7:0]               sd1_data;
@@ -163,8 +164,7 @@ sd_sd4_phy sd4 (
   .rst          (rst                      ),
                                           
   .i_en         (data_txrx_en             ),
-  //.o_finished   (o_data_txrx_finished     ),
-  //.i_write_flag (i_data_write_flag        ),
+  //.o_finished   (sd4_finished             ),
   .i_write_flag (write_flag               ),
                                          
   .o_crc_err    (data_read_crc_err        ),      //Detected a CRC error during read
@@ -376,7 +376,6 @@ always @ (posedge i_sd_clk) begin
         end
       end
       FINISHED: begin
-        o_data_txrx_finished    <=  1;
       end
       default: begin
       end
@@ -385,11 +384,6 @@ always @ (posedge i_sd_clk) begin
     if (!i_data_txrx_activate) begin
       data_state                <=  IDLE;
     end
-/*
-    if (data_txrx_en) begin
-      write_flag      <=  i_data_write_flag;
-    end
-*/
   end
 end
 

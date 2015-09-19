@@ -188,33 +188,33 @@ always @ (posedge clk) begin
     //Whenever the host de-asserts command enable go back to IDLE, this way we
     //Won't get stuck if something goes buggered
     if (!i_cmd_en) begin
-      state                     <=  IDLE;
-    end
-  end
-end
-
-always @ (posedge clk) begin
-  if (rst) begin
-    o_data_txrx_finished        <=  0;
-    o_data_txrx_activate        <=  0;
-    data_state                  <=  IDLE;
-    data_count                  <=  0;
-    transfer_count              <=  0;
-    infinite_data_txrx          <=  0;
-    block_count                 <=  0;
-  end
-  else begin
-    case (data_state)
-      IDLE: begin
-        infinite_data_txrx      <=  0;
-        o_data_txrx_finished    <=  0;
-        o_data_txrx_activate    <=  0;
-        data_count              <=  0;
-        if (i_data_txrx) begin
-          data_state            <=  TXRX_BLOCK;
+      state                       <=  IDLE;
+    end                           
+  end                             
+end                               
+                                  
+always @ (posedge clk) begin      
+  if (rst) begin                  
+    o_data_txrx_finished          <=  0;
+    o_data_txrx_activate          <=  0;
+    data_state                    <=  IDLE;
+    data_count                    <=  0;
+    transfer_count                <=  0;
+    infinite_data_txrx            <=  0;
+    block_count                   <=  0;
+  end                             
+  else begin                      
+    case (data_state)             
+      IDLE: begin                 
+        infinite_data_txrx        <=  0;
+        o_data_txrx_finished      <=  0;
+        o_data_txrx_activate      <=  0;
+        data_count                <=  0;
+        if (i_data_txrx) begin    
+          data_state              <=  TXRX_BLOCK;
           if (i_data_block_mode) begin
             if (i_data_size == 0) begin
-              infinite_data_txrx <=  1;
+              infinite_data_txrx  <=  1;
             end
             transfer_count        <=  func_block_size[i_func_addr];
             block_count           <=  0;
