@@ -99,6 +99,7 @@ STATUS_MEMORY_0_EMPTY       = 2
 STATUS_MEMORY_1_EMPTY       = 3
 STATUS_ENABLE               = 4
 STATUS_SD_BUSY              = 5
+STATUS_SD_DATA_BUSY         = 6
 STATUS_ERROR_BIT_TOP        = 31
 STATUS_ERROR_BIT_BOT        = 24
 
@@ -315,6 +316,9 @@ class wb_sd_hostDriver(driver.Driver):
 
     def is_sd_busy(self):
         return self.is_register_bit_set(STATUS, STATUS_SD_BUSY)
+
+    def is_sd_data_busy(self):
+        return self.is_register_bit_set(STATUS, STATUS_SD_DATA_BUSY)
 
 #Responses
     def read_response(self):
@@ -675,7 +679,8 @@ class wb_sd_hostDriver(driver.Driver):
             self.dma_writer.write(data)
 
             to = time.time() + timeout
-            while (time.time() < to) and (self.dma_writer.get_available_memory_blocks() != 3):
+            #while (time.time() < to) and (self.dma_writer.get_available_memory_blocks() != 3):
+            while (time.time() < to) and (self.is_sd_data_busy()):
                 print "This should change to an asynchrounous Wait"
                 time.sleep(0.01)
 

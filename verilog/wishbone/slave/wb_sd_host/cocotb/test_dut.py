@@ -203,7 +203,7 @@ def receive_byte_test(dut):
     yield (nysa.wait_clocks(1000))
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def small_multi_byte_data_write(dut):
     """
     Description:
@@ -327,13 +327,12 @@ def data_block_write(dut):
     yield cocotb.external(driver.cmd_enable_card)(True)
     yield cocotb.external(driver.set_function_block_size)(FUNCTION, 0x08)
 
-    data = [0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-    '''
+    #data = [0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+    #data = [0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
     data = Array ('B')
-    for i in range (128):
+    for i in range (16):
         value = i % 256
         data.append(value)
-    '''
     yield cocotb.external(driver.write_sd_data)(FUNCTION, 0x00, data, fifo_mode = False, read_after_write = False)
     yield (nysa.wait_clocks(1000))
 

@@ -64,6 +64,7 @@ module sd_host_stack #(
   output                    o_data_txrx_finished,
   input       [2:0]         i_func_addr,
   input                     i_data_block_mode,
+  input       [31:0]        i_block_sleep_count,
 
   input       [23:0]        i_f0_block_size,
   input       [23:0]        i_f1_block_size,
@@ -250,6 +251,7 @@ sd_cmd_layer cmd(
 
   //Interrupt From the Card
   .o_interrupt          (o_interrupt              ),
+  .i_block_sleep_count  (i_block_sleep_count      ),
 
   //Block Size for layers
   .i_f0_block_size      (i_f0_block_size          ),
@@ -307,7 +309,6 @@ sd_phy_layer #(
   .i_data_byte_count    (data_byte_count          ),
   .i_data_write_flag    (data_write_flag          ),
   .o_data_crc_read_err  (data_crc_read_err        ),
-
 
   //Data From Host to SD Interface
   .i_h2s_fifo_ready     (rfifo_rdy                ),

@@ -104,6 +104,7 @@ SOFTWARE.
 `define SD_ERROR_BAD_CRC                      2
 
 
+`define DEFAULT_BLOCK_SLEEP                   32'h00000100
 
 module wb_sd_host #(
   parameter                 SD_MODE       = 1,
@@ -162,6 +163,7 @@ localparam          SD_RESPONSE1        = 32'h0000000A;
 localparam          SD_RESPONSE2        = 32'h0000000B;
 localparam          SD_RESPONSE3        = 32'h0000000C;
 localparam          SD_DATA_BYTE_COUNT  = 32'h0000000D;
+localparam          SD_BLOCK_SLEEP      = 32'h0000000E;
 localparam          SD_F0_BLOCK_SIZE    = 32'h00000010;
 localparam          SD_F1_BLOCK_SIZE    = 32'h00000011;
 localparam          SD_F2_BLOCK_SIZE    = 32'h00000012;
@@ -295,6 +297,8 @@ reg         [23:0]      f6_block_size;
 reg         [23:0]      f7_block_size;
 reg         [23:0]      mem_block_size;
 
+reg         [31:0]      block_sleep_count;
+
 //Possibly replace with a generate statement using an input parameter
 `ifdef COCOTB_SIMULATION
 sd_host_platform_cocotb cocotb_platform(
@@ -358,6 +362,7 @@ sd_host_stack #(
   .o_data_txrx_finished (data_txrx_finished       ),
   .i_func_addr          (function_address         ),
   .i_data_block_mode    (data_block_mode          ),
+  .i_block_sleep_count  (block_sleep_count        ),
   .i_f0_block_size      (f0_block_size            ),
   .i_f1_block_size      (f1_block_size            ),
   .i_f2_block_size      (f2_block_size            ),
@@ -563,14 +568,14 @@ always @ (posedge clk) begin
     r_memory_1_ready      <= 0;
     r_memory_1_new_data   <= 0;
 
+    block_sleep_count     <= `DEFAULT_BLOCK_SLEEP;
 
   end
   else begin
-    r_memory_0_new_data <=  0;
-    r_memory_1_new_data <=  0;
-    r_memory_0_ready    <=  0;
-    r_memory_1_ready    <=  0;
-
+    r_memory_0_new_data   <=  0;
+    r_memory_1_new_data   <=  0;
+    r_memory_0_ready      <=  0;
+    r_memory_1_ready      <=  0;
 
     //when the master acks our ack, then put our ack down
     if (o_wbs_ack && ~i_wbs_stb)begin
@@ -634,6 +639,9 @@ always @ (posedge clk) begin
             SD_DATA_BYTE_COUNT: begin
               data_size               <=  i_wbs_dat[23:0];
             end
+            SD_BLOCK_SLEEP: begin
+              block_sleep_count       <=  i_wbs_dat;
+            end
             SD_F0_BLOCK_SIZE: begin
               f0_block_size           <=  i_wbs_dat[23:0];
             end
@@ -684,6 +692,7 @@ always @ (posedge clk) begin
                                                       w_mem_read_enable  ? w_p2m_1_empty    :
                                                       1'b0;
               o_wbs_dat[`STATUS_SD_BUSY]                              <= sd_cmd_en;
+              o_wbs_dat[`STATUS_SD_DATA_BUSY]                         <= data_txrx_en;
               o_wbs_dat[`STATUS_ERROR_BIT_TOP:`STATUS_ERROR_BIT_BOT]  <= sd_error;
               if (w_p2m_0_finished) begin
                 $display ("Reset size 0");
@@ -736,6 +745,9 @@ always @ (posedge clk) begin
             end
             SD_DATA_BYTE_COUNT: begin
               o_wbs_dat   <=  {8'h00, data_size};
+            end
+            SD_BLOCK_SLEEP: begin
+              o_wbs_dat   <=  block_sleep_count;
             end
             SD_F0_BLOCK_SIZE: begin
               o_wbs_dat   <=  {8'h00, f0_block_size};

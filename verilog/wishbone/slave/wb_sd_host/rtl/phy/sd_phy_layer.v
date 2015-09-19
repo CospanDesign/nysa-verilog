@@ -58,7 +58,6 @@ module sd_phy_layer #(
   output  reg               o_data_txrx_finished,
   input         [11:0]      i_data_byte_count,
   input                     i_data_write_flag,
-
   output                    o_data_crc_read_err,
 
   //Data From Host to SD Interface
@@ -125,7 +124,7 @@ reg     [7:0]               data_h2s;
 wire    [7:0]               data_s2h;
 reg     [11:0]              total_byte_count;
 
-reg     [23:0]              data_count;
+reg     [23:0]              count;
 reg                         write_flag;
 reg     [3:0]               data_state;
 reg     [39:0]              cmd;
@@ -230,7 +229,7 @@ always @ (posedge i_sd_clk) begin
   o_s2h_fifo_stb                      <=  0;
 
   if (rst) begin
-    data_count                        <=  0;
+    count                             <=  0;
     write_flag                        <=  1;
     data_state                        <=  IDLE;
     o_data_txrx_finished              <=  0;
@@ -263,13 +262,13 @@ always @ (posedge i_sd_clk) begin
         write_flag                <=  1;
         if (i_h2s_fifo_ready && !o_h2s_fifo_activate) begin
           o_h2s_fifo_activate     <=  1;
-          data_count              <=  0;
+          count                   <=  0;
         end
         if (o_h2s_fifo_activate) begin
           //got a reference to a FIFO
           data_state              <=  WRITE_DATA;
           //data_h2s                <=  i_h2s_fifo_data[31:24];
-          data_count              <=  1;  //We already have the fist piece of data
+          count                   <=  1;  //We already have the fist piece of data
           byte_index              <=  3;
           data_txrx_en            <=  1;
         end
@@ -278,7 +277,7 @@ always @ (posedge i_sd_clk) begin
         //Start Reading
         write_flag                <=  0;
         if ((i_s2h_fifo_ready > 0) && (o_s2h_fifo_activate == 0)) begin
-          data_count              <=  0;
+          count                   <=  0;
           if (i_s2h_fifo_ready[0]) begin
             o_s2h_fifo_activate[0]<=  1;
           end
@@ -317,8 +316,8 @@ always @ (posedge i_sd_clk) begin
           end
           if (byte_index == 0) begin
             byte_index                <=  2'h3;
-            if (data_count < i_h2s_fifo_size) begin
-              data_count              <=  data_count + 1;
+            if (count < i_h2s_fifo_size) begin
+              count                   <=  count + 1;
             end
             else begin
               data_state              <=  END_TRANSACTION;
@@ -348,8 +347,8 @@ always @ (posedge i_sd_clk) begin
           if (byte_index == 0) begin
             byte_index                <=  2'h3;
             o_s2h_fifo_stb            <=  1;
-            if (data_count < i_s2h_fifo_size) begin
-              data_count              <=  data_count + 1;
+            if (count < i_s2h_fifo_size) begin
+              count                   <=  count + 1;
             end
             else begin
               data_state              <=  END_TRANSACTION;
@@ -376,6 +375,7 @@ always @ (posedge i_sd_clk) begin
         end
       end
       FINISHED: begin
+        o_data_txrx_finished    <=  1;
       end
       default: begin
       end

@@ -38,6 +38,7 @@ module sd_cmd_layer (
   input                     i_crc_enable_flag,
   input                     i_card_detect,
   input       [15:0]        i_timeout,
+  input       [31:0]        i_block_sleep_count,
 
   output  reg               o_error_flag,
   output  reg [7:0]         o_error,
@@ -100,13 +101,14 @@ module sd_cmd_layer (
 localparam    IDLE          = 4'h0;
 localparam    TXRX_BLOCK    = 4'h1;
 localparam    WAIT_RESPONSE = 4'h2;
-localparam    FINISHED      = 4'h3;
+localparam    BLOCK_SLEEP   = 4'h3;
+localparam    FINISHED      = 4'h4;
 
 
 //registes/wires
 reg           [3:0]         state;
 reg           [3:0]         data_state;
-reg           [23:0]        data_count;
+reg           [23:0]        count;
 reg                         infinite_data_txrx;
 reg           [23:0]        transfer_count;
 reg           [23:0]        block_count;
@@ -198,7 +200,7 @@ always @ (posedge clk) begin
     o_data_txrx_finished          <=  0;
     o_data_txrx_activate          <=  0;
     data_state                    <=  IDLE;
-    data_count                    <=  0;
+    count                         <=  0;
     transfer_count                <=  0;
     infinite_data_txrx            <=  0;
     block_count                   <=  0;
@@ -209,7 +211,7 @@ always @ (posedge clk) begin
         infinite_data_txrx        <=  0;
         o_data_txrx_finished      <=  0;
         o_data_txrx_activate      <=  0;
-        data_count                <=  0;
+        count                     <=  0;
         if (i_data_txrx) begin    
           data_state              <=  TXRX_BLOCK;
           if (i_data_block_mode) begin
@@ -231,24 +233,30 @@ always @ (posedge clk) begin
       end
       WAIT_RESPONSE: begin
         //if (i_data_write_stb || i_data_read_stb) begin
-        //  data_count            <=  data_count + 1; 
+        //  count                 <=  count + 1; 
         //end
         if (i_data_txrx_finished) begin
           o_data_txrx_activate  <=  0;
           if (i_data_block_mode) begin
-            if (infinite_data_txrx) begin
-              data_state        <=  TXRX_BLOCK;
-            end
-            else if (block_count < i_data_size) begin
-              data_state        <=  TXRX_BLOCK;
+            if (infinite_data_txrx || (block_count < i_data_size)) begin
+              data_state        <=  BLOCK_SLEEP;
             end
             else begin
+              count             <=  0;
               data_state        <=  FINISHED;
             end
           end
           else begin
             data_state          <=  FINISHED;
           end
+        end
+      end
+      BLOCK_SLEEP: begin
+        if (count < i_block_sleep_count) begin
+          count                 <=  count + 1;
+        end
+        else begin
+          data_state            <=  TXRX_BLOCK;
         end
       end
       FINISHED: begin
