@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.62 (w)1999-2014 BSI
-[*] Sat Sep 19 16:01:36 2015
+[*] Sat Sep 19 21:30:55 2015
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/cocotb/design.vcd"
-[dumpfile_mtime] "Sat Sep 19 16:00:50 2015"
-[dumpfile_size] 763659
+[dumpfile_mtime] "Sat Sep 19 16:49:29 2015"
+[dumpfile_size] 877173
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/cocotb/waveforms.gtkw"
-[timestart] 0
+[timestart] 5350
 [size] 1918 1059
 [pos] -1 -1
-*-12.600862 30500 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-12.600863 31740 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.s1.
 [treeopen] tb_cocotb.s1.sd_stack.
@@ -37,13 +37,25 @@ tb_cocotb.test_id[31:0]
 tb_cocotb.s1.sd_stack.cmd.clk
 @22
 tb_cocotb.s1.sd_stack.cmd.o_phy_cmd[39:0]
-@28
-tb_cocotb.s1.sd_stack.i_sd_pll_locked
-tb_cocotb.s1.sd_stack.cmd.rst
+@200
+-
+@800200
+-Command
+@22
+tb_cocotb.s1.sd_stack.cmd.state[3:0]
+@200
+-
 @22
 tb_cocotb.s1.sd_stack.cmd.data_state[3:0]
 @28
-tb_cocotb.s1.sd_stack.cmd.i_data_txrx_finished
+tb_cocotb.s1.sd_stack.cmd.i_data_txrx
+tb_cocotb.s1.sd_stack.cmd.o_data_txrx_activate
+tb_cocotb.s1.sd_stack.cmd.o_data_txrx_finished
+@22
+tb_cocotb.s1.sd_stack.cmd.count[23:0]
+tb_cocotb.s1.sd_stack.cmd.block_count[23:0]
+@1000200
+-Command
 @800200
 -phy
 -SD4
@@ -52,40 +64,34 @@ tb_cocotb.s1.sd_stack.cmd.i_data_txrx_finished
 @28
 tb_cocotb.s1.cocotb_platform.o_out_clk_x2
 tb_cocotb.s1.cocotb_platform.o_out_clk
-@800022
-tb_cocotb.s1.cocotb_platform.io_phy_sd_data[3:0]
-@28
-(0)tb_cocotb.s1.cocotb_platform.io_phy_sd_data[3:0]
-(1)tb_cocotb.s1.cocotb_platform.io_phy_sd_data[3:0]
-(2)tb_cocotb.s1.cocotb_platform.io_phy_sd_data[3:0]
-(3)tb_cocotb.s1.cocotb_platform.io_phy_sd_data[3:0]
+@1401200
+-cocotb platform
+@200
+-
+@22
+tb_cocotb.s1.sd_stack.phy.genblk1.sd4.data_count[11:0]
 @200
 -
 @28
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.crc_en
+tb_cocotb.s1.sd_stack.phy.i_data_txrx_activate
+tb_cocotb.s1.sd_stack.phy.o_data_txrx_finished
+@200
+-
 @22
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.data_count[11:0]
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc2[15:0]
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc3[15:0]
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.crc0[15:0]
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.crc1[15:0]
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.crc2[15:0]
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.crc3[15:0]
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.sd_data[7:0]
-@1001200
--group_end
-@1401200
--cocotb platform
+tb_cocotb.s1.sd_stack.phy.data_h2s[7:0]
+tb_cocotb.s1.sd_stack.phy.o_sd_data[7:0]
+@28
+tb_cocotb.s1.sd_stack.phy.data_byte_req_stb
 @1000200
 -SD4
 -phy
 -SD Host
 @200
 -
+-
 @800200
 -SDIO Device
+@c00200
 -Command
 @28
 tb_cocotb.sdio_device.card_controller.v1p8_sel
@@ -111,47 +117,30 @@ tb_cocotb.sdio_device.card_controller.i_func_finished
 @22
 tb_cocotb.sdio_device.card_controller.state[3:0]
 tb_cocotb.sdio_device.card_controller.i_func_read_data[7:0]
-@1000200
+@1401200
 -Command
-@c00200
+@800200
 -Data Bus
 @22
 tb_cocotb.sdio_device.data_bus_interconnect.state[3:0]
 @28
+tb_cocotb.sdio_device.data_bus_interconnect.i_cmd_bus_sel
+@22
+tb_cocotb.sdio_device.data_bus_interconnect.i_data_cnt[12:0]
+@28
 tb_cocotb.sdio_device.data_bus_interconnect.i_write_flg
 tb_cocotb.sdio_device.data_bus_interconnect.i_activate
 tb_cocotb.sdio_device.data_bus_interconnect.o_finished
-@200
--
 @22
-tb_cocotb.sdio_device.data_bus_interconnect.ld_state[3:0]
-@28
-tb_cocotb.sdio_device.data_bus_interconnect.lcl_wr_stb
-@22
-tb_cocotb.sdio_device.data_bus_interconnect.o_address[17:0]
+tb_cocotb.sdio_device.data_bus_interconnect.block_size[15:0]
+tb_cocotb.sdio_device.data_bus_interconnect.data_count[9:0]
 @200
 -
-@22
-tb_cocotb.sdio_device.data_bus_interconnect.i_cmd_wr_data[7:0]
-tb_cocotb.sdio_device.data_bus_interconnect.o_cia_wr_data[7:0]
-tb_cocotb.sdio_device.data_bus_interconnect.i_cia_rd_data[7:0]
+@23
+tb_cocotb.sdio_device.data_bus_interconnect.block_count[9:0]
 @200
 -
-@28
-tb_cocotb.sdio_device.data_bus_interconnect.o_cia_wr_stb
-@200
--
-@28
-tb_cocotb.sdio_device.card_controller.i_cmd_stb
-@200
--
-@28
-tb_cocotb.sdio_device.card_controller.o_func_write_flag
-tb_cocotb.sdio_device.card_controller.o_func_block_mode
-tb_cocotb.sdio_device.card_controller.o_func_inc_addr
-@22
-tb_cocotb.sdio_device.card_controller.i_cmd_arg[31:0]
-@1401200
+@1000200
 -Data Bus
 @800200
 -Phy
@@ -171,96 +160,9 @@ tb_cocotb.sdio_device.phy.o_sdio_cmd_dir
 tb_cocotb.sdio_device.phy.o_sdio_cmd_out
 @1401200
 -PHY Command
-@c00200
+@800200
 -PHY Data
-@28
-tb_cocotb.sdio_device.phy.data_phy.o_data_crc_good
-tb_cocotb.sdio_device.phy.data_phy.data_crc_good
-@c00022
-tb_cocotb.sdio_device.phy.data_phy.state[3:0]
-@28
-(0)tb_cocotb.sdio_device.phy.data_phy.state[3:0]
-(1)tb_cocotb.sdio_device.phy.data_phy.state[3:0]
-(2)tb_cocotb.sdio_device.phy.data_phy.state[3:0]
-(3)tb_cocotb.sdio_device.phy.data_phy.state[3:0]
-@1401200
--group_end
-@28
-tb_cocotb.sdio_device.phy.data_phy.capture_crc
-tb_cocotb.sdio_device.phy.data_phy.i_activate
-tb_cocotb.sdio_device.phy.data_phy.o_data_wr_stb
-tb_cocotb.sdio_device.phy.data_phy.o_data_crc_good
-@22
-tb_cocotb.sdio_device.phy.data_phy.o_data_wr_data[7:0]
-@c00022
-tb_cocotb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
-@28
-(0)tb_cocotb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
-(1)tb_cocotb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
-(2)tb_cocotb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
-(3)tb_cocotb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
-(4)tb_cocotb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
-(5)tb_cocotb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
-(6)tb_cocotb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
-(7)tb_cocotb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
-@1401200
--group_end
-@28
-tb_cocotb.sdio_device.phy.data_phy.clk_x2
-tb_cocotb.sdio_device.phy.data_phy.clk
-@200
--
-@28
-tb_cocotb.sdio_device.phy.data_phy.i_activate
-@c00022
-tb_cocotb.sdio_device.phy.data_phy.o_data_wr_data[7:0]
-@28
-(0)tb_cocotb.sdio_device.phy.data_phy.o_data_wr_data[7:0]
-(1)tb_cocotb.sdio_device.phy.data_phy.o_data_wr_data[7:0]
-(2)tb_cocotb.sdio_device.phy.data_phy.o_data_wr_data[7:0]
-(3)tb_cocotb.sdio_device.phy.data_phy.o_data_wr_data[7:0]
-(4)tb_cocotb.sdio_device.phy.data_phy.o_data_wr_data[7:0]
-(5)tb_cocotb.sdio_device.phy.data_phy.o_data_wr_data[7:0]
-(6)tb_cocotb.sdio_device.phy.data_phy.o_data_wr_data[7:0]
-(7)tb_cocotb.sdio_device.phy.data_phy.o_data_wr_data[7:0]
-@1401200
--group_end
-@200
--
-@22
-tb_cocotb.sdio_device.phy.data_phy.crc_out0[15:0]
-tb_cocotb.sdio_device.phy.data_phy.crc_out1[15:0]
-tb_cocotb.sdio_device.phy.data_phy.crc_out2[15:0]
-tb_cocotb.sdio_device.phy.data_phy.crc_out3[15:0]
-@200
--
-@22
-tb_cocotb.sdio_device.phy.data_phy.host_crc0[15:0]
-@c00022
-tb_cocotb.sdio_device.phy.data_phy.host_crc1[15:0]
-@28
-(0)tb_cocotb.sdio_device.phy.data_phy.host_crc1[15:0]
-(1)tb_cocotb.sdio_device.phy.data_phy.host_crc1[15:0]
-(2)tb_cocotb.sdio_device.phy.data_phy.host_crc1[15:0]
-(3)tb_cocotb.sdio_device.phy.data_phy.host_crc1[15:0]
-(4)tb_cocotb.sdio_device.phy.data_phy.host_crc1[15:0]
-(5)tb_cocotb.sdio_device.phy.data_phy.host_crc1[15:0]
-(6)tb_cocotb.sdio_device.phy.data_phy.host_crc1[15:0]
-(7)tb_cocotb.sdio_device.phy.data_phy.host_crc1[15:0]
-(8)tb_cocotb.sdio_device.phy.data_phy.host_crc1[15:0]
-(9)tb_cocotb.sdio_device.phy.data_phy.host_crc1[15:0]
-(10)tb_cocotb.sdio_device.phy.data_phy.host_crc1[15:0]
-(11)tb_cocotb.sdio_device.phy.data_phy.host_crc1[15:0]
-(12)tb_cocotb.sdio_device.phy.data_phy.host_crc1[15:0]
-(13)tb_cocotb.sdio_device.phy.data_phy.host_crc1[15:0]
-(14)tb_cocotb.sdio_device.phy.data_phy.host_crc1[15:0]
-(15)tb_cocotb.sdio_device.phy.data_phy.host_crc1[15:0]
-@1401200
--group_end
-@22
-tb_cocotb.sdio_device.phy.data_phy.host_crc2[15:0]
-tb_cocotb.sdio_device.phy.data_phy.host_crc3[15:0]
-@1401200
+@1000200
 -PHY Data
 @c00200
 -Response
