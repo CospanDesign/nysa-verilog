@@ -191,12 +191,12 @@ always @ (posedge clk) begin
     //Won't get stuck if something goes buggered
     if (!i_cmd_en) begin
       state                       <=  IDLE;
-    end                           
-  end                             
-end                               
-                                  
-always @ (posedge clk) begin      
-  if (rst) begin                  
+    end
+  end
+end
+
+always @ (posedge clk) begin
+  if (rst) begin
     o_data_txrx_finished          <=  0;
     o_data_txrx_activate          <=  0;
     data_state                    <=  IDLE;
@@ -204,15 +204,15 @@ always @ (posedge clk) begin
     transfer_count                <=  0;
     infinite_data_txrx            <=  0;
     block_count                   <=  0;
-  end                             
-  else begin                      
-    case (data_state)             
-      IDLE: begin                 
+  end
+  else begin
+    case (data_state)
+      IDLE: begin
         infinite_data_txrx        <=  0;
         o_data_txrx_finished      <=  0;
         o_data_txrx_activate      <=  0;
         count                     <=  0;
-        if (i_data_txrx) begin    
+        if (i_data_txrx) begin
           data_state              <=  TXRX_BLOCK;
           if (i_data_block_mode) begin
             if (i_data_size == 0) begin
@@ -233,7 +233,7 @@ always @ (posedge clk) begin
       end
       WAIT_RESPONSE: begin
         //if (i_data_write_stb || i_data_read_stb) begin
-        //  count                 <=  count + 1; 
+        //  count                 <=  count + 1;
         //end
         if (i_data_txrx_finished) begin
           o_data_txrx_activate  <=  0;

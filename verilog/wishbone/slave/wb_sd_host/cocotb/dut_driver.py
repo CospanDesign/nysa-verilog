@@ -660,11 +660,11 @@ class wb_sd_hostDriver(driver.Driver):
             command_arg |= (1 << DATA_RW_OP_CODE)
 
         block_size = self.get_block_size(function_id)
+        command_arg |= ((len(data) / block_size) & DATA_RW_COUNT_BITMODE)
 
         if rw_flag:
             #Setup the DMA Read or Write Block Size
             self.dma_writer.set_size(block_size)
-            command_arg |= (len(data) & DATA_RW_COUNT_BITMODE)
             command_arg |= (1 << DATA_RW_FLAG)
             self.send_command(CMD_DATA_RW, command_arg)
             print "Initiate Data Transfer (Outbound)"
