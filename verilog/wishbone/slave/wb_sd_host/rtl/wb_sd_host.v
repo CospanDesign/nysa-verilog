@@ -593,8 +593,6 @@ always @ (posedge clk) begin
               $display ("Control: %X", i_wbs_dat);
               control                 <=  i_wbs_dat;
             end
-            STATUS: begin
-            end
             REG_MEM_0_BASE: begin
               r_memory_0_base         <=  i_wbs_dat;
             end

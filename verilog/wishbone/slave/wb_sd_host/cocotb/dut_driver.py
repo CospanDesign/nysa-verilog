@@ -17,40 +17,40 @@ from nysa.host.driver import driver
 
 #Sub Module ID
 #Use 'nysa devices' to get a list of different available devices
-DEVICE_TYPE                 = "SD Host"
-SDB_ABI_VERSION_MINOR       = 1
-SDB_VENDOR_ID               = 0x800000000000C594
+DEVICE_TYPE                     = "SD Host"
+SDB_ABI_VERSION_MINOR           = 1
+SDB_VENDOR_ID                   = 0x800000000000C594
 
 #Register Constants
-ZERO_BIT                    = 0
+ZERO_BIT                        = 0
 
 
 
-CONTROL                     = 0x000
-STATUS                      = 0x001
-REG_MEM_0_BASE              = 0x002
-REG_MEM_0_SIZE              = 0x003
-REG_MEM_1_BASE              = 0x004
-REG_MEM_1_SIZE              = 0x005
-SD_ARGUMENT                 = 0x006
-SD_COMMAND                  = 0x007
-SD_CONFIGURE                = 0x008
-SD_RESPONSE0                = 0x009
-SD_RESPONSE1                = 0x00A
-SD_RESPONSE2                = 0x00B
-SD_RESPONSE3                = 0x00C
-SD_DATA_BYTE_COUNT          = 0x00D
-SD_F0_BLOCK_SIZE            = 0x010
-SD_F1_BLOCK_SIZE            = 0x011
-SD_F2_BLOCK_SIZE            = 0x012
-SD_F3_BLOCK_SIZE            = 0x013
-SD_F4_BLOCK_SIZE            = 0x014
-SD_F5_BLOCK_SIZE            = 0x015
-SD_F6_BLOCK_SIZE            = 0x016
-SD_F7_BLOCK_SIZE            = 0x017
-SD_MEM_BLOCK_SIZE           = 0x018
+CONTROL                         = 0x000
+STATUS                          = 0x001
+REG_MEM_0_BASE                  = 0x002
+REG_MEM_0_SIZE                  = 0x003
+REG_MEM_1_BASE                  = 0x004
+REG_MEM_1_SIZE                  = 0x005
+SD_ARGUMENT                     = 0x006
+SD_COMMAND                      = 0x007
+SD_CONFIGURE                    = 0x008
+SD_RESPONSE0                    = 0x009
+SD_RESPONSE1                    = 0x00A
+SD_RESPONSE2                    = 0x00B
+SD_RESPONSE3                    = 0x00C
+SD_DATA_BYTE_COUNT              = 0x00D
+SD_F0_BLOCK_SIZE                = 0x010
+SD_F1_BLOCK_SIZE                = 0x011
+SD_F2_BLOCK_SIZE                = 0x012
+SD_F3_BLOCK_SIZE                = 0x013
+SD_F4_BLOCK_SIZE                = 0x014
+SD_F5_BLOCK_SIZE                = 0x015
+SD_F6_BLOCK_SIZE                = 0x016
+SD_F7_BLOCK_SIZE                = 0x017
+SD_MEM_BLOCK_SIZE               = 0x018
 
-SD_BLOCK_SIZE_OFFSET        = 0x010
+SD_BLOCK_SIZE_OFFSET            = 0x010
 
 CONTROL_ENABLE_SD               = 0
 CONTROL_ENABLE_INTERRUPT        = 1
@@ -63,76 +63,78 @@ CONTROL_DATA_BLOCK_MODE         = 7
 CONTROL_FUNCTION_ADDRESS_LOW    = 8
 CONTROL_FUNCTION_ADDRESS_HIGH   = 10
 
-COMMAND_BIT_GO              = 16
-COMMAND_BIT_RSP_LONG_FLG    = 17
+COMMAND_BIT_GO                  = 16
+COMMAND_BIT_RSP_LONG_FLG        = 17
 
-CONFIGURE_EN_CRC            = 4
+CONFIGURE_EN_CRC                = 4
+CONFIGURE_READ_WAIT_SPRT_ADDR   = 8
+CONFIGURE_READ_WAIT_SPRT_BIT    = 2
 
-CMD_PHY_MODE                = 0
-CMD_SEND_RELATIVE_ADDR      = 3
-CMD_OP_COND                 = 5
-CMD_SEL_DESEL_CARD          = 7
-CMD_GO_INACTIVE             = 15
-CMD_SINGLE_DATA_RW          = 52
-CMD_DATA_RW                 = 53
+CMD_PHY_MODE                    = 0
+CMD_SEND_RELATIVE_ADDR          = 3
+CMD_OP_COND                     = 5
+CMD_SEL_DESEL_CARD              = 7
+CMD_GO_INACTIVE                 = 15
+CMD_SINGLE_DATA_RW              = 52
+CMD_DATA_RW                     = 53
 
-DATA_RW_WRITE               = 1
-DATA_RW_READ                = 0
-DATA_WRITE_FLAG             = 31
-DATA_FUNC_INDEX             = 28
-DATA_FUNC_BITMASK           = 7
-DATA_ADDR                   = 9
-DATA_ADDR_BITMASK           = 0x1FFFF
-DATA_MASK                   = 0xFF
+DATA_RW_WRITE                   = 1
+DATA_RW_READ                    = 0
+DATA_WRITE_FLAG                 = 31
+DATA_FUNC_INDEX                 = 28
+DATA_FUNC_BITMASK               = 7
+DATA_ADDR                       = 9
+DATA_ADDR_BITMASK               = 0x1FFFF
+DATA_MASK                       = 0xFF
 
-DATA_RW_BLOCK_MODE          = 27
-DATA_RW_OP_CODE             = 26
-DATA_RW_COUNT_BITMODE       = 0x1FF
-
-
-OP_COND_BIT_EN_1P8V         = 24
-OP_COND_BIT_OCR_LOW         = 8
-
-STATUS_MEMORY_0_FINISHED    = 0
-STATUS_MEMORY_1_FINISHED    = 1
-STATUS_MEMORY_0_EMPTY       = 2
-STATUS_MEMORY_1_EMPTY       = 3
-STATUS_ENABLE               = 4
-STATUS_SD_BUSY              = 5
-STATUS_SD_DATA_BUSY         = 6
-STATUS_ERROR_BIT_TOP        = 31
-STATUS_ERROR_BIT_BOT        = 24
+DATA_RW_BLOCK_MODE              = 27
+DATA_RW_OP_CODE                 = 26
+DATA_RW_COUNT_BITMODE           = 0x1FF
 
 
-R1_OUT_OF_RANGE             = 39
-R1_COM_CRC_ERROR            = 38
-R1_ILLEGAL_COMMAND          = 37
-R1_ERROR                    = 19
-R1_CURRENT_STATE            = 9
-R1_CURRENT_STATE_BITMASK    = 0xF
+OP_COND_BIT_EN_1P8V             = 24
+OP_COND_BIT_OCR_LOW             = 8
 
-R4_READY                    = 31
-R4_NUM_FUNCS                = 28
-R4_NUM_FUNCS_BITMASK        = 0x7
-R4_MEM_PRESENT              = 27
-R4_UHSII_AVAILABLE          = 26
-R4_S18A                     = 24
-R4_IO_OCR                   = 0
-R4_IO_OCR_BITMASK           = 0xFFF
+STATUS_MEMORY_0_FINISHED        = 0
+STATUS_MEMORY_1_FINISHED        = 1
+STATUS_MEMORY_0_EMPTY           = 2
+STATUS_MEMORY_1_EMPTY           = 3
+STATUS_ENABLE                   = 4
+STATUS_SD_BUSY                  = 5
+STATUS_SD_DATA_BUSY             = 6
+STATUS_ERROR_BIT_TOP            = 31
+STATUS_ERROR_BIT_BOT            = 24
 
-R5_COM_CRC_ERROR            = 15
-R5_ILLEGAL_COMMAND          = 14
-R5_CURRENT_STATE            = 12
-R5_CURRENT_STATE_BITMASK    = 3
-R5_ERROR                    = 3
-R5_ERROR_FUNC               = 1
-R5_ERROR_OUT_OF_RANGE       = 0
 
-R6_REL_ADDR_BITMASK         = 0xFF
-R6_REL_ADDR                 = 16
-R6_STS_CRC_COMM_ERR         = 15
-R6_STS_ILLEGAL_CMD          = 13
-R6_STS_ERROR                = 12
+R1_OUT_OF_RANGE                 = 39
+R1_COM_CRC_ERROR                = 38
+R1_ILLEGAL_COMMAND              = 37
+R1_ERROR                        = 19
+R1_CURRENT_STATE                = 9
+R1_CURRENT_STATE_BITMASK        = 0xF
+
+R4_READY                        = 31
+R4_NUM_FUNCS                    = 28
+R4_NUM_FUNCS_BITMASK            = 0x7
+R4_MEM_PRESENT                  = 27
+R4_UHSII_AVAILABLE              = 26
+R4_S18A                         = 24
+R4_IO_OCR                       = 0
+R4_IO_OCR_BITMASK               = 0xFFF
+
+R5_COM_CRC_ERROR                = 15
+R5_ILLEGAL_COMMAND              = 14
+R5_CURRENT_STATE                = 12
+R5_CURRENT_STATE_BITMASK        = 3
+R5_ERROR                        = 3
+R5_ERROR_FUNC                   = 1
+R5_ERROR_OUT_OF_RANGE           = 0
+
+R6_REL_ADDR_BITMASK             = 0xFF
+R6_REL_ADDR                     = 16
+R6_STS_CRC_COMM_ERR             = 15
+R6_STS_ILLEGAL_CMD              = 13
+R6_STS_ERROR                    = 12
 
 RESPONSE_DICT = {CMD_PHY_MODE           : 1,
                  CMD_SEND_RELATIVE_ADDR : 6,
@@ -175,6 +177,10 @@ class wb_sd_hostDriver(driver.Driver):
 
     def __init__(self, nysa, urn, debug = False):
         super(wb_sd_hostDriver, self).__init__(nysa, urn, debug)
+        self.callback = None
+        self.block_timeout = 0
+        self.read_data = Array('B')
+        self.read_in_progress = False
         size = 2048
         self.MEM_BASE_0 = 0x000
         self.MEM_BASE_1 = self.MEM_BASE_0 + size
@@ -612,6 +618,7 @@ class wb_sd_hostDriver(driver.Driver):
             #Disable the DMA Write Flag
             self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
             self.set_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
+            return self.read_memory(REG_MEM0_BASE, byte_count / 4)
 
     def set_function_block_size(self, func_num, block_size):
         '''
@@ -699,7 +706,7 @@ class wb_sd_hostDriver(driver.Driver):
         else:
             command_arg |= (byte_count / block_size) & DATA_RW_COUNT_BITMODE
             self.clear_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
-            self.dma_reader.set_size(block_size)
+            self.dma_reader.set_size(block_size / 4)
             self.set_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
             self.write_register(SD_DATA_BYTE_COUNT, byte_count / block_size)
             self.set_register_bit(CONTROL, CONTROL_DATA_BLOCK_MODE)
@@ -708,16 +715,33 @@ class wb_sd_hostDriver(driver.Driver):
             self.select_sd_function(function_id)
 
             self.send_command(CMD_DATA_RW, command_arg)
-            to = time.time() + timeout
-            #while (time.time() < to) and (self.dma_writer.get_available_memory_blocks() != 3):
-            while (time.time() < to) and (self.is_sd_data_busy()):
-                print "This should change to an asynchrounous Wait"
-                time.sleep(0.01)
+            self.block_timeout = time.time() + timeout
 
-            self.clear_register_bit(CONTROL, CONTROL_ENABLE_INTERRUPT)
-            self.clear_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
-            self.clear_register_bit(CONTROL, CONTROL_DATA_BLOCK_MODE)
-            self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
+            if self.is_asynchronous_read_mode():
+                print "ASYNCHRONOUS MODE!"
+                #Go to asynchronous Read mode
+                return
+
+            else:
+                #Asynchronous Read Mode
+                self.read_data = Array('B')
+                self.dma_reader.debug = True
+                print "Byte Count: %d" % byte_count
+                while len(self.read_data) < byte_count:
+                    print "Length Read Data: %d" % len(self.read_data)
+                    self.read_data += self.dma_reader.read()
+                print "Length Read Data: %d" % len(self.read_data)
+                self.dma_reader.debug = False
+
+                #while (time.time() < self.block_timeout) and (self.is_sd_data_busy()):
+                #    print "This should change to an asynchrounous Wait"
+                #    time.sleep(0.01)
+
+                self.clear_register_bit(CONTROL, CONTROL_ENABLE_INTERRUPT)
+                self.clear_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
+                self.clear_register_bit(CONTROL, CONTROL_DATA_BLOCK_MODE)
+                self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
+                return self.read_data
 
     def send_single_byte(self, function_id, address, data, read_after_write):
         command_arg = 0
@@ -727,4 +751,26 @@ class wb_sd_hostDriver(driver.Driver):
     def set_data_bus_dir_output(self, enable):
         self.enable_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG, enable)
 
+    def is_read_wait_supported(self):
+        return ((self.read_config_byte(CONFIGURE_READ_WAIT_SPRT_ADDR) & CONFIGURE_READ_WAIT_SPRT_BIT) > 0)
+
+    def is_asynchronous_read_mode(self):
+        return self.dma_reader.is_asynchronous_mode()
+
+    def enable_async_dma_reader(self, callback, enable):
+        if enable:
+            self.callback = callback
+            self.dma_reader.enable_asynchronous_read(callback)
+        else:
+            self.dma_reader.disable_asynchronous_read()
+            self.callback = None
+
+    def _async_callback(self):
+        pass
+
+    def _read_async_data(self):
+        if self.callback is None:
+            return
+        data = self.read_memory(REG_MEM0_BASE, byte_count / 4)
+        self.callback(data)
 

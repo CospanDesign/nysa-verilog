@@ -376,7 +376,69 @@ def data_block_read(dut):
     #data = [0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
     #data = [0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
     data = yield cocotb.external(driver.read_sd_data)(FUNCTION, 0x00, READ_SIZE, fifo_mode = False)
+    print "Data: %s" % print_hex_array(data)
+    yield (nysa.wait_clocks(2000))
+
+
+
+@cocotb.test(skip = True)
+def data_block_read_with_read_wait(dut):
+    """
+    Description:
+        Perform a block read adding in read wait
+
+    Test ID: 8
+
+    Expected Results:
+        Block Transfer (Read)
+    """
+    dut.test_id = 8
+    BLOCK_SIZE = 0x08
+    READ_SIZE = 0x20
+
+    SDIO_PATH = get_verilog_path("sdio-device")
+    sdio_config = os.path.join(SDIO_PATH, "sdio_configuration.json")
+    config = None
+    with open (sdio_config, "r") as f:
+        dut.log.warning("Run %s before running this function" % os.path.join(SDIO_PATH, "tools", "generate_config.py"))
+        config = json.load(f)
+
+    nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
+    setup_dut(dut)
+    yield(nysa.reset())
+    nysa.read_sdb()
+    yield (nysa.wait_clocks(10))
+    driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    #Enable SDIO
+    FUNCTION = 0
+    yield cocotb.external(driver.enable_sd_host)(True)
+    yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
+    yield cocotb.external(driver.cmd_get_relative_card_address)()
+    yield cocotb.external(driver.cmd_enable_card)(True)
+    yield cocotb.external(driver.set_function_block_size)(FUNCTION, BLOCK_SIZE)
+    rw_support = yield cocotb.external(driver.is_read_wait_supported)()
+    print "Read Wait Supported: %s" % str(rw_support)
+
+    #data = [0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+    #data = [0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+    data = yield cocotb.external(driver.read_sd_data)(FUNCTION, 0x00, READ_SIZE, fifo_mode = False)
     yield (nysa.wait_clocks(1000))
 
 
+def dma_read_callback(self, data):
+    print "Data is ready!: %s" % data
 
+
+def print_hex_array(a):
+    s = None
+    for i in a:
+        if s is None:
+            s = "["
+        else:
+            s += ", "
+
+        s += "0x%02X" % i
+
+    s += "]"
+
+    return s

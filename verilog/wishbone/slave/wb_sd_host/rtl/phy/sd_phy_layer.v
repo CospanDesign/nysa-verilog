@@ -330,49 +330,41 @@ always @ (posedge i_sd_clk) begin
           if (data_byte_req_stb) begin
             count                       <=  count + 1;
             total_byte_count            <=  total_byte_count + 1;
+            byte_index                  <=  byte_index - 1;
+            case (byte_index)
+              0: begin
+                o_s2h_fifo_data[7:0]    <=  data_s2h;
+              end
+              1: begin
+                o_s2h_fifo_data[15:8]   <=  data_s2h;
+              end
+              2: begin
+                o_s2h_fifo_data[23:16]  <=  data_s2h;
+              end
+              3: begin
+                o_s2h_fifo_data[31:24]  <=  data_s2h;
+              end
+            endcase
+            if (byte_index == 0) begin
+              byte_index                <=  2'h3;
+              o_s2h_fifo_stb            <=  1;
+              if (count < i_s2h_fifo_size) begin
+                count                   <=  count + 1;
+              end
+            end
           end
         end
         else begin
-          data_state                  <=  END_TRANSACTION;
+          data_state                    <=  END_TRANSACTION;
         end
-        /*
-        if (data_byte_req_stb) begin
-          total_byte_count            <=  total_byte_count + 1;
-          byte_index                  <=  byte_index - 1;
-          case (byte_index)
-            0: begin
-              o_s2h_fifo_data[7:0]    <=  data_s2h;
-            end
-            1: begin
-              o_s2h_fifo_data[15:8]   <=  data_s2h;
-            end
-            2: begin
-              o_s2h_fifo_data[23:16]  <=  data_s2h;
-            end
-            3: begin
-              o_s2h_fifo_data[31:24]  <=  data_s2h;
-            end
-          endcase
-          if (byte_index == 0) begin
-            byte_index                <=  2'h3;
-            o_s2h_fifo_stb            <=  1;
-            if (count < i_s2h_fifo_size) begin
-              count                   <=  count + 1;
-            end
-            else begin
-              data_state              <=  END_TRANSACTION;
-            end
-          end
-        end
-        */
       end
       END_TRANSACTION: begin
         //Deactivate any FIFOs
         o_s2h_fifo_activate     <=  0;
         o_h2s_fifo_activate     <=  0;
         data_txrx_en            <=  0;
-        if (total_byte_count < i_data_byte_count) begin
-          if (i_data_write_flag) begin
+        if (i_data_write_flag) begin
+          if (total_byte_count < i_data_byte_count) begin
             data_state          <=  SETUP_WRITE_FIFO;
           end
           else begin
