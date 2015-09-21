@@ -78,7 +78,7 @@ CMD_DATA_RW                 = 53
 
 DATA_RW_WRITE               = 1
 DATA_RW_READ                = 0
-DATA_RW_FLAG                = 31
+DATA_WRITE_FLAG             = 31
 DATA_FUNC_INDEX             = 28
 DATA_FUNC_BITMASK           = 7
 DATA_ADDR                   = 9
@@ -320,6 +320,8 @@ class wb_sd_hostDriver(driver.Driver):
     def is_sd_data_busy(self):
         return self.is_register_bit_set(STATUS, STATUS_SD_DATA_BUSY)
 
+    def select_sd_function(self, function_id):
+        self.write_register_bit_range(CONTROL, CONTROL_FUNCTION_ADDRESS_HIGH, CONTROL_FUNCTION_ADDRESS_LOW, function_id)
 #Responses
     def read_response(self):
         resp = [0, 0, 0, 0, 0]
@@ -529,27 +531,31 @@ class wb_sd_hostDriver(driver.Driver):
 
 
         if (block_size == 0) or (byte_count < block_size):
-            return self.rw_multiple_bytes(rw_flag = False,
+            return self.rw_multiple_bytes(write_flag = False,
                                           function_id = function_id,
                                           address = address,
                                           data = [0],
                                           byte_count = byte_count,
                                           fifo_mode = fifo_mode)
 
-        raise Exception("Not implemented yet")
-        #return self.rw_block(False, function_id, address, data, fifo_mode)
+        return self.rw_block(write_flag = False,
+                             function_id = function_id,
+                             address = address,
+                             data = [],
+                             byte_count = byte_count,
+                             fifo_mode = fifo_mode)
 
-    def rw_byte(self, rw_flag, function_id, address, data, read_after_write):
+    def rw_byte(self, write_flag, function_id, address, data, read_after_write):
         command_arg = 0
-        if rw_flag:
-            command_arg |= (1 << DATA_RW_FLAG)
+        if write_flag:
+            command_arg |= (1 << DATA_WRITE_FLAG)
             command_arg |= (data & DATA_MASK)
         command_arg |= ((function_id & DATA_FUNC_BITMASK) << DATA_FUNC_INDEX)
         command_arg |= ((address & DATA_ADDR_BITMASK) << DATA_ADDR)
         self.send_command(CMD_SINGLE_DATA_RW, command_arg)
         return self.read_data_byte
 
-    def rw_multiple_bytes(self, rw_flag, function_id, address, data, fifo_mode, byte_count = 1, timeout = 0.2):
+    def rw_multiple_bytes(self, write_flag, function_id, address, data, fifo_mode, byte_count = 1, timeout = 0.2):
         command_arg = 0
         command_arg |= ((function_id & DATA_FUNC_BITMASK) << DATA_FUNC_INDEX)
         command_arg |= ((address & DATA_ADDR_BITMASK) << DATA_ADDR)
@@ -558,9 +564,9 @@ class wb_sd_hostDriver(driver.Driver):
             print "Increment Address!"
             command_arg |= (1 << DATA_RW_OP_CODE)
 
-        if rw_flag:
+        if write_flag:
             self.dma_writer.set_size(512)
-            command_arg |= (1 << DATA_RW_FLAG)
+            command_arg |= (1 << DATA_WRITE_FLAG)
             command_arg |= (len(data) & DATA_RW_COUNT_BITMODE)
 
             self.send_command(CMD_DATA_RW, command_arg)
@@ -646,7 +652,7 @@ class wb_sd_hostDriver(driver.Driver):
         self.write_config_byte(address + 1, upper_byte)
         self.write_register(SD_BLOCK_SIZE_OFFSET + func_num, block_size)
 
-    def rw_block(self, rw_flag, function_id, address, data, byte_count, fifo_mode, timeout = 0.2):
+    def rw_block(self, write_flag, function_id, address, data, byte_count, fifo_mode, timeout = 0.2):
         print "RW Block"
         command_arg = 0
         command_arg |= ((function_id & DATA_FUNC_BITMASK) << DATA_FUNC_INDEX)
@@ -660,12 +666,13 @@ class wb_sd_hostDriver(driver.Driver):
             command_arg |= (1 << DATA_RW_OP_CODE)
 
         block_size = self.get_block_size(function_id)
-        command_arg |= ((len(data) / block_size) & DATA_RW_COUNT_BITMODE)
 
-        if rw_flag:
+        if write_flag:
             #Setup the DMA Read or Write Block Size
+            command_arg |= ((len(data) / block_size) & DATA_RW_COUNT_BITMODE)
             self.dma_writer.set_size(block_size)
-            command_arg |= (1 << DATA_RW_FLAG)
+            command_arg |= (1 << DATA_WRITE_FLAG)
+            self.set_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
             self.send_command(CMD_DATA_RW, command_arg)
             print "Initiate Data Transfer (Outbound)"
             #XXX: All these transactions with the control register can be consolodated to one function call
@@ -673,7 +680,7 @@ class wb_sd_hostDriver(driver.Driver):
             self.write_register(SD_DATA_BYTE_COUNT, (len(data) / block_size))
             self.set_register_bit(CONTROL, CONTROL_DATA_BLOCK_MODE)
             self.set_register_bit(CONTROL, CONTROL_ENABLE_INTERRUPT)
-            self.write_register_bit_range(CONTROL, CONTROL_FUNCTION_ADDRESS_HIGH, CONTROL_FUNCTION_ADDRESS_LOW, function_id)
+            self.select_sd_function(function_id)
             self.set_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
 
             self.dma_writer.write(data)
@@ -684,23 +691,37 @@ class wb_sd_hostDriver(driver.Driver):
                 print "This should change to an asynchrounous Wait"
                 time.sleep(0.01)
 
+            self.clear_register_bit(CONTROL, CONTROL_ENABLE_INTERRUPT)
             self.clear_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
             self.clear_register_bit(CONTROL, CONTROL_DATA_BLOCK_MODE)
             self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_WR)
-            self.clear_register_bit(CONTROL, CONTROL_ENABLE_INTERRUPT)
 
         else:
+            command_arg |= (byte_count / block_size) & DATA_RW_COUNT_BITMODE
+            self.clear_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
             self.dma_reader.set_size(block_size)
-            command_arg |= (byte_count & DATA_RW_COUNT_BITMODE)
-            self.send_command(CMD_DATA_RW, command_arg)
-            self.write_register(SD_DATA_BYTE_COUNT, len(data))
-            self.write_register_bit_range(CONTROL, CONTROL_FUNCTION_ADDRESS_HIGH, CONTROL_FUNCTION_ADDRESS_LOW, function_id)
+            self.set_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
+            self.write_register(SD_DATA_BYTE_COUNT, byte_count / block_size)
+            self.set_register_bit(CONTROL, CONTROL_DATA_BLOCK_MODE)
+            self.set_register_bit(CONTROL, CONTROL_ENABLE_INTERRUPT)
+            self.set_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
+            self.select_sd_function(function_id)
 
+            self.send_command(CMD_DATA_RW, command_arg)
+            to = time.time() + timeout
+            #while (time.time() < to) and (self.dma_writer.get_available_memory_blocks() != 3):
+            while (time.time() < to) and (self.is_sd_data_busy()):
+                print "This should change to an asynchrounous Wait"
+                time.sleep(0.01)
+
+            self.clear_register_bit(CONTROL, CONTROL_ENABLE_INTERRUPT)
+            self.clear_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
             self.clear_register_bit(CONTROL, CONTROL_DATA_BLOCK_MODE)
+            self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
 
     def send_single_byte(self, function_id, address, data, read_after_write):
         command_arg = 0
-        write_flag = DATA_RW_FLAG
+        write_flag = DATA_WRITE_FLAG
         cmd = CMD_SINGLE_DATA_RW
 
     def set_data_bus_dir_output(self, enable):

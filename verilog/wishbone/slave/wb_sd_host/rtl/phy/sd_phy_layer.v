@@ -326,6 +326,15 @@ always @ (posedge i_sd_clk) begin
         end
       end
       READ_DATA: begin
+        if (count < i_data_byte_count) begin
+          if (data_byte_req_stb) begin
+            count                       <=  count + 1;
+            total_byte_count            <=  total_byte_count + 1;
+          end
+        end
+        else begin
+          data_state                  <=  END_TRANSACTION;
+        end
         /*
         if (data_byte_req_stb) begin
           total_byte_count            <=  total_byte_count + 1;

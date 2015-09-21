@@ -109,7 +109,8 @@ wire    [7:0]     function_ready;
 wire    [2:0]     function_abort;
 wire    [7:0]     function_int_en;
 wire    [7:0]     function_int_pend;
-reg     [7:0]     function_exec_status;
+wire    [7:0]     function_exec_status;
+wire    [7:0]     function_ready_for_data;
 
 wire              function_activate;
 wire              function_inc_addr;
@@ -139,6 +140,7 @@ wire              demo_func_ready;
 wire              demo_func_abort;
 wire              demo_func_int_pend;
 wire              demo_func_busy;
+wire              demo_func_exec_sts;
 
 wire              demo_func_activate;
 wire              demo_func_finished;
@@ -484,6 +486,7 @@ sdio_device_stack sdio_device (
   .o_func_int_enable    (function_int_en      ),
   .i_func_int_pending   (function_int_pend    ),
   .i_func_exec_status   (function_exec_status ),
+  .i_func_ready_for_data(function_ready_for_data  ),
 
   .o_func_inc_addr      (o_func_inc_addr      ),
 
@@ -517,6 +520,8 @@ demo_function demo (
   .i_interrupt_enable   (function_int_en[0]  ),
   .o_interrupt_pending  (demo_func_int_pend  ),
   .o_busy               (demo_func_busy      ),
+  .o_execution_status   (demo_func_exec_sts  ),
+  .o_ready_for_data     (demo_func_ready_for_data),
 
   .i_activate           (demo_func_activate  ),
   .o_finished           (demo_func_finished  ),
@@ -560,6 +565,8 @@ assign  w_wbs0_dat_o            = 0;
 assign  start                   = 1;
 assign  function_ready          = {7'b0000000, demo_func_ready};
 assign  function_int_pend       = {7'b0000000, demo_func_int_pend};
+assign  function_exec_status    = {7'b0000000, demo_func_exec_sts};
+assign  function_ready_for_data = {7'b0000000, demo_func_ready_for_data};
 
 //Submodules
 //Asynchronous Logic

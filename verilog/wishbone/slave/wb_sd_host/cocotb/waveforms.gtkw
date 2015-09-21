@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Sun Sep 20 18:58:38 2015
+[*] Sun Sep 20 23:54:26 2015
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/cocotb/design.vcd"
-[dumpfile_mtime] "Sun Sep 20 18:57:58 2015"
-[dumpfile_size] 1098353
+[dumpfile_mtime] "Sun Sep 20 23:54:24 2015"
+[dumpfile_size] 1035960
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/cocotb/waveforms.gtkw"
-[timestart] 37135
+[timestart] 27910
 [size] 1918 1059
 [pos] -1 -1
-*-6.761126 37520 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-8.546414 29247 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.s1.
 [treeopen] tb_cocotb.s1.sd_stack.
@@ -91,36 +91,42 @@ tb_cocotb.s1.sd_stack.phy.data_byte_req_stb
 -
 @800200
 -SDIO Device
-@800201
 -Command
-@29
+@28
 tb_cocotb.sdio_device.card_controller.v1p8_sel
-@23
+@22
 tb_cocotb.sdio_device.card_controller.voltage_select[23:0]
-@29
+@28
 tb_cocotb.sdio_device.phy.o_cmd_stb
 tb_cocotb.sdio_device.phy.o_cmd_crc_good_stb
-@23
+@22
 tb_cocotb.sdio_device.phy.o_cmd[5:0]
 tb_cocotb.sdio_device.phy.o_cmd_arg[31:0]
-@29
+@28
 tb_cocotb.sdio_device.phy.o_cmd_crc_good_stb
-@23
+@22
 tb_cocotb.sdio_device.card_controller.response_index[3:0]
 tb_cocotb.sdio_device.card_controller.o_rsps[39:0]
 tb_cocotb.sdio_device.card_controller.o_func_addr[17:0]
-@201
+@200
 -
-@29
+@28
 tb_cocotb.sdio_device.card_controller.o_func_activate
 tb_cocotb.sdio_device.card_controller.i_func_finished
-@23
+@22
 tb_cocotb.sdio_device.card_controller.state[3:0]
 tb_cocotb.sdio_device.card_controller.i_func_read_data[7:0]
-@1000201
+@1000200
 -Command
 @800200
 -Data Bus
+@28
+tb_cocotb.sdio_device.data_bus_interconnect.d_activate
+tb_cocotb.sdio_device.data_bus_interconnect.data_activate
+tb_cocotb.sdio_device.data_bus_interconnect.i_activate
+tb_cocotb.sdio_device.data_bus_interconnect.cmd_bus_sel
+@201
+-
 @22
 tb_cocotb.sdio_device.data_bus_interconnect.state[3:0]
 @28
@@ -136,9 +142,21 @@ tb_cocotb.sdio_device.data_bus_interconnect.i_block_mode_flg
 tb_cocotb.sdio_device.data_bus_interconnect.data_count[9:0]
 tb_cocotb.sdio_device.data_bus_interconnect.o_total_data_cnt[12:0]
 @28
+tb_cocotb.sdio_device.data_bus_interconnect.o_data_phy_activate
 tb_cocotb.sdio_device.data_bus_interconnect.i_data_phy_finished
 @22
 tb_cocotb.sdio_device.data_bus_interconnect.total_block_count[9:0]
+@28
+tb_cocotb.sdio_device.data_bus_interconnect.rd_stb
+tb_cocotb.sdio_device.data_bus_interconnect.i_cia_com_rdy
+@22
+tb_cocotb.sdio_device.data_bus_interconnect.i_cia_rd_data[7:0]
+@28
+tb_cocotb.sdio_device.data_bus_interconnect.i_cia_rd_stb
+tb_cocotb.sdio_device.data_bus_interconnect.o_cia_hst_rdy
+tb_cocotb.sdio_device.data_bus_interconnect.o_cia_activate
+@22
+tb_cocotb.sdio_device.cia.state[3:0]
 @200
 -
 @1000200
@@ -167,6 +185,9 @@ tb_cocotb.sdio_device.phy.o_sdio_cmd_out
 tb_cocotb.sdio_device.phy.data_phy.state[3:0]
 @28
 tb_cocotb.sdio_device.phy.data_phy.i_activate
+@22
+tb_cocotb.sdio_device.phy.data_phy.data_count[12:0]
+tb_cocotb.sdio_device.phy.data_phy.o_sdio_data_out[7:0]
 @1000200
 -PHY Data
 @c00200
