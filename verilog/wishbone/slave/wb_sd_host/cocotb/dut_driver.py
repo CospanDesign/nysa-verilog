@@ -178,7 +178,10 @@ class wb_sd_hostDriver(driver.Driver):
     def __init__(self, nysa, urn, debug = False):
         super(wb_sd_hostDriver, self).__init__(nysa, urn, debug)
         self.callback = None
+        self.async_read_mode = False
         self.block_timeout = 0
+        self.byte_count = 0
+        self.block_size = 0
         self.read_data = Array('B')
         self.read_in_progress = False
         size = 2048
@@ -328,6 +331,7 @@ class wb_sd_hostDriver(driver.Driver):
 
     def select_sd_function(self, function_id):
         self.write_register_bit_range(CONTROL, CONTROL_FUNCTION_ADDRESS_HIGH, CONTROL_FUNCTION_ADDRESS_LOW, function_id)
+
 #Responses
     def read_response(self):
         resp = [0, 0, 0, 0, 0]
@@ -511,10 +515,10 @@ class wb_sd_hostDriver(driver.Driver):
             #This seems overly complicated but I chose to add this to exercise the SDIO Device Core
             return self.rw_byte(True, function_id, address, data[0], read_after_write)
 
-        block_size = self.get_block_size(function_id)
+        self.block_size = self.get_block_size(function_id)
 
-        if  block_size == 0 or               \
-            ( len(data) <= block_size and    \
+        if  self.block_size == 0 or               \
+            ( len(data) <= self.block_size and    \
               len(data) <= 512):
 
             #Block mode
@@ -533,10 +537,10 @@ class wb_sd_hostDriver(driver.Driver):
         if byte_count == 1:
             return self.rw_byte(False, function_id, address, [0], False)
 
-        block_size = self.get_block_size(function_id)
+        self.block_size = self.get_block_size(function_id)
 
 
-        if (block_size == 0) or (byte_count < block_size):
+        if (self.block_size == 0) or (byte_count < self.block_size):
             return self.rw_multiple_bytes(write_flag = False,
                                           function_id = function_id,
                                           address = address,
@@ -651,6 +655,8 @@ class wb_sd_hostDriver(driver.Driver):
         if block_size < 1:
             raise SDHostException("Only values between 1 - 2048 allowed: %d not valid" % block_size)
 
+        self.block_size = block_size
+
         address = 0x100 * func_num + 0x10
 
         lower_byte = block_size & 0xFF
@@ -661,6 +667,7 @@ class wb_sd_hostDriver(driver.Driver):
 
     def rw_block(self, write_flag, function_id, address, data, byte_count, fifo_mode, timeout = 0.2):
         print "RW Block"
+        self.byte_count = byte_count
         command_arg = 0
         command_arg |= ((function_id & DATA_FUNC_BITMASK) << DATA_FUNC_INDEX)
         command_arg |= ((address & DATA_ADDR_BITMASK) << DATA_ADDR)
@@ -672,19 +679,19 @@ class wb_sd_hostDriver(driver.Driver):
             print "Increment Address!"
             command_arg |= (1 << DATA_RW_OP_CODE)
 
-        block_size = self.get_block_size(function_id)
+        self.block_size = self.get_block_size(function_id)
 
         if write_flag:
             #Setup the DMA Read or Write Block Size
-            command_arg |= ((len(data) / block_size) & DATA_RW_COUNT_BITMODE)
-            self.dma_writer.set_size(block_size)
+            command_arg |= ((len(data) / self.block_size) & DATA_RW_COUNT_BITMODE)
+            self.dma_writer.set_size(self.block_size)
             command_arg |= (1 << DATA_WRITE_FLAG)
             self.set_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
             self.send_command(CMD_DATA_RW, command_arg)
             print "Initiate Data Transfer (Outbound)"
             #XXX: All these transactions with the control register can be consolodated to one function call
             self.set_register_bit(CONTROL, CONTROL_ENABLE_DMA_WR)
-            self.write_register(SD_DATA_BYTE_COUNT, (len(data) / block_size))
+            self.write_register(SD_DATA_BYTE_COUNT, (len(data) / self.block_size))
             self.set_register_bit(CONTROL, CONTROL_DATA_BLOCK_MODE)
             self.set_register_bit(CONTROL, CONTROL_ENABLE_INTERRUPT)
             self.select_sd_function(function_id)
@@ -704,11 +711,11 @@ class wb_sd_hostDriver(driver.Driver):
             self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_WR)
 
         else:
-            command_arg |= (byte_count / block_size) & DATA_RW_COUNT_BITMODE
+            command_arg |= (byte_count / self.block_size) & DATA_RW_COUNT_BITMODE
             self.clear_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
-            self.dma_reader.set_size(block_size / 4)
+            self.dma_reader.set_size(self.block_size / 4)
             self.set_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
-            self.write_register(SD_DATA_BYTE_COUNT, byte_count / block_size)
+            self.write_register(SD_DATA_BYTE_COUNT, byte_count / self.block_size)
             self.set_register_bit(CONTROL, CONTROL_DATA_BLOCK_MODE)
             self.set_register_bit(CONTROL, CONTROL_ENABLE_INTERRUPT)
             self.set_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
@@ -717,13 +724,16 @@ class wb_sd_hostDriver(driver.Driver):
             self.send_command(CMD_DATA_RW, command_arg)
             self.block_timeout = time.time() + timeout
 
+            self.dma_reader.debug = True
             if self.is_asynchronous_read_mode():
                 print "ASYNCHRONOUS MODE!"
+                self.read_data = Array('B')
                 #Go to asynchronous Read mode
+                self.dma_reader.enable_asynchronous_read(self._read_async_data)
                 return
 
             else:
-                #Asynchronous Read Mode
+                #Synchronous Read Mode
                 self.read_data = Array('B')
                 self.dma_reader.debug = True
                 print "Byte Count: %d" % byte_count
@@ -733,15 +743,12 @@ class wb_sd_hostDriver(driver.Driver):
                 print "Length Read Data: %d" % len(self.read_data)
                 self.dma_reader.debug = False
 
-                #while (time.time() < self.block_timeout) and (self.is_sd_data_busy()):
-                #    print "This should change to an asynchrounous Wait"
-                #    time.sleep(0.01)
-
                 self.clear_register_bit(CONTROL, CONTROL_ENABLE_INTERRUPT)
                 self.clear_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
                 self.clear_register_bit(CONTROL, CONTROL_DATA_BLOCK_MODE)
                 self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
                 return self.read_data
+
 
     def send_single_byte(self, function_id, address, data, read_after_write):
         command_arg = 0
@@ -755,22 +762,25 @@ class wb_sd_hostDriver(driver.Driver):
         return ((self.read_config_byte(CONFIGURE_READ_WAIT_SPRT_ADDR) & CONFIGURE_READ_WAIT_SPRT_BIT) > 0)
 
     def is_asynchronous_read_mode(self):
-        return self.dma_reader.is_asynchronous_mode()
+        return self.async_read_mode
 
-    def enable_async_dma_reader(self, callback, enable):
-        if enable:
-            self.callback = callback
-            self.dma_reader.enable_asynchronous_read(callback)
-        else:
-            self.dma_reader.disable_asynchronous_read()
-            self.callback = None
+    def enable_async_dma_reader(self, enable):
+        self.async_read_mode = enable
 
-    def _async_callback(self):
-        pass
+    def set_async_dma_reader_callback(self, callback):
+        self.callback = callback
 
     def _read_async_data(self):
-        if self.callback is None:
-            return
-        data = self.read_memory(REG_MEM0_BASE, byte_count / 4)
-        self.callback(data)
+        #print "__read_async_data callback!"
+        #self.read_data += self.dma_reader.async_read()
+        self.read_data += self.dma_reader._dangerous_async_read()
+        if len(self.read_data) >= self.byte_count:
+            #print "DONE!"
+            self.dma_reader.disable_asynchronous_read()
+            self.callback(self.read_data)
+            self.clear_register_bit(CONTROL, CONTROL_ENABLE_INTERRUPT)
+            self.clear_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
+            self.clear_register_bit(CONTROL, CONTROL_DATA_BLOCK_MODE)
+            self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
+
 

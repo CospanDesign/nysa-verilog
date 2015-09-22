@@ -41,6 +41,7 @@ input                 i_sd_cmd_dir,
 output                o_sd_cmd_in,
 input                 i_sd_cmd_out,
                       
+input                 i_read_wait,
                       
 input                 i_sd_data_dir,
 output  reg   [7:0]   o_sd_data_in,
@@ -64,9 +65,8 @@ assign  o_out_clk_x2 = clk;
 assign  io_phy_sd_cmd = i_sd_cmd_dir  ? i_sd_cmd_out : 1'hZ;
 assign  o_sd_cmd_in   = io_phy_sd_cmd;
 
-assign  io_phy_sd_data= i_sd_data_dir ? data_out: 8'hZ;
-//assign  o_sd_data_in  = io_phy_sd_data;
-
+assign  io_phy_sd_data= i_read_wait ? {1'bZ, 1'b0, 1'bZ, 1'bZ } :
+                                      i_sd_data_dir ? data_out: 4'hZ;
 
 assign  data_out      = !pos_edge_clk ? { i_sd_data_out[7],
                                           i_sd_data_out[6],

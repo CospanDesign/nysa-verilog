@@ -99,6 +99,7 @@ module sd_host_stack #(
   input                     i_sd_clk,
   input                     i_sd_clk_x2,
 
+  output                    o_read_wait,
   output                    o_sd_cmd_dir,
   input                     i_sd_cmd,
   output                    o_sd_cmd,
@@ -324,7 +325,7 @@ sd_phy_layer #(
   .o_s2h_fifo_stb       (wfifo_stb                ),
   .o_s2h_fifo_data      (wfifo_data               ),
 
-
+  .o_read_wait          (o_read_wait              ),
   .i_sd_clk             (i_sd_clk                 ),
   .i_sd_clk_x2          (i_sd_clk_x2              ),
 

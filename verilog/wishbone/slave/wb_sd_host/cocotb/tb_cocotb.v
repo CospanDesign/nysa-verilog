@@ -44,6 +44,7 @@ reg               r_ih_reset;
 reg               clk;
 reg               r_request_read_wait;
 reg               r_request_interrupt;
+wire              request_read_wait = 0;
 
 //There is a bug in COCOTB when stiumlating a signal, sometimes it can be corrupted if not registered
 always @ (*) r_rst           = rst;
@@ -226,7 +227,8 @@ wire              mem_i_ack;
 wire              mem_i_int;
 
 
-assign  device_interrupt  = w_wbs1_int;
+assign  device_interrupt  = w_wbp_int;
+assign  w_wbs0_int        = 1'b0;
 
 
 //Submodules
@@ -371,26 +373,26 @@ arbiter_2_masters arb0 (
   .rst        (r_rst                ),
 
   //masters
-  .i_m0_we    (mem_o_we             ),
-  .i_m0_stb   (mem_o_stb            ),
-  .i_m0_cyc   (mem_o_cyc            ),
-  .i_m0_sel   (mem_o_sel            ),
-  .i_m0_dat   (mem_o_dat            ),
-  .i_m0_adr   (mem_o_adr            ),
-  .o_m0_dat   (mem_i_dat            ),
-  .o_m0_ack   (mem_i_ack            ),
-  .o_m0_int   (mem_i_int            ),
+  .i_m1_we    (mem_o_we             ),
+  .i_m1_stb   (mem_o_stb            ),
+  .i_m1_cyc   (mem_o_cyc            ),
+  .i_m1_sel   (mem_o_sel            ),
+  .i_m1_dat   (mem_o_dat            ),
+  .i_m1_adr   (mem_o_adr            ),
+  .o_m1_dat   (mem_i_dat            ),
+  .o_m1_ack   (mem_i_ack            ),
+  .o_m1_int   (mem_i_int            ),
 
 
-  .i_m1_we    (w_sm0_i_wbs_we       ),
-  .i_m1_stb   (w_sm0_i_wbs_stb      ),
-  .i_m1_cyc   (w_sm0_i_wbs_cyc      ),
-  .i_m1_sel   (w_sm0_i_wbs_sel      ),
-  .i_m1_dat   (w_sm0_i_wbs_dat      ),
-  .i_m1_adr   (w_sm0_i_wbs_adr      ),
-  .o_m1_dat   (w_sm0_o_wbs_dat      ),
-  .o_m1_ack   (w_sm0_o_wbs_ack      ),
-  .o_m1_int   (w_sm0_o_wbs_int      ),
+  .i_m0_we    (w_sm0_i_wbs_we       ),
+  .i_m0_stb   (w_sm0_i_wbs_stb      ),
+  .i_m0_cyc   (w_sm0_i_wbs_cyc    || r_request_read_wait             ),
+  .i_m0_sel   (w_sm0_i_wbs_sel      ),
+  .i_m0_dat   (w_sm0_i_wbs_dat      ),
+  .i_m0_adr   (w_sm0_i_wbs_adr      ),
+  .o_m0_dat   (w_sm0_o_wbs_dat      ),
+  .o_m0_ack   (w_sm0_o_wbs_ack      ),
+  .o_m0_int   (w_sm0_o_wbs_int      ),
 
   //slave
   .o_s_we     (w_arb0_i_wbs_we      ),

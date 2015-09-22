@@ -77,8 +77,7 @@ module sd_phy_layer #(
   input                     i_sd_clk,
   input                     i_sd_clk_x2,
 
-
-  //output                    o_sd_cmd_dir,
+  output  reg               o_read_wait,
   output  reg               o_sd_cmd_dir,
   input                     i_sd_cmd,
   output  reg               o_sd_cmd,
@@ -227,6 +226,7 @@ always @ (posedge i_sd_clk) begin
   //De-assert Strobes
   o_h2s_fifo_stb                      <=  0;
   o_s2h_fifo_stb                      <=  0;
+  o_read_wait                         <=  0;
 
   if (rst) begin
     count                             <=  0;
@@ -284,6 +284,9 @@ always @ (posedge i_sd_clk) begin
           else begin
             o_s2h_fifo_activate[1]<=  1;
           end
+        end
+        if (i_s2h_fifo_ready == 0) begin
+          o_read_wait             <=  1;
         end
         if (o_s2h_fifo_activate > 0) begin
           //Got a reference to a FIFO

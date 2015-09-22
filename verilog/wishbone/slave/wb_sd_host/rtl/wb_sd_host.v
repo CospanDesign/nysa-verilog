@@ -275,6 +275,7 @@ wire                    sd_cmd_dir;
 wire                    sd_cmd_in;
 wire                    sd_cmd_out;
 
+wire                    read_wait;
 wire                    sd_data_dir;
 wire        [7:0]       sd_data_out;
 wire        [7:0]       sd_data_in;
@@ -309,6 +310,8 @@ sd_host_platform_cocotb cocotb_platform(
   .o_locked             (pll_locked               ),
   .o_out_clk            (sd_clk                   ),
   .o_out_clk_x2         (sd_clk_x2                ),
+
+  .i_read_wait          (read_wait                ),
 
   .i_sd_cmd_dir         (sd_cmd_dir               ),
   .o_sd_cmd_in          (sd_cmd_in                ),
@@ -397,6 +400,7 @@ sd_host_stack #(
   .i_sd_clk             (sd_clk                   ),
   .i_sd_clk_x2          (sd_clk_x2                ),
 
+  .o_read_wait          (read_wait                ),
   .o_sd_cmd_dir         (sd_cmd_dir               ),
   .i_sd_cmd             (sd_cmd_in                ),
   .o_sd_cmd             (sd_cmd_out               ),
@@ -798,8 +802,8 @@ always @ (posedge clk) begin
   if (rst) begin
     w_int <=  0;
   end
-  //Memory Read Interface
-  else if (w_mem_read_enable) begin
+  //Write Memory Controller
+  else if (w_mem_write_enable) begin
     if (!w_m2p_0_empty && !w_m2p_1_empty) begin
       w_int <=  0;
     end
@@ -812,8 +816,8 @@ always @ (posedge clk) begin
       w_int <=  1;
     end
   end
-  //Write Memory Controller
-  else if (w_mem_write_enable) begin
+  //Memory Read Interface
+  else if (w_mem_read_enable) begin
     if (i_wbs_stb) begin
       w_int         <=  0;
     end
