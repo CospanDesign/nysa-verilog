@@ -299,6 +299,7 @@ reg         [23:0]      f7_block_size;
 reg         [23:0]      mem_block_size;
 
 reg         [31:0]      block_sleep_count;
+wire                    sd_int_detected;
 
 //Possibly replace with a generate statement using an input parameter
 `ifdef COCOTB_SIMULATION
@@ -343,6 +344,7 @@ sd_host_stack #(
   .o_sd_ready           (sd_ready                 ),
   .i_card_detect        (sd_card_detect           ),
   .i_timeout            (sd_timeout               ),
+  .o_sd_int_detected    (sd_int_detected          ),
 
   .o_error_flag         (sd_error_flag            ),  //If an SD Error occured this flag
                                                       // will be high when sd_cmd_ack_stb goes high
@@ -830,7 +832,12 @@ always @ (posedge clk) begin
   end
   else begin
     //if we're not enable de-assert interrupt
-    w_int <=  0;
+    if (sd_int_detected) begin
+      w_int         <=  1;
+    end
+    else begin
+      w_int         <=  0;
+    end
   end
 end
 

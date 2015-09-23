@@ -40,6 +40,7 @@ module sd_phy_layer #(
 )(
 //  input                     clk,
   input                     rst,
+  output  reg               o_sd_int_detected,
 
   //Coniguration
 
@@ -239,9 +240,19 @@ always @ (posedge i_sd_clk) begin
     data_txrx_en                      <=  0;
     o_h2s_fifo_activate               <=  0;
     o_s2h_fifo_activate               <=  0;
+    o_sd_int_detected                 <=  0;
   end
   else begin
-    //Write FIFO
+
+    if (!i_data_txrx_activate) begin
+      if (!i_sd_data[1]) begin
+        o_sd_int_detected   <=  1;
+      end
+    end
+    else begin
+      o_sd_int_detected     <=  0;
+    end
+
     case (data_state)
       IDLE: begin
         o_data_txrx_finished          <=  0;

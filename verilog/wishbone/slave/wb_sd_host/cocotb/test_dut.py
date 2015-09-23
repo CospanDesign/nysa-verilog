@@ -9,13 +9,12 @@ from cocotb.clock import Clock
 import time
 from array import array as Array
 from dut_driver import wb_sd_hostDriver
+from dut_driver import SDHostException
 import json
 from nysa.tools.nysa_paths import get_verilog_path
 
 SDIO_PATH = "path to sdio-device interface"
-
 SIM_CONFIG = "sim_config.json"
-
 
 CLK_PERIOD = 10
 
@@ -27,16 +26,7 @@ def setup_dut(dut):
     cocotb.fork(Clock(dut.in_clk, CLK_PERIOD).start())
     dut.request_interrupt =   0
 
-@cocotb.coroutine
-def wait_ready(nysa, dut):
-
-    #while not dut.hd_ready.value.get_value():
-    #    yield(nysa.wait_clocks(1))
-
-    #yield(nysa.wait_clocks(100))
-    pass
-
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def first_test(dut):
     """
     Description:
@@ -117,7 +107,7 @@ def send_simple_command(dut):
 
     yield (nysa.wait_clocks(20))
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def send_byte_test(dut):
     """
     Description:
@@ -157,7 +147,7 @@ def send_byte_test(dut):
 
 
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def receive_byte_test(dut):
     """
     Description:
@@ -203,7 +193,7 @@ def receive_byte_test(dut):
     yield (nysa.wait_clocks(1000))
 
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def small_multi_byte_data_write(dut):
     """
     Description:
@@ -254,7 +244,7 @@ def small_multi_byte_data_write(dut):
     yield (nysa.wait_clocks(1000))
 
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def small_multi_byte_data_read(dut):
     """
     Description:
@@ -337,7 +327,7 @@ def data_block_write(dut):
     yield (nysa.wait_clocks(1000))
 
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def data_block_read(dut):
     """
     Description:
@@ -381,7 +371,7 @@ def data_block_read(dut):
 
 
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def data_async_block_read(dut):
     """
     Description:
@@ -430,7 +420,7 @@ def data_async_block_read(dut):
     print "Finished..."
 
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def data_async_block_read_with_read_wait(dut):
     """
     Description:
@@ -521,17 +511,26 @@ def detect_interrupt(dut):
     yield cocotb.external(driver.cmd_get_relative_card_address)()
     yield cocotb.external(driver.cmd_enable_card)(True)
 
+    #Configure an interrupt callback
     driver.set_interrupt_callback(interrupt_callback)
 
+    #Enable Function
     yield cocotb.external(driver.enable_function)(FUNCTION)
+    #Enable Interrupts on Device
     yield cocotb.external(driver.enable_function_interrupt)(FUNCTION)
     pending = yield cocotb.external(driver.is_interrupt_pending)(FUNCTION)
     print "Is Interrupt Pending? %s" % pending
 
-    #Configure an interrupt callback
-    #Enable Interrupts on Device
+    #Enable Interrupt on controller
+    yield cocotb.external(driver.enable_interrupt)(True)
+    yield (nysa.wait_clocks(100))
     #Generate an interrupt
+    dut.request_interrupt = 1
     #Detect an interrupt from the device
+
+
+    pending = yield cocotb.external(driver.is_interrupt_pending)(FUNCTION)
+    print "Is Interrupt Pending? %s" % pending
 
     yield (nysa.wait_clocks(3000))
     print "Finished..."

@@ -42,6 +42,7 @@ module sd_host_stack #(
   input                     i_card_detect,
   input       [15:0]        i_timeout,
   input                     i_crc_en_flag,
+  output                    o_sd_int_detected,
 
   output                    o_error_flag,
   output      [7:0]         o_error,
@@ -289,9 +290,9 @@ sd_phy_layer #(
   .SD_MODE              (SD_MODE                  ),
   .FOUR_BIT_DATA        (FOUR_BIT_DATA            ),
   .DDR_EN               (DDR_EN                   )
-
 )phy (
   .rst                  (rst  || !i_sd_pll_locked ),
+  .o_sd_int_detected    (o_sd_int_detected        ),
 
   //Coniguration
   //Command/Response Interface
@@ -302,7 +303,6 @@ sd_phy_layer #(
   .o_rsp                (phy_rsp                  ),
   .i_rsp_len            (phy_rsp_len              ),
   .o_rsp_finished_en    (phy_rsp_finished_en      ),
-
 
   //Data Control
   .i_data_txrx_activate (data_txrx_activate       ),
@@ -336,7 +336,6 @@ sd_phy_layer #(
   .o_sd_data_dir        (o_sd_data_dir            ),
   .i_sd_data            (i_sd_data                ),
   .o_sd_data            (o_sd_data                )
-
 );
 
 

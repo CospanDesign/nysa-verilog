@@ -624,7 +624,7 @@ class wb_sd_hostDriver(driver.Driver):
             #Disable the DMA Write Flag
             self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
             self.set_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
-            return self.read_memory(REG_MEM0_BASE, byte_count / 4)
+            return self.read_memory(REG_MEM_0_BASE, byte_count / 4)
 
     def set_function_block_size(self, func_num, block_size):
         '''
@@ -751,7 +751,6 @@ class wb_sd_hostDriver(driver.Driver):
                 self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
                 return self.read_data
 
-
     def send_single_byte(self, function_id, address, data, read_after_write):
         command_arg = 0
         write_flag = DATA_WRITE_FLAG
@@ -793,9 +792,7 @@ class wb_sd_hostDriver(driver.Driver):
 
     def enable_function(self, function_id):
         data = 0
-        '''
         data = self.read_config_byte(IO_FUNC_ENABLE_ADDR)
-        '''
         if function_id:
             data |= 1 << function_id
         else:
@@ -812,9 +809,7 @@ class wb_sd_hostDriver(driver.Driver):
 
     def enable_function_interrupt(self, function_id):
         data = 0
-        '''
         data = self.read_config_byte(INT_ENABLE_ADDR)
-        '''
         if function_id:
             data |= 1 << function_id
         else:
@@ -826,4 +821,10 @@ class wb_sd_hostDriver(driver.Driver):
 
     def get_interrupt_pending(self):
         return self.read_config_byte(INT_PENDING_ADDR)
+
+    def enable_interrupt(self, enable):
+        self.enable_register_bit(CONTROL, CONTROL_ENABLE_INTERRUPT, enable)
+
+    def is_interrupt_enabled(self):
+        return self.is_register_bit_set(CONTROL, CONTROL_ENABLE_ITNERRUPT)
 

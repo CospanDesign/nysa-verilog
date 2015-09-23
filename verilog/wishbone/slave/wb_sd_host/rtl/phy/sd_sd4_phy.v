@@ -176,7 +176,7 @@ assign  gen_crc3  = gen_crc[3];
 
 
 
-assign  o_sd_data_dir = i_write_flag;
+assign  o_sd_data_dir = i_write_flag & i_en;
 
 /*
 assign  in_remap   = { i_sd_data[0],

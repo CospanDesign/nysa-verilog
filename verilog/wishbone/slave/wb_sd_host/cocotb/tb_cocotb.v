@@ -108,8 +108,6 @@ wire    [15:0]    fbr7_block_size;
 wire    [7:0]     function_enable;
 wire    [7:0]     function_ready;
 wire    [2:0]     function_abort;
-wire    [7:0]     function_int_en;
-wire    [7:0]     function_int_pend;
 wire    [7:0]     function_exec_status;
 wire    [7:0]     function_ready_for_data;
 
@@ -118,7 +116,7 @@ wire              function_inc_addr;
 wire              function_bock_mode;
 wire              function_finished;
 
-reg     [7:0]     function_interrupt;
+wire    [7:0]     function_interrupt;
 wire    [3:0]     func_num;
 wire              func_write_flag;
 wire              func_rd_after_wr;
@@ -480,13 +478,9 @@ sdio_device_stack sdio_device (
   .o_fbr7_pwr_mode      (fbr7_pwr_mode        ),
   .o_fbr7_block_size    (fbr7_block_size      ),
 
-
-
   .o_func_enable        (function_enable      ),
   .i_func_ready         (function_ready       ),
   .o_func_abort         (function_abort       ),
-  .o_func_int_enable    (function_int_en      ),
-  .i_func_int_pending   (function_int_pend    ),
   .i_func_exec_status   (function_exec_status ),
   .i_func_ready_for_data(function_ready_for_data  ),
 
@@ -519,8 +513,6 @@ demo_function demo (
   .i_enable             (function_enable[0]  ),
   .o_ready              (demo_func_ready     ),
   .i_abort              (demo_func_abort     ),
-  .i_interrupt_enable   (function_int_en[0]  ),
-  .o_interrupt_pending  (demo_func_int_pend  ),
   .o_busy               (demo_func_busy      ),
   .o_execution_status   (demo_func_exec_sts  ),
   .o_ready_for_data     (demo_func_ready_for_data),
@@ -565,10 +557,10 @@ demo_function demo (
 assign  w_wbs0_ack              = 0;
 assign  w_wbs0_dat_o            = 0;
 assign  start                   = 1;
-assign  function_ready          = {7'b0000000, demo_func_ready};
-assign  function_int_pend       = {7'b0000000, demo_func_int_pend};
-assign  function_exec_status    = {7'b0000000, demo_func_exec_sts};
-assign  function_ready_for_data = {7'b0000000, demo_func_ready_for_data};
+assign  function_ready          = {6'b000000, demo_func_ready,          1'b0};
+assign  function_exec_status    = {6'b000000, demo_func_exec_sts,       1'b0};
+assign  function_ready_for_data = {6'b000000, demo_func_ready_for_data, 1'b0};
+assign  function_interrupt      = {6'b000000, demo_func_interrupt,      1'b0};
 
 //Submodules
 //Asynchronous Logic
