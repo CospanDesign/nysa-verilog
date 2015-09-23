@@ -136,6 +136,11 @@ R6_STS_CRC_COMM_ERR             = 15
 R6_STS_ILLEGAL_CMD              = 13
 R6_STS_ERROR                    = 12
 
+
+IO_FUNC_ENABLE_ADDR             = 0x02
+INT_ENABLE_ADDR                 = 0x04
+INT_PENDING_ADDR                = 0x05
+
 RESPONSE_DICT = {CMD_PHY_MODE           : 1,
                  CMD_SEND_RELATIVE_ADDR : 6,
                  CMD_OP_COND            : 4,
@@ -144,12 +149,8 @@ RESPONSE_DICT = {CMD_PHY_MODE           : 1,
                  CMD_SINGLE_DATA_RW     : 5,
                  CMD_DATA_RW            : 5}
 
-
-
-
 class SDHostException(Exception):
     pass
-
 
 class wb_sd_hostDriver(driver.Driver):
 
@@ -157,7 +158,6 @@ class wb_sd_hostDriver(driver.Driver):
 
         Communication with a DutDriver wb_sd_host Core
     """
-
 
     @staticmethod
     def get_abi_class():
@@ -177,7 +177,8 @@ class wb_sd_hostDriver(driver.Driver):
 
     def __init__(self, nysa, urn, debug = False):
         super(wb_sd_hostDriver, self).__init__(nysa, urn, debug)
-        self.callback = None
+        self.async_read_callback= None
+        self.interrupt_callback = None
         self.async_read_mode = False
         self.block_timeout = 0
         self.byte_count = 0
@@ -265,6 +266,7 @@ class wb_sd_hostDriver(driver.Driver):
         self.set_voltage_range(2.0, 3.6)
         self.relative_card_address = 0x00
         self.inactive = False
+        self.register_interrupt_callback(self._callback)
 
 #Low Level Functions
     def set_control(self, control):
@@ -768,19 +770,60 @@ class wb_sd_hostDriver(driver.Driver):
         self.async_read_mode = enable
 
     def set_async_dma_reader_callback(self, callback):
-        self.callback = callback
+        self.async_read_callback = callback
+
+    def _callback(self):
+        if self.is_asynchronous_read_mode():
+            #No Interrupt during block read
+            return
+        if self.interrupt_callback is not None:
+            self.interrupt_callback()
 
     def _read_async_data(self):
-        #print "__read_async_data callback!"
         #self.read_data += self.dma_reader.async_read()
         self.read_data += self.dma_reader._dangerous_async_read()
         if len(self.read_data) >= self.byte_count:
             #print "DONE!"
             self.dma_reader.disable_asynchronous_read()
-            self.callback(self.read_data)
+            self.async_read_callback(self.read_data)
             self.clear_register_bit(CONTROL, CONTROL_ENABLE_INTERRUPT)
             self.clear_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
             self.clear_register_bit(CONTROL, CONTROL_DATA_BLOCK_MODE)
             self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
 
+    def enable_function(self, function_id):
+        data = 0
+        '''
+        data = self.read_config_byte(IO_FUNC_ENABLE_ADDR)
+        '''
+        if function_id:
+            data |= 1 << function_id
+        else:
+            data &= ~(1 << function_id)
+
+        self.write_config_byte(IO_FUNC_ENABLE_ADDR, data)
+
+    def set_interrupt_callback(self, callback):
+        self.interrupt_callback = callback
+
+    def clear_interrupt_callback(self):
+        print "Interrupt callback!"
+        self.interrupt_callback = None
+
+    def enable_function_interrupt(self, function_id):
+        data = 0
+        '''
+        data = self.read_config_byte(INT_ENABLE_ADDR)
+        '''
+        if function_id:
+            data |= 1 << function_id
+        else:
+            data &= ~(1 << function_id)
+        self.write_config_byte(INT_ENABLE_ADDR, data)
+
+    def is_interrupt_pending(self, function_id):
+        return ((self.read_config_byte(INT_PENDING_ADDR) & (1 << function_id)) > 0)
+
+    def get_interrupt_pending(self):
+        return self.read_config_byte(INT_PENDING_ADDR)
 

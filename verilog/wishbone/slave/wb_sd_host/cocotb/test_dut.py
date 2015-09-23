@@ -430,7 +430,7 @@ def data_async_block_read(dut):
     print "Finished..."
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def data_async_block_read_with_read_wait(dut):
     """
     Description:
@@ -485,9 +485,63 @@ def data_async_block_read_with_read_wait(dut):
     print "Finished..."
 
 
+@cocotb.test(skip = False)
+def detect_interrupt(dut):
+    """
+    Description:
+        Detect an interrupt
+
+    Test ID: 10
+
+    Expected Results:
+        Block Transfer (Read)
+    """
+    dut.test_id = 10
+
+    FUNCTION = 1
+    BLOCK_SIZE = 0x08
+    READ_SIZE = 0x18
+
+    SDIO_PATH = get_verilog_path("sdio-device")
+    sdio_config = os.path.join(SDIO_PATH, "sdio_configuration.json")
+    config = None
+    with open (sdio_config, "r") as f:
+        dut.log.warning("Run %s before running this function" % os.path.join(SDIO_PATH, "tools", "generate_config.py"))
+        config = json.load(f)
+
+    nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
+    setup_dut(dut)
+    yield(nysa.reset())
+    nysa.read_sdb()
+    yield (nysa.wait_clocks(10))
+    driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    #Enable SDIO
+    yield cocotb.external(driver.enable_sd_host)(True)
+    yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
+    yield cocotb.external(driver.cmd_get_relative_card_address)()
+    yield cocotb.external(driver.cmd_enable_card)(True)
+
+    driver.set_interrupt_callback(interrupt_callback)
+
+    yield cocotb.external(driver.enable_function)(FUNCTION)
+    yield cocotb.external(driver.enable_function_interrupt)(FUNCTION)
+    pending = yield cocotb.external(driver.is_interrupt_pending)(FUNCTION)
+    print "Is Interrupt Pending? %s" % pending
+
+    #Configure an interrupt callback
+    #Enable Interrupts on Device
+    #Generate an interrupt
+    #Detect an interrupt from the device
+
+    yield (nysa.wait_clocks(3000))
+    print "Finished..."
+
+
+def interrupt_callback():
+    print "INTERRRRUUUUPPPPTTTT CALLLLLLBACKKKKK!!!!"
+
 def dma_read_callback(data):
     print "Data is ready!: %s" % print_hex_array(data)
-
 
 def print_hex_array(a):
     s = None
