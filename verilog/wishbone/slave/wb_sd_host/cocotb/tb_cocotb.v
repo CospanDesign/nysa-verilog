@@ -107,27 +107,28 @@ wire    [15:0]    fbr7_block_size;
 
 wire    [7:0]     function_enable;
 wire    [7:0]     function_ready;
-wire    [2:0]     function_abort;
+wire    [2:0]     function_abort_stb;
 wire    [7:0]     function_exec_status;
 wire    [7:0]     function_ready_for_data;
 
-wire              function_activate;
 wire              function_inc_addr;
 wire              function_bock_mode;
-wire              function_finished;
+
+wire              func_wr_stb   [0:8];
+wire    [7:0]     func_wr_data  [0:8];
+wire              func_rd_stb   [0:8];
+wire    [7:0]     func_rd_data  [0:8];
+wire              func_hst_rdy  [0:8];
+wire              func_com_rdy  [0:8];
+wire              func_activate [0:8];
 
 wire    [7:0]     function_interrupt;
+wire              func_inc_addr;
 wire    [3:0]     func_num;
 wire              func_write_flag;
 wire              func_rd_after_wr;
-wire    [7:0]     func_write_data;
-wire    [7:0]     func_read_data;
-wire              func_data_rdy;
-wire              func_wr_data_stb;
-wire              func_host_rdy;
 wire    [17:0]    func_addr;
 wire    [12:0]    func_data_count;
-wire              func_rd_data_stb;
 wire              func_block_mode;
 
 
@@ -136,17 +137,9 @@ wire              o_read_wait;
 wire              o_interrupt;
 
 wire              demo_func_ready;
-wire              demo_func_abort;
 wire              demo_func_int_pend;
 wire              demo_func_busy;
 wire              demo_func_exec_sts;
-
-wire              demo_func_activate;
-wire              demo_func_finished;
-wire              demo_func_inc_addr;
-wire              demo_func_block_mode;
-
-
 
 //wishbone signals
 wire              w_wbp_we;
@@ -231,46 +224,46 @@ assign  w_wbs0_int        = 1'b0;
 
 //Submodules
 wishbone_master wm (
-  .clk            (clk            ),
-  .rst            (r_rst          ),
+  .clk            (clk              ),
+  .rst            (r_rst            ),
 
-  .i_ih_rst       (r_ih_reset     ),
+  .i_ih_rst       (r_ih_reset       ),
 
-  .i_ready        (r_in_ready     ),
-  .i_command      (r_in_command   ),
-  .i_address      (r_in_address   ),
-  .i_data         (r_in_data      ),
-  .i_data_count   (r_in_data_count),
-  .o_master_ready (master_ready   ),
+  .i_ready        (r_in_ready       ),
+  .i_command      (r_in_command     ),
+  .i_address      (r_in_address     ),
+  .i_data         (r_in_data        ),
+  .i_data_count   (r_in_data_count  ),
+  .o_master_ready (master_ready     ),
 
-  .i_out_ready    (r_out_ready    ),
-  .o_en           (out_en         ),
-  .o_status       (out_status     ),
-  .o_address      (out_address    ),
-  .o_data         (out_data       ),
-  .o_data_count   (out_data_count ),
+  .i_out_ready    (r_out_ready      ),
+  .o_en           (out_en           ),
+  .o_status       (out_status       ),
+  .o_address      (out_address      ),
+  .o_data         (out_data         ),
+  .o_data_count   (out_data_count   ),
 
-  .o_per_we       (w_wbp_we       ),
-  .o_per_adr      (w_wbp_adr      ),
-  .o_per_dat      (w_wbp_dat_i    ),
-  .i_per_dat      (w_wbp_dat_o    ),
-  .o_per_stb      (w_wbp_stb      ),
-  .o_per_cyc      (w_wbp_cyc      ),
-  .o_per_msk      (w_wbp_msk      ),
-  .o_per_sel      (w_wbp_sel      ),
-  .i_per_ack      (w_wbp_ack      ),
-  .i_per_int      (w_wbp_int      ),
+  .o_per_we       (w_wbp_we         ),
+  .o_per_adr      (w_wbp_adr        ),
+  .o_per_dat      (w_wbp_dat_i      ),
+  .i_per_dat      (w_wbp_dat_o      ),
+  .o_per_stb      (w_wbp_stb        ),
+  .o_per_cyc      (w_wbp_cyc        ),
+  .o_per_msk      (w_wbp_msk        ),
+  .o_per_sel      (w_wbp_sel        ),
+  .i_per_ack      (w_wbp_ack        ),
+  .i_per_int      (w_wbp_int        ),
 
   //memory interconnect signals
-  .o_mem_we       (w_mem_we_o     ),
-  .o_mem_adr      (w_mem_adr_o    ),
-  .o_mem_dat      (w_mem_dat_o    ),
-  .i_mem_dat      (w_mem_dat_i    ),
-  .o_mem_stb      (w_mem_stb_o    ),
-  .o_mem_cyc      (w_mem_cyc_o    ),
-  .o_mem_sel      (w_mem_sel_o    ),
-  .i_mem_ack      (w_mem_ack_i    ),
-  .i_mem_int      (w_mem_int_i    )
+  .o_mem_we       (w_mem_we_o       ),
+  .o_mem_adr      (w_mem_adr_o      ),
+  .o_mem_dat      (w_mem_dat_o      ),
+  .i_mem_dat      (w_mem_dat_i      ),
+  .o_mem_stb      (w_mem_stb_o      ),
+  .o_mem_cyc      (w_mem_cyc_o      ),
+  .o_mem_sel      (w_mem_sel_o      ),
+  .i_mem_ack      (w_mem_ack_i      ),
+  .i_mem_int      (w_mem_int_i      )
 );
 
 wishbone_mem_interconnect wmi (
@@ -287,7 +280,6 @@ wishbone_mem_interconnect wmi (
   .o_m_dat    (w_mem_dat_i          ),
   .i_m_adr    (w_mem_adr_o          ),
   .o_m_int    (w_mem_int_i          ),
-
 
   //slave 0
   .o_s0_we    (w_sm0_i_wbs_we       ),
@@ -384,7 +376,7 @@ arbiter_2_masters arb0 (
 
   .i_m0_we    (w_sm0_i_wbs_we       ),
   .i_m0_stb   (w_sm0_i_wbs_stb      ),
-  .i_m0_cyc   (w_sm0_i_wbs_cyc    || r_request_read_wait             ),
+  .i_m0_cyc   (w_sm0_i_wbs_cyc    || r_request_read_wait             ), //Artificially block
   .i_m0_sel   (w_sm0_i_wbs_sel      ),
   .i_m0_dat   (w_sm0_i_wbs_dat      ),
   .i_m0_adr   (w_sm0_i_wbs_adr      ),
@@ -424,10 +416,10 @@ wb_bram #(
 
 
 sd_dev_platform_cocotb sdio_dev_plat(
-  .clk            (clk            ),
-  .rst            (r_rst          ),
+  .clk            (clk              ),
+  .rst            (r_rst            ),
 
-  .o_locked       (dev_pll_locked ),
+  .o_locked       (dev_pll_locked   ),
 
   .i_sd_cmd_dir   (dev_sd_cmd_dir   ),
   .o_sd_cmd_in    (dev_sd_cmd_in    ),
@@ -437,9 +429,9 @@ sd_dev_platform_cocotb sdio_dev_plat(
   .o_sd_data_in   (dev_sd_data_in   ),
   .i_sd_data_out  (dev_sd_data_out  ),
 
-  .i_phy_clk      (sd_clk         ),
-  .io_phy_sd_cmd  (phy_sd_cmd     ),
-  .io_phy_sd_data (phy_sd_data    )
+  .i_phy_clk      (sd_clk           ),
+  .io_phy_sd_cmd  (phy_sd_cmd       ),
+  .io_phy_sd_data (phy_sd_data      )
 );
 
 //TODO ADAPT sdio_device to use the platform based phy_sd_cmd and phy_sd_data
@@ -478,14 +470,89 @@ sdio_device_stack sdio_device (
   .o_fbr7_pwr_mode      (fbr7_pwr_mode        ),
   .o_fbr7_block_size    (fbr7_block_size      ),
 
+  //Data Interface
+
+  //Function 1 Interface
+  .o_func1_wr_stb       (func_wr_stb[1]       ),
+  .o_func1_wr_data      (func_wr_data[1]      ),
+  .i_func1_rd_stb       (func_rd_stb[1]       ),
+  .i_func1_rd_data      (func_rd_data[1]      ),
+  .o_func1_hst_rdy      (func_hst_rdy[1]      ),
+  .i_func1_com_rdy      (func_com_rdy[1]      ),
+  .o_func1_activate     (func_activate[1]     ),
+
+  //Function 2 Interface
+  .o_func2_wr_stb       (func_wr_stb[2]       ),
+  .o_func2_wr_data      (func_wr_data[2]      ),
+  .i_func2_rd_stb       (func_rd_stb[2]       ),
+  .i_func2_rd_data      (func_rd_data[2]      ),
+  .o_func2_hst_rdy      (func_hst_rdy[2]      ),
+  .i_func2_com_rdy      (func_com_rdy[2]      ),
+  .o_func2_activate     (func_activate[2]     ),
+
+  //Function 3 Interface
+  .o_func3_wr_stb       (func_wr_stb[3]       ),
+  .o_func3_wr_data      (func_wr_data[3]      ),
+  .i_func3_rd_stb       (func_rd_stb[3]       ),
+  .i_func3_rd_data      (func_rd_data[3]      ),
+  .o_func3_hst_rdy      (func_hst_rdy[3]      ),
+  .i_func3_com_rdy      (func_com_rdy[3]      ),
+  .o_func3_activate     (func_activate[3]     ),
+
+  //Function 4 Interface
+  .o_func4_wr_stb       (func_wr_stb[4]       ),
+  .o_func4_wr_data      (func_wr_data[4]      ),
+  .i_func4_rd_stb       (func_rd_stb[4]       ),
+  .i_func4_rd_data      (func_rd_data[4]      ),
+  .o_func4_hst_rdy      (func_hst_rdy[4]      ),
+  .i_func4_com_rdy      (func_com_rdy[4]      ),
+  .o_func4_activate     (func_activate[4]     ),
+
+  //Function 5 Interface
+  .o_func5_wr_stb       (func_wr_stb[5]       ),
+  .o_func5_wr_data      (func_wr_data[5]      ),
+  .i_func5_rd_stb       (func_rd_stb[5]       ),
+  .i_func5_rd_data      (func_rd_data[5]      ),
+  .o_func5_hst_rdy      (func_hst_rdy[5]      ),
+  .i_func5_com_rdy      (func_com_rdy[5]      ),
+  .o_func5_activate     (func_activate[5]     ),
+
+  //Function 6 Interface
+  .o_func6_wr_stb       (func_wr_stb[6]       ),
+  .o_func6_wr_data      (func_wr_data[6]      ),
+  .i_func6_rd_stb       (func_rd_stb[6]       ),
+  .i_func6_rd_data      (func_rd_data[6]      ),
+  .o_func6_hst_rdy      (func_hst_rdy[6]      ),
+  .i_func6_com_rdy      (func_com_rdy[6]      ),
+  .o_func6_activate     (func_activate[6]     ),
+
+  //Function 7 Interface
+  .o_func7_wr_stb       (func_wr_stb[7]       ),
+  .o_func7_wr_data      (func_wr_data[7]      ),
+  .i_func7_rd_stb       (func_rd_stb[7]       ),
+  .i_func7_rd_data      (func_rd_data[7]      ),
+  .o_func7_hst_rdy      (func_hst_rdy[7]      ),
+  .i_func7_com_rdy      (func_com_rdy[7]      ),
+  .o_func7_activate     (func_activate[7]     ),
+
+  //Memory Interface
+  .o_mem_wr_stb         (func_wr_stb[8]       ),
+  .o_mem_wr_data        (func_wr_data[8]      ),
+  .i_mem_rd_stb         (func_rd_stb[8]       ),
+  .i_mem_rd_data        (func_rd_data[8]      ),
+  .o_mem_hst_rdy        (func_hst_rdy[8]      ),
+  .i_mem_com_rdy        (func_com_rdy[8]      ),
+  .o_mem_activate       (func_activate[8]     ),
+
+
   .o_func_enable        (function_enable      ),
   .i_func_ready         (function_ready       ),
-  .o_func_abort         (function_abort       ),
+  .o_func_abort_stb     (function_abort_stb   ),
   .i_func_exec_status   (function_exec_status ),
   .i_func_ready_for_data(function_ready_for_data  ),
 
-  .o_func_inc_addr      (o_func_inc_addr      ),
-
+  .o_func_inc_addr      (func_inc_addr        ),
+  .o_func_write_flag    (func_write_flag      ),
   .o_func_num           (func_num             ),
   .o_func_rd_after_wr   (func_rd_after_wr     ),
   .o_func_addr          (func_addr            ),
@@ -510,49 +577,36 @@ demo_function demo (
 
   .i_csa_en             (fbr1_csa_en         ),
   .i_block_size         (fbr1_block_size     ),
-  .i_enable             (function_enable[0]  ),
+  .i_enable             (function_enable[1]  ),
   .o_ready              (demo_func_ready     ),
-  .i_abort              (demo_func_abort     ),
+  .i_abort              (function_abort_stb[1]),
   .o_busy               (demo_func_busy      ),
   .o_execution_status   (demo_func_exec_sts  ),
   .o_ready_for_data     (demo_func_ready_for_data),
 
-  .i_activate           (demo_func_activate  ),
+  .i_activate           (func_activate[1]    ),
   .o_finished           (demo_func_finished  ),
   .i_inc_addr           (demo_func_inc_addr  ),
   .i_block_mode         (demo_func_block_mode),
 
-
-/*
   .i_write_flag         (func_write_flag     ),
   .i_rd_after_wr        (func_rd_after_wr    ),
   .i_addr               (func_addr           ),
-  .i_write_data         (func_write_data     ),
-  .o_read_data          (func_read_data      ),
-  .o_data_rdy           (func_data_rdy       ),
-  .i_data_stb           (func_wr_data_stb    ),
-  .i_host_rdy           (func_host_rdy       ),
+  .i_write_data         (func_wr_data[1]     ),
+  .o_read_data          (func_rd_data[1]     ),
+  .o_data_rdy           (func_com_rdy[1]     ),
+  .i_data_stb           (func_wr_stb[1]      ),
+  .i_host_rdy           (func_hst_rdy[1]     ),
   .i_data_count         (func_data_count     ),
-  .o_data_stb           (func_rd_data_stb    ),
-*/
+  .o_data_stb           (func_rd_stb[1]      ),
 
-
-  .o_read_wait          (demo_func_read_wait ),
+//  .o_read_wait          (demo_func_read_wait ),
   .o_interrupt          (demo_func_interrupt ),
 
-
-  .i_request_read_wait  (r_request_read_wait ),
+//  .i_request_read_wait  (r_request_read_wait ),
   .i_request_interrupt  (r_request_interrupt )
 
 );
-
-
-
-
-
-
-
-
 
 assign  w_wbs0_ack              = 0;
 assign  w_wbs0_dat_o            = 0;

@@ -608,13 +608,15 @@ class wb_sd_hostDriver(driver.Driver):
         else:
             print "Initiate Data Transfer (Inbound)"
             self.dma_reader.set_size(512)
+            print "byte count: %s" % byte_count
             command_arg |= (byte_count & DATA_RW_COUNT_BITMODE)
 
             self.clear_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
             self.set_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
-            self.set_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
             self.write_register(SD_DATA_BYTE_COUNT, byte_count)
             self.write_register(REG_MEM_0_SIZE, byte_count / 4)
+
+            self.set_register_bit(CONTROL, CONTROL_DATA_BIT_ACTIVATE)
 
             self.send_command(CMD_DATA_RW, command_arg)
             word_count = byte_count / 4
@@ -624,7 +626,7 @@ class wb_sd_hostDriver(driver.Driver):
             #Disable the DMA Write Flag
             self.clear_register_bit(CONTROL, CONTROL_ENABLE_DMA_RD)
             self.set_register_bit(CONTROL, CONTROL_DATA_WRITE_FLAG)
-            return self.read_memory(REG_MEM_0_BASE, byte_count / 4)
+            return self.read_memory(self.MEM_BASE_0, byte_count / 4)
 
     def set_function_block_size(self, func_num, block_size):
         '''

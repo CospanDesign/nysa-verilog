@@ -377,6 +377,8 @@ always @ (posedge i_sd_clk) begin
         o_s2h_fifo_activate     <=  0;
         o_h2s_fifo_activate     <=  0;
         data_txrx_en            <=  0;
+        o_data_txrx_finished    <=  1;
+/*
         if (i_data_write_flag) begin
           if (total_byte_count < i_data_byte_count) begin
             data_state          <=  SETUP_WRITE_FIFO;
@@ -388,6 +390,7 @@ always @ (posedge i_sd_clk) begin
         else begin
           data_state            <=  FINISHED;
         end
+*/
       end
       FINISHED: begin
         o_data_txrx_finished    <=  1;
