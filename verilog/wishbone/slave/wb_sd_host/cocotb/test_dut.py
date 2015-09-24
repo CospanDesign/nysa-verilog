@@ -280,9 +280,6 @@ def small_multi_byte_data_write(dut):
     value = dut.sdio_device.cia.cccr.o_func_int_enable.value.get_value()
     if value != 0x04:
         raise TestFailure ("Failed to write configuration byte to CCCR Memory Space: Should be 0x04 is: 0x%02X" % value)
-
-
-
     yield (nysa.wait_clocks(1000))
 
 
@@ -388,6 +385,7 @@ def data_block_write(dut):
                                                             address     = ADDRESS,
                                                             byte_count  = len(write_data),
                                                             fifo_mode   = False)
+    yield (nysa.wait_clocks(2000))
     fail = False
     for i in range(len(write_data)):
         if write_data[i] != read_data[i]:

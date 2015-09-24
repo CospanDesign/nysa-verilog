@@ -225,7 +225,7 @@ assign  w_wbs0_int        = 1'b0;
 //Submodules
 wishbone_master wm (
   .clk            (clk              ),
-  .rst            (r_rst            ),
+  .rst            (r_rst || !dev_pll_locked  ),
 
   .i_ih_rst       (r_ih_reset       ),
 
@@ -552,6 +552,7 @@ sdio_device_stack sdio_device (
   .i_func_ready_for_data(function_ready_for_data  ),
 
   .o_func_inc_addr      (func_inc_addr        ),
+  .o_func_block_mode    (func_block_mode      ),
   .o_func_write_flag    (func_write_flag      ),
   .o_func_num           (func_num             ),
   .o_func_rd_after_wr   (func_rd_after_wr     ),
@@ -573,9 +574,10 @@ sdio_device_stack sdio_device (
 demo_function demo (
   .clk                  (clk                 ),
   .sdio_clk             (sd_clk              ),
-  .rst                  (r_rst               ),
+  .rst                  (r_rst || !dev_pll_locked),
 
   .i_csa_en             (fbr1_csa_en         ),
+  .i_pwr_mode           (fbr1_pwr_mode       ),
   .i_block_size         (fbr1_block_size     ),
   .i_enable             (function_enable[1]  ),
   .o_ready              (demo_func_ready     ),
@@ -586,8 +588,8 @@ demo_function demo (
 
   .i_activate           (func_activate[1]    ),
   .o_finished           (demo_func_finished  ),
-  .i_inc_addr           (demo_func_inc_addr  ),
-  .i_block_mode         (demo_func_block_mode),
+  .i_inc_addr           (func_inc_addr       ),
+  .i_block_mode         (func_block_mode     ),
 
   .i_write_flag         (func_write_flag     ),
   .i_rd_after_wr        (func_rd_after_wr    ),
