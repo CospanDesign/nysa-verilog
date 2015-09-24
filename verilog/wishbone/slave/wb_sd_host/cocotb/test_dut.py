@@ -26,7 +26,7 @@ def setup_dut(dut):
     cocotb.fork(Clock(dut.in_clk, CLK_PERIOD).start())
     dut.request_interrupt =   0
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def first_test(dut):
     """
     Description:
@@ -39,7 +39,7 @@ def first_test(dut):
         Write to all registers
     """
     dut.test_id = 0
-    print "module path: %s" % MODULE_PATH
+    #print "module path: %s" % MODULE_PATH
     nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
     setup_dut(dut)
     yield(nysa.reset())
@@ -51,16 +51,22 @@ def first_test(dut):
     #yield cocotb.external(driver.set_control)(0x01)
     yield (nysa.wait_clocks(200))
     v = yield cocotb.external(driver.get_control)()
-    dut.log.info("V: %d" % v)
-    dut.log.info("DUT Opened!")
-    dut.log.info("Ready")
+    dut.log.debug("V: %d" % v)
+    dut.log.debug("DUT Opened!")
+    dut.log.debug("Ready")
     test_data = [0x00, 0x01, 0x02, 0x03]
     yield cocotb.external(nysa.write_memory)(0x00, test_data)
     yield (nysa.wait_clocks(10))
-    dut.log.info("Wrote %s to memory" % (test_data))
+    dut.log.debug("Wrote %s to memory" % (test_data))
     data = yield cocotb.external(nysa.read_memory)(0x00, 1)
-    dut.log.info("Read back %s from memory" % test_data)
+    dut.log.debug("Read back %s from memory" % test_data)
+    fail = False
+    for i in range(len(data)):
+        if data[i] != test_data[i]:
+            raise TestFailure("Data into memory != Data out of memory: %s != %s" %
+                                (print_hex_array(test_data), print_hex_array(data)))
 
+        
 
 @cocotb.test(skip = True)
 def send_simple_command(dut):
@@ -98,16 +104,34 @@ def send_simple_command(dut):
     #yield cocotb.external(driver.send_command)(0x05, 0x01234)
     #yield cocotb.external(driver.send_command)(0x05, 0x00000)
     yield cocotb.external(driver.cmd_phy_sel)()
+    #if dut.s1.sd_stack.cmd.
+    yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = False)
+    if dut.sdio_device.card_controller.v1p8_sel.value.get_value() == True:
+        raise TestFailure ("1.8V Switch Voltage Before Request")
+
     yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
+    if dut.sdio_device.card_controller.v1p8_sel.value.get_value() == False:
+        raise TestFailure ("Failed to set 1.8V Switch Voltage Request")
+
     yield cocotb.external(driver.cmd_get_relative_card_address)()
+    if dut.sdio_device.card_controller.state.value.get_value() != 2:
+        raise TestFailure ("Card Should Be In Standby State Right Now")
+
     yield cocotb.external(driver.cmd_enable_card)(True)
+    if dut.sdio_device.card_controller.state.value.get_value() != 3:
+        raise TestFailure ("Card Should Be In Command State Right Now")
+
     yield cocotb.external(driver.cmd_enable_card)(False)
-    yield cocotb.external(driver.cmd_enable_card)(False)
+    if dut.sdio_device.card_controller.state.value.get_value() != 2:
+        raise TestFailure ("Card Should Be In Standby State Right Now")
+
     yield cocotb.external(driver.cmd_go_inactive_state)()
+    if dut.sdio_device.card_controller.state.value.get_value() != 5:
+        raise TestFailure ("Card Should Be In Standby State Right Now")
 
     yield (nysa.wait_clocks(20))
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def send_byte_test(dut):
     """
     Description:
@@ -139,15 +163,26 @@ def send_byte_test(dut):
     #Enable SDIO
     yield cocotb.external(driver.enable_sd_host)(True)
     yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
+    if dut.sdio_device.card_controller.v1p8_sel.value.get_value() == False:
+        raise TestFailure ("Failed to set 1.8V Switch Voltage Request")
+
     yield cocotb.external(driver.cmd_get_relative_card_address)()
+    if dut.sdio_device.card_controller.state.value.get_value() != 2:
+        raise TestFailure ("Card Should Be In Standby State Right Now")
+
     yield cocotb.external(driver.cmd_enable_card)(True)
+    if dut.sdio_device.card_controller.state.value.get_value() != 3:
+        raise TestFailure ("Card Should Be In Command State Right Now")
 
     yield cocotb.external(driver.write_config_byte)(0x02, 0x01)
+    if dut.sdio_device.cia.cccr.o_func_enable.value.get_value() != 1:
+        raise TestFailure ("Failed to write configuration byte to CCCR Memory Space")
+
     yield (nysa.wait_clocks(1000))
 
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def receive_byte_test(dut):
     """
     Description:
@@ -183,12 +218,17 @@ def receive_byte_test(dut):
     yield cocotb.external(driver.cmd_enable_card)(True)
 
     value = yield cocotb.external(driver.read_config_byte)(0x00)
-    dut.log.info("Read value: 0x%02X" % value)
+    if value != 0x43:
+        raise TestFailure("Failed to Read Configuration Byte at Address 0: bad value: 0x%02X" % value)
+    dut.log.debug("Read value: 0x%02X" % value)
     value = yield cocotb.external(driver.read_config_byte)(0x01)
-    dut.log.info("Read value: 0x%02X" % value)
+    if value != 0x03:
+        raise TestFailure("Failed to Read Configuration Byte at Address 1: bad value: 0x%02X" % value)
+    dut.log.debug("Read value: 0x%02X" % value)
     value = yield cocotb.external(driver.read_config_byte)(0x02)
-    dut.log.info("Read value: 0x%02X" % value)
-
+    if value != 0x00:
+        raise TestFailure("Failed to Read Configuration Byte at Address 2: bad value: 0x%02X" % value)
+    dut.log.debug("Read value: 0x%02X" % value)
 
     yield (nysa.wait_clocks(1000))
 
@@ -228,23 +268,25 @@ def small_multi_byte_data_write(dut):
     yield cocotb.external(driver.cmd_get_relative_card_address)()
     yield cocotb.external(driver.cmd_enable_card)(True)
 
-    #data = Array('B')
-    #for i in range (2):
-    #    data.append(0xFF)
-    #yield cocotb.external(driver.write_sd_data)(0, 0x00, [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07], fifo_mode = False, read_after_write = False)
-    #yield cocotb.external(driver.write_sd_data)(0, 0x00, [0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF], fifo_mode = False, read_after_write = False)
-    #yield cocotb.external(driver.write_sd_data)(0, 0x00, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF], fifo_mode = False, read_after_write = False)
-    #yield cocotb.external(driver.write_sd_data)(0, 0x00, [0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF], fifo_mode = False, read_after_write = False)
-
+    #data = Array ('B', [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07])
     data = Array ('B')
-    for i in range (128):
+    for i in range (8):
         value = i % 256
         data.append(value)
     yield cocotb.external(driver.write_sd_data)(0, 0x00, data, fifo_mode = False, read_after_write = False)
+    value = dut.sdio_device.cia.cccr.o_func_enable.value.get_value()
+    if value != 0x02:
+        raise TestFailure ("Failed to write configuration byte to CCCR Memory Space: Should be 0x02 is: 0x%02X" % value)
+    value = dut.sdio_device.cia.cccr.o_func_int_enable.value.get_value()
+    if value != 0x04:
+        raise TestFailure ("Failed to write configuration byte to CCCR Memory Space: Should be 0x04 is: 0x%02X" % value)
+
+
+
     yield (nysa.wait_clocks(1000))
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def small_multi_byte_data_read(dut):
     """
     Description:
@@ -327,7 +369,7 @@ def data_block_write(dut):
     yield (nysa.wait_clocks(1000))
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def data_block_read(dut):
     """
     Description:
@@ -371,7 +413,7 @@ def data_block_read(dut):
 
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def data_async_block_read(dut):
     """
     Description:
@@ -420,7 +462,7 @@ def data_async_block_read(dut):
     print "Finished..."
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def data_async_block_read_with_read_wait(dut):
     """
     Description:
@@ -465,8 +507,6 @@ def data_async_block_read_with_read_wait(dut):
     data = yield cocotb.external(driver.read_sd_data)(FUNCTION, 0x00, READ_SIZE, fifo_mode = False)
     print "Waiting for function to finish..."
 
-
-    #yield (nysa.wait_clocks(1))
     dut.request_read_wait   = 1;
     yield (nysa.wait_clocks(2000))
     dut.request_read_wait   = 0;
@@ -475,7 +515,7 @@ def data_async_block_read_with_read_wait(dut):
     print "Finished..."
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def detect_interrupt(dut):
     """
     Description:
