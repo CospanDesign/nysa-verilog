@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Thu Sep 24 21:15:17 2015
+[*] Fri Sep 25 04:48:50 2015
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/cocotb/design.vcd"
-[dumpfile_mtime] "Thu Sep 24 21:14:29 2015"
-[dumpfile_size] 1977720
+[dumpfile_mtime] "Fri Sep 25 04:47:34 2015"
+[dumpfile_size] 2031145
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/cocotb/waveforms.gtkw"
-[timestart] 41554
+[timestart] 74943
 [size] 1918 1059
 [pos] -1 -1
-*-5.865725 41760 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-6.876144 75220 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.demo.
 [treeopen] tb_cocotb.s1.
@@ -267,10 +267,18 @@ tb_cocotb.demo.o_ready_for_data
 -
 @28
 tb_cocotb.demo.mem_write_stb
-@23
-tb_cocotb.demo.mem_write_data[31:0]
 @22
+tb_cocotb.demo.mem_write_data[31:0]
 tb_cocotb.demo.mem_read_data[31:0]
+@200
+-
+@22
+tb_cocotb.demo.mem_addr[11:0]
+tb_cocotb.demo.data_count[12:0]
+tb_cocotb.demo.mem_read_data[31:0]
+tb_cocotb.demo.o_read_data[7:0]
+@29
+tb_cocotb.s1.sd_stack.phy.byte_index[1:0]
 @1000200
 -Demo
 [pattern_trace] 1
