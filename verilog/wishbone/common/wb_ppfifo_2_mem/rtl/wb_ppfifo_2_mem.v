@@ -254,20 +254,20 @@ end
 //Bank Select and Memory Ready
 always @ (posedge clk) begin
   if (rst) begin
-    r_active_bank   <=  0;
-    r_memory_ready     <=  0;
+    r_active_bank           <=  0;
+    r_memory_ready          <=  0;
   end
   else begin
     //Activate Memory Logic
     if (!r_memory_ready) begin
       //If there is any data at all in the memory blocks
       if (r_mem_count[0] > 0) begin
-        r_memory_ready  <=  1;
-        r_active_bank   <=  0;
+        r_memory_ready      <=  1;
+        r_active_bank       <=  0;
       end
       else if (r_mem_count[1] > 0) begin
-        r_memory_ready  <=  1;
-        r_active_bank   <=  1;
+        r_memory_ready      <=  1;
+        r_active_bank       <=  1;
       end
     end
     else begin
@@ -287,7 +287,7 @@ end
 //Simulation information
 always @ (posedge clk) begin
   if (o_ppfifo_stb) begin
-    $display ("\twb_ppfifo_2_mem: Wrote: %h: Write Count: %h", i_ppfifo_data, r_ppfifo_count);
+    `ifdef VERBOSE: $display ("\twb_ppfifo_2_mem: Wrote: %h: Write Count: %h", i_ppfifo_data, r_ppfifo_count); `endif
   end
 end
 
