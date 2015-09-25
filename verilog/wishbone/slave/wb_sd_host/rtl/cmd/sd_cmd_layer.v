@@ -227,6 +227,7 @@ always @ (posedge clk) begin
         end
       end
       TXRX_BLOCK: begin
+        count                   <=  0;
         o_data_txrx_activate    <=  1;
         data_state              <=  WAIT_RESPONSE;
         block_count             <=  block_count + 1;

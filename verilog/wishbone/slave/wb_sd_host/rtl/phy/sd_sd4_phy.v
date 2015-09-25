@@ -283,13 +283,13 @@ always @ (posedge clk) begin
             crc[i]        <=  {gen_crc[i][13:0], 2'b0};
           end
           data_count      <=  data_count + 1;
-          $display("CRC: %X %X %X %X", gen_crc0, gen_crc1, gen_crc2, gen_crc3);
-          $display("Bus Value: %X", {gen_crc0[15], gen_crc1[15], gen_crc2[15], gen_crc3[15],
-                                     gen_crc0[14], gen_crc1[14], gen_crc2[14], gen_crc3[14]});
+          //$display("CRC: %X %X %X %X", gen_crc0, gen_crc1, gen_crc2, gen_crc3);
+          //$display("Bus Value: %X", {gen_crc0[15], gen_crc1[15], gen_crc2[15], gen_crc3[15],
+          //                           gen_crc0[14], gen_crc1[14], gen_crc2[14], gen_crc3[14]});
 
         end
         else if (data_count < 8) begin
-          $display("SD Data: %X", sd_data);
+          //$display("SD Data: %X", sd_data);
           sd_data         <=  {crc0[15], crc1[15], crc2[15], crc3[15],
                                crc0[14], crc1[14], crc2[14], crc3[14]};
           for (i = 0; i < 4; i = i + 1) begin

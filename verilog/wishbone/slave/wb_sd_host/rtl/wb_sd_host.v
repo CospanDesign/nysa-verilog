@@ -140,7 +140,7 @@ module wb_sd_host #(
 
 
   //This interrupt can be controlled from this module or a submodule
-  output              o_wbs_int,
+  output  reg         o_wbs_int,
 
   output              o_sd_clk,
   inout               io_sd_cmd,
@@ -519,7 +519,7 @@ assign  data_block_mode                   = control[`CONTROL_DATA_BLOCK_MODE  ];
 assign  function_address                  = control[`CONTROL_FUNCTION_ADDRESS ];
 assign  data_txrx_en                      = control[`CONTROL_DATA_BIT_ACTIVATE];
 
-assign  o_wbs_int                         = w_interrupt_enable ? w_int : 1'b0;
+//assign  o_wbs_int                         = w_interrupt_enable ? w_int : 1'b0;
 assign  mem_o_we                          = w_mem_write_enable ? m2p_mem_o_we :
                                             w_mem_read_enable  ? p2m_mem_o_we :
                                             1'b0;
@@ -538,7 +538,6 @@ assign  mem_o_adr                         = w_mem_write_enable ? m2p_mem_o_adr :
 assign  mem_o_dat                         = w_mem_write_enable ? m2p_mem_o_dat :
                                             w_mem_read_enable  ? p2m_mem_o_dat :
                                             4'b0000;
-
 
 //Synchronous Logic
 
@@ -575,6 +574,7 @@ always @ (posedge clk) begin
     r_memory_1_new_data   <= 0;
 
     block_sleep_count     <= `DEFAULT_BLOCK_SLEEP;
+    o_wbs_int             <=  0;
 
   end
   else begin
@@ -582,6 +582,15 @@ always @ (posedge clk) begin
     r_memory_1_new_data   <=  0;
     r_memory_0_ready      <=  0;
     r_memory_1_ready      <=  0;
+
+    if (w_interrupt_enable) begin
+      if (w_int) begin
+        o_wbs_int         <=  1;
+      end
+    end
+    else begin
+      o_wbs_int           <=  0;
+    end
 
     //when the master acks our ack, then put our ack down
     if (o_wbs_ack && ~i_wbs_stb)begin
@@ -596,7 +605,7 @@ always @ (posedge clk) begin
           case (i_wbs_adr)
             CONTROL: begin
 //TODO: Remove Verbose Messages
-              $display ("Control: %X", i_wbs_dat);
+              //$display ("Control: %X", i_wbs_dat);
               control                 <=  i_wbs_dat;
             end
             REG_MEM_0_BASE: begin
@@ -635,7 +644,7 @@ always @ (posedge clk) begin
               sd_cmd_rsp_long_flag    <=  i_wbs_dat[`COMMAND_BIT_RSP_LONG_FLG];
               sd_cmd                  <=  i_wbs_dat[`COMMAND_BIT_CMD_TOP:`COMMAND_BIT_CMD_BOT];
 //TODO: Remove Verbose Messages
-              $display ("Command: %X, Go Bit: %X", sd_cmd, sd_cmd_en);
+              //$display ("Command: %X, Go Bit: %X", sd_cmd, sd_cmd_en);
             end
             SD_CONFIGURE: begin
               enable_crc              <=  i_wbs_dat[`CONFIGURE_EN_CRC];
@@ -699,13 +708,14 @@ always @ (posedge clk) begin
               o_wbs_dat[`STATUS_SD_DATA_BUSY]                         <= data_txrx_en;
               o_wbs_dat[`STATUS_ERROR_BIT_TOP:`STATUS_ERROR_BIT_BOT]  <= sd_error;
               if (w_p2m_0_finished) begin
-                $display ("Reset size 0");
+                //$display ("Reset size 0");
                 r_memory_0_size   <=  0;
               end
               if (w_p2m_1_finished) begin
-                $display ("Reset size 1");
+                //$display ("Reset size 1");
                 r_memory_1_size   <=  0;
               end
+              o_wbs_int           <=  0;
             end
             REG_MEM_0_BASE: begin
               o_wbs_dat <=  r_memory_0_base;

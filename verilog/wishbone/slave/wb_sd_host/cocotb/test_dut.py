@@ -21,10 +21,16 @@ CLK_PERIOD = 10
 MODULE_PATH = os.path.join(os.path.dirname(__file__), os.pardir, "rtl")
 MODULE_PATH = os.path.abspath(MODULE_PATH)
 
+interrupt_called = False
+data_is_ready = False
 
 def setup_dut(dut):
     cocotb.fork(Clock(dut.in_clk, CLK_PERIOD).start())
     dut.request_interrupt =   0
+    global interrupt_called
+    interrupt_called = False
+    global data_is_ready
+    data_is_ready = False
 
 @cocotb.test(skip = True)
 def first_test(dut):
@@ -334,7 +340,7 @@ def small_multi_byte_data_read(dut):
     yield (nysa.wait_clocks(1000))
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def data_block_write(dut):
     """
     Description:
@@ -393,13 +399,9 @@ def data_block_write(dut):
 
     if fail:
         raise TestFailure("Block Write Transfer Failed, %s != %s" % (print_hex_array(write_data), print_hex_array(read_data)))
-            
 
 
-
-
-
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def data_block_read(dut):
     """
     Description:
@@ -412,7 +414,9 @@ def data_block_read(dut):
     """
     dut.test_id = 7
     BLOCK_SIZE = 0x08
-    READ_SIZE = 0x10
+    SIZE = 0x10
+    FUNCTION = 0
+    ADDRESS = 0x00
 
     SDIO_PATH = get_verilog_path("sdio-device")
     sdio_config = os.path.join(SDIO_PATH, "sdio_configuration.json")
@@ -428,16 +432,13 @@ def data_block_read(dut):
     yield (nysa.wait_clocks(10))
     driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
     #Enable SDIO
-    FUNCTION = 0
     yield cocotb.external(driver.enable_sd_host)(True)
     yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
     yield cocotb.external(driver.cmd_get_relative_card_address)()
     yield cocotb.external(driver.cmd_enable_card)(True)
     yield cocotb.external(driver.set_function_block_size)(FUNCTION, BLOCK_SIZE)
 
-    #data = [0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-    #data = [0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-    data = yield cocotb.external(driver.read_sd_data)(FUNCTION, 0x00, READ_SIZE, fifo_mode = False)
+    data = yield cocotb.external(driver.read_sd_data)(FUNCTION, ADDRESS, SIZE, fifo_mode = False)
     print "Data: %s" % print_hex_array(data)
     yield (nysa.wait_clocks(2000))
 
@@ -453,8 +454,10 @@ def data_async_block_read(dut):
         Block Transfer (Read)
     """
     dut.test_id = 8
+    ADDRESS = 0x00
+    FUNCTION = 1
     BLOCK_SIZE = 0x08
-    READ_SIZE = 0x18
+    SIZE = 0x10
 
     SDIO_PATH = get_verilog_path("sdio-device")
     sdio_config = os.path.join(SDIO_PATH, "sdio_configuration.json")
@@ -470,27 +473,38 @@ def data_async_block_read(dut):
     yield (nysa.wait_clocks(10))
     driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
     #Enable SDIO
-    FUNCTION = 0
     yield cocotb.external(driver.enable_sd_host)(True)
     yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
     yield cocotb.external(driver.cmd_get_relative_card_address)()
     yield cocotb.external(driver.cmd_enable_card)(True)
+
+    #Enable Function
     yield cocotb.external(driver.set_function_block_size)(FUNCTION, BLOCK_SIZE)
-    rw_support = yield cocotb.external(driver.is_read_wait_supported)()
+    yield cocotb.external(driver.enable_function)(FUNCTION)
+
+    write_data = Array ('B')
+    for i in range (SIZE):
+        value = i % 256
+        write_data.append(value)
+    yield cocotb.external(driver.write_sd_data)(FUNCTION, ADDRESS, write_data, fifo_mode = False, read_after_write = False)
     yield cocotb.external(driver.set_async_dma_reader_callback)(dma_read_callback)
     yield cocotb.external(driver.enable_async_dma_reader)(True)
-
-    print "Read Wait Supported: %s" % str(rw_support)
-
-    #data = [0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-    #data = [0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-    yield cocotb.external(driver.read_sd_data)(FUNCTION, 0x00, READ_SIZE, fifo_mode = False)
-    print "Waiting for function to finish..."
+    yield cocotb.external(driver.read_sd_data)(FUNCTION, ADDRESS, SIZE, fifo_mode = False)
+    dut.log.debug("Waiting for function to finish...")
     yield (nysa.wait_clocks(4000))
-    print "Finished..."
+    if not data_is_ready:
+        raise TestFailure("Async Read Never Finished!")
 
+    read_data = driver.read_async_data()
+    dut.log.debug("Async Data: %s" % print_hex_array(read_data))
+    fail = False
+    for i in range(len(write_data)):
+        if write_data[i] != read_data[i]:
+            fail = True
+    if fail:
+        raise TestFailure("Async Block Read Transfer Failed, %s != %s" % (print_hex_array(write_data), print_hex_array(read_data)))
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def data_async_block_read_with_read_wait(dut):
     """
     Description:
@@ -502,10 +516,10 @@ def data_async_block_read_with_read_wait(dut):
         Block Transfer (Read)
     """
     dut.test_id = 9
-
-    FUNCTION = 0
+    ADDRESS = 0x00
+    FUNCTION = 1
     BLOCK_SIZE = 0x08
-    READ_SIZE = 0x18
+    SIZE = 0x10
 
     SDIO_PATH = get_verilog_path("sdio-device")
     sdio_config = os.path.join(SDIO_PATH, "sdio_configuration.json")
@@ -525,14 +539,29 @@ def data_async_block_read_with_read_wait(dut):
     yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
     yield cocotb.external(driver.cmd_get_relative_card_address)()
     yield cocotb.external(driver.cmd_enable_card)(True)
-    yield cocotb.external(driver.set_function_block_size)(FUNCTION, BLOCK_SIZE)
+
     rw_support = yield cocotb.external(driver.is_read_wait_supported)()
+
+    #Enable Function
+    yield cocotb.external(driver.set_function_block_size)(FUNCTION, BLOCK_SIZE)
+    yield cocotb.external(driver.enable_function)(FUNCTION)
+
+    write_data = Array ('B')
+    for i in range (SIZE):
+        value = i % 256
+        write_data.append(value)
+    yield cocotb.external(driver.write_sd_data)(FUNCTION, ADDRESS, write_data, fifo_mode = False, read_after_write = False)
+
+    #XXX: Debug why this doesn't work sometimes!
+    #rw_support = yield cocotb.external(driver.is_read_wait_supported)()
+
     yield cocotb.external(driver.set_async_dma_reader_callback)(dma_read_callback)
     yield cocotb.external(driver.enable_async_dma_reader)(True)
 
     dut.log.debug("Read Wait Supported: %s" % str(rw_support))
 
-    data = yield cocotb.external(driver.read_sd_data)(FUNCTION, 0x00, READ_SIZE, fifo_mode = False)
+    data = yield cocotb.external(driver.read_sd_data)(FUNCTION, ADDRESS, SIZE, fifo_mode = False)
+
     dut.log.debug("Waiting for function to finish...")
 
     dut.request_read_wait   = 1;
@@ -540,8 +569,16 @@ def data_async_block_read_with_read_wait(dut):
     dut.request_read_wait   = 0;
 
     yield (nysa.wait_clocks(3000))
-    dut.log.debug("Finished...")
-
+    if not data_is_ready:
+        raise TestFailure("Async Read Never Finished!")
+    read_data = driver.read_async_data()
+    dut.log.debug("Async Data: %s" % print_hex_array(read_data))
+    fail = False
+    for i in range(len(write_data)):
+        if write_data[i] != read_data[i]:
+            fail = True
+    if fail:
+        raise TestFailure("Async Block Read Transfer Failed, %s != %s" % (print_hex_array(write_data), print_hex_array(read_data)))
 
 @cocotb.test(skip = True)
 def detect_interrupt(dut):
@@ -587,7 +624,7 @@ def detect_interrupt(dut):
     #Enable Interrupts on Device
     yield cocotb.external(driver.enable_function_interrupt)(FUNCTION)
     pending = yield cocotb.external(driver.is_interrupt_pending)(FUNCTION)
-    print "Is Interrupt Pending? %s" % pending
+    dut.log.debug("Is Interrupt Pending? %s" % pending)
 
     #Enable Interrupt on controller
     yield cocotb.external(driver.enable_interrupt)(True)
@@ -595,20 +632,86 @@ def detect_interrupt(dut):
     #Generate an interrupt
     dut.request_interrupt = 1
     #Detect an interrupt from the device
-
-
     pending = yield cocotb.external(driver.is_interrupt_pending)(FUNCTION)
-    print "Is Interrupt Pending? %s" % pending
+    dut.log.debug("Is Interrupt Pending? %s" % pending)
 
     yield (nysa.wait_clocks(3000))
-    print "Finished..."
+    if not interrupt_called:
+        raise TestFailure("Interrupt was not detected")
+
+@cocotb.test(skip = True)
+def data_async_block_read_write_long_transfer(dut):
+    """
+    Description:
+        Perform a block read using asynchronous transfer
+
+    Test ID: 11
+
+    Expected Results:
+        Block Transfer (Read)
+    """
+    dut.test_id = 11
+    ADDRESS = 0x00
+    FUNCTION = 1
+    BLOCK_SIZE = 0x08
+    SIZE = 0x18
+
+    SDIO_PATH = get_verilog_path("sdio-device")
+    sdio_config = os.path.join(SDIO_PATH, "sdio_configuration.json")
+    config = None
+    with open (sdio_config, "r") as f:
+        dut.log.warning("Run %s before running this function" % os.path.join(SDIO_PATH, "tools", "generate_config.py"))
+        config = json.load(f)
+
+    nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
+    setup_dut(dut)
+    yield(nysa.reset())
+    nysa.read_sdb()
+    yield (nysa.wait_clocks(10))
+    driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    #Enable SDIO
+    yield cocotb.external(driver.enable_sd_host)(True)
+    yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
+    yield cocotb.external(driver.cmd_get_relative_card_address)()
+    yield cocotb.external(driver.cmd_enable_card)(True)
+
+    #Enable Function
+    yield cocotb.external(driver.enable_function)(FUNCTION)
+    yield cocotb.external(driver.set_function_block_size)(FUNCTION, BLOCK_SIZE)
+
+    write_data = Array ('B')
+    for i in range (SIZE):
+        value = i % 256
+        write_data.append(value)
+    yield cocotb.external(driver.write_sd_data)(FUNCTION, ADDRESS, write_data, fifo_mode = False, read_after_write = False)
+    yield cocotb.external(driver.set_async_dma_reader_callback)(dma_read_callback)
+    yield cocotb.external(driver.enable_async_dma_reader)(True)
+    yield cocotb.external(driver.read_sd_data)(FUNCTION, ADDRESS, SIZE, fifo_mode = False)
+    dut.log.debug("Waiting for function to finish...")
+    yield (nysa.wait_clocks(4000))
+    if not data_is_ready:
+        raise TestFailure("Async Read Never Finished!")
+
+    read_data = driver.read_async_data()
+    dut.log.debug("Async Data: %s" % print_hex_array(read_data))
+    fail = False
+    for i in range(len(write_data)):
+        if write_data[i] != read_data[i]:
+            fail = True
+    if fail:
+        raise TestFailure("Async Block Read Transfer Failed, %s != %s" % (print_hex_array(write_data), print_hex_array(read_data)))
+
 
 
 def interrupt_callback():
-    print "INTERRRRUUUUPPPPTTTT CALLLLLLBACKKKKK!!!!"
+    global interrupt_called
+    interrupt_called = True
+    #print "INTERRRRUUUUPPPPTTTT CALLLLLLBACKKKKK!!!!"
 
 def dma_read_callback(data):
-    print "Data is ready!: %s" % print_hex_array(data)
+    global data_is_ready
+    data_is_ready = True
+    #print "Data is ready!: %s" % print_hex_array(data)
 
 def print_hex_array(a):
     s = None
