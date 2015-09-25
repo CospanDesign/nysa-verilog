@@ -300,7 +300,7 @@ end
 //Simulation information
 always @ (posedge clk) begin
   if (o_ppfifo_stb) begin
-    $display ("\twb_mem_2_ppfifo: Wrote: %h: Write Count: %h", o_ppfifo_data, r_ppfifo_count);
+    `ifdef VERBOSE: $display ("\twb_mem_2_ppfifo: Wrote: %h: Write Count: %h", o_ppfifo_data, r_ppfifo_count); `endif
   end
 end
 
