@@ -28,9 +28,9 @@ SOFTWARE.
  * Changes:
  */
 
-`define NUM_EXT_PINS  4
-
-module sd_host_platform_spartan6.v (
+module sd_host_platform_spartan6#(
+  parameter                 NUM_EXT_PINS = 4
+) (
   input                     rst
   input                     100mhz_clk,
   output                    sd_clk,
@@ -57,9 +57,7 @@ localparam     PARAM1  = 32'h00000000;
 genvar pcnt;
 genvar scnt;
 generate
-for (pcnt = 0; pcnt < `NUM_EXT_PINS; pcnt = pcnt + 1) begin: sgen
-
-
+for (pcnt = 0; pcnt < NUM_EXT_PINS; pcnt = pcnt + 1) begin: sgen
 IOBUF #(
 ) iobuffer (
   .IO                       (phy_data[pcnt] ),
@@ -79,16 +77,9 @@ ISERDES2 #(
   .RST                      (rst            ),
   .TCE                      (1'b1           ),
   .OCE                      (1'b1           ),
-  
 );
-
-
 end
 endgenerate
 
 //asynchronous logic
-
-
-
-
 endmodule
