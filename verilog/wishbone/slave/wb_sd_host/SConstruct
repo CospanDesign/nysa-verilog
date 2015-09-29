@@ -49,6 +49,7 @@ def fix_verilog_paths():
   #Apply the configuration directory
   buf = template.safe_substitute(
     NYSA=paths_dict["verilog"]["nysa-verilog"]["path"],
+    SDIO_DEV=paths_dict["verilog"]["sdio-device"]["path"],
     XILINX=utils.find_xilinx_path()
   )
 

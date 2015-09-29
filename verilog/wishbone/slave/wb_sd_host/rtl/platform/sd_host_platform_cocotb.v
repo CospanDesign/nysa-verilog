@@ -36,23 +36,23 @@ input                 rst,
 output  reg           o_locked,
 output  reg           o_out_clk,
 output                o_out_clk_x2,
-                      
+
 input                 i_sd_cmd_dir,
 output                o_sd_cmd_in,
 input                 i_sd_cmd_out,
-                      
+
 input                 i_read_wait,
-                      
+
 input                 i_sd_data_dir,
 output  reg   [7:0]   o_sd_data_in,
 input         [7:0]   i_sd_data_out,
-                      
+
 output  reg           o_phy_out_clk,
 inout                 io_phy_sd_cmd,
 inout         [3:0]   io_phy_sd_data
-                      
-);                    
-                      
+
+);
+
 reg           [7:0]   lock_count;
 reg                   pos_edge_clk;
 wire          [3:0]   data_out;

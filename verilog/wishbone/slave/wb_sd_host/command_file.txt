@@ -1,51 +1,66 @@
 #Add other command line options here
+
 +libext+.v
 +incdir+${NYSA}/verilog
++incdir+${SDIO_DEV}/rtl
++incdir+${SDIO_DEV}/rtl/cia
++incdir+${XILINX}/ISE/verilog/src
 +incdir+rtl
-#In order to use Xilinx libraris use the ${XILINX} to replace, the path will include ISE_DS
-#An example:
-#+incdir+${XILINX}/ISE/verilog/src
 
 #Use the NYSA keyword to point to the nysa-verilog base directory
-
-${NYSA}/verilog/sim/wishbone/interconnect/example_2port_interconnect/wishbone_interconnect.v
-#${NYSA}/verilog/wishbone/slave/device_rom_table/device_rom_table.v
-${NYSA}/verilog/wishbone/master/wishbone_master.v
-
 #Example module from Xilinx
-#${XILINX}/ISE/verilog/src/glbl.v
-
-#The generic directory contains a lot of non-platform specific verilog code
-#${NYSA}/verilog/generic/<some name here>.v
-
 ${XILINX}/ISE/verilog/src/glbl.v
-${XILINX}/ISE/verilog/src/unisims/PLL_ADV.v
+${XILINX}/ISE/verilog/src/unisims/STARTUP_SPARTAN6.v
 ${XILINX}/ISE/verilog/src/unisims/BUFG.v
 ${XILINX}/ISE/verilog/src/unisims/ODDR2.v
+${XILINX}/ISE/verilog/src/unisims/PLL_BASE.v
+${XILINX}/ISE/verilog/src/unisims/PLL_ADV.v
+${XILINX}/ISE/verilog/src/unisims/BUFPLL.v
+${XILINX}/ISE/verilog/src/unisims/IOBUF.v
+${XILINX}/ISE/verilog/src/unisims/IODELAY2.v
+#${XILINX}/ISE/verilog/src/unisims/ISERDES2.v
+sim/ISERDES2.v
+${XILINX}/ISE/verilog/src/unisims/OSERDES2.v
+${XILINX}/ISE/verilog/src/unisims/OBUF.v
+
+${NYSA}/verilog/wishbone/master/wishbone_master.v
+${NYSA}/verilog/sim/wishbone/interconnect/example_2port_interconnect/wishbone_interconnect.v
 
 ${NYSA}/verilog/generic/bram.v
 ${NYSA}/verilog/wishbone/slave/wb_bram/rtl/wb_bram.v
-
-sim/arbiter_2_masters.v
-sim/wishbone_mem_interconnect.v
 ${NYSA}/verilog/wishbone/common/wb_mem_2_ppfifo/rtl/wb_mem_2_ppfifo.v
 ${NYSA}/verilog/wishbone/common/wb_ppfifo_2_mem/rtl/wb_ppfifo_2_mem.v
 ${NYSA}/verilog/generic/cross_clock_enable.v
 ${NYSA}/verilog/generic/blk_mem.v
 ${NYSA}/verilog/generic/ppfifo.v
-rtl/sd_sd4_phy.v
-rtl/sd_crc_16.v
-rtl/sd_crc_7.v
 
-rtl/sd_clk_gen.v
+${SDIO_DEV}/rtl/platform/sd_dev_platform_cocotb.v
+${SDIO_DEV}/rtl/sdio_data_control.v
+${SDIO_DEV}/sim/demo_function.v
+${SDIO_DEV}/rtl/generic/crc7.v
+${SDIO_DEV}/rtl/generic/crc16.v
+${SDIO_DEV}/rtl/cia/sdio_fbr.v
+${SDIO_DEV}/rtl/cia/sdio_cccr.v
+${SDIO_DEV}/rtl/cia/sdio_cis.v
+${SDIO_DEV}/rtl/cia/sdio_cia.v
+${SDIO_DEV}/rtl/control/sdio_card_control.v
+${SDIO_DEV}/rtl/phy/sdio_phy.v
+${SDIO_DEV}/rtl/phy/sdio_data_phy.v
+${SDIO_DEV}/rtl/sdio_device_stack.v
+
+sim/arbiter_2_masters.v
+sim/wishbone_mem_interconnect.v
+rtl/generic/sd_crc_16.v
+rtl/generic/sd_crc_7.v
+
+rtl/platform/sd_host_platform_cocotb.v
+rtl/platform/sd_host_platform_spartan6.v
 rtl/sd_host_defines.v
-rtl/sd_phy_layer.v
-rtl/sd_cmd_layer.v
-
+rtl/phy/sd_sd4_phy.v
+rtl/phy/sd_phy_layer.v
+rtl/cmd/sd_cmd_layer.v
 rtl/sd_host_stack.v
-
 rtl/wb_sd_host.v
-
 
 sim/tb_wishbone_master.v
 

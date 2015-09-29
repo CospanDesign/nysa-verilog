@@ -212,6 +212,7 @@ always @ (posedge clk) begin
         o_data_txrx_finished      <=  0;
         o_data_txrx_activate      <=  0;
         count                     <=  0;
+        block_count               <=  0;
         if (i_data_txrx) begin
           data_state              <=  TXRX_BLOCK;
           if (i_data_block_mode) begin
@@ -219,7 +220,6 @@ always @ (posedge clk) begin
               infinite_data_txrx  <=  1;
             end
             transfer_count        <=  func_block_size[i_func_addr];
-            block_count           <=  0;
           end
           else begin
             transfer_count        <=  i_data_size;

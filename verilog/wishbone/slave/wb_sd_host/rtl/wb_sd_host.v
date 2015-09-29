@@ -303,7 +303,7 @@ wire                    sd_int_detected;
 
 //Possibly replace with a generate statement using an input parameter
 `ifdef COCOTB_SIMULATION
-sd_host_platform_cocotb cocotb_platform(
+sd_host_platform_cocotb platform(
   .clk                  (clk                      ),
   .rst                  (rst                      ),
 
@@ -329,6 +329,32 @@ sd_host_platform_cocotb cocotb_platform(
 
 );
 `else
+//Spartan 6 Platform
+sd_host_platform_spartan6 #(
+  .OUTPUT_DELAY         (63                       ),
+  .INPUT_DELAY          (63                       )
+)platform(
+  .rst                  (rst                      ),
+  .clk                  (clk                      ),
+  .o_locked             (pll_locked               ),
+  .i_read_wait          (read_wait                ),
+                                                  
+  .o_sd_clk             (sd_clk                   ),
+  .o_sd_clk_x2          (sd_clk_x2                ),
+                                                  
+  .i_sd_cmd_dir         (sd_cmd_dir               ),
+  .i_sd_cmd_out         (sd_cmd_out               ),
+  .o_sd_cmd_in          (sd_cmd_in                ),
+ 
+  .i_sd_data_dir        (sd_data_dir              ),
+  .i_sd_data_out        (sd_data_out              ),
+  .o_sd_data_in         (sd_data_in               ),
+                                                 
+  .o_phy_clk            (o_sd_clk                 ),
+  .io_phy_cmd           (io_sd_cmd                ),
+  .io_phy_data          (io_sd_data               )
+);
+
 `endif
 
 sd_host_stack #(
@@ -552,6 +578,7 @@ always @ (posedge clk) begin
     sd_cmd_rsp_long_flag  <= 1'b0;
     enable_crc            <= 1'b1;
     data_size             <= 0;
+    control               <= 0;
 
     f0_block_size         <= 0;
     f1_block_size         <= 0;

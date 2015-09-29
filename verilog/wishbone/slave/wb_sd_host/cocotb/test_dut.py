@@ -32,7 +32,7 @@ def setup_dut(dut):
     global data_is_ready
     data_is_ready = False
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def first_test(dut):
     """
     Description:
@@ -74,7 +74,7 @@ def first_test(dut):
 
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def send_simple_command(dut):
     """
     Description:
@@ -137,7 +137,7 @@ def send_simple_command(dut):
 
     yield (nysa.wait_clocks(20))
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def send_byte_test(dut):
     """
     Description:
@@ -188,7 +188,7 @@ def send_byte_test(dut):
 
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def receive_byte_test(dut):
     """
     Description:
@@ -239,7 +239,7 @@ def receive_byte_test(dut):
     yield (nysa.wait_clocks(1000))
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def small_multi_byte_data_write(dut):
     """
     Description:
@@ -289,7 +289,7 @@ def small_multi_byte_data_write(dut):
     yield (nysa.wait_clocks(1000))
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def small_multi_byte_data_read(dut):
     """
     Description:
@@ -340,7 +340,7 @@ def small_multi_byte_data_read(dut):
     yield (nysa.wait_clocks(1000))
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def data_block_write(dut):
     """
     Description:
@@ -401,7 +401,7 @@ def data_block_write(dut):
         raise TestFailure("Block Write Transfer Failed, %s != %s" % (print_hex_array(write_data), print_hex_array(read_data)))
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def data_block_read(dut):
     """
     Description:
@@ -442,7 +442,7 @@ def data_block_read(dut):
     print "Data: %s" % print_hex_array(data)
     yield (nysa.wait_clocks(2000))
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def data_async_block_read(dut):
     """
     Description:
@@ -504,7 +504,7 @@ def data_async_block_read(dut):
     if fail:
         raise TestFailure("Async Block Read Transfer Failed, %s != %s" % (print_hex_array(write_data), print_hex_array(read_data)))
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def data_async_block_read_with_read_wait(dut):
     """
     Description:
@@ -580,7 +580,7 @@ def data_async_block_read_with_read_wait(dut):
     if fail:
         raise TestFailure("Async Block Read Transfer Failed, %s != %s" % (print_hex_array(write_data), print_hex_array(read_data)))
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def detect_interrupt(dut):
     """
     Description:

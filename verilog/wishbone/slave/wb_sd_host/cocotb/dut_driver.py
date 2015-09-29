@@ -93,7 +93,7 @@ DATA_RW_COUNT_BITMODE           = 0x1FF
 
 
 OP_COND_BIT_EN_1P8V             = 24
-OP_COND_BIT_OCR_LOW             = 8
+OP_COND_BIT_OCR_LOW             = 0
 
 STATUS_MEMORY_0_FINISHED        = 0
 STATUS_MEMORY_1_FINISHED        = 1
