@@ -2,10 +2,10 @@
 TOPLEVEL_LANG ?= verilog
 PWD=$(shell pwd)
 TOPDIR=$(PWD)/..
-COCOTB=/home/cospan/Projects/cocotb
-NYSA=/home/cospan/Projects/nysa-verilog
-NYSA_SATA=/home/cospan/Projects/nysa-sata
-PYTHONPATH := ./model:$(PYTHONPATH)
+COCOTB		:= $(shell $(python) nysa paths -c -s)
+NYSA		:= $(shell $(python) nysa paths -s -v nysa-verilog)
+NYSA_SATA	:= $(shell $(python) nysa paths -s -v nysa-sata)
+PYTHONPATH 	:= ./model:$(PYTHONPATH)
 export PYTHONPATH
 
 

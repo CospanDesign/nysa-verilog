@@ -1,18 +1,25 @@
 # Simple tests for an adder module
+import os
+import sys
 import cocotb
 import logging
-from cocotb.result import TestFailure
-from nysa.host.driver.sata_driver import SATADriver
-import nysa.host.driver.dma as dmam
-from nysa.host.driver.dma import DMA
-from model.sim_host import NysaSim
-from cocotb.clock import Clock
 import time
 from array import array as Array
 
+from cocotb.result import TestFailure
+from nysa.host.sim.sim_host import NysaSim
+from cocotb.clock import Clock
+
+from nysa.host.driver.sata_driver import SATADriver
+import nysa.host.driver.dma as dmam
+from nysa.host.driver.dma import DMA
+
 SATA_CLK_PERIOD = 16
 CLK_PERIOD = 10
+SIM_CONFIG = "test_dict.json"
 
+MODULE_PATH = os.path.join(os.path.dirname(__file__), os.pardir, "rtl")
+MODULE_PATH = os.path.abspath(MODULE_PATH)
 
 def setup_sata(dut):
     cocotb.fork(Clock(dut.sata_clk, SATA_CLK_PERIOD).start())
@@ -56,7 +63,8 @@ def first_test(dut):
     """
 
     dut.test_id = 0
-    nysa = NysaSim(dut, CLK_PERIOD)
+    #nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
+    nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
     setup_sata(dut)
 
     yield(nysa.reset())
@@ -90,7 +98,7 @@ def write_test(dut):
     """
 
     dut.test_id = 1
-    nysa = NysaSim(dut, CLK_PERIOD)
+    nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
     setup_sata(dut)
 
     yield(nysa.reset())
@@ -144,7 +152,7 @@ def read_test(dut):
     """
 
     dut.test_id = 2
-    nysa = NysaSim(dut, CLK_PERIOD)
+    nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
     setup_sata(dut)
 
     yield(nysa.reset())
@@ -240,7 +248,8 @@ def dma_first_test(dut):
     """
 
     dut.test_id = 4
-    nysa = NysaSim(dut)
+    #nysa = NysaSim(dut)
+    nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
     yield(nysa.reset())
     nysa.read_sdb()
 
@@ -288,7 +297,8 @@ def test_single_instruction_to_sata(dut):
         Data is all transferred from one memory device to the next
     """
     dut.test_id = 5
-    nysa = NysaSim(dut)
+    #nysa = NysaSim(dut)
+    nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
     yield(nysa.reset())
     nysa.read_sdb()
     yield nysa.wait_clocks(2000)
@@ -374,7 +384,8 @@ def test_single_instruction_from_sata(dut):
         Data is all transferred from one memory device to the next
     """
     dut.test_id = 8
-    nysa = NysaSim(dut)
+    #nysa = NysaSim(dut)
+    nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
     yield(nysa.reset())
     nysa.read_sdb()
     yield nysa.wait_clocks(2000)
@@ -458,7 +469,8 @@ def test_continuous_transfer(dut):
         Data is all transferred from one memory device to the next
     """
     dut.test_id = 6
-    nysa = NysaSim(dut)
+    #nysa = NysaSim(dut)
+    nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
     yield(nysa.reset())
     nysa.read_sdb()
     yield nysa.wait_clocks(2000)
@@ -539,7 +551,8 @@ def test_double_buffer(dut):
         Data is all transferred from one memory device to the next
     """
     dut.test_id = 7
-    nysa = NysaSim(dut)
+    #nysa = NysaSim(dut)
+    nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
     yield(nysa.reset())
     nysa.read_sdb()
     yield nysa.wait_clocks(10)

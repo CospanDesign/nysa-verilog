@@ -38,7 +38,8 @@ output            h2u_read_busy,
 
 
 input             hold,
-output            hd_ready
+output            hd_ready,
+output            device_interrupt
 
 );
 
@@ -184,6 +185,7 @@ wire    [31:0]    rx_din;
 wire    [3:0]     rx_is_k;
 
 
+assign w_wbs0_int     = 1'b0;
 
 
 //Submodules
@@ -242,14 +244,14 @@ wb_sata s1 (
   .o_write_finished     (write_finished[3]    ),
   .i_write_count        (write_data_count[3]  ),
   .i_write_flush        (write_flush[3]       ),
-                                              
+
   .o_write_ready        (write_ready[3]       ),
   .i_write_activate     (write_activate[3]    ),
   .o_write_size         (write_size[3]        ),
   .i_write_strobe       (write_strobe[3]      ),
   .i_write_data         (write_data[3]        ),
-                                              
-                                              
+
+
   .i_read_enable        (read_enable[3]       ),
   .i_read_addr          (read_addr[3]         ),
   .i_read_addr_inc      (read_addr_inc[3]     ),
@@ -258,13 +260,13 @@ wb_sata s1 (
   .o_read_error         (read_error[3]        ),
   .i_read_count         (read_data_count[3]   ),
   .i_read_flush         (read_flush [3]       ),
-                                              
+
   .o_read_ready         (read_ready[3]        ),
   .i_read_activate      (read_activate[3]     ),
   .o_read_size          (read_size[3]         ),
   .o_read_data          (read_data[3]         ),
   .i_read_strobe        (read_strobe[3]       ),
- 
+
   .sata_75mhz_clk       (sata_clk             ),
   .i_platform_ready     (1'b1                 ),
   .i_phy_error          (1'b0                 ),
@@ -777,6 +779,7 @@ wb_test_dma_mem #(
 assign  w_wbs0_ack              = 0;
 assign  w_wbs0_dat_o            = 0;
 assign  start                   = 1;
+assign  device_interrupt        = 0;
 
 //Submodules
 //Asynchronous Logic
