@@ -46,6 +46,9 @@ reg               r_request_read_wait;
 reg               r_request_interrupt;
 wire              request_read_wait = 0;
 
+wire              dev_sd_clk;
+wire              dev_sd_clk_x2;
+
 //There is a bug in COCOTB when stiumlating a signal, sometimes it can be corrupted if not registered
 always @ (*) r_rst           = rst;
 always @ (*) r_in_ready      = in_ready;
@@ -420,6 +423,10 @@ sd_dev_platform_cocotb sdio_dev_plat(
   .rst            (r_rst            ),
 
   .o_locked       (dev_pll_locked   ),
+
+  .o_sd_clk       (dev_sd_clk       ),
+  .o_sd_clk_x2    (dev_sd_clk_x2    ),
+
 
   .i_sd_cmd_dir   (dev_sd_cmd_dir   ),
   .o_sd_cmd_in    (dev_sd_cmd_in    ),

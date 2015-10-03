@@ -29,8 +29,8 @@ SOFTWARE.
  */
 
 module sd_host_platform_spartan6 #(
-  parameter                 OUTPUT_DELAY  = 63,
-  parameter                 INPUT_DELAY   = 63
+  parameter                 OUTPUT_DELAY  = 0,
+  parameter                 INPUT_DELAY   = 0
 )(
   input                     rst,
   input                     clk,
@@ -102,7 +102,7 @@ PLL_BASE #(
   .CLKOUT0_DUTY_CYCLE   (0.500                ),
   .CLKOUT1_DIVIDE       (18                   ),
   .CLKOUT1_DUTY_CYCLE   (0.500                ),
-  .CLKIN_PERIOD         (20.000               ),
+  .CLKIN_PERIOD         (10.000               ),
   .REF_JITTER           (0.010                )
 ) pll (
   //Input Clock and Input Clock Control

@@ -487,6 +487,7 @@ wb_bram #(
 );
 
 
+/*
 sd_dev_platform_cocotb sdio_dev_plat(
   .clk            (clk              ),
   .rst            (rst              ),
@@ -505,6 +506,33 @@ sd_dev_platform_cocotb sdio_dev_plat(
   .io_phy_sd_cmd  (phy_sd_cmd       ),
   .io_phy_sd_data (phy_sd_data      )
 );
+*/
+
+sd_dev_platform_spartan6 #(
+  .OUTPUT_DELAY   (63               ),
+  .INPUT_DELAY    (63               )
+)sdio_dev_plat (
+  .clk            (clk              ),
+  .rst            (r_rst            ),
+
+  .o_locked       (dev_pll_locked   ),
+
+  .o_sd_clk       (dev_sd_clk       ),
+  .o_sd_clk_x2    (dev_sd_clk_x2    ),
+
+  .i_sd_cmd_dir   (dev_sd_cmd_dir   ),
+  .o_sd_cmd_in    (dev_sd_cmd_in    ),
+  .i_sd_cmd_out   (dev_sd_cmd_out   ),
+
+  .i_sd_data_dir  (dev_sd_data_dir  ),
+  .o_sd_data_in   (dev_sd_data_in   ),
+  .i_sd_data_out  (dev_sd_data_out  ),
+
+  .i_phy_clk      (sd_clk           ),
+  .io_phy_sd_cmd  (phy_sd_cmd       ),
+  .io_phy_sd_data (phy_sd_data      )
+);
+
 
 //TODO ADAPT sdio_device to use the platform based phy_sd_cmd and phy_sd_data
 

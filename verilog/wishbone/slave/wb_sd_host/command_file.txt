@@ -12,6 +12,9 @@
 ${XILINX}/ISE/verilog/src/glbl.v
 ${XILINX}/ISE/verilog/src/unisims/STARTUP_SPARTAN6.v
 ${XILINX}/ISE/verilog/src/unisims/BUFG.v
+${XILINX}/ISE/verilog/src/unisims/IBUFG.v
+${XILINX}/ISE/verilog/src/unisims/BUFIO2.v
+${XILINX}/ISE/verilog/src/unisims/BUFIO2FB.v
 ${XILINX}/ISE/verilog/src/unisims/ODDR2.v
 ${XILINX}/ISE/verilog/src/unisims/PLL_BASE.v
 ${XILINX}/ISE/verilog/src/unisims/PLL_ADV.v
@@ -35,6 +38,7 @@ ${NYSA}/verilog/generic/blk_mem.v
 ${NYSA}/verilog/generic/ppfifo.v
 
 ${SDIO_DEV}/rtl/platform/sd_dev_platform_cocotb.v
+${SDIO_DEV}/rtl/platform/sd_dev_platform_spartan6.v
 ${SDIO_DEV}/rtl/sdio_data_control.v
 ${SDIO_DEV}/sim/demo_function.v
 ${SDIO_DEV}/rtl/generic/crc7.v
