@@ -4,7 +4,6 @@ module tb_cocotb (
 
 //Virtual Host Interface Signals
 input             clk,
-input             sata_clk,
 input             rst,
 output            master_ready,
 input             in_ready,
@@ -25,7 +24,6 @@ input             ih_reset,
 output            device_interrupt
 
 );
-
 
 //Parameters
 //Registers/Wires
@@ -127,9 +125,10 @@ wire              mem_i_ack;
 wire              mem_i_int;
 
 
-assign  device_interrupt  = w_wbp_int;
-assign  w_wbs0_int        = 1'b0;
 
+reg               sd_clk;
+wire              sd_cmd;
+wire  [3:0]       sd_data;
 
 
 //Submodules
@@ -189,7 +188,12 @@ wb_sdio_device s1 (
   .o_wbs_ack            (w_wbs1_ack           ),
   .o_wbs_dat            (w_wbs1_dat_o         ),
   .i_wbs_adr            (w_wbs1_adr           ),
-  .o_wbs_int            (w_wbs1_int           )
+  .o_wbs_int            (w_wbs1_int           ),
+
+  .i_phy_sd_clk         (sd_clk               ),
+  .io_phy_sd_cmd        (sd_cmd               ),
+  .io_phy_sd_data       (sd_data              )
+
 );
 
 wishbone_interconnect wi (
@@ -307,15 +311,12 @@ wb_bram #(
   .o_wbs_int  (w_arb0_o_wbs_int     )
 );
 
-
-
-
-
 //Submodules
 //Asynchronous Logic
+assign  w_wbs0_int              = 0;
 assign  w_wbs0_ack              = 0;
 assign  w_wbs0_dat_o            = 0;
-assign  device_interrupt  = w_wbp_int;
+assign  device_interrupt        = w_wbp_int;
 
 /*
   READ ME IF YOUR MODULE WILL INTERFACE WITH MEMORY
@@ -345,12 +346,20 @@ assign  mem_o_sel               = 0;
 assign  mem_o_adr               = 0;
 assign  mem_o_dat               = 0;
 
-
 //Synchronous Logic
 //Simulation Control
 initial begin
   $dumpfile ("design.vcd");
   $dumpvars(0, tb_cocotb);
+end
+
+always @ (posedge clk) begin
+  if (rst) begin
+    sd_clk                      <=  0;
+  end
+  else begin
+    sd_clk                      <=  ~sd_clk;
+  end
 end
 
 endmodule

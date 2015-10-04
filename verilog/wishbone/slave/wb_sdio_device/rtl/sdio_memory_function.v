@@ -51,7 +51,7 @@ SOFTWARE.
  *      sdio_configuration.json file
  *
  *  Parameters:
- *      FUN_NUM: The function index to respond to, e.g. 1 for function 1
+ *      FUNC_NUM: The function index to respond to, e.g. 1 for function 1
  *
  * Changes:
  */
@@ -59,7 +59,8 @@ SOFTWARE.
 `include "sdio_cia_defines.v"
 
 module sdio_memory_function #(
-  parameter                 FUNC_NUM = 1
+  parameter                 FUNC_NUM = 1,
+  parameter                 MEM_EXP = 12
 )(
   input                     clk,
   input                     sdio_clk,
@@ -95,11 +96,13 @@ module sdio_memory_function #(
   output    reg             o_data_stb,             //SDIO sends a piece of data to host
 
   //Out of band signaling
-//  output                    o_read_wait,            //When asserted function is not ready to receive more data
   output                    o_interrupt,            //Launch off an interrupt
 
-  //Test Stimulate
-//  input                     i_request_read_wait,    //Used for Simulation to test read wait
+  //User Interface
+  
+
+  //Tell the host "HEY LISTEN!"
+  input                     i_en_in_interrupts,
   input                     i_request_interrupt     //Used for simulation to test interrupt
 
 );
@@ -112,7 +115,7 @@ localparam      FINISHED    =   4'h4;
 
 //registes/wires
 reg             [3:0]       state;
-reg             [11:0]      mem_addr;
+reg             [(MEM_EXP - 1):0]      mem_addr;
 reg                         write_stb;
 reg                         mem_write_stb;
 reg             [31:0]      mem_write_data;
@@ -127,16 +130,16 @@ reg             [31:0]      write_data;
 reg             [31:0]      read_data;
 
 //submodules
-blk_mem #(
+dpb #(
     .DATA_WIDTH             (32             ),  //More Challenging but this is going to be more like final applications
-    .ADDRESS_WIDTH          (12             ),  //4096
-    .INC_NUM_PATTERN        (1              )   //Incrementing data pattern to read and modify
+    .ADDR_WIDTH             (MEM_EXP        )   //4096
 )mem(
     .clka                   (sdio_clk       ),
     .wea                    (mem_write_stb  ),
     .addra                  (mem_addr       ),
     .dina                   (mem_write_data ),
-    //.clkb                   (blk            ),
+    .douta                  (mem_read_data  ),
+
     .clkb                   (sdio_clk       ),
     .addrb                  (mem_addr       ),
     .doutb                  (mem_read_data  )
@@ -243,8 +246,8 @@ always @ (posedge sdio_clk) begin
         mem_addr            <=  0;
         data_count          <=  0;
         if (i_activate)begin
-          address           <=  i_addr[12:2];
-          mem_addr          <=  i_addr[12:2];
+          address           <=  i_addr[MEM_EXP + 1:2];
+          mem_addr          <=  i_addr[MEM_EXP + 1:2];
           o_data_rdy        <=  1;
           if (i_write_flag) begin
             state           <=  WRITE;
@@ -265,7 +268,7 @@ always @ (posedge sdio_clk) begin
               1: begin
               end
               2: begin
-                mem_addr          <= address;
+                mem_addr          <= address[MEM_EXP - 1: 0];
               end
               3: begin
                 write_stb         <=  1;
