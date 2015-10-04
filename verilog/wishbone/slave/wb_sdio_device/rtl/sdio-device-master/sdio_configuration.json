@@ -1,0 +1,89 @@
+{
+    "vendor id"                       : "0x0001",
+    "product id"                      : "0x0000",
+
+    "support spi"                     : false,
+    "continuous spi interrupt"        : false,
+
+    "cmd52 while transfer"            : true,
+
+    "support multiple block transfer" : true,
+    "support read wait"               : true,
+    "support suspend resume"          : true,
+    "support 4 bit interrupt mode"    : true,
+    "support async interrupts"        : true,
+
+    "support high speed"              : true,
+    "support 4 bit in low speed"      : false,
+
+    "support sd 1 bit data"           : true,
+    "support sd 4 bit data"           : true,
+    "support sd 8 bit data"           : false,
+
+    "support sdr50"                   : false,
+    "support sdr104"                  : false,
+    "support ddr50"                   : true,
+
+    "support driver type a"           : false,
+    "support driver type c"           : false,
+    "support driver type d"           : false,
+
+    "max sdio clock khz"              : 50000,
+
+    "max byte transfer size"          : 2048,
+
+    "support voltage 2p0 2p1"         : true,
+    "support voltage 2p1 2p2"         : true,
+    "support voltage 2p2 2p3"         : true,
+    "support voltage 2p3 2p4"         : true,
+    "support voltage 2p4 2p5"         : true,
+    "support voltage 2p5 2p6"         : true,
+    "support voltage 2p6 2p7"         : true,
+    "support voltage 2p7 2p8"         : true,
+    "support voltage 2p8 2p9"         : true,
+    "support voltage 2p9 3p0"         : true,
+    "support voltage 3p0 3p1"         : true,
+    "support voltage 3p1 3p2"         : true,
+    "support voltage 3p2 3p3"         : true,
+    "support voltage 3p3 3p4"         : true,
+    "support voltage 3p4 3p5"         : true,
+    "support voltage 3p5 3p6"         : true,
+
+
+    "functions":[
+        {
+            "index"                   : 1,
+
+            "filename"                : "functions/my_function.v",
+            "version"                 : "0.1",
+            "support wakeup"          : false,
+            "serial number"           : 0,
+            "size"                    : 100,
+            "read only"               : false,
+            "do not format"           : true,
+            "type"                    : 0,
+            "max byte transfer size"  : 2048,
+            "min bandwidth"           : 0,
+            "optimal bandwidth"       : 0,
+            "timeout"                 : 0
+        },
+        {
+            "index"                   : 2
+        },
+        {
+            "index"                   : 3
+        },
+        {
+            "index"                   : 4
+        },
+        {
+            "index"                   : 5
+        },
+        {
+            "index"                   : 6
+        },
+        {
+            "index"                   : 7
+        }
+  ]
+}

@@ -1,0 +1,5 @@
+`ifndef MY_FUNCTION_DEFINES
+`define MY_FUNCTION_DEFINES
+
+`endif /* MY_FUNCTION_DEFINES */
+
