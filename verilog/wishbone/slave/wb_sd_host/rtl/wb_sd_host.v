@@ -338,18 +338,18 @@ sd_host_platform_spartan6 #(
   .clk                  (clk                      ),
   .o_locked             (pll_locked               ),
   .i_read_wait          (read_wait                ),
-                                                  
+
   .o_sd_clk             (sd_clk                   ),
   .o_sd_clk_x2          (sd_clk_x2                ),
-                                                  
+
   .i_sd_cmd_dir         (sd_cmd_dir               ),
   .i_sd_cmd_out         (sd_cmd_out               ),
   .o_sd_cmd_in          (sd_cmd_in                ),
- 
+
   .i_sd_data_dir        (sd_data_dir              ),
   .i_sd_data_out        (sd_data_out              ),
   .o_sd_data_in         (sd_data_in               ),
-                                                 
+
   .o_phy_clk            (o_sd_clk                 ),
   .io_phy_cmd           (io_sd_cmd                ),
   .io_phy_data          (io_sd_data               )

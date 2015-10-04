@@ -220,10 +220,7 @@ wire  [31:0]      mem_i_dat;
 wire              mem_i_ack;
 wire              mem_i_int;
 
-
-assign  device_interrupt  = w_wbp_int;
-assign  w_wbs0_int        = 1'b0;
-
+wire              sd_clk;
 
 //Submodules
 wishbone_master wm (
@@ -617,16 +614,17 @@ demo_function demo (
 
 );
 
+//Submodules
+//Asynchronous Logic
+assign  device_interrupt        = w_wbp_int;
+assign  w_wbs0_int              = 0;
 assign  w_wbs0_ack              = 0;
 assign  w_wbs0_dat_o            = 0;
-assign  start                   = 1;
 assign  function_ready          = {6'b000000, demo_func_ready,          1'b0};
 assign  function_exec_status    = {6'b000000, demo_func_exec_sts,       1'b0};
 assign  function_ready_for_data = {6'b000000, demo_func_ready_for_data, 1'b0};
 assign  function_interrupt      = {6'b000000, demo_func_interrupt,      1'b0};
 
-//Submodules
-//Asynchronous Logic
 //Synchronous Logic
 //Simulation Control
 initial begin
