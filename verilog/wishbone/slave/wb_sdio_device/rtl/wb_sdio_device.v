@@ -68,6 +68,12 @@ SOFTWARE.
 `define     BUFFER_EXP    10
 `define     BUFFER_SIZE   2**(`BUFFER_EXP)
 
+`define     MEM_TIMEOUT   1
+
+`define     CNTRL_BIT_ENABLE          0
+`define     CNTRL_BIT_INTERRUPT       1
+`define     CNTRL_BIT_SEND_INTERRUPT  2
+
 
 module wb_sdio_device (
   input               clk,
@@ -101,6 +107,9 @@ localparam     STATUS   = 32'h00000001;
 localparam     ADDR_2   = 32'h00000002;
 
 reg     [31:0]    control;
+wire              enable_sdio;
+wire              enable_interrupt;
+
 //Local Registers/Wires
 wire              pll_locked;
 wire              sd_clk;
@@ -179,12 +188,16 @@ wire              sdio_func_exec_sts;
 wire              local_buffer_en;
 wire    [9:0]     local_buffer_addr;
 
-reg               enable_interrupt;
-reg               request_interrupt;
+wire              enable_interrupts;
+wire              request_interrupt;
 
 reg               mem_write_en;
 reg     [31:0]    mem_data_in;
 wire    [31:0]    mem_data_out;
+
+reg     [1:0]     mem_sleep;
+reg               prev_stb;
+wire              posedge_stb;
 
 //Submodules
 
@@ -437,25 +450,36 @@ assign  function_interrupt      = {6'b000000, sdio_func_interrupt,      1'b0};
 assign  local_buffer_en         = ((i_wbs_adr >= `BUFFER_OFFSET) &&
                                     (i_wbs_adr < (`BUFFER_OFFSET + (`BUFFER_SIZE))));
 assign  local_buffer_addr       = local_buffer_en ? (i_wbs_adr - `BUFFER_OFFSET) : 10'h000;
+assign  posedge_stb             = i_wbs_stb && !prev_stb;
+
+assign  enable_sdio             = control[`CNTRL_BIT_ENABLE];
+assign  enable_interrupts       = control[`CNTRL_BIT_INTERRUPT];
+assign  request_interrupt       = control[`CNTRL_BIT_SEND_INTERRUPT];
 
 
 
 //Synchronous Logic
 always @ (posedge clk) begin
   if (rst) begin
-    o_wbs_dat <= 32'h0;
-    o_wbs_ack <= 0;
-    o_wbs_int <= 0;
-    mem_data_in   <=  0;
-    mem_write_en  <=  0;
-    control       <=  0;
+    o_wbs_dat                 <= 32'h0;
+    o_wbs_ack                 <= 0;
+    o_wbs_int                 <= 0;
+    mem_data_in               <= 0;
+    mem_write_en              <= 0;
+    control                   <= 0;
+    control[`CNTRL_BIT_ENABLE]<=  1;  //Enable SDIO At the beginning
+    mem_sleep                 <= 0;
   end
-
   else begin
+    //De-assert Strobes
     //when the master acks our ack, then put our ack down
     if (o_wbs_ack && ~i_wbs_stb)begin
-      o_wbs_ack     <= 0;
-      mem_write_en  <=  0;
+      o_wbs_ack               <= 0;
+      mem_write_en            <=  0;
+    end
+
+    if (mem_sleep < `MEM_TIMEOUT) begin
+      mem_sleep               <=  mem_sleep + 1;
     end
 
     if (i_wbs_stb && i_wbs_cyc) begin
@@ -463,16 +487,12 @@ always @ (posedge clk) begin
       if (!o_wbs_ack) begin
         if (i_wbs_we) begin
           //write request
+          mem_sleep           <=  `MEM_TIMEOUT;
           case (i_wbs_adr)
             CONTROL: begin
               control         <=  i_wbs_dat;
-              $display("ADDR: %h user wrote %h", i_wbs_adr, i_wbs_dat);
-            end
-            STATUS: begin
-              $display("ADDR: %h user wrote %h", i_wbs_adr, i_wbs_dat);
             end
             ADDR_2: begin
-              $display("ADDR: %h user wrote %h", i_wbs_adr, i_wbs_dat);
             end
             default: begin
               if (local_buffer_en) begin
@@ -487,27 +507,35 @@ always @ (posedge clk) begin
           //read request
           case (i_wbs_adr)
             CONTROL: begin
-              $display("user read %h", CONTROL);
               o_wbs_dat <= control;
             end
             STATUS: begin
-              $display("user read %h", STATUS);
               o_wbs_dat <= STATUS;
             end
             ADDR_2: begin
-              $display("user read %h", ADDR_2);
               o_wbs_dat <= ADDR_2;
             end
             default: begin
               if (local_buffer_en) begin
+                if (posedge_stb) begin
+                  mem_sleep <=  2'h0;
+                end
                 o_wbs_dat   <=  mem_data_out;
               end
             end
           endcase
         end
-      o_wbs_ack <= 1;
+        if (local_buffer_en) begin
+          if (!posedge_stb && (mem_sleep == `MEM_TIMEOUT)) begin
+            o_wbs_ack         <= 1;
+          end
+        end
+        else begin
+          o_wbs_ack         <= 1;
+        end
+      end
     end
-    end
+    prev_stb                <=  i_wbs_stb;
   end
 end
 

@@ -56,6 +56,7 @@ SOFTWARE.
  * Changes:
  */
 
+`include "sdio_defines.v"
 `include "sdio_cia_defines.v"
 
 module sdio_memory_function #(
