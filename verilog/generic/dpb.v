@@ -18,13 +18,13 @@ module dpb #(
     input                             wea,
     input   wire  [ADDR_WIDTH - 1: 0] addra,
     input   wire  [DATA_WIDTH - 1: 0] dina,
-    output  reg   [DATA_WIDTH - 1: 0] douta,
+    output  reg   [DATA_WIDTH - 1: 0] douta = 0,
 
     input                             clkb,
     input                             web,
     input   wire  [ADDR_WIDTH - 1: 0] addrb,
     input   wire  [DATA_WIDTH - 1: 0] dinb,
-    output  reg   [DATA_WIDTH - 1: 0] doutb
+    output  reg   [DATA_WIDTH - 1: 0] doutb = 0
 );
 
 //Shared Memory
@@ -50,10 +50,10 @@ end
 
 //Port B
 always @ (posedge clkb) begin
-  doutb          <=              #1 mem[addrb];
+  doutb          <=              mem[addrb];
   if (web) begin
-    doutb        <=              #1 dinb;
-    mem[addrb]   <=              #1 dinb;
+    doutb        <=              dinb;
+    mem[addrb]   <=              dinb;
   end
 end
 
