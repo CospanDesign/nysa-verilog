@@ -20,8 +20,12 @@ DEVICE_TYPE             = "SDIO Device"
 SDB_ABI_VERSION_MINOR   = 0x01
 SDB_VENDOR_ID           = 0x800000000000C594
 
+BUFFER_SIZE             = 0x00000400
+
 #Register Constants
 CONTROL_ADDR            = 0x00000000
+STATUS_ADDR             = 0x00000001
+BUFFER_OFFSET           = 0x00000400
 ZERO_BIT                = 0
 
 class wb_sdio_deviceDriver(driver.Driver):
@@ -60,3 +64,18 @@ class wb_sdio_deviceDriver(driver.Driver):
 
     def is_control_0_bit_set(self):
         return self.is_register_bit_set(CONTROL_ADDR, ZERO_BIT)
+
+    def write_local_buffer(self, addr, data):
+        #Make sure data is 32-bit Aligned
+        print "Write Local Buffer"
+        data = Array('B', data)
+        while len(data) % 4 > 0:
+            data.append(0x00)
+
+        self.write(BUFFER_OFFSET + addr, data)
+        print "Wrote Local BUffer"
+
+    def read_local_buffer(self, addr, length):
+        print "Read Local Buffer"
+        return self.read(BUFFER_OFFSET + addr, length)
+

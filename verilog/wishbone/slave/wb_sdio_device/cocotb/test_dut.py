@@ -56,9 +56,27 @@ def first_test(dut):
     driver = wb_sdio_deviceDriver(nysa, nysa.find_device(wb_sdio_deviceDriver)[0])
     print "here!"
     yield cocotb.external(driver.set_control)(0x01)
-    yield (nysa.wait_clocks(100))
     v = yield cocotb.external(driver.get_control)()
     dut.log.info("V: %d" % v)
     dut.log.info("DUT Opened!")
     dut.log.info("Ready")
+    data_in = Array('B', [0x00, 0x01, 0x02, 0x03])
+    yield cocotb.external(driver.write_local_buffer)(0x00, data_in)
+    data_out = yield cocotb.external(driver.read_local_buffer)(0x00, (len(data_in) / 4))
+    print "data out: %s" % print_hex_array(data_out)
+
+def print_hex_array(a):
+    s = None
+    for i in a:
+        if s is None:
+            s = "["
+        else:
+            s += ", "
+
+        s += "0x%02X" % i
+
+    s += "]"
+
+    return s
+
 

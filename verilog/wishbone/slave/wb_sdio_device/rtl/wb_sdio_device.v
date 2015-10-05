@@ -100,6 +100,7 @@ localparam     CONTROL  = 32'h00000000;
 localparam     STATUS   = 32'h00000001;
 localparam     ADDR_2   = 32'h00000002;
 
+reg     [31:0]    control;
 //Local Registers/Wires
 wire              pll_locked;
 wire              sd_clk;
@@ -181,7 +182,7 @@ wire    [9:0]     local_buffer_addr;
 reg               enable_interrupt;
 reg               request_interrupt;
 
-wire              mem_write_en;
+reg               mem_write_en;
 reg     [31:0]    mem_data_in;
 wire    [31:0]    mem_data_out;
 
@@ -435,8 +436,6 @@ assign  function_interrupt      = {6'b000000, sdio_func_interrupt,      1'b0};
 
 assign  local_buffer_en         = ((i_wbs_adr >= `BUFFER_OFFSET) &&
                                     (i_wbs_adr < (`BUFFER_OFFSET + (`BUFFER_SIZE))));
-assign  mem_write_en            = (local_buffer_en & i_wbs_we);
-
 assign  local_buffer_addr       = local_buffer_en ? (i_wbs_adr - `BUFFER_OFFSET) : 10'h000;
 
 
@@ -447,13 +446,16 @@ always @ (posedge clk) begin
     o_wbs_dat <= 32'h0;
     o_wbs_ack <= 0;
     o_wbs_int <= 0;
-    mem_data_in <=  0;
+    mem_data_in   <=  0;
+    mem_write_en  <=  0;
+    control       <=  0;
   end
 
   else begin
     //when the master acks our ack, then put our ack down
     if (o_wbs_ack && ~i_wbs_stb)begin
-      o_wbs_ack <= 0;
+      o_wbs_ack     <= 0;
+      mem_write_en  <=  0;
     end
 
     if (i_wbs_stb && i_wbs_cyc) begin
@@ -463,6 +465,7 @@ always @ (posedge clk) begin
           //write request
           case (i_wbs_adr)
             CONTROL: begin
+              control         <=  i_wbs_dat;
               $display("ADDR: %h user wrote %h", i_wbs_adr, i_wbs_dat);
             end
             STATUS: begin
@@ -473,7 +476,8 @@ always @ (posedge clk) begin
             end
             default: begin
               if (local_buffer_en) begin
-                mem_data_in <=  i_wbs_dat;
+                mem_write_en  <=  1;
+                mem_data_in   <=  i_wbs_dat;
                 
               end
             end
@@ -484,7 +488,7 @@ always @ (posedge clk) begin
           case (i_wbs_adr)
             CONTROL: begin
               $display("user read %h", CONTROL);
-              o_wbs_dat <= CONTROL;
+              o_wbs_dat <= control;
             end
             STATUS: begin
               $display("user read %h", STATUS);
