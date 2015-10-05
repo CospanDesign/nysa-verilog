@@ -99,7 +99,10 @@ module sdio_memory_function #(
   output                    o_interrupt,            //Launch off an interrupt
 
   //User Interface
-  
+  input                     i_user_write_en,
+  input         [(MEM_EXP - 1): 0]  i_user_address,
+  input         [31:0]      i_user_data_in,
+  output        [31:0]      o_user_data_out,
 
   //Tell the host "HEY LISTEN!"
   input                     i_en_in_interrupts,
@@ -140,9 +143,11 @@ dpb #(
     .dina                   (mem_write_data ),
     .douta                  (mem_read_data  ),
 
-    .clkb                   (sdio_clk       ),
-    .addrb                  (mem_addr       ),
-    .doutb                  (mem_read_data  )
+    .clkb                   (clk            ),
+    .web                    (i_user_write_en),
+    .addrb                  (i_user_address ),
+    .dinb                   (i_user_data_in ),
+    .doutb                  (o_user_data_out)
 );
 //asynchronous logic
 assign  o_busy              =   state != IDLE;

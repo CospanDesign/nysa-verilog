@@ -181,6 +181,10 @@ wire    [9:0]     local_buffer_addr;
 reg               enable_interrupt;
 reg               request_interrupt;
 
+wire              mem_write_en;
+reg     [31:0]    mem_data_in;
+wire    [31:0]    mem_data_out;
+
 //Submodules
 
 //Possibly replace with a generate statement using an input parameter
@@ -412,6 +416,11 @@ sdio_memory_function #(
   .i_en_in_interrupts   (enable_interrupts    ),
 
   //Memory
+  .i_user_write_en      (mem_write_en         ),
+  .i_user_address       (local_buffer_addr    ),
+  .i_user_data_in       (mem_data_in          ),
+  .o_user_data_out      (mem_data_out         ),
+
 
   //Control
   .i_request_interrupt  (request_interrupt    )
@@ -424,10 +433,11 @@ assign  function_ready_for_data = {6'b000000, sdio_func_ready_for_data, 1'b0};
 assign  function_interrupt      = {6'b000000, sdio_func_interrupt,      1'b0};
 
 
-assign  local_buffer_en          = ((i_wbs_adr >= `BUFFER_OFFSET) &&
+assign  local_buffer_en         = ((i_wbs_adr >= `BUFFER_OFFSET) &&
                                     (i_wbs_adr < (`BUFFER_OFFSET + (`BUFFER_SIZE))));
+assign  mem_write_en            = (local_buffer_en & i_wbs_we);
 
-assign  local_buffer_addr        = local_buffer_en ? (i_wbs_adr - `BUFFER_OFFSET) : 10'h000;
+assign  local_buffer_addr       = local_buffer_en ? (i_wbs_adr - `BUFFER_OFFSET) : 10'h000;
 
 
 
@@ -437,6 +447,7 @@ always @ (posedge clk) begin
     o_wbs_dat <= 32'h0;
     o_wbs_ack <= 0;
     o_wbs_int <= 0;
+    mem_data_in <=  0;
   end
 
   else begin
@@ -461,6 +472,10 @@ always @ (posedge clk) begin
               $display("ADDR: %h user wrote %h", i_wbs_adr, i_wbs_dat);
             end
             default: begin
+              if (local_buffer_en) begin
+                mem_data_in <=  i_wbs_dat;
+                
+              end
             end
           endcase
         end
@@ -480,6 +495,9 @@ always @ (posedge clk) begin
               o_wbs_dat <= ADDR_2;
             end
             default: begin
+              if (local_buffer_en) begin
+                o_wbs_dat   <=  mem_data_out;
+              end
             end
           endcase
         end
