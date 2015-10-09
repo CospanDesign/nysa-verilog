@@ -198,60 +198,9 @@ wire    [31:0]    mem_data_out;
 reg     [1:0]     mem_sleep;
 reg               prev_stb;
 wire              posedge_stb;
+wire              phy_posedge_stb;
 
 //Submodules
-
-//Possibly replace with a generate statement using an input parameter
-`ifdef COCOTB_SIMULATION
-sd_dev_platform_cocotb sdio_dev_plat(
-  .clk            (clk                        ),
-  .rst            (rst                        ),
-
-  .o_locked       (pll_locked                 ),
-
-  .o_sd_clk       (sd_clk                     ),
-  .o_sd_clk_x2    (sd_clk_x2                  ),
-
-  .i_sd_cmd_dir   (sd_cmd_dir                 ),
-  .o_sd_cmd_in    (sd_cmd_in                  ),
-  .i_sd_cmd_out   (sd_cmd_out                 ),
-
-  .i_sd_data_dir  (sd_data_dir                ),
-  .o_sd_data_in   (sd_data_in                 ),
-  .i_sd_data_out  (sd_data_out                ),
-
-  .i_phy_clk      (i_phy_sd_clk               ),
-  .io_phy_sd_cmd  (io_phy_sd_cmd              ),
-  .io_phy_sd_data (io_phy_sd_data             )
-);
-`else
-//Spartan 6 Platform
-sd_dev_platform_spartan6 #(
-  .OUTPUT_DELAY   (63                         ),
-  .INPUT_DELAY    (63                         )
-)sdio_dev_plat (
-  .clk            (clk                        ),
-  .rst            (rst                        ),
-
-  .o_locked       (pll_locked                 ),
-
-  .o_sd_clk       (sd_clk                     ),
-  .o_sd_clk_x2    (sd_clk_x2                  ),
-
-  .i_sd_cmd_dir   (sd_cmd_dir                 ),
-  .o_sd_cmd_in    (sd_cmd_in                  ),
-  .i_sd_cmd_out   (sd_cmd_out                 ),
-
-  .i_sd_data_dir  (sd_data_dir                ),
-  .o_sd_data_in   (sd_data_in                 ),
-  .i_sd_data_out  (sd_data_out                ),
-
-  .i_phy_clk      (i_phy_sd_clk               ),
-  .io_phy_sd_cmd  (io_phy_sd_cmd              ),
-  .io_phy_sd_data (io_phy_sd_data             )
-);
-`endif
-
 sdio_device_stack sdio_device (
   .sdio_clk             (sd_clk               ),
   .sdio_clk_x2          (sd_clk_x2            ),
@@ -377,6 +326,7 @@ sdio_device_stack sdio_device (
   .o_func_data_count    (func_data_count      ),
 
   .i_interrupt          (function_interrupt   ),
+  .i_phy_posedge_stb    (phy_posedge_stb      ),
 
   //Platform Interface
   .o_sd_cmd_dir         (sd_cmd_dir           ),
@@ -439,6 +389,64 @@ sdio_memory_function #(
   //Control
   .i_request_interrupt  (request_interrupt    )
 );
+
+
+//Possibly replace with a generate statement using an input parameter
+`ifdef COCOTB_SIMULATION
+sd_dev_platform_cocotb sdio_dev_plat(
+  .clk            (clk                        ),
+  .rst            (rst                        ),
+
+  .o_posedge_stb  (phy_posedge_stb            ),
+
+  .o_locked       (pll_locked                 ),
+
+  .o_sd_clk       (sd_clk                     ),
+  .o_sd_clk_x2    (sd_clk_x2                  ),
+
+  .i_sd_cmd_dir   (sd_cmd_dir                 ),
+  .o_sd_cmd_in    (sd_cmd_in                  ),
+  .i_sd_cmd_out   (sd_cmd_out                 ),
+
+  .i_sd_data_dir  (sd_data_dir                ),
+  .o_sd_data_in   (sd_data_in                 ),
+  .i_sd_data_out  (sd_data_out                ),
+
+  .i_phy_clk      (i_phy_sd_clk               ),
+  .io_phy_sd_cmd  (io_phy_sd_cmd              ),
+  .io_phy_sd_data (io_phy_sd_data             )
+);
+`else
+//Spartan 6 Platform
+sd_dev_platform_spartan6 #(
+  .OUTPUT_DELAY   (63                         ),
+  .INPUT_DELAY    (63                         )
+)sdio_dev_plat (
+  .clk            (clk                        ),
+  .rst            (rst                        ),
+
+  .o_posedge_stb  (phy_posedge_stb            ),
+
+  .o_locked       (pll_locked                 ),
+
+  .o_sd_clk       (sd_clk                     ),
+  .o_sd_clk_x2    (sd_clk_x2                  ),
+
+  .i_sd_cmd_dir   (sd_cmd_dir                 ),
+  .o_sd_cmd_in    (sd_cmd_in                  ),
+  .i_sd_cmd_out   (sd_cmd_out                 ),
+
+  .i_sd_data_dir  (sd_data_dir                ),
+  .o_sd_data_in   (sd_data_in                 ),
+  .i_sd_data_out  (sd_data_out                ),
+
+  .i_phy_clk      (i_phy_sd_clk               ),
+  .io_phy_sd_cmd  (io_phy_sd_cmd              ),
+  .io_phy_sd_data (io_phy_sd_data             )
+);
+`endif
+
+
 
 //Asynchronous Logic
 assign  function_ready          = {6'b000000, sdio_func_ready,          1'b0};

@@ -118,7 +118,7 @@
 `define FUNC6_CIS_OFFSET            ${FUNC6_CIS_OFFSET}
 `define FUNC7_CIS_OFFSET            ${FUNC7_CIS_OFFSET}
 
-`define CIS_FILENAME                "sdio_cis_rom.rom"
+`define CIS_FILENAME                "${CIS_FILE_NAME}"
 `define CIS_FILE_LENGTH             ${CIS_FILE_LENGTH}
 
 `define NUM_FUNCS                   ${NUM_FUNCS}

@@ -170,7 +170,6 @@ assign  o_interrupt   = ((i_func_interrupt & i_func_interrupt_en) > 0);
 //synchronous logic
 always @ (posedge sdio_clk) begin
   o_rsps_stb                <=  0;
-  o_rsps_fail               <=  0;
   if (rst) begin
     response_type           <=  NORMAL_RESPONSE;
     response_value          <=  48'h00000000;
@@ -273,6 +272,7 @@ always @ (posedge sdio_clk) begin
     //o_func_host_rdy                 <=  0;
     cmd_data                        <=  0;
     o_cmd_bus_sel                   <=  1;
+    o_rsps_fail                     <=  0;
 
   end
   else if (i_cmd_stb && !i_cmd_crc_good_stb) begin
@@ -287,6 +287,7 @@ always @ (posedge sdio_clk) begin
       cmd_arg_out_of_range          <=  0;
       illegal_command               <=  0;
       card_error                    <=  0;  //Unknown Error
+      o_rsps_fail                   <=  0;
     end
     //Card Bootup Sequence
     case (state)

@@ -22,26 +22,48 @@ SOFTWARE.
 */
 
 /*
- * Author:
- * Description:
+ * Author: David McCoy (dave.mccoy@cospandesign.com)
+ * Description: Card Information Structure (CIS)
+ *  Information about card behavior
  *
  * Changes:
  */
 
-module my_function (
+module sdio_cis #(
+  parameter                 FILE_LENGTH = 10,
+  parameter                 FILENAME = "cis.rom"
+)(
   input                     clk,
-  input                     rst
-  //output  reg   [7:0]       o_reg_example
-  //input         [7:0]       i_reg_example
+  input                     rst,
 
+  input                     i_activate,
+  input         [17:0]      i_address,
+  input                     i_data_stb,
+  output  reg   [7:0]       o_data_out
 );
 //local parameters
-localparam     PARAM1  = 32'h00000000;
 //registes/wires
+reg   [7:0]                 rom [0:FILE_LENGTH];
+
 //submodules
 //asynchronous logic
 //synchronous logic
+initial begin
+  $readmemh(FILENAME, rom, 0, FILE_LENGTH - 1);
+end
 
-
+always @ (posedge clk) begin
+  //De-assert Strobes
+  if (rst) begin
+    o_data_out          <=  0;
+  end
+  else begin
+    if (i_activate) begin
+      if (i_data_stb) begin
+        o_data_out      <=  rom[i_address];
+      end
+    end
+  end
+end
 
 endmodule

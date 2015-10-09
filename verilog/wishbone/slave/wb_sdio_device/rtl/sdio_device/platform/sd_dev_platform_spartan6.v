@@ -74,6 +74,8 @@ module sd_dev_platform_spartan6 #(
   output                    o_sd_clk,
   output                    o_sd_clk_x2,
 
+  output  reg               o_posedge_stb,
+
   input                     i_sd_cmd_dir,
   input                     i_sd_cmd_out,
   output                    o_sd_cmd_in,
@@ -85,12 +87,12 @@ module sd_dev_platform_spartan6 #(
   input                     i_phy_clk,
   inout                     io_phy_sd_cmd,
   inout           [3:0]     io_phy_sd_data
-
 );
 
 //local parameters
 //registes/wires
 wire                [7:0]   sd_data_out;
+wire                        pll_sd_clk;
 
 wire                        ddr_clk_predelay;
 wire                        ddr_clk_delay;
@@ -110,8 +112,6 @@ wire                [3:0]   pin_data_in_predelay;
 wire                [3:0]   pin_data_tristate_predelay;
 wire                        serdes_strobe;
 
-wire                        din_serdes_strobe_buf;
-
 wire                        phy_clk_s;
 wire                        buf_phy_clk;
 wire                        pll_phy_clk;
@@ -121,12 +121,15 @@ wire                        serdes_clk_fb;
 
 
 
+`ifdef SIMULATION
 pullup (io_phy_sd_data[0]);
 pullup (io_phy_sd_data[1]);
 pullup (io_phy_sd_data[2]);
 pullup (io_phy_sd_data[3]);
+`endif
 
-assign    fb_locked     = o_locked && pll_locked;
+assign    fb_locked       = o_locked && pll_locked;
+//assign    o_posedge_stb   = serdes_strobe;
 //submodules
 
 //Read in the clock
@@ -143,7 +146,7 @@ IODELAY2 #(
   .IDELAY_MODE          ("NORMAL"             ),  // NORMAL or PCI
   .SERDES_MODE          ("MASTER"             ),  // NONE, MASTER or SLAVE
   .COUNTER_WRAPAROUND   ("STAY_AT_LIMIT"      ),  // <STAY_AT_LIMIT>, WRAPAROUND
-  .IDELAY_TYPE          ("VARIABLE_FROM_HALF_MAX"),   
+  .IDELAY_TYPE          ("VARIABLE_FROM_HALF_MAX"),
   .DELAY_SRC            ("IDATAIN"            ),  // "IO", "IDATAIN", "ODATAIN"
   .SIM_TAPDELAY_VALUE   (75                   )   // Simulation Tap Delay
 )clk_delay_m (
@@ -174,7 +177,6 @@ IODELAY2 #(
   .IDELAY_MODE          ("NORMAL"             ),  // NORMAL or PCI
   .SERDES_MODE          ("SLAVE"              ),  // NONE, MASTER or SLAVE
   .COUNTER_WRAPAROUND   ("STAY_AT_LIMIT"      ),  // <STAY_AT_LIMIT>, WRAPAROUND
-  .IDELAY_TYPE          ("FIXED"              ),   
   .DELAY_SRC            ("IDATAIN"            ),  // "IO", "IDATAIN", "ODATAIN"
   .SIM_TAPDELAY_VALUE   (75                   )   // Simulation Tap Delay
 )clk_delay_s (
@@ -196,8 +198,6 @@ IODELAY2 #(
   .BUSY                 (                     ),  // output signal indicating sync circuit has finished / calibration has finished
   .RST                  (1'b0                 )   // Reset delay line
 );
-
-
 
 //Bridge Between IODELAY and PLL
 BUFIO2 #(
@@ -221,7 +221,6 @@ BUFIO2FB clkfb_buf(
   .I                    (feedback             ),
   .O                    (serdes_clk_fb        )
 );
-
 
 PLL_ADV #(
   .BANDWIDTH            ("OPTIMIZED"          ),
@@ -305,16 +304,13 @@ ISERDES2 #(
   .CFB0                 (                     ),
   .CFB1                 (                     ),
   .DFB                  (                     ),
-
   .INCDEC               (                     ),
   .VALID                (                     ),
   .BITSLIP              (1'b0                 ),
-
   //Actual Data
-  .Q1                   (                       ),
-  .Q2                   (                       )
+  .Q1                   (                     ),
+  .Q2                   (                     )
 );
-
 
 ISERDES2 #(
   .BITSLIP_ENABLE       ("FALSE"              ),
@@ -338,14 +334,12 @@ ISERDES2 #(
   .CFB1                 (                     ),
   //.DFB                  (feedback             ),
   .DFB                  (data_clk_pre         ),
-
   .INCDEC               (                     ),
   .VALID                (                     ),
   .BITSLIP              (1'b0                 ),
-
   //Actual Data
-  .Q1                   (                       ),
-  .Q2                   (                       )
+  .Q1                   (                     ),
+  .Q2                   (                     )
 );
 
 BUFPLL #(
@@ -355,50 +349,26 @@ BUFPLL #(
   .GCLK                 (o_sd_clk             ),
   .LOCKED               (pll_locked           ),
   .PLLIN                (pll_serdes_clk       ),
-  
-
   .LOCK                 (o_locked             ),
   .IOCLK                (serdes_clk           ),
   .SERDESSTROBE         (serdes_strobe        )
 );
 
-
-
 //Control Line
-IOBUF #(
-  .IOSTANDARD           ("LVCMOS18"           )
-)cmd_iobuf(
+IOBUF
+#(
+  .IOSTANDARD           ("LVCMOS33"           )
+)
+cmd_iobuf(
   .T                    (sd_cmd_tristate_dly  ),
-
   .O                    (sd_cmd_in_delay      ),
   .I                    (sd_cmd_out_delay     ),
-
   .IO                   (io_phy_sd_cmd        )
 );
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+`ifdef SIMULATION
 pullup (io_phy_sd_cmd);
+`endif
 
 IODELAY2 #(
   .DATA_RATE            ("SDR"                ),
@@ -414,9 +384,7 @@ IODELAY2 #(
   .ODATAIN              (i_sd_cmd_out         ),
   //.DATAOUT              (o_sd_cmd_in          ),
   .DATAOUT2             (o_sd_cmd_in          ),
-
   //FPGA Fabric
-
   //IOB
   .TOUT                 (sd_cmd_tristate_dly  ),
   .IDATAIN              (sd_cmd_in_delay      ),
@@ -437,7 +405,7 @@ genvar pcnt;
 generate
 for (pcnt = 0; pcnt < 4; pcnt = pcnt + 1) begin: sgen
 IOBUF #(
-  .IOSTANDARD           ("LVCMOS18"             )
+  .IOSTANDARD           ("LVCMOS33"             )
 ) io_data_buffer (
   .T                    (pin_data_tristate[pcnt]),
 
@@ -461,12 +429,10 @@ IODELAY2 #(
   .T                    (pin_data_tristate_predelay[pcnt] ),
   .ODATAIN              (pin_data_in_predelay[pcnt]       ),
   .DATAOUT              (pin_data_out_delay[pcnt]         ),
-
   //To/From IO Buffer
   .TOUT                 (pin_data_tristate[pcnt]          ),
   .IDATAIN              (pin_data_in[pcnt]                ),
   .DOUT                 (pin_data_out[pcnt]               ),
-
   .DATAOUT2             (                     ),
   .IOCLK0               (1'b0                 ),  //This one is not SERDESized.. Do I need to add a clock??
   .IOCLK1               (1'b0                 ),
@@ -493,11 +459,9 @@ ISERDES2 #(
   .CFB0                 (                     ),
   .CFB1                 (                     ),
   .DFB                  (                     ),
-
   .INCDEC               (                     ),
   .VALID                (                     ),
   .BITSLIP              (1'b0                 ),
-
   .CE0                  (1'b1                 ),
   .CLK0                 (serdes_clk           ),
   .CLK1                 (1'b0                 ),
@@ -549,8 +513,9 @@ endgenerate
 //asynchronous logic
 assign  sd_data_out = i_sd_data_out;
 
+always @ (posedge o_sd_clk_x2) begin
+  o_posedge_stb     <=  serdes_strobe;
+end
 
 //Synchronous Logic
-
-
 endmodule

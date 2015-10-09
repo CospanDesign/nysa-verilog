@@ -292,6 +292,7 @@ reg               request_more_data_ack;
 reg     [27:0]    data_write_count;
 reg     [27:0]    data_read_count;
 
+
 //Submodules
 wishbone_master wm (
   .clk            (clk              ),
@@ -361,8 +362,6 @@ wishbone_mem_interconnect wmi (
   .o_s0_adr   (w_sm0_i_wbs_adr      ),
   .i_s0_int   (w_sm0_o_wbs_int      )
 );
-
-
 
 //slave 1
 wb_sd_host s1 (
@@ -533,9 +532,7 @@ sd_dev_platform_spartan6 #(
   .io_phy_sd_data (phy_sd_data      )
 );
 
-
 //TODO ADAPT sdio_device to use the platform based phy_sd_cmd and phy_sd_data
-
 sdio_device_stack sdio_device (
   .sdio_clk             (sd_clk               ),
   .sdio_clk_x2          (clk                  ),

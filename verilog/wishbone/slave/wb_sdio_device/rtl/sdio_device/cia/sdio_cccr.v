@@ -93,7 +93,7 @@ reg             [3:0]       state;
 
 wire            [7:0]       cccr_map [0:22];
 
-output  reg     [1:0]       bus_width;
+reg             [1:0]       bus_width;
 reg             [2:0]       bus_speed_select;
 reg             [2:0]       abort_sel;
 wire            [17:0]      reg_addr;

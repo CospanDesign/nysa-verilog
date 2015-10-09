@@ -77,6 +77,7 @@ wire  [31:0]      w_out_address;
 wire  [31:0]      w_out_data;
 wire  [27:0]      w_out_data_count;
 reg               r_ih_reset      = 0;
+wire              phy_posedge_stb;
 
 //wishbone signals
 wire              w_wbm_we;
@@ -227,10 +228,6 @@ wishbone_interconnect wi (
   .o_s1_adr   (w_wbs1_adr           ),
   .i_s1_int   (w_wbs1_int           )
 );
-
-
-
-
 
 assign  w_wbs0_ack              = 0;
 assign  w_wbs0_dat_o            = 0;

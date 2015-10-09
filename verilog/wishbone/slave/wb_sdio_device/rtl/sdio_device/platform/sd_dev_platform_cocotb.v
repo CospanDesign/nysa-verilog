@@ -36,6 +36,9 @@ output              o_sd_clk,
 output              o_sd_clk_x2,
 //SD Stack Interface
 output  reg         o_locked,
+
+output              o_posedge_stb,
+
 input               i_sd_cmd_dir,
 output              o_sd_cmd_in,
 input               i_sd_cmd_out,
@@ -68,6 +71,7 @@ reg       negedge_clk;
 
 
 assign  o_sd_clk      = i_phy_clk;
+//assign  o_posedge_stb = posedge_clk;
 assign  o_sd_clk_x2   = clk;
 
 assign  io_phy_sd_cmd = i_sd_cmd_dir  ? i_sd_cmd_out : 1'hZ;
@@ -102,6 +106,8 @@ always @ (posedge clk) begin
 
   prev_clk_edge     <=  i_phy_clk;
 end
+
+assign  o_posedge_stb       =  (!clk ^ posedge_clk);
 
 always @ (posedge clk) begin
   if (rst) begin

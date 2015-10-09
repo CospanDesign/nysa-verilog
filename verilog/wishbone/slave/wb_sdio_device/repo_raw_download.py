@@ -20,6 +20,7 @@ import sys
 import json
 import os
 import argparse
+from distutils import dir_util
 import zipfile
 import tempfile
 import shutil
@@ -52,8 +53,12 @@ def get_repo_zip_file(url, dest_path):
     print "Temp path:%s" % temparchive
     urllib.urlretrieve(url, temparchive)
     zf = zipfile.ZipFile(temparchive, "a")
-    zf.extractall(dest_path)
+    #zf.extractall(dest_path)
+    zf.extractall(tempdir)
     zf.close()
+    src = os.path.join(tempdir, "sdio-device-master", "rtl")
+    dst = os.path.join(dest_path, "sdio_device")
+    dir_util.copy_tree(src, dst)
     shutil.rmtree(tempdir)
 
 

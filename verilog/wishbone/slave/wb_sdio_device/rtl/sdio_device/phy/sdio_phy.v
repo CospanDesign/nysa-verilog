@@ -2,6 +2,7 @@
 
 module sdio_device_phy (
   input               rst,
+  input               i_posedge_stb,
 
   //Configuration
   input               i_ddr_en,
@@ -88,6 +89,7 @@ sdio_data_phy data_phy(
   .clk_x2             (i_sdio_clk_x2   ),
   .rst                (rst             ),
   .i_interrupt        (i_interrupt     ),
+  .i_posedge_stb      (i_posedge_stb   ),
 
   .i_ddr_en           (i_ddr_en        ),
   .i_spi_phy          (i_spi_phy       ),

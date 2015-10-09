@@ -34,6 +34,7 @@ module sdio_data_phy (
   input                   clk,
   input                   clk_x2,
   input                   rst,
+  input                   i_posedge_stb,
   input                   i_interrupt,
 
   //Configuration
@@ -80,7 +81,7 @@ reg               [3:0]   crc_state;
 
 reg               [12:0]  data_count;
 wire                      data_crc_good;
-reg                       posedge_clk;
+//reg                       posedge_clk;
 reg               [3:0]   crc_bit;
 wire              [15:0]  crc_out [0:3];
 
@@ -148,18 +149,35 @@ assign  sdio_data1    = crc_data[1];
 assign  sdio_data2    = crc_data[2];
 assign  sdio_data3    = crc_data[3];
 
-assign  crc_data[0]  = i_write_flag   ?
-                          !clk        ? i_sdio_data_in[4'h7] : i_sdio_data_in[4'h3]:
-                          clk         ? i_data_rd_data[4'h7] : i_data_rd_data[4'h3];
-assign  crc_data[1]  = i_write_flag   ?
-                          !clk        ? i_sdio_data_in[4'h6] : i_sdio_data_in[4'h2]:
-                          clk         ? i_data_rd_data[4'h6] : i_data_rd_data[4'h2];
-assign  crc_data[2]  = i_write_flag   ?
-                          !clk        ? i_sdio_data_in[4'h5] : i_sdio_data_in[4'h1]:
-                          clk         ? i_data_rd_data[4'h5] : i_data_rd_data[4'h1];
-assign  crc_data[3]  = i_write_flag   ?
+/*
+assign  crc_data[0]   = i_write_flag   ?
+                           !clk        ? i_sdio_data_in[4'h7] : i_sdio_data_in[4'h3]:
+                           clk         ? i_data_rd_data[4'h7] : i_data_rd_data[4'h3];
+assign  crc_data[1]   = i_write_flag   ?
+                           !clk        ? i_sdio_data_in[4'h6] : i_sdio_data_in[4'h2]:
+                           clk         ? i_data_rd_data[4'h6] : i_data_rd_data[4'h2];
+assign  crc_data[2]   = i_write_flag   ?
+                           !clk        ? i_sdio_data_in[4'h5] : i_sdio_data_in[4'h1]:
+                           clk         ? i_data_rd_data[4'h5] : i_data_rd_data[4'h1];
+assign  crc_data[3]   = i_write_flag   ?
                           !clk        ? i_sdio_data_in[4'h4] : i_sdio_data_in[4'h0]:
                           clk         ? i_data_rd_data[4'h4] : i_data_rd_data[4'h0];
+*/
+
+assign  crc_data[0]   = i_write_flag      ?
+                           !i_posedge_stb ? i_sdio_data_in[4'h7] : i_sdio_data_in[4'h3]:
+                           i_posedge_stb  ? i_data_rd_data[4'h7] : i_data_rd_data[4'h3];
+assign  crc_data[1]   = i_write_flag      ?
+                           !i_posedge_stb ? i_sdio_data_in[4'h6] : i_sdio_data_in[4'h2]:
+                           i_posedge_stb  ? i_data_rd_data[4'h6] : i_data_rd_data[4'h2];
+assign  crc_data[2]   = i_write_flag      ?
+                           !i_posedge_stb ? i_sdio_data_in[4'h5] : i_sdio_data_in[4'h1]:
+                           i_posedge_stb  ? i_data_rd_data[4'h5] : i_data_rd_data[4'h1];
+assign  crc_data[3]   = i_write_flag      ?
+                          !i_posedge_stb  ? i_sdio_data_in[4'h4] : i_sdio_data_in[4'h0]:
+                          i_posedge_stb   ? i_data_rd_data[4'h4] : i_data_rd_data[4'h0];
+
+
 
 assign  o_data_wr_data = o_sdio_data_dir ? 8'h00 : i_sdio_data_in;
 assign  data_crc_good  =  ( (host_crc[0] == crc_out[0]) &&
@@ -178,14 +196,14 @@ always @ (posedge clk_x2) begin
     case (crc_state)
       IDLE: begin
         crc_rst               <=  1;
-        if (capture_crc && !clk) begin
+        if (capture_crc && !i_posedge_stb) begin
           crc_rst             <=  0;
           crc_state           <=  PROCESS_CRC;
           enable_crc          <=  1;
         end
       end
       PROCESS_CRC: begin
-        if (!capture_crc && !clk) begin
+        if (!capture_crc && !i_posedge_stb) begin
           crc_state           <=  FINISHED;
           enable_crc          <=  0;
         end
@@ -210,6 +228,7 @@ always @ (posedge clk)begin
   end
 end
 
+/*
 always @ (posedge clk_x2) begin
   if (rst) begin
     posedge_clk               <=  0;
@@ -223,6 +242,7 @@ always @ (posedge clk_x2) begin
     end
   end
 end
+*/
 
 always @ (posedge clk) begin
   if (rst) begin
@@ -387,7 +407,6 @@ always @ (posedge clk) begin
         end
         else begin
           read_data             <=  8'hFF;
-          o_sdio_data_out       <=  8'hFF;
           state                 <=  FINISHED;
         end
       end

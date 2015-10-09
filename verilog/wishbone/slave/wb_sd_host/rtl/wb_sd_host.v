@@ -326,7 +326,6 @@ sd_host_platform_cocotb platform(
   .o_phy_out_clk        (o_sd_clk                 ),
   .io_phy_sd_cmd        (io_sd_cmd                ),
   .io_phy_sd_data       (io_sd_data               )
-
 );
 `else
 //Spartan 6 Platform

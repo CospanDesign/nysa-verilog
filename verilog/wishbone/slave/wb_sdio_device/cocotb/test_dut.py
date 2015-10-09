@@ -32,7 +32,7 @@ def wait_ready(nysa, dut):
     pass
 
 @cocotb.test(skip = False)
-def first_test(dut):
+def test_local_buffer(dut):
     """
     Description:
         Very Basic Functionality
@@ -41,10 +41,9 @@ def first_test(dut):
     Test ID: 0
 
     Expected Results:
-        Write to all registers
+        Write to the local buffer
+        Read from the local buffer
     """
-
-
     dut.test_id = 0
     print "module path: %s" % MODULE_PATH
     nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
@@ -54,16 +53,38 @@ def first_test(dut):
     yield (nysa.wait_clocks(10))
     nysa.pretty_print_sdb()
     driver = wb_sdio_deviceDriver(nysa, nysa.find_device(wb_sdio_deviceDriver)[0])
-    print "here!"
-    yield cocotb.external(driver.set_control)(0x01)
-    v = yield cocotb.external(driver.get_control)()
-    dut.log.info("V: %d" % v)
+
+    #Enable SDIO
+    yield cocotb.external(driver.enable_sdio_device)(True)
+    v = yield cocotb.external(driver.is_sdio_device_enabled)()
+
+    dut.log.info("Is SDIO Enabled: %s" % str(v))
+    #Enable Interrupts
+    yield cocotb.external(driver.enable_interrupt)(True)
+    v = yield cocotb.external(driver.is_sdio_device_enabled)()
+
+    dut.log.info("Is SDIO Interrupt Enabled: %s" % str(v))
+
+    #Send an Interrupt to host
+    yield cocotb.external(driver.enable_interrupt_to_host)(True)
+    v = yield cocotb.external(driver.is_interrupt_to_host_enabled)()
+    
+    dut.log.info("Is SDIO Interrupt to host enabled: %s" % str(v))
+
+    #Disable Interrupt to host
+    yield cocotb.external(driver.enable_interrupt_to_host)(False)
+    v = yield cocotb.external(driver.is_interrupt_to_host_enabled)()
+    
+    dut.log.info("Is SDIO Interrupt to host enabled: %s" % str(v))
+
+
     dut.log.info("DUT Opened!")
     dut.log.info("Ready")
-    data_in = Array('B', [0x00, 0x01, 0x02, 0x03])
+    data_in = Array('B', [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07])
     yield cocotb.external(driver.write_local_buffer)(0x00, data_in)
     data_out = yield cocotb.external(driver.read_local_buffer)(0x00, (len(data_in) / 4))
     print "data out: %s" % print_hex_array(data_out)
+
 
 def print_hex_array(a):
     s = None

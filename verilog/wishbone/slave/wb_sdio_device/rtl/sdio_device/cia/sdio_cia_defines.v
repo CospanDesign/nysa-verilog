@@ -74,35 +74,35 @@
 `define CCCR_FUNC_START_ADDR        (18'h00000)
 `define CCCR_FUNC_END_ADDR          (18'h000FF)
 `define CCCR_INDEX                  0
-
+                                    
 `define FUNC1_START_ADDR            (18'h00100)
 `define FUNC1_END_ADDR              (18'h001FF)
 `define FUNC1_INDEX                 1
-
+                                    
 `define FUNC2_START_ADDR            (18'h00200)
 `define FUNC2_END_ADDR              (18'h002FF)
 `define FUNC2_INDEX                 2
-
+                                    
 `define FUNC3_START_ADDR            (18'h00300)
 `define FUNC3_END_ADDR              (18'h003FF)
 `define FUNC3_INDEX                 3
-
+                                    
 `define FUNC4_START_ADDR            (18'h00400)
 `define FUNC4_END_ADDR              (18'h004FF)
 `define FUNC4_INDEX                 4
-
+                                    
 `define FUNC5_START_ADDR            (18'h00500)
 `define FUNC5_END_ADDR              (18'h005FF)
 `define FUNC5_INDEX                 5
-
+                                    
 `define FUNC6_START_ADDR            (18'h00600)
 `define FUNC6_END_ADDR              (18'h006FF)
 `define FUNC6_INDEX                 6
-
+                                    
 `define FUNC7_START_ADDR            (18'h00700)
 `define FUNC7_END_ADDR              (18'h007FF)
 `define FUNC7_INDEX                 7
-
+ 
 `define MAIN_CIS_START_ADDR         (18'h01000)
 `define MAIN_CIS_END_ADDR           (18'h17FFF)
 `define CIS_INDEX                   8
@@ -119,7 +119,7 @@
 `define FUNC7_CIS_OFFSET            74
 
 `define CIS_FILENAME                "sdio_cis_rom.rom"
-`define CIS_FILE_LENGTH             77
+`define CIS_FILE_LENGTH             80
 
 `define NUM_FUNCS                   1
 

@@ -171,9 +171,10 @@ module sdio_device_stack (
 
   input           [7:0]     i_interrupt,
 
-  //FPGA Interface
-  input                     i_sdio_clk,
+  //Platform Spectific posedge strobe
+  input                     i_phy_posedge_stb,
 
+  //FPGA Interface
   output                    o_sd_cmd_dir,
   input                     i_sd_cmd_in,
   output                    o_sd_cmd_out,
@@ -544,6 +545,7 @@ sdio_cia cia (
 
 sdio_device_phy phy(
   .rst                      (rst                        ),
+  .i_posedge_stb            (i_phy_posedge_stb          ),
 
   //Configuration
   .i_spi_phy                (spi_phy                    ),/* Flag: SPI PHY (not supported now) */

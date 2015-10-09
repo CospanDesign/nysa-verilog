@@ -74,22 +74,22 @@ always @ (posedge clk) begin
     //Shift the output value
     if (en) begin
       //crc <=  bit ? ({crc[14:0], 1'b0} ^ POLYNOMIAL) : {crc[14:0], 1'b0};
-      crc[15] = crc[14];
-      crc[14] = crc[13];
-      crc[13] = crc[12];
-      crc[12] = crc[11] ^ inv;
-      crc[11] = crc[10];
-      crc[10] = crc[9];
-      crc[9]  = crc[8];
-      crc[8]  = crc[7];
-      crc[7]  = crc[6];
-      crc[6]  = crc[5];
-      crc[5]  = crc[4] ^ inv;
-      crc[4]  = crc[3];
-      crc[3]  = crc[2];
-      crc[2]  = crc[1];
-      crc[1]  = crc[0];
-      crc[0]  = inv;
+      crc[15] <= crc[14];
+      crc[14] <= crc[13];
+      crc[13] <= crc[12];
+      crc[12] <= crc[11] ^ inv;
+      crc[11] <= crc[10];
+      crc[10] <= crc[9];
+      crc[9]  <= crc[8];
+      crc[8]  <= crc[7];
+      crc[7]  <= crc[6];
+      crc[6]  <= crc[5];
+      crc[5]  <= crc[4] ^ inv;
+      crc[4]  <= crc[3];
+      crc[3]  <= crc[2];
+      crc[2]  <= crc[1];
+      crc[1]  <= crc[0];
+      crc[0]  <= inv;
     end
   end
 end
