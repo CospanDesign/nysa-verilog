@@ -130,6 +130,7 @@ wire      [3:0]             crc_bit2;
 wire      [3:0]             crc_bit3;
 //wire      [7:0]             in_remap;
 reg       [11:0]            data_count;
+wire                        writing_active;
 
 integer                     i = 0;
 
@@ -176,7 +177,6 @@ assign  gen_crc3  = gen_crc[3];
 
 
 
-assign  o_sd_data_dir = i_write_flag & i_en;
 
 /*
 assign  in_remap   = { i_sd_data[0],
@@ -199,7 +199,10 @@ assign  o_sd_data  = { sd_data[0],
                        sd_data[6],
                        sd_data[7]};
 */
-assign  o_sd_data  =  sd_data;
+assign  o_sd_data       = sd_data;
+
+assign  writing_active  = ((state == WRITE) || (state == WRITE_CRC));
+assign  o_sd_data_dir   = writing_active;
 
 //synchronous logic
 always @ (posedge clk_x2) begin

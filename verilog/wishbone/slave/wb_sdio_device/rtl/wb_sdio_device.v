@@ -68,12 +68,6 @@ SOFTWARE.
 `define     BUFFER_EXP    10
 `define     BUFFER_SIZE   2**(`BUFFER_EXP)
 
-`define     MEM_TIMEOUT   1
-
-`define     CNTRL_BIT_ENABLE          0
-`define     CNTRL_BIT_INTERRUPT       1
-`define     CNTRL_BIT_SEND_INTERRUPT  2
-
 
 module wb_sdio_device (
   input               clk,
@@ -105,10 +99,6 @@ module wb_sdio_device (
 localparam     CONTROL  = 32'h00000000;
 localparam     STATUS   = 32'h00000001;
 localparam     ADDR_2   = 32'h00000002;
-
-reg     [31:0]    control;
-wire              enable_sdio;
-wire              enable_interrupt;
 
 //Local Registers/Wires
 wire              pll_locked;
@@ -188,19 +178,62 @@ wire              sdio_func_exec_sts;
 wire              local_buffer_en;
 wire    [9:0]     local_buffer_addr;
 
-wire              enable_interrupts;
-wire              request_interrupt;
-
-reg               mem_write_en;
-reg     [31:0]    mem_data_in;
-wire    [31:0]    mem_data_out;
-
-reg     [1:0]     mem_sleep;
-reg               prev_stb;
-wire              posedge_stb;
-wire              phy_posedge_stb;
+reg               enable_interrupt;
+reg               request_interrupt;
 
 //Submodules
+
+//Possibly replace with a generate statement using an input parameter
+`ifdef COCOTB_SIMULATION
+sd_dev_platform_cocotb sdio_dev_plat(
+  .clk            (clk                        ),
+  .rst            (rst                        ),
+
+  .o_locked       (pll_locked                 ),
+
+  .o_sd_clk       (sd_clk                     ),
+  .o_sd_clk_x2    (sd_clk_x2                  ),
+
+  .i_sd_cmd_dir   (sd_cmd_dir                 ),
+  .o_sd_cmd_in    (sd_cmd_in                  ),
+  .i_sd_cmd_out   (sd_cmd_out                 ),
+
+  .i_sd_data_dir  (sd_data_dir                ),
+  .o_sd_data_in   (sd_data_in                 ),
+  .i_sd_data_out  (sd_data_out                ),
+
+  .i_phy_clk      (i_phy_sd_clk               ),
+  .io_phy_sd_cmd  (io_phy_sd_cmd              ),
+  .io_phy_sd_data (io_phy_sd_data             )
+);
+`else
+//Spartan 6 Platform
+sd_dev_platform_spartan6 #(
+  .OUTPUT_DELAY   (63                         ),
+  .INPUT_DELAY    (63                         )
+)sdio_dev_plat (
+  .clk            (clk                        ),
+  .rst            (rst                        ),
+
+  .o_locked       (pll_locked                 ),
+
+  .o_sd_clk       (sd_clk                     ),
+  .o_sd_clk_x2    (sd_clk_x2                  ),
+
+  .i_sd_cmd_dir   (sd_cmd_dir                 ),
+  .o_sd_cmd_in    (sd_cmd_in                  ),
+  .i_sd_cmd_out   (sd_cmd_out                 ),
+
+  .i_sd_data_dir  (sd_data_dir                ),
+  .o_sd_data_in   (sd_data_in                 ),
+  .i_sd_data_out  (sd_data_out                ),
+
+  .i_phy_clk      (i_phy_sd_clk               ),
+  .io_phy_sd_cmd  (io_phy_sd_cmd              ),
+  .io_phy_sd_data (io_phy_sd_data             )
+);
+`endif
+
 sdio_device_stack sdio_device (
   .sdio_clk             (sd_clk               ),
   .sdio_clk_x2          (sd_clk_x2            ),
@@ -326,7 +359,6 @@ sdio_device_stack sdio_device (
   .o_func_data_count    (func_data_count      ),
 
   .i_interrupt          (function_interrupt   ),
-  .i_phy_posedge_stb    (phy_posedge_stb      ),
 
   //Platform Interface
   .o_sd_cmd_dir         (sd_cmd_dir           ),
@@ -380,73 +412,10 @@ sdio_memory_function #(
   .i_en_in_interrupts   (enable_interrupts    ),
 
   //Memory
-  .i_user_write_en      (mem_write_en         ),
-  .i_user_address       (local_buffer_addr    ),
-  .i_user_data_in       (mem_data_in          ),
-  .o_user_data_out      (mem_data_out         ),
-
 
   //Control
   .i_request_interrupt  (request_interrupt    )
 );
-
-
-//Possibly replace with a generate statement using an input parameter
-`ifdef COCOTB_SIMULATION
-sd_dev_platform_cocotb sdio_dev_plat(
-  .clk            (clk                        ),
-  .rst            (rst                        ),
-
-  .o_posedge_stb  (phy_posedge_stb            ),
-
-  .o_locked       (pll_locked                 ),
-
-  .o_sd_clk       (sd_clk                     ),
-  .o_sd_clk_x2    (sd_clk_x2                  ),
-
-  .i_sd_cmd_dir   (sd_cmd_dir                 ),
-  .o_sd_cmd_in    (sd_cmd_in                  ),
-  .i_sd_cmd_out   (sd_cmd_out                 ),
-
-  .i_sd_data_dir  (sd_data_dir                ),
-  .o_sd_data_in   (sd_data_in                 ),
-  .i_sd_data_out  (sd_data_out                ),
-
-  .i_phy_clk      (i_phy_sd_clk               ),
-  .io_phy_sd_cmd  (io_phy_sd_cmd              ),
-  .io_phy_sd_data (io_phy_sd_data             )
-);
-`else
-//Spartan 6 Platform
-sd_dev_platform_spartan6 #(
-  .OUTPUT_DELAY   (63                         ),
-  .INPUT_DELAY    (63                         )
-)sdio_dev_plat (
-  .clk            (clk                        ),
-  .rst            (rst                        ),
-
-  .o_posedge_stb  (phy_posedge_stb            ),
-
-  .o_locked       (pll_locked                 ),
-
-  .o_sd_clk       (sd_clk                     ),
-  .o_sd_clk_x2    (sd_clk_x2                  ),
-
-  .i_sd_cmd_dir   (sd_cmd_dir                 ),
-  .o_sd_cmd_in    (sd_cmd_in                  ),
-  .i_sd_cmd_out   (sd_cmd_out                 ),
-
-  .i_sd_data_dir  (sd_data_dir                ),
-  .o_sd_data_in   (sd_data_in                 ),
-  .i_sd_data_out  (sd_data_out                ),
-
-  .i_phy_clk      (i_phy_sd_clk               ),
-  .io_phy_sd_cmd  (io_phy_sd_cmd              ),
-  .io_phy_sd_data (io_phy_sd_data             )
-);
-`endif
-
-
 
 //Asynchronous Logic
 assign  function_ready          = {6'b000000, sdio_func_ready,          1'b0};
@@ -455,39 +424,25 @@ assign  function_ready_for_data = {6'b000000, sdio_func_ready_for_data, 1'b0};
 assign  function_interrupt      = {6'b000000, sdio_func_interrupt,      1'b0};
 
 
-assign  local_buffer_en         = ((i_wbs_adr >= `BUFFER_OFFSET) &&
+assign  local_buffer_en          = ((i_wbs_adr >= `BUFFER_OFFSET) &&
                                     (i_wbs_adr < (`BUFFER_OFFSET + (`BUFFER_SIZE))));
-assign  local_buffer_addr       = local_buffer_en ? (i_wbs_adr - `BUFFER_OFFSET) : 10'h000;
-assign  posedge_stb             = i_wbs_stb && !prev_stb;
 
-assign  enable_sdio             = control[`CNTRL_BIT_ENABLE];
-assign  enable_interrupts       = control[`CNTRL_BIT_INTERRUPT];
-assign  request_interrupt       = control[`CNTRL_BIT_SEND_INTERRUPT];
+assign  local_buffer_addr        = local_buffer_en ? (i_wbs_adr - `BUFFER_OFFSET) : 10'h000;
 
 
 
 //Synchronous Logic
 always @ (posedge clk) begin
   if (rst) begin
-    o_wbs_dat                 <= 32'h0;
-    o_wbs_ack                 <= 0;
-    o_wbs_int                 <= 0;
-    mem_data_in               <= 0;
-    mem_write_en              <= 0;
-    control                   <= 0;
-    control[`CNTRL_BIT_ENABLE]<=  1;  //Enable SDIO At the beginning
-    mem_sleep                 <= 0;
+    o_wbs_dat <= 32'h0;
+    o_wbs_ack <= 0;
+    o_wbs_int <= 0;
   end
+
   else begin
-    //De-assert Strobes
     //when the master acks our ack, then put our ack down
     if (o_wbs_ack && ~i_wbs_stb)begin
-      o_wbs_ack               <= 0;
-      mem_write_en            <=  0;
-    end
-
-    if (mem_sleep < `MEM_TIMEOUT) begin
-      mem_sleep               <=  mem_sleep + 1;
+      o_wbs_ack <= 0;
     end
 
     if (i_wbs_stb && i_wbs_cyc) begin
@@ -495,19 +450,17 @@ always @ (posedge clk) begin
       if (!o_wbs_ack) begin
         if (i_wbs_we) begin
           //write request
-          mem_sleep           <=  `MEM_TIMEOUT;
           case (i_wbs_adr)
             CONTROL: begin
-              control         <=  i_wbs_dat;
+              $display("ADDR: %h user wrote %h", i_wbs_adr, i_wbs_dat);
+            end
+            STATUS: begin
+              $display("ADDR: %h user wrote %h", i_wbs_adr, i_wbs_dat);
             end
             ADDR_2: begin
+              $display("ADDR: %h user wrote %h", i_wbs_adr, i_wbs_dat);
             end
             default: begin
-              if (local_buffer_en) begin
-                mem_write_en  <=  1;
-                mem_data_in   <=  i_wbs_dat;
-                
-              end
             end
           endcase
         end
@@ -515,35 +468,24 @@ always @ (posedge clk) begin
           //read request
           case (i_wbs_adr)
             CONTROL: begin
-              o_wbs_dat <= control;
+              $display("user read %h", CONTROL);
+              o_wbs_dat <= CONTROL;
             end
             STATUS: begin
+              $display("user read %h", STATUS);
               o_wbs_dat <= STATUS;
             end
             ADDR_2: begin
+              $display("user read %h", ADDR_2);
               o_wbs_dat <= ADDR_2;
             end
             default: begin
-              if (local_buffer_en) begin
-                if (posedge_stb) begin
-                  mem_sleep <=  2'h0;
-                end
-                o_wbs_dat   <=  mem_data_out;
-              end
             end
           endcase
         end
-        if (local_buffer_en) begin
-          if (!posedge_stb && (mem_sleep == `MEM_TIMEOUT)) begin
-            o_wbs_ack         <= 1;
-          end
-        end
-        else begin
-          o_wbs_ack         <= 1;
-        end
-      end
+      o_wbs_ack <= 1;
     end
-    prev_stb                <=  i_wbs_stb;
+    end
   end
 end
 

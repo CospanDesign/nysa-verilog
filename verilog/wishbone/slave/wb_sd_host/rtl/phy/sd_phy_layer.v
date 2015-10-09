@@ -161,18 +161,18 @@ sd_sd4_phy sd4 (
   .clk          (i_sd_clk                 ),
   .clk_x2       (i_sd_clk_x2              ),
   .rst          (rst                      ),
-                                          
+
   .i_en         (data_txrx_en             ),
   //.o_finished   (sd4_finished             ),
   .i_write_flag (write_flag               ),
-                                         
+
   .o_crc_err    (data_read_crc_err        ),      //Detected a CRC error during read
-                                          
+
   .o_data_stb   (data_byte_req_stb        ),
   .i_data_count (i_data_byte_count        ),
   .i_data_h2s   (data_h2s                 ),
   .o_data_s2h   (data_s2h                 ),
-                                          
+
   .o_sd_data_dir(sd4_data_dir             ),
   .i_sd_data    (i_sd_data                ),
   .o_sd_data    (sd4_data                 )
