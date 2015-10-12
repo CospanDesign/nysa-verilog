@@ -56,7 +56,8 @@ def get_repo_zip_file(url, dest_path):
     #zf.extractall(dest_path)
     zf.extractall(tempdir)
     zf.close()
-    src = os.path.join(tempdir, "sdio-device-master", "rtl")
+
+    src = os.path.join(tempdir, "sdio-device-DDR", "rtl")
     dst = os.path.join(dest_path, "sdio_device")
     dir_util.copy_tree(src, dst)
     shutil.rmtree(tempdir)

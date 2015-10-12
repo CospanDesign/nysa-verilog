@@ -101,7 +101,7 @@ wire              [15:0]  crc_out3;
 
 reg               [7:0]   read_data;
 
-wire              [3:0]   crc_data;
+reg               [3:0]   crc_data;
 wire                      sdio_data0;
 wire                      sdio_data1;
 wire                      sdio_data2;
@@ -149,6 +149,18 @@ assign  sdio_data1    = crc_data[1];
 assign  sdio_data2    = crc_data[2];
 assign  sdio_data3    = crc_data[3];
 
+assign  o_data_wr_data = o_sdio_data_dir ? 8'h00 : i_sdio_data_in;
+assign  data_crc_good  =  ( (host_crc[0] == crc_out[0]) &&
+                            (host_crc[1] == crc_out[1]) &&
+                            (host_crc[2] == crc_out[2]) &&
+                            (host_crc[3] == crc_out[3]));
+
+
+reg     top_flag;
+
+
+
+
 /*
 assign  crc_data[0]   = i_write_flag   ?
                            !clk        ? i_sdio_data_in[4'h7] : i_sdio_data_in[4'h3]:
@@ -164,46 +176,59 @@ assign  crc_data[3]   = i_write_flag   ?
                           clk         ? i_data_rd_data[4'h4] : i_data_rd_data[4'h0];
 */
 
-assign  crc_data[0]   = i_write_flag      ?
-                           !i_posedge_stb ? i_sdio_data_in[4'h7] : i_sdio_data_in[4'h3]:
-                           i_posedge_stb  ? i_data_rd_data[4'h7] : i_data_rd_data[4'h3];
-assign  crc_data[1]   = i_write_flag      ?
-                           !i_posedge_stb ? i_sdio_data_in[4'h6] : i_sdio_data_in[4'h2]:
-                           i_posedge_stb  ? i_data_rd_data[4'h6] : i_data_rd_data[4'h2];
-assign  crc_data[2]   = i_write_flag      ?
-                           !i_posedge_stb ? i_sdio_data_in[4'h5] : i_sdio_data_in[4'h1]:
-                           i_posedge_stb  ? i_data_rd_data[4'h5] : i_data_rd_data[4'h1];
-assign  crc_data[3]   = i_write_flag      ?
-                          !i_posedge_stb  ? i_sdio_data_in[4'h4] : i_sdio_data_in[4'h0]:
-                          i_posedge_stb   ? i_data_rd_data[4'h4] : i_data_rd_data[4'h0];
 
-
-
-assign  o_data_wr_data = o_sdio_data_dir ? 8'h00 : i_sdio_data_in;
-assign  data_crc_good  =  ( (host_crc[0] == crc_out[0]) &&
-                            (host_crc[1] == crc_out[1]) &&
-                            (host_crc[2] == crc_out[2]) &&
-                            (host_crc[3] == crc_out[3]));
-
-//synchronous logic
+//CRC State Machine
 always @ (posedge clk_x2) begin
   if (rst) begin
     crc_rst                   <=  1;
     crc_state                 <=  IDLE;
     enable_crc                <=  0;
+    crc_data                  <=  0;
+    top_flag                  <=  0;
   end
   else begin
     case (crc_state)
       IDLE: begin
         crc_rst               <=  1;
-        if (capture_crc && !i_posedge_stb) begin
+        crc_data              <=  0;
+        if (capture_crc) begin
+          top_flag            <=  1;
           crc_rst             <=  0;
           crc_state           <=  PROCESS_CRC;
           enable_crc          <=  1;
         end
       end
       PROCESS_CRC: begin
-        if (!capture_crc && !i_posedge_stb) begin
+        if (i_write_flag) begin
+          if (top_flag) begin
+            crc_data[0] <=  i_sdio_data_in[4'h3];
+            crc_data[1] <=  i_sdio_data_in[4'h2];
+            crc_data[2] <=  i_sdio_data_in[4'h1];
+            crc_data[3] <=  i_sdio_data_in[4'h0];
+          end
+          else begin
+            crc_data[0] <=  i_sdio_data_in[4'h7];
+            crc_data[1] <=  i_sdio_data_in[4'h6];
+            crc_data[2] <=  i_sdio_data_in[4'h5];
+            crc_data[3] <=  i_sdio_data_in[4'h4];
+          end
+        end
+        else begin
+          //Read Flag
+          if (top_flag) begin
+            crc_data[0] <=  i_data_rd_data[4'h3];
+            crc_data[1] <=  i_data_rd_data[4'h3];
+            crc_data[2] <=  i_data_rd_data[4'h1];
+            crc_data[3] <=  i_data_rd_data[4'h0];
+          end
+          else begin
+            crc_data[0] <=  i_data_rd_data[4'h7];
+            crc_data[1] <=  i_data_rd_data[4'h6];
+            crc_data[2] <=  i_data_rd_data[4'h5];
+            crc_data[3] <=  i_data_rd_data[4'h4];
+          end
+        end
+        if (!capture_crc) begin
           crc_state           <=  FINISHED;
           enable_crc          <=  0;
         end
@@ -214,6 +239,8 @@ always @ (posedge clk_x2) begin
         end
       end
     endcase
+
+    top_flag                  <=  ~top_flag;
   end
 end
 
@@ -321,14 +348,14 @@ always @ (posedge clk) begin
       WRITE: begin
         o_data_wr_stb           <=  1;
         if (data_count == i_data_count - 1) begin
-          capture_crc           <= 0;
+          //capture_crc           <= 0;
         end
         if (data_count < i_data_count) begin
           data_count            <= data_count + 1;
         end
         else begin
-          o_data_wr_stb         <=  0;
-          //capture_crc           <= 0;
+          o_data_wr_stb         <= 0;
+          capture_crc           <= 0;
           state                 <= CRC;
           data_count            <= 0;
           //data_count            <=  data_count + 1;

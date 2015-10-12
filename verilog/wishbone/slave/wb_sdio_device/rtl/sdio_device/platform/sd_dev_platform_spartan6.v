@@ -61,6 +61,7 @@
  * Changes:
  */
 
+`define SWAP_CLK  0
 module sd_dev_platform_spartan6 #(
   parameter                 OUTPUT_DELAY  = 63,
   parameter                 INPUT_DELAY   = 63
@@ -113,7 +114,6 @@ wire                [3:0]   pin_data_tristate_predelay;
 wire                        serdes_strobe;
 
 wire                        phy_clk_s;
-wire                        buf_phy_clk;
 wire                        pll_phy_clk;
 wire                        clkfb;
 wire                        fb_locked;
@@ -133,24 +133,53 @@ assign    fb_locked       = o_locked && pll_locked;
 //submodules
 
 //Read in the clock
-IBUFG input_clock_buffer(
+wire  buf_clk;
+wire  buf_phy_clk_p;
+wire  buf_phy_clk_n;
+wire  predelay_clk_p;
+wire  predelay_clk_n;
+
+/*
+IBUF clkin_buf (
   .I                    (i_phy_clk            ),
-  .O                    (buf_phy_clk          )
+  .O                    (buf_clk              )
 );
+*/
+
+IBUFG input_clock_buffer_p(
+  //.I                    (buf_clk              ),
+  .I                    (i_phy_clk            ),
+  .O                    (buf_phy_clk_p        )
+);
+/*
+BUFG input_clock_buffer_n(
+  .I                    (buf_clk              ),
+  .O                    (buf_phy_clk_n        )
+);
+
+*/
+//assign   buf_phy_clk  = i_phy_clk;
+assign  predelay_clk_p  = buf_phy_clk_p ^ `SWAP_CLK;
+//assign  predelay_clk_n  = ~buf_phy_clk_n ^ `SWAP_CLK;
+
 
 //Delay For Clock
 IODELAY2 #(
   .DATA_RATE            ("SDR"                ),  // Double Data Rate
+  //.DATA_RATE            ("DDR"                ),  // Double Data Rate
   .IDELAY_VALUE         (0                    ),  // Input Delay (0 for delay)
+  .IDELAY2_VALUE        (0                    ),
   .ODELAY_VALUE         (0                    ),  // Output Delay Tap Value
   .IDELAY_MODE          ("NORMAL"             ),  // NORMAL or PCI
-  .SERDES_MODE          ("MASTER"             ),  // NONE, MASTER or SLAVE
+  //.SERDES_MODE          ("MASTER"             ),  // NONE, MASTER or SLAVE
+  .SERDES_MODE          ("NONE"               ),  // NONE, MASTER or SLAVE
   .COUNTER_WRAPAROUND   ("STAY_AT_LIMIT"      ),  // <STAY_AT_LIMIT>, WRAPAROUND
-  .IDELAY_TYPE          ("VARIABLE_FROM_HALF_MAX"),
+  //.IDELAY_TYPE          ("VARIABLE_FROM_HALF_MAX"),
+  .IDELAY_TYPE          ("FIXED"),
   .DELAY_SRC            ("IDATAIN"            ),  // "IO", "IDATAIN", "ODATAIN"
   .SIM_TAPDELAY_VALUE   (75                   )   // Simulation Tap Delay
 )clk_delay_m (
-  .IDATAIN              (buf_phy_clk          ),  // Clock Input from input buffer
+  .IDATAIN              (predelay_clk_p       ),  // Clock Input from input buffer
   .TOUT                 (                     ),  // Delayed Tristate
   .DOUT                 (                     ),  // Delayed Output
 
@@ -169,6 +198,7 @@ IODELAY2 #(
   .RST                  (1'b0                 )   // Reset delay line
 );
 
+/*
 IODELAY2 #(
   .DATA_RATE            ("SDR"                ),  // Double Data Rate
   .IDELAY_VALUE         (0                    ),  // Input Delay (0 for delay)
@@ -180,7 +210,7 @@ IODELAY2 #(
   .DELAY_SRC            ("IDATAIN"            ),  // "IO", "IDATAIN", "ODATAIN"
   .SIM_TAPDELAY_VALUE   (75                   )   // Simulation Tap Delay
 )clk_delay_s (
-  .IDATAIN              (buf_phy_clk          ),  // Clock Input from input buffer
+  .IDATAIN              (predelay_clk_p       ),  // Clock Input from input buffer
   .TOUT                 (                     ),  // Delayed Tristate
   .DOUT                 (                     ),  // Delayed Output
 
@@ -198,6 +228,7 @@ IODELAY2 #(
   .BUSY                 (                     ),  // output signal indicating sync circuit has finished / calibration has finished
   .RST                  (1'b0                 )   // Reset delay line
 );
+*/
 
 //Bridge Between IODELAY and PLL
 BUFIO2 #(
@@ -301,9 +332,9 @@ ISERDES2 #(
   .SHIFTIN              (                     ),
   .SHIFTOUT             (                     ),
   .FABRICOUT            (                     ),
-  .CFB0                 (                     ),
+  .CFB0                 (feedback             ),
   .CFB1                 (                     ),
-  .DFB                  (                     ),
+  .DFB                  (data_clk_pre         ),
   .INCDEC               (                     ),
   .VALID                (                     ),
   .BITSLIP              (1'b0                 ),
@@ -312,6 +343,7 @@ ISERDES2 #(
   .Q2                   (                     )
 );
 
+/*
 ISERDES2 #(
   .BITSLIP_ENABLE       ("FALSE"              ),
   .DATA_RATE            ("SDR"                ),  //Because we are using a PLL to generate a high speed clock we use single data rate
@@ -322,6 +354,7 @@ ISERDES2 #(
 
   .RST                  (!fb_locked           ),
   .D                    (phy_clk_s            ),
+  //.D                    (phy_clk_m            ),
   .CE0                  (1'b1                 ),
   .CLK0                 (serdes_clk           ),
   .CLK1                 (1'b0                 ),
@@ -341,6 +374,7 @@ ISERDES2 #(
   .Q1                   (                     ),
   .Q2                   (                     )
 );
+*/
 
 BUFPLL #(
   .DIVIDE               (2                    ),

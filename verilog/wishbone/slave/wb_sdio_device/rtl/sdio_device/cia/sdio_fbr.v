@@ -30,6 +30,8 @@ SOFTWARE.
  *  2015.08.16: Initial Commit
  */
 
+`include "sdio_cia_defines.v"
+
 module sdio_fbr #(
     parameter               INDEX           =   0,
     parameter               FUNC_TYPE       =   4'h0,
