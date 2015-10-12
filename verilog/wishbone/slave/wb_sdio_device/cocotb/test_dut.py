@@ -4,11 +4,11 @@ import sys
 import cocotb
 import logging
 from cocotb.result import TestFailure
+from nysa.host.driver.sdio_device_driver import SDIODeviceDriver
 from nysa.host.sim.sim_host import NysaSim
 from cocotb.clock import Clock
 import time
 from array import array as Array
-from dut_driver import wb_sdio_deviceDriver
 
 SIM_CONFIG = "sim_config.json"
 
@@ -52,7 +52,7 @@ def test_local_buffer(dut):
     nysa.read_sdb()
     yield (nysa.wait_clocks(10))
     nysa.pretty_print_sdb()
-    driver = wb_sdio_deviceDriver(nysa, nysa.find_device(wb_sdio_deviceDriver)[0])
+    driver = SDIODeviceDriver(nysa, nysa.find_device(SDIODeviceDriver)[0])
 
     #Enable SDIO
     yield cocotb.external(driver.enable_sdio_device)(True)

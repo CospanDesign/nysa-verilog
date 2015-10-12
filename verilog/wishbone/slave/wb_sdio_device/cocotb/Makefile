@@ -4,7 +4,7 @@ PWD=$(shell pwd)
 TOPDIR=$(PWD)/..
 COCOTB 			:= $(shell $(python) nysa paths -c -s)
 NYSA 				:= $(shell $(python) nysa paths -s -v nysa-verilog)
-SDIO_BASE		:= ${TOPDIR}/rtl/sdio-device-master/rtl
+SDIO_BASE		:= ${TOPDIR}/rtl/sdio_device
 PYTHONPATH 	:= ./model:$(PYTHONPATH)
 export PYTHONPATH
 

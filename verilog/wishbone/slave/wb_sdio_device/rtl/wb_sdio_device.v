@@ -60,13 +60,18 @@ SOFTWARE.
   SDB_WRITEABLE:True
 
   Device Size: Number of Registers
-  SDB_SIZE:3
+  SDB_SIZE:0x800
 */
 
-`define     BUFFER_OFFSET 32'h00000400
+`define     CONTROL_BIT_ENABLE_SDIO         0
+`define     CONTROL_BIT_ENABLE_SDIO_INT     1
+`define     CONTROL_BIT_ENABLE_SDIO_INT_EN  2
 
-`define     BUFFER_EXP    10
-`define     BUFFER_SIZE   2**(`BUFFER_EXP)
+`define     BUFFER_OFFSET                   32'h00000400
+
+`define     BUFFER_EXP                      10
+`define     BUFFER_SIZE                     2**(`BUFFER_EXP)
+`define     MEM_DELAY_COUNT                 2
 
 
 module wb_sdio_device (
@@ -86,8 +91,7 @@ module wb_sdio_device (
   input       [31:0]  i_wbs_adr,
 
   //This interrupt can be controlled from this module or a submodule
-  output  reg         o_wbs_int,
-  //output              o_wbs_int
+  output              o_wbs_int,
 
   //SDIO Physical Interface
   input               i_phy_sd_clk,
@@ -98,7 +102,6 @@ module wb_sdio_device (
 //Local Parameters
 localparam     CONTROL  = 32'h00000000;
 localparam     STATUS   = 32'h00000001;
-localparam     ADDR_2   = 32'h00000002;
 
 //Local Registers/Wires
 wire              pll_locked;
@@ -176,10 +179,19 @@ wire              sdio_func_exec_sts;
 
 
 wire              local_buffer_en;
-wire    [9:0]     local_buffer_addr;
+wire              local_buffer_we;
+wire    [(`BUFFER_EXP - 1):0]     local_buffer_addr;
+wire    [31:0]    local_buffer_data;
 
-reg               enable_interrupt;
-reg               request_interrupt;
+wire              enable_interrupts;
+wire              request_interrupt;
+reg     [31:0]    control;
+wire    [31:0]    status;
+
+reg     [3:0]     mem_delay_count;
+wire              posedge_buffer;
+reg               prev_buffer_en;
+
 
 //Submodules
 
@@ -292,7 +304,6 @@ sdio_device_stack sdio_device (
   .i_mem_com_rdy        (func_com_rdy[8]      ),
   .o_mem_activate       (func_activate[8]     ),
 
-
   //Cross Function Signals
   .o_func_enable        (function_enable      ),
   .i_func_ready         (function_ready       ),
@@ -360,9 +371,11 @@ sdio_memory_function #(
 
   //User Interface
   .i_en_in_interrupts   (enable_interrupts    ),
-
   //Memory
-
+  .i_user_write_en      (local_buffer_we      ), 
+  .i_user_address       (local_buffer_addr    ),
+  .i_user_data_in       (i_wbs_dat            ),
+  .o_user_data_out      (local_buffer_data    ),
   //Control
   .i_request_interrupt  (request_interrupt    )
 );
@@ -417,36 +430,48 @@ sd_dev_platform_spartan6 #(
 );
 `endif
 
-
-
 //Asynchronous Logic
-assign  function_ready          = {6'b000000, sdio_func_ready,          1'b0};
-assign  function_exec_status    = {6'b000000, sdio_func_exec_sts,       1'b0};
-assign  function_ready_for_data = {6'b000000, sdio_func_ready_for_data, 1'b0};
-assign  function_interrupt      = {6'b000000, sdio_func_interrupt,      1'b0};
-
-
-assign  local_buffer_en          = ((i_wbs_adr >= `BUFFER_OFFSET) &&
+assign  function_ready            = {6'b000000, sdio_func_ready,          1'b0};
+assign  function_exec_status      = {6'b000000, sdio_func_exec_sts,       1'b0};
+assign  function_ready_for_data   = {6'b000000, sdio_func_ready_for_data, 1'b0};
+assign  function_interrupt        = {6'b000000, sdio_func_interrupt,      1'b0};
+                                 
+assign  local_buffer_we           = (local_buffer_en & i_wbs_we);
+assign  local_buffer_en           = (i_wbs_stb &&
+                                    (i_wbs_adr >= `BUFFER_OFFSET) &&
                                     (i_wbs_adr < (`BUFFER_OFFSET + (`BUFFER_SIZE))));
 
-assign  local_buffer_addr        = local_buffer_en ? (i_wbs_adr - `BUFFER_OFFSET) : 10'h000;
+assign  local_buffer_addr         = local_buffer_en ? (i_wbs_adr - `BUFFER_OFFSET) : 10'h000;
 
-
+assign  enable_sdio_device        = control[`CONTROL_BIT_ENABLE_SDIO];
+assign  enable_interrupts         = control[`CONTROL_BIT_ENABLE_SDIO_INT];
+assign  request_interrupts        = control[`CONTROL_BIT_ENABLE_SDIO_INT_EN];
+assign  status                    = {28'h000000, 
+                                    sdio_func_ready,
+                                    sdio_func_exec_sts,
+                                    sdio_func_ready_for_data,
+                                    pll_locked};
+assign  o_wbs_int                 = sdio_func_interrupt;
+assign  posedge_buffer            = !prev_buffer_en & local_buffer_en;
 
 //Synchronous Logic
 always @ (posedge clk) begin
   if (rst) begin
-    o_wbs_dat <= 32'h0;
-    o_wbs_ack <= 0;
-    o_wbs_int <= 0;
+    o_wbs_dat       <=  32'h0;
+    o_wbs_ack       <=  0;
+    control         <=  0;
+    mem_delay_count <=  `MEM_DELAY_COUNT;
+    prev_buffer_en  <=  0;
   end
-
   else begin
+
+    if (mem_delay_count < `MEM_DELAY_COUNT) begin
+      mem_delay_count <=  mem_delay_count + 1;
+    end
     //when the master acks our ack, then put our ack down
     if (o_wbs_ack && ~i_wbs_stb)begin
       o_wbs_ack <= 0;
     end
-
     if (i_wbs_stb && i_wbs_cyc) begin
       //master is requesting somethign
       if (!o_wbs_ack) begin
@@ -454,13 +479,7 @@ always @ (posedge clk) begin
           //write request
           case (i_wbs_adr)
             CONTROL: begin
-              $display("ADDR: %h user wrote %h", i_wbs_adr, i_wbs_dat);
-            end
-            STATUS: begin
-              $display("ADDR: %h user wrote %h", i_wbs_adr, i_wbs_dat);
-            end
-            ADDR_2: begin
-              $display("ADDR: %h user wrote %h", i_wbs_adr, i_wbs_dat);
+              control   <=  i_wbs_dat;
             end
             default: begin
             end
@@ -470,24 +489,30 @@ always @ (posedge clk) begin
           //read request
           case (i_wbs_adr)
             CONTROL: begin
-              $display("user read %h", CONTROL);
-              o_wbs_dat <= CONTROL;
+              o_wbs_dat <= control;
             end
             STATUS: begin
-              $display("user read %h", STATUS);
-              o_wbs_dat <= STATUS;
-            end
-            ADDR_2: begin
-              $display("user read %h", ADDR_2);
-              o_wbs_dat <= ADDR_2;
+              o_wbs_dat <= status;
             end
             default: begin
+              if (posedge_buffer) begin
+                mem_delay_count <=  0;
+              end
             end
           endcase
         end
-      o_wbs_ack <= 1;
+        if (local_buffer_en) begin
+          o_wbs_dat       <=  local_buffer_data;
+          if ((mem_delay_count == `MEM_DELAY_COUNT) && !posedge_buffer) begin
+            o_wbs_ack     <= 1;
+          end
+        end
+        else begin
+          o_wbs_ack       <= 1;
+        end
+      end
     end
-    end
+    prev_buffer_en        <=  local_buffer_en;
   end
 end
 

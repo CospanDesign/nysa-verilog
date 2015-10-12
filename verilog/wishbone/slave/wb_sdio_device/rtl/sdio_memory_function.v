@@ -121,7 +121,7 @@ localparam      FINISHED    =   4'h4;
 reg             [3:0]       state;
 reg             [(MEM_EXP - 1):0]      mem_addr;
 reg                         write_stb;
-reg                         mem_write_stb;
+reg                         mem_write_stb = 0;
 reg             [31:0]      mem_write_data;
 wire            [31:0]      mem_read_data;
 reg             [12:0]      data_count;
