@@ -59,8 +59,8 @@ NET DQML       LOC = P43  | IOSTANDARD = LVTTL ;
 #PIN "sdcard/sdio_dev_plat/sd_clk_bufg.O" CLOCK_DEDICATED_ROUTE = FALSE;
 
 
-NET SD_CLK       LOC = P88  | IOSTANDARD = LVTTL ;
-INST "sdcard/sdio_dev_plat/buf_phy_clk" IOB=FALSE;
+NET SD_CLK       LOC = P88  | IOSTANDARD = LVTTL | IOB = FALSE;
+#INST "sdcard/sdio_dev_plat/i_phy_clk" IOB=FALSE;
 #TIMESPEC "ts_sdclk"  = PERIOD SD_CLK 20 ns High 50%; #50 MHz clock
 
 NET SD_CMD       LOC = P87  | IOSTANDARD = LVTTL | PULLUP ;
