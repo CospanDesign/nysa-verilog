@@ -14,6 +14,7 @@ ${XILINX}/ISE/verilog/src/unisims/STARTUP_SPARTAN6.v
 ${XILINX}/ISE/verilog/src/unisims/BUFG.v
 ${XILINX}/ISE/verilog/src/unisims/IBUFG.v
 ${XILINX}/ISE/verilog/src/unisims/BUFIO2.v
+${XILINX}/ISE/verilog/src/unisims/BUFIO2_2CLK.v
 ${XILINX}/ISE/verilog/src/unisims/BUFIO2FB.v
 ${XILINX}/ISE/verilog/src/unisims/ODDR2.v
 ${XILINX}/ISE/verilog/src/unisims/PLL_BASE.v
