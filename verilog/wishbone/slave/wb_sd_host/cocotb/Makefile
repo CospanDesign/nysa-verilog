@@ -37,6 +37,7 @@ VERILOG_SOURCES += ${SDIO_DEV}/rtl/sdio_data_control.v
 VERILOG_SOURCES += $(SDIO_DEV)/sim/demo_function.v
 VERILOG_SOURCES += $(SDIO_DEV)/rtl/generic/crc7.v
 VERILOG_SOURCES += $(SDIO_DEV)/rtl/generic/crc16.v
+VERILOG_SOURCES += $(SDIO_DEV)/rtl/generic/crc16_2bit.v
 VERILOG_SOURCES += $(SDIO_DEV)/rtl/cia/sdio_fbr.v
 VERILOG_SOURCES += $(SDIO_DEV)/rtl/cia/sdio_cccr.v
 VERILOG_SOURCES += $(SDIO_DEV)/rtl/cia/sdio_cis.v
