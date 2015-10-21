@@ -106,7 +106,6 @@ localparam     STATUS   = 32'h00000001;
 //Local Registers/Wires
 wire              pll_locked;
 wire              sd_clk;
-wire              sd_clk_x2;
 
 wire              sd_cmd_dir;
 wire              sd_cmd_in;
@@ -198,7 +197,6 @@ reg               prev_buffer_en;
 //Possibly replace with a generate statement using an input parameter
 sdio_device_stack sdio_device (
   .sdio_clk             (sd_clk               ),
-  .sdio_clk_x2          (sd_clk_x2            ),
   .rst                  (rst   || !pll_locked ),
 
   // Function Interfacee From CIA
@@ -388,7 +386,6 @@ sd_dev_platform_cocotb sdio_dev_plat(
   .o_locked       (pll_locked                 ),
 
   .o_sd_clk       (sd_clk                     ),
-  .o_sd_clk_x2    (sd_clk_x2                  ),
 
   .i_sd_cmd_dir   (sd_cmd_dir                 ),
   .o_sd_cmd_in    (sd_cmd_in                  ),
@@ -414,7 +411,6 @@ sd_dev_platform_spartan6 #(
   .o_locked       (pll_locked                 ),
 
   .o_sd_clk       (sd_clk                     ),
-  .o_sd_clk_x2    (sd_clk_x2                  ),
 
   .i_sd_cmd_dir   (sd_cmd_dir                 ),
   .o_sd_cmd_in    (sd_cmd_in                  ),

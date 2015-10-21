@@ -67,7 +67,6 @@ SOFTWARE.
 
 module sd_sd4_phy (
   input                     clk,
-  input                     clk_x2,
   input                     rst,
 
 //  input                     ddr_en, //ALWAYS ENABLED FOR NOW!
@@ -85,7 +84,6 @@ module sd_sd4_phy (
   output                    o_sd_data_dir,
   input       [7:0]         i_sd_data,
   output      [7:0]         o_sd_data
-
 );
 //local parameters
 localparam  IDLE          = 4'h0;
@@ -122,7 +120,7 @@ reg                         crc_rst;
 reg                         crc_en;
 wire                        sd_clk;
 reg                         posedge_clk;
-wire      [3:0]             crc_sd_bit;
+wire      [7:0]             crc_sd_bit;
 
 wire      [3:0]             crc_bit0;
 wire      [3:0]             crc_bit1;
@@ -140,8 +138,21 @@ integer                     i = 0;
 genvar gv;
 generate
 for (gv = 0; gv < 4; gv = gv + 1) begin
+crc16_2bit crc(
+  .clk                (clk                    ),
+  .rst                (crc_rst                ),
+  .en                 (crc_en                 ),
+//  .bit1               (i_data_h2s[7 - gv]     ),
+//  .bit0               (i_data_h2s[7 - gv - 4] ),
+  .bit1               (i_data_h2s[7 - gv]     ),
+  .bit0               (i_data_h2s[7 - gv - 4] ),
+  .crc                (gen_crc[gv]            )
+);
+
+
+
+/*
 sd_crc_16 crc16 (
-  .clk          (clk_x2             ),
   .rst          (crc_rst            ),
   .en           (crc_en             ),  //Need to make sure this CRC_EN goes low when a new clock cycle starts, may need mealy state machine
   .bitval       (crc_sd_bit[gv]     ),
@@ -151,8 +162,10 @@ assign  crc_sd_bit[gv]  = i_write_flag ?
                             posedge_clk ? sd_data  [7 - gv] : sd_data  [7 - gv - 4] :
                             clk         ? i_sd_data[7 - gv] : i_sd_data[7 - gv - 4];
 
+*/
 end
 endgenerate
+assign  crc_sd_bit = i_write_flag ? i_data_h2s : i_sd_data;
 
 assign  crc_bit0  = crc_sd_bit[0];
 assign  crc_bit1  = crc_sd_bit[1];
@@ -175,36 +188,13 @@ assign  gen_crc1  = gen_crc[1];
 assign  gen_crc2  = gen_crc[2];
 assign  gen_crc3  = gen_crc[3];
 
-
-
-
-/*
-assign  in_remap   = { i_sd_data[0],
-                       i_sd_data[1],
-                       i_sd_data[2],
-                       i_sd_data[3],
-                       i_sd_data[4],
-                       i_sd_data[5],
-                       i_sd_data[6],
-                       i_sd_data[7]};
-
-*/
-/*
-assign  o_sd_data  = { sd_data[0],
-                       sd_data[1],
-                       sd_data[2],
-                       sd_data[3],
-                       sd_data[4],
-                       sd_data[5],
-                       sd_data[6],
-                       sd_data[7]};
-*/
 assign  o_sd_data       = sd_data;
 
 assign  writing_active  = ((state == WRITE) || (state == WRITE_CRC));
 assign  o_sd_data_dir   = writing_active;
 
 //synchronous logic
+/*
 always @ (posedge clk_x2) begin
   if (rst) begin
     prev_crc[i] <=  0;
@@ -225,6 +215,7 @@ always @ (posedge clk_x2) begin
     posedge_clk   <=  0;
   end
 end
+*/
 
 always @ (posedge clk) begin
   //De-assert Strobes

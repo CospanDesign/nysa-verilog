@@ -80,7 +80,7 @@ reg               r_ih_reset      = 0;
 
 
 wire              phy_sd_cmd;
-tri1    [3:0]     phy_sd_data;
+wire    [3:0]     phy_sd_data;
 
 wire              dev_pll_locked;
 
@@ -338,7 +338,7 @@ wishbone_master wm (
 
 wishbone_mem_interconnect wmi (
   .clk        (clk                  ),
-  .rst        (r_rst                ),
+  .rst        (rst                ),
 
   //master
   .i_m_we     (w_mem_we_o           ),
@@ -397,7 +397,7 @@ wb_sd_host s1 (
 
 wishbone_interconnect wi (
   .clk        (clk                  ),
-  .rst        (r_rst                ),
+  .rst        (rst                ),
 
   .i_m_we     (w_wbp_we             ),
   .i_m_cyc    (w_wbp_cyc            ),
@@ -512,12 +512,11 @@ sd_dev_platform_spartan6 #(
   .INPUT_DELAY    (63               )
 )sdio_dev_plat (
   .clk            (clk              ),
-  .rst            (r_rst            ),
+  .rst            (rst              ),
 
   .o_locked       (dev_pll_locked   ),
 
   .o_sd_clk       (dev_sd_clk       ),
-  .o_sd_clk_x2    (dev_sd_clk_x2    ),
 
   .i_sd_cmd_dir   (dev_sd_cmd_dir   ),
   .o_sd_cmd_in    (dev_sd_cmd_in    ),
@@ -532,10 +531,14 @@ sd_dev_platform_spartan6 #(
   .io_phy_sd_data (phy_sd_data      )
 );
 
+pullup (phy_sd_data[0]);
+pullup (phy_sd_data[1]);
+pullup (phy_sd_data[2]);
+pullup (phy_sd_data[3]);
+
 //TODO ADAPT sdio_device to use the platform based phy_sd_cmd and phy_sd_data
 sdio_device_stack sdio_device (
   .sdio_clk             (sd_clk               ),
-  .sdio_clk_x2          (clk                  ),
   .rst                  (rst   || !dev_pll_locked),
 
   // Function Interfacee From CIA

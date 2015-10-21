@@ -98,7 +98,6 @@ module sd_host_stack #(
   //Phy Interface
   input                     i_sd_pll_locked,
   input                     i_sd_clk,
-  input                     i_sd_clk_x2,
 
   output                    o_read_wait,
   output                    o_sd_cmd_dir,
@@ -327,7 +326,6 @@ sd_phy_layer #(
 
   .o_read_wait          (o_read_wait              ),
   .i_sd_clk             (i_sd_clk                 ),
-  .i_sd_clk_x2          (i_sd_clk_x2              ),
 
   .o_sd_cmd_dir         (o_sd_cmd_dir             ),
   .i_sd_cmd             (i_sd_cmd                 ),

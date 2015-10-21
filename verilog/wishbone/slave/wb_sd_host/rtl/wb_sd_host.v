@@ -301,61 +301,6 @@ reg         [23:0]      mem_block_size;
 reg         [31:0]      block_sleep_count;
 wire                    sd_int_detected;
 
-//Possibly replace with a generate statement using an input parameter
-`ifdef COCOTB_SIMULATION
-sd_host_platform_cocotb platform(
-  .clk                  (clk                      ),
-  .rst                  (rst                      ),
-
-  //Stack Interface
-  .o_locked             (pll_locked               ),
-  .o_out_clk            (sd_clk                   ),
-  .o_out_clk_x2         (sd_clk_x2                ),
-
-  .i_read_wait          (read_wait                ),
-
-  .i_sd_cmd_dir         (sd_cmd_dir               ),
-  .o_sd_cmd_in          (sd_cmd_in                ),
-  .i_sd_cmd_out         (sd_cmd_out               ),
-
-  .i_sd_data_dir        (sd_data_dir              ),
-  .i_sd_data_out        (sd_data_out              ),
-  .o_sd_data_in         (sd_data_in               ),
-
-  //Physical Signals
-  .o_phy_out_clk        (o_sd_clk                 ),
-  .io_phy_sd_cmd        (io_sd_cmd                ),
-  .io_phy_sd_data       (io_sd_data               )
-);
-`else
-//Spartan 6 Platform
-sd_host_platform_spartan6 #(
-  .OUTPUT_DELAY         (63                       ),
-  .INPUT_DELAY          (63                       )
-)platform(
-  .rst                  (rst                      ),
-  .clk                  (clk                      ),
-  .o_locked             (pll_locked               ),
-  .i_read_wait          (read_wait                ),
-
-  .o_sd_clk             (sd_clk                   ),
-  .o_sd_clk_x2          (sd_clk_x2                ),
-
-  .i_sd_cmd_dir         (sd_cmd_dir               ),
-  .i_sd_cmd_out         (sd_cmd_out               ),
-  .o_sd_cmd_in          (sd_cmd_in                ),
-
-  .i_sd_data_dir        (sd_data_dir              ),
-  .i_sd_data_out        (sd_data_out              ),
-  .o_sd_data_in         (sd_data_in               ),
-
-  .o_phy_clk            (o_sd_clk                 ),
-  .io_phy_cmd           (io_sd_cmd                ),
-  .io_phy_data          (io_sd_data               )
-);
-
-`endif
-
 sd_host_stack #(
   .SD_MODE              (SD_MODE                  ),
   .FOUR_BIT_DATA        (FOUR_BIT_DATA            ),
@@ -425,7 +370,6 @@ sd_host_stack #(
    //Phy Interface
   .i_sd_pll_locked      (pll_locked               ),
   .i_sd_clk             (sd_clk                   ),
-  .i_sd_clk_x2          (sd_clk_x2                ),
 
   .o_read_wait          (read_wait                ),
   .o_sd_cmd_dir         (sd_cmd_dir               ),
@@ -533,6 +477,57 @@ wb_mem_2_ppfifo m2p(
   .o_ppfifo_stb         (w_wfifo_strobe           ),
   .o_ppfifo_data        (w_wfifo_data             )
 );
+//Possibly replace with a generate statement using an input parameter
+`ifdef COCOTB_SIMULATION
+sd_host_platform_cocotb platform(
+  .clk                  (clk                      ),
+  .rst                  (rst                      ),
+
+  //Stack Interface
+  .o_locked             (pll_locked               ),
+  .o_out_clk            (sd_clk                   ),
+
+  .i_read_wait          (read_wait                ),
+
+  .i_sd_cmd_dir         (sd_cmd_dir               ),
+  .o_sd_cmd_in          (sd_cmd_in                ),
+  .i_sd_cmd_out         (sd_cmd_out               ),
+
+  .i_sd_data_dir        (sd_data_dir              ),
+  .i_sd_data_out        (sd_data_out              ),
+  .o_sd_data_in         (sd_data_in               ),
+
+  //Physical Signals
+  .o_phy_out_clk        (o_sd_clk                 ),
+  .io_phy_sd_cmd        (io_sd_cmd                ),
+  .io_phy_sd_data       (io_sd_data               )
+);
+`else
+//Spartan 6 Platform
+sd_host_platform_spartan6 #(
+  .OUTPUT_DELAY         (63                       ),
+  .INPUT_DELAY          (63                       )
+)platform(
+  .rst                  (rst                      ),
+  .clk                  (clk                      ),
+  .o_locked             (pll_locked               ),
+  .i_read_wait          (read_wait                ),
+
+  .o_sd_clk             (sd_clk                   ),
+
+  .i_sd_cmd_dir         (sd_cmd_dir               ),
+  .i_sd_cmd_out         (sd_cmd_out               ),
+  .o_sd_cmd_in          (sd_cmd_in                ),
+
+  .i_sd_data_dir        (sd_data_dir              ),
+  .i_sd_data_out        (sd_data_out              ),
+  .o_sd_data_in         (sd_data_in               ),
+
+  .o_phy_clk            (o_sd_clk                 ),
+  .io_phy_cmd           (io_sd_cmd                ),
+  .io_phy_data          (io_sd_data               )
+);
+`endif
 
 //Asynchronous Logic
 assign  w_sd_enable                       = control[`CONTROL_ENABLE_SD        ];

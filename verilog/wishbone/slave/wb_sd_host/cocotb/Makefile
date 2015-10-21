@@ -56,7 +56,6 @@ VERILOG_SOURCES += ${TOPDIR}/rtl/cmd/sd_cmd_layer.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/sd_host_stack.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/wb_sd_host.v
 
-
 #DUT
 VERILOG_SOURCES += $(TOPDIR)/cocotb/tb_cocotb.v
 

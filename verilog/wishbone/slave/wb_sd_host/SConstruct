@@ -21,12 +21,12 @@ env = Environment(ENV=os.environ,
                     'wave':wave_builder})
 
 env.Alias("sim", 'design.vcd')
-env.Alias("wave", 'design.vcd', "gtkwave design.vcd &")
+env.Alias("wave", 'design.vcd', "gtkwave sd_host_wave.gtkw &")
 env.Alias("build", 'design.sim')
 
 
 AlwaysBuild('design.sim')
-AlwaysBuild('design.vcd')
+#AlwaysBuild('design.vcd')
 
 def fix_verilog_paths():
   #Open the configuration file from the default location

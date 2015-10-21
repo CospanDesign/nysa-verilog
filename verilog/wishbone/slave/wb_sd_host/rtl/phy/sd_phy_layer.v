@@ -76,7 +76,6 @@ module sd_phy_layer #(
   output  reg   [31:0]      o_s2h_fifo_data,
 
   input                     i_sd_clk,
-  input                     i_sd_clk_x2,
 
   output  reg               o_read_wait,
   output  reg               o_sd_cmd_dir,
@@ -159,7 +158,6 @@ generate
 if (SD_MODE && FOUR_BIT_DATA) begin
 sd_sd4_phy sd4 (
   .clk          (i_sd_clk                 ),
-  .clk_x2       (i_sd_clk_x2              ),
   .rst          (rst                      ),
 
   .i_en         (data_txrx_en             ),

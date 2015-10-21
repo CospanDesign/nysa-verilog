@@ -16,15 +16,16 @@ ${XILINX}/ISE/verilog/src/unisims/IBUFG.v
 ${XILINX}/ISE/verilog/src/unisims/BUFIO2.v
 ${XILINX}/ISE/verilog/src/unisims/BUFIO2_2CLK.v
 ${XILINX}/ISE/verilog/src/unisims/BUFIO2FB.v
+${XILINX}/ISE/verilog/src/unisims/IDDR2.v
 ${XILINX}/ISE/verilog/src/unisims/ODDR2.v
-${XILINX}/ISE/verilog/src/unisims/PLL_BASE.v
-${XILINX}/ISE/verilog/src/unisims/PLL_ADV.v
+#${XILINX}/ISE/verilog/src/unisims/PLL_BASE.v
+#${XILINX}/ISE/verilog/src/unisims/PLL_ADV.v
 ${XILINX}/ISE/verilog/src/unisims/BUFPLL.v
 ${XILINX}/ISE/verilog/src/unisims/IOBUF.v
 ${XILINX}/ISE/verilog/src/unisims/IODELAY2.v
 #${XILINX}/ISE/verilog/src/unisims/ISERDES2.v
-sim/ISERDES2.v
-${XILINX}/ISE/verilog/src/unisims/OSERDES2.v
+#sim/ISERDES2.v
+#${XILINX}/ISE/verilog/src/unisims/OSERDES2.v
 ${XILINX}/ISE/verilog/src/unisims/OBUF.v
 
 ${NYSA}/verilog/wishbone/master/wishbone_master.v
@@ -44,6 +45,7 @@ ${SDIO_DEV}/rtl/sdio_data_control.v
 ${SDIO_DEV}/sim/demo_function.v
 ${SDIO_DEV}/rtl/generic/crc7.v
 ${SDIO_DEV}/rtl/generic/crc16.v
+${SDIO_DEV}/rtl/generic/crc16_2bit.v
 ${SDIO_DEV}/rtl/cia/sdio_fbr.v
 ${SDIO_DEV}/rtl/cia/sdio_cccr.v
 ${SDIO_DEV}/rtl/cia/sdio_cis.v
