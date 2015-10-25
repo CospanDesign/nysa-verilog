@@ -47,7 +47,6 @@ reg               r_request_interrupt;
 wire              request_read_wait = 0;
 
 wire              dev_sd_clk;
-wire              dev_sd_clk_x2;
 
 //There is a bug in COCOTB when stiumlating a signal, sometimes it can be corrupted if not registered
 always @ (*) r_rst           = rst;
@@ -422,7 +421,6 @@ sd_dev_platform_cocotb sdio_dev_plat(
   .o_locked       (dev_pll_locked   ),
 
   .o_sd_clk       (dev_sd_clk       ),
-  .o_sd_clk_x2    (dev_sd_clk_x2    ),
 
 
   .i_sd_cmd_dir   (dev_sd_cmd_dir   ),
@@ -442,7 +440,6 @@ sd_dev_platform_cocotb sdio_dev_plat(
 
 sdio_device_stack sdio_device (
   .sdio_clk             (sd_clk               ),
-  .sdio_clk_x2          (clk                  ),
   .rst                  (r_rst || !dev_pll_locked),
 
   // Function Interfacee From CIA

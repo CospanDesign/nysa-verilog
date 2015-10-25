@@ -82,22 +82,36 @@ module sd_phy_layer #(
   input                     i_sd_cmd,
   output  reg               o_sd_cmd,
 
+  //FPGA Debug Interface
+  output      [3:0]         o_state,
+  output      [3:0]         o_data_state,
+  output  reg [7:0]         o_gen_crc,
+  output  reg [7:0]         o_rmt_crc,
+
+  //Physical Interface
   output                    o_sd_data_dir,
   input       [7:0]         i_sd_data,
   output      [7:0]         o_sd_data
 );
 
+initial begin
+  o_read_wait                 <=  0;
+  cmd_count                   <=  0;
+end
+
 //local parameters
 localparam  IDLE              = 4'h0;
 localparam  SEND_COMMAND      = 4'h1;
-localparam  SEND_CRC          = 4'h2;
-localparam  FINISHED_COMMAND  = 4'h3;
-localparam  WAIT_FOR_RESPONSE = 4'h4;
-localparam  READ_RESPONSE     = 4'h5;
-localparam  READ_CRC          = 4'h6;
-localparam  CHECK_CRC         = 4'h7;
-localparam  END_TRANSACTION   = 4'h8; //This may not be needed
-localparam  FINISHED          = 4'h9;
+localparam  SEND_FIRST_CRC    = 4'h2;
+localparam  SEND_CRC          = 4'h3;
+localparam  FINISHED_COMMAND  = 4'h4;
+localparam  WAIT_TRISTATE     = 4'h5;
+localparam  WAIT_FOR_RESPONSE = 4'h6;
+localparam  READ_RESPONSE     = 4'h7;
+localparam  READ_CRC          = 4'h8;
+localparam  CHECK_CRC         = 4'h9;
+localparam  END_TRANSACTION   = 4'hA; //This may not be needed
+localparam  FINISHED          = 4'hB;
 
 localparam  SETUP_WRITE_FIFO  = 4'h1;
 localparam  SETUP_READ_FIFO   = 4'h2;
@@ -106,7 +120,7 @@ localparam  READ_DATA         = 4'h4;
 
 
 //registes/wires
-reg     [3:0]               state;
+reg     [3:0]               state = IDLE;
 reg     [6:0]               cmd_count;
 wire    [6:0]               crc7;
 reg     [6:0]               r_crc7;
@@ -125,7 +139,7 @@ reg     [11:0]              total_byte_count;
 
 reg     [23:0]              count;
 reg                         write_flag;
-reg     [3:0]               data_state;
+reg     [3:0]               data_state = IDLE;
 reg     [39:0]              cmd;
 
 
@@ -135,7 +149,7 @@ wire    [7:0]               sd4_data;
 wire    [7:0]               sd1_data;
 wire    [7:0]               spi_data;
 
-wire    [11:0]              phy_data_count;
+//wire    [11:0]              phy_data_count;
 reg                         rst_crc;
 reg                         data_txrx_en;
 wire                        data_byte_req_stb;
@@ -147,15 +161,15 @@ assign  sd_cmd  = o_sd_cmd_dir ? o_sd_cmd : i_sd_cmd;
 
 //submodules
 sd_crc_7 crc (
-  .clk         (i_sd_clk          ),
-  .rst         (rst_crc           ),
-  .bitval      (sd_cmd            ),
-  .en          (crc_en            ),
-  .crc         (crc7              )
+  .clk         (i_sd_clk                  ),
+  .rst         (rst_crc                   ),
+  .bitval      (sd_cmd                    ),
+  .en          (crc_en                    ),
+  .crc         (crc7                      )
 );
 
 generate
-if (SD_MODE && FOUR_BIT_DATA) begin
+if (SD_MODE && FOUR_BIT_DATA) begin: sd4_gen
 sd_sd4_phy sd4 (
   .clk          (i_sd_clk                 ),
   .rst          (rst                      ),
@@ -179,8 +193,10 @@ end
 endgenerate
 
 //asynchronous logic
+/*
 assign  phy_data_count= (write_flag)   ?  i_h2s_fifo_size << 2  :
                                           i_s2h_fifo_size << 2;
+*/
 assign  sd_mode       = SD_MODE;
 
 
@@ -226,7 +242,6 @@ always @ (posedge i_sd_clk) begin
   o_h2s_fifo_stb                      <=  0;
   o_s2h_fifo_stb                      <=  0;
   o_read_wait                         <=  0;
-
   if (rst) begin
     count                             <=  0;
     write_flag                        <=  1;
@@ -307,22 +322,6 @@ always @ (posedge i_sd_clk) begin
         if (data_byte_req_stb) begin
           total_byte_count            <=  total_byte_count + 1;
           byte_index                  <=  byte_index - 1;
-          /*
-          case (byte_index)
-            0: begin
-              data_h2s                <=  i_h2s_fifo_data[7:0];
-            end
-            1: begin
-              data_h2s                <=  i_h2s_fifo_data[15:8];
-            end
-            2: begin
-              data_h2s                <=  i_h2s_fifo_data[23:16];
-            end
-            3: begin
-              data_h2s                <=  i_h2s_fifo_data[31:24];
-            end
-          endcase
-          */
           if (byte_index == 1) begin
               o_h2s_fifo_stb          <=  1;
           end
@@ -376,19 +375,6 @@ always @ (posedge i_sd_clk) begin
         o_h2s_fifo_activate     <=  0;
         data_txrx_en            <=  0;
         o_data_txrx_finished    <=  1;
-/*
-        if (i_data_write_flag) begin
-          if (total_byte_count < i_data_byte_count) begin
-            data_state          <=  SETUP_WRITE_FIFO;
-          end
-          else begin
-            data_state          <=  SETUP_READ_FIFO;
-          end
-        end
-        else begin
-          data_state            <=  FINISHED;
-        end
-*/
       end
       FINISHED: begin
         o_data_txrx_finished    <=  1;
@@ -409,7 +395,6 @@ always @ (posedge i_sd_clk) begin
     cmd_count             <=  0;
     spi_cs_n              <=  1;
     r_crc7                <=  0;
-    crc_en                <=  0;
     rst_crc               <=  1;
     o_crc_err             <=  0;
     o_rsp_finished_en     <=  0;
@@ -417,6 +402,9 @@ always @ (posedge i_sd_clk) begin
     o_sd_cmd              <=  1;
     crc_en                <=  0;
     o_sd_cmd_dir          <=  1;
+    o_gen_crc             <=  0;
+    o_rmt_crc             <=  0;
+
   end
   else begin
     case (state)
@@ -433,6 +421,7 @@ always @ (posedge i_sd_clk) begin
           rst_crc         <=  0;
           cmd_count       <=  0;
           cmd             <=  i_cmd;
+          o_rmt_crc       <=  0;
           //$display("Command: %h", i_cmd);
           if (SD_MODE) begin
             //SD Mode
@@ -453,11 +442,23 @@ always @ (posedge i_sd_clk) begin
           cmd_count       <=  cmd_count + 1;
         end
         else begin
-          r_crc7          <=  crc7;
-          state           <=  SEND_CRC;
           cmd_count       <=  0;
+          state           <=  SEND_FIRST_CRC;
+          cmd_count       <=  cmd_count + 1;
+
+
+          r_crc7          <=  crc7;
           crc_en          <=  0;
         end
+      end
+      SEND_FIRST_CRC: begin
+        state             <=  SEND_CRC;
+        o_gen_crc         <=  {1'b0, crc7};
+        cmd_count         <=  1;
+        o_sd_cmd          <=  crc7[6];
+
+        r_crc7            <=  {crc7[5:0], 1'b0};
+        crc_en            <=  0;
       end
       SEND_CRC: begin
         o_sd_cmd          <=  r_crc7[6];
@@ -471,10 +472,16 @@ always @ (posedge i_sd_clk) begin
         end
       end
       FINISHED_COMMAND: begin
+        o_sd_cmd_dir      <=  0;
+        rst_crc           <=  0;
+        o_sd_cmd          <=  1'b1;
+        state             <=  WAIT_TRISTATE;
+      end
+      WAIT_TRISTATE: begin
+        o_sd_cmd_dir      <=  0;
         rst_crc           <=  0;
         o_sd_cmd          <=  1'b1;
         state             <=  WAIT_FOR_RESPONSE;
-        o_sd_cmd_dir      <=  0;
       end
       WAIT_FOR_RESPONSE: begin
         if (i_sd_cmd    ==  1'b0) begin
@@ -505,17 +512,20 @@ always @ (posedge i_sd_clk) begin
         end
       end
       CHECK_CRC: begin
+        o_gen_crc         <=  {1'b0, crc7};
+        o_rmt_crc         <=  {1'b0, r_crc7};
         if (r_crc7 != crc7) begin
-          o_crc_err      <=  1;
+          o_crc_err       <=  1;
         end
-        o_sd_cmd_dir     <=  1;
-        o_sd_cmd         <=  1'b1;
-        state            <=  FINISHED;
+        o_sd_cmd_dir      <=  1;
+        o_sd_cmd          <=  1'b1;
+        state             <=  FINISHED;
       end
       FINISHED: begin
-        o_rsp_finished_en<=  1;
+        o_rsp_finished_en <=  1;
       end
       default: begin
+        state             <=  IDLE;
       end
     endcase
     //Out of band break of command enable
@@ -525,5 +535,9 @@ always @ (posedge i_sd_clk) begin
     end
   end
 end
+
+//Debug Stuff
+assign      o_state       = state;
+assign      o_data_state  = data_state;
 
 endmodule

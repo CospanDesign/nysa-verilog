@@ -508,8 +508,8 @@ sd_dev_platform_cocotb sdio_dev_plat(
 */
 
 sd_dev_platform_spartan6 #(
-  .OUTPUT_DELAY   (63               ),
-  .INPUT_DELAY    (63               )
+  .OUTPUT_DELAY   (0                ),
+  .INPUT_DELAY    (0                )
 )sdio_dev_plat (
   .clk            (clk              ),
   .rst            (rst              ),
@@ -530,6 +530,8 @@ sd_dev_platform_spartan6 #(
   .io_phy_sd_cmd  (phy_sd_cmd       ),
   .io_phy_sd_data (phy_sd_data      )
 );
+
+pullup (phy_sd_cmd    );
 
 pullup (phy_sd_data[0]);
 pullup (phy_sd_data[1]);

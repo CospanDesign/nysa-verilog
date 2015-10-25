@@ -71,7 +71,7 @@ module sd_sd4_phy (
 
 //  input                     ddr_en, //ALWAYS ENABLED FOR NOW!
   input                     i_en,
-  output  reg               o_finished,
+//  output  reg               o_finished,
   input                     i_write_flag,
 
   output  reg               o_crc_err,      //Detected a CRC error during read
@@ -96,7 +96,7 @@ localparam  READ_CRC      = 4'h7;
 localparam  FINISHED      = 4'h8;
 
 //registes/wires
-reg       [3:0]             state;
+reg       [3:0]             state = IDLE;
 reg       [7:0]             sd_data;
 wire                        sd_data_bit;
 wire      [15:0]            gen_crc[0:3];
@@ -129,6 +129,10 @@ wire      [3:0]             crc_bit3;
 //wire      [7:0]             in_remap;
 reg       [11:0]            data_count;
 wire                        writing_active;
+reg                         local_rst;
+initial begin
+  local_rst                   <=  1;
+end
 
 integer                     i = 0;
 
@@ -221,15 +225,16 @@ always @ (posedge clk) begin
   //De-assert Strobes
   o_data_stb              <=  0;
 
-  if (rst) begin
+  if (rst | local_rst) begin
     sd_data               <=  0;
     state                 <=  IDLE;
     crc_rst               <=  1;
     crc_en                <=  0;
-    o_finished            <=  0;
+//    o_finished            <=  0;
     data_count            <=  0;
     o_crc_err             <=  0;
     o_data_s2h            <=  0;
+    local_rst             <=  0;
     for (i = 0; i < 4; i = i + 1) begin
       crc[i]              <=  16'h0000;
     end
@@ -239,7 +244,7 @@ always @ (posedge clk) begin
       IDLE: begin
         crc_en            <=  0;
         crc_rst           <=  1;
-        o_finished        <=  0;
+//        o_finished        <=  0;
         data_count        <=  0;
         o_crc_err         <=  0;
         sd_data           <=  8'hFF;
@@ -335,17 +340,18 @@ always @ (posedge clk) begin
         end
       end
       FINISHED: begin
-        o_finished        <=  1;
+//        o_finished        <=  1;
         o_crc_err         <= !( (crc[0] == gen_crc[0]) &&
                                 (crc[1] == gen_crc[1]) &&
                                 (crc[2] == gen_crc[2]) &&
                                 (crc[3] == gen_crc[3]));
         if (!i_en) begin
-          o_finished      <=  0;
+//          o_finished      <=  0;
           state           <=  IDLE;
         end
       end
       default: begin
+        local_rst         <=  1;
       end
     endcase
   end

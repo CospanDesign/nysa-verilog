@@ -1,26 +1,26 @@
 [*]
-[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Tue Oct 20 16:57:50 2015
+[*] GTKWave Analyzer v3.3.62 (w)1999-2014 BSI
+[*] Sat Oct 24 16:04:38 2015
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/design.vcd"
-[dumpfile_mtime] "Tue Oct 20 16:56:22 2015"
-[dumpfile_size] 2583083
+[dumpfile_mtime] "Sat Oct 24 16:04:29 2015"
+[dumpfile_size] 3135755
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/sd_host_wave.gtkw"
-[timestart] 47455800
-[size] 1918 1059
+[timestart] 0
+[size] 958 1059
 [pos] -1 -1
-*-16.262182 47559500 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-23.276777 16310000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] wishbone_master_tb.
 [treeopen] wishbone_master_tb.s1.
-[treeopen] wishbone_master_tb.s1.sd_stack.phy.genblk1.
-[treeopen] wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.
-[treeopen] wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.genblk0001.
+[treeopen] wishbone_master_tb.s1.platform.
+[treeopen] wishbone_master_tb.s1.sd_stack.
+[treeopen] wishbone_master_tb.s1.sd_stack.phy.
 [treeopen] wishbone_master_tb.sdio_device.
 [treeopen] wishbone_master_tb.sdio_device.phy.
 [sst_width] 213
-[signals_width] 278
+[signals_width] 494
 [sst_expanded] 1
-[sst_vpaned_height] 313
+[sst_vpaned_height] 298
 @28
 wishbone_master_tb.s1.sd_stack.clk
 wishbone_master_tb.rst
@@ -35,41 +35,30 @@ wishbone_master_tb.s1.platform.o_locked
 -Spartan 6 Platform
 @800200
 -Host Stack
-@800201
 -Phy
-@23
-wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.o_sd_data[7:0]
-wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.i_sd_data[7:0]
-@201
+@200
 -
-@c00023
-wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-@29
-(0)wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-(1)wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-(2)wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-(3)wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-(4)wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-(5)wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-(6)wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-(7)wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-(8)wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-(9)wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-(10)wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-(11)wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-(12)wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-(13)wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-(14)wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-(15)wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-@1401201
--group_end
-@29
-wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.genblk0001.crc.en
-wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.genblk0001.crc.rst
-wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.genblk0001.crc.bit0
-wishbone_master_tb.s1.sd_stack.phy.genblk1.sd4.genblk0001.crc.bit1
-@1000201
+@1000200
 -Phy
+@28
+wishbone_master_tb.s1.platform.io_phy_cmd
+@200
+-
+@28
+wishbone_master_tb.s1.sd_stack.phy.o_sd_cmd_dir
+wishbone_master_tb.s1.sd_stack.phy.o_sd_data_dir
+wishbone_master_tb.s1.platform.i_sd_data_dir
+@800022
+wishbone_master_tb.s1.platform.io_phy_data[3:0]
+@28
+(0)wishbone_master_tb.s1.platform.io_phy_data[3:0]
+(1)wishbone_master_tb.s1.platform.io_phy_data[3:0]
+(2)wishbone_master_tb.s1.platform.io_phy_data[3:0]
+(3)wishbone_master_tb.s1.platform.io_phy_data[3:0]
+@1001200
+-group_end
+@200
+-
 @1000200
 -Host Stack
 @800200

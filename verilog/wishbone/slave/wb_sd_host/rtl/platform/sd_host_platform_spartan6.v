@@ -47,6 +47,10 @@ module sd_host_platform_spartan6 #(
   input                     i_sd_cmd_out,
   output                    o_sd_cmd_in,
 
+  //Configuration
+  input                     i_cfg_inc,
+  input                     i_cfg_en,
+
   output                    o_phy_clk,
   inout                     io_phy_cmd,
   inout           [3:0]     io_phy_data
@@ -55,7 +59,6 @@ module sd_host_platform_spartan6 #(
 //local parameters
 //registes/wires
 wire                [7:0]   sd_data_out;
-wire                        pll_locked;
 wire                        pll_serdes_clk;
 wire                        pll_sd_clk;
 
@@ -77,15 +80,11 @@ wire                [3:0]   pin_data_tristate_predelay;
 wire                        serdes_strobe;
 
 wire                        din_serdes_strobe_buf;
+reg                         sd_clk;
+reg                         user_reset = 1;
+wire                        sd_data_direction;
 
 
-
-`ifdef SIMULATION
-pullup (io_phy_data[0]);
-pullup (io_phy_data[1]);
-pullup (io_phy_data[2]);
-pullup (io_phy_data[3]);
-`endif
 //submodules
 
 //Generate the SERDES
@@ -93,97 +92,94 @@ pullup (io_phy_data[3]);
 //Clock will be used to drive both the output and the internal state machine
 //Take the output of the delay buffer and send it through ODDR2
 ODDR2 #(
-  .DDR_ALIGNMENT        ("NONE"               ),
-  .INIT                 (1'b0                 ),
-  .SRTYPE               ("SYNC"               )
+  .DDR_ALIGNMENT        ("NONE"                           ),
+  .INIT                 (1'b0                             ),
+  .SRTYPE               ("SYNC"                           )
 ) oddr2_clk (
-  .D0                   (1'b1                 ),
-  .D1                   (1'b0                 ),
-  .C0                   (o_sd_clk             ),
-  .C1                   (~o_sd_clk            ),
-  .CE                   (1'b1                 ),
-  .Q                    (o_phy_clk            ),
-  .R                    (1'b0                 ),
-  .S                    (1'b0                 )
-
+  .D0                   (1'b1                             ),
+  .D1                   (1'b0                             ),
+  .C0                   (o_sd_clk                         ),
+  .C1                   (~o_sd_clk                        ),
+  .CE                   (1'b1                             ),
+  .Q                    (o_phy_clk                        ),
+  .R                    (1'b0                             ),
+  .S                    (1'b0                             )
 );
 
 //Internal Clock Interface
 //Control Line
 IOBUF #(
-  .IOSTANDARD           ("LVCMOS33"           )
-)cmd_iobuf(
-  .T                    (sd_cmd_tristate_dly  ),
-  .O                    (sd_cmd_in_delay      ),
-  .I                    (sd_cmd_out_delay     ),
-  .IO                   (io_phy_cmd           )
+  .IOSTANDARD           ("LVCMOS33"                       )
+) cmd_iobuf (
+  .T                    (sd_cmd_tristate_dly              ),
+  .O                    (sd_cmd_in_delay                  ),
+  .I                    (sd_cmd_out_delay                 ),
+
+  .IO                   (io_phy_cmd                       )
 );
 
-`ifdef SIMULATION
-pullup (io_phy_cmd);
-`endif
-
 IODELAY2 #(
-  .DATA_RATE            ("SDR"                ),
-  .IDELAY_VALUE         (INPUT_DELAY          ),
-  .ODELAY_VALUE         (OUTPUT_DELAY         ),
-  .IDELAY_TYPE          ("FIXED"              ),
-  .COUNTER_WRAPAROUND   ("STAY_AT_LIMIT"      ),
-  .DELAY_SRC            ("IO"                 ),
-  .SERDES_MODE          ("NONE"               ),
-  .SIM_TAPDELAY_VALUE   (75                   )
+  .DATA_RATE            ("SDR"                            ),
+  .IDELAY_VALUE         (INPUT_DELAY                      ),
+  .ODELAY_VALUE         (OUTPUT_DELAY                     ),
+  .IDELAY_TYPE          ("FIXED"                          ),
+  //.IDELAY_TYPE          ("VARIABLE_FROM_ZERO"             ),
+  .COUNTER_WRAPAROUND   ("STAY_AT_LIMIT"                  ),
+  .DELAY_SRC            ("IO"                             ),
+  .SERDES_MODE          ("NONE"                           ),
+  .SIM_TAPDELAY_VALUE   (75                               )
 ) cmd_delay (
-  .T                    (!i_sd_cmd_dir        ),
-  .ODATAIN              (i_sd_cmd_out         ),
-  //.DATAOUT              (o_sd_cmd_in          ),
-  .DATAOUT2             (o_sd_cmd_in          ),
+  .T                    (!i_sd_cmd_dir                    ),
+  .ODATAIN              (i_sd_cmd_out                     ),
+  //.DATAOUT              (o_sd_cmd_in                      ),
+  .DATAOUT2             (o_sd_cmd_in                      ),
 
   //FPGA Fabric
 
   //IOB
-  .TOUT                 (sd_cmd_tristate_dly  ),
-  .IDATAIN              (sd_cmd_in_delay      ),
-  .DOUT                 (sd_cmd_out_delay     ),
+  .TOUT                 (sd_cmd_tristate_dly              ),
+  .IDATAIN              (sd_cmd_in_delay                  ),
+  .DOUT                 (sd_cmd_out_delay                 ),
 
-  .IOCLK0               (1'b0                 ),  //XXX: This one is not SERDESized.. Do I need to add a clock??
-  .IOCLK1               (1'b0                 ),
-  .CLK                  (1'b0                 ),
-  .CAL                  (1'b0                 ),
-  .INC                  (1'b0                 ),
-  .CE                   (1'b0                 ),
-  .BUSY                 (                     ),
-  //.RST                  (1'b0                 )
-  .RST                  (rst & !o_locked      )
+  .IOCLK0               (clk                              ),
+  .IOCLK1               (1'b0                             ),
+  .CAL                  (1'b0                             ),
+  .BUSY                 (                                 ),
+
+  .CLK                  (clk                              ),
+  .INC                  (i_cfg_inc                        ),
+  .CE                   (i_cfg_en                         ),
+  .RST                  (rst                              )
+  //.RST                  (rst & !o_locked                  )
 );
 
 //DATA Lines
 genvar pcnt;
 generate
 for (pcnt = 0; pcnt < 4; pcnt = pcnt + 1) begin: sgen
+
 IOBUF #(
-  .IOSTANDARD           ("LVCMOS33"             )
+  .IOSTANDARD           ("LVCMOS33"                       )
 ) io_data_buffer (
-  .T                    (pin_data_tristate[pcnt]),
-
-  .I                    (pin_data_out[pcnt]     ),
-  .O                    (pin_data_in[pcnt]      ),
-
-  .IO                   (io_phy_data[pcnt]      )
+  .T                    (pin_data_tristate[pcnt]          ),
+  .I                    (pin_data_out[pcnt]               ),
+  .O                    (pin_data_in[pcnt]                ),
+  .IO                   (io_phy_data[pcnt]                )
 );
 
 IODELAY2 #(
-  .DATA_RATE            ("SDR"                ),
-  .IDELAY_VALUE         (INPUT_DELAY          ),
-  .ODELAY_VALUE         (OUTPUT_DELAY         ),
-  .IDELAY_TYPE          ("FIXED"              ),
-  .COUNTER_WRAPAROUND   ("STAY_AT_LIMIT"      ),
-  .DELAY_SRC            ("IO"                 ),
-  .SERDES_MODE          ("NONE"               ),
-  .SIM_TAPDELAY_VALUE   (75                   )
+  .DATA_RATE            ("SDR"                            ),
+  .IDELAY_VALUE         (INPUT_DELAY                      ),
+  .ODELAY_VALUE         (OUTPUT_DELAY                     ),
+  .IDELAY_TYPE          ("FIXED"                          ),
+  .COUNTER_WRAPAROUND   ("STAY_AT_LIMIT"                  ),
+  .DELAY_SRC            ("IO"                             ),
+  .SERDES_MODE          ("NONE"                           ),
+  .SIM_TAPDELAY_VALUE   (75                               )
 )sd_data_delay(
   //IOSerdes
   //.T                    (pin_data_tristate_predelay[pcnt] ),
-  .T                    (!i_sd_data_dir                   ),
+  .T                    (sd_data_direction                ),
   .ODATAIN              (pin_data_in_predelay[pcnt]       ),
   .DATAOUT              (pin_data_out_delay[pcnt]         ),
 
@@ -192,22 +188,22 @@ IODELAY2 #(
   .IDATAIN              (pin_data_in[pcnt]                ),
   .DOUT                 (pin_data_out[pcnt]               ),
 
-  .DATAOUT2             (                     ),
-  .IOCLK0               (1'b0                 ),  //This one is not SERDESized.. Do I need to add a clock??
-  .IOCLK1               (1'b0                 ),
-  .CLK                  (1'b0                 ),
-  .CAL                  (1'b0                 ),
-  .INC                  (1'b0                 ),
-  .CE                   (1'b0                 ),
-  .BUSY                 (                     ),
-  .RST                  (1'b0                 )
+  .DATAOUT2             (                                 ),
+  .IOCLK0               (1'b0                             ),  //This one is not SERDESized.. Do I need to add a clock??
+  .IOCLK1               (1'b0                             ),
+  .CLK                  (1'b0                             ),
+  .CAL                  (1'b0                             ),
+  .INC                  (1'b0                             ),
+  .CE                   (1'b0                             ),
+  .BUSY                 (                                 ),
+  .RST                  (1'b0                             )
 );
 
 IDDR2 #(
-  .DDR_ALIGNMENT        ("NONE"                          ),
-  .INIT_Q0              (0                               ),
-  .INIT_Q1              (0                               ),
-  .SRTYPE               ("SYNC"                          )
+  .DDR_ALIGNMENT        ("NONE"                           ),
+  .INIT_Q0              (0                                ),
+  .INIT_Q1              (0                                ),
+  .SRTYPE               ("SYNC"                           )
 ) data_in_ddr (
   .C0                   (o_sd_clk                         ),
   .C1                   (!o_sd_clk                        ),
@@ -222,7 +218,7 @@ IDDR2 #(
 
 ODDR2 #(
   .DDR_ALIGNMENT        ("C0"                             ),
-  .INIT                 (0                                ),
+  .INIT                 (1                                ),
   .SRTYPE               ("ASYNC"                          )
 ) data_out_ddr (
   .C0                   (o_sd_clk                         ),
@@ -241,10 +237,36 @@ ODDR2 #(
 end
 endgenerate
 
+
+BUFG sd_clk_buffer(
+  .I                      (sd_clk                         ),
+  .O                      (o_sd_clk                       )
+);
+
 //asynchronous logic
-assign  o_sd_clk          = clk;
 assign  sd_data_out       = i_read_wait ? {1'b1, 1'b0, 1'b1, 1'b1, 1'b1, 1'b0, 1'b1, 1'b1}:
                                           i_sd_data_out;
 assign  sd_data_direction = (!i_sd_data_dir && !i_read_wait);
-assign  o_locked          = !rst;
+assign  o_locked          = !user_reset;
+
+//Synchronous Logic
+reg [7:0] count;
+always @ (posedge clk) begin
+  if (rst) begin
+    sd_clk                <=  0;
+    count                 <=  0;
+    user_reset            <=  1;
+  end
+  else begin
+    if (count < 4) begin
+      count               <=  count + 1;
+    end
+    else begin
+      sd_clk              <=  ~sd_clk;
+      count               <=  0;
+      user_reset          <=  0;
+    end
+  end
+end
+
 endmodule

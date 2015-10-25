@@ -8,8 +8,9 @@ from nysa.host.sim.sim_host import NysaSim
 from cocotb.clock import Clock
 import time
 from array import array as Array
-from dut_driver import wb_sd_hostDriver
-from dut_driver import SDHostException
+from nysa.host.driver.sd_host_driver import SDHostException
+from nysa.host.driver.sd_host_driver import SDHostDriver
+
 import json
 from nysa.tools.nysa_paths import get_verilog_path
 
@@ -52,8 +53,8 @@ def first_test(dut):
     nysa.read_sdb()
     yield (nysa.wait_clocks(10))
     nysa.pretty_print_sdb()
-    #driver = wb_sd_hostDriver(nysa, nysa.find_device(wb_sd_hostDriver)[0])
-    driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    #driver = SDHostDriver(nysa, nysa.find_device(SDHostDriver)[0])
+    driver = yield cocotb.external(SDHostDriver)(nysa, nysa.find_device(SDHostDriver)[0])
     #yield cocotb.external(driver.set_control)(0x01)
     yield (nysa.wait_clocks(200))
     v = yield cocotb.external(driver.get_control)()
@@ -74,7 +75,7 @@ def first_test(dut):
 
 
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def send_simple_command(dut):
     """
     Description:
@@ -101,16 +102,15 @@ def send_simple_command(dut):
     nysa.read_sdb()
     yield (nysa.wait_clocks(10))
     nysa.pretty_print_sdb()
-    #driver = wb_sd_hostDriver(nysa, nysa.find_device(wb_sd_hostDriver)[0])
-    driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    #driver = SDHostDriver(nysa, nysa.find_device(SDHostDriver)[0])
+    driver = yield cocotb.external(SDHostDriver)(nysa, nysa.find_device(SDHostDriver)[0])
     driver.set_voltage_range(2.0, 3.6)
 
     yield cocotb.external(driver.enable_sd_host)(True)
     yield (nysa.wait_clocks(100))
-    #yield cocotb.external(driver.send_command)(0x05, 0x01234)
-    #yield cocotb.external(driver.send_command)(0x05, 0x00000)
+
     yield cocotb.external(driver.cmd_phy_sel)()
-    #if dut.s1.sd_stack.cmd.
+
     yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = False)
     if dut.sdio_device.card_controller.v1p8_sel.value.get_value() == True:
         raise TestFailure ("1.8V Switch Voltage Before Request")
@@ -164,8 +164,8 @@ def send_byte_test(dut):
     nysa.read_sdb()
     yield (nysa.wait_clocks(10))
     #nysa.pretty_print_sdb()
-    #driver = wb_sd_hostDriver(nysa, nysa.find_device(wb_sd_hostDriver)[0])
-    driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    #driver = SDHostDriver(nysa, nysa.find_device(SDHostDriver)[0])
+    driver = yield cocotb.external(SDHostDriver)(nysa, nysa.find_device(SDHostDriver)[0])
     #Enable SDIO
     yield cocotb.external(driver.enable_sd_host)(True)
     yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
@@ -215,8 +215,8 @@ def receive_byte_test(dut):
     nysa.read_sdb()
     yield (nysa.wait_clocks(10))
     #nysa.pretty_print_sdb()
-    #driver = wb_sd_hostDriver(nysa, nysa.find_device(wb_sd_hostDriver)[0])
-    driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    #driver = SDHostDriver(nysa, nysa.find_device(SDHostDriver)[0])
+    driver = yield cocotb.external(SDHostDriver)(nysa, nysa.find_device(SDHostDriver)[0])
     #Enable SDIO
     yield cocotb.external(driver.enable_sd_host)(True)
     yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
@@ -266,8 +266,8 @@ def small_multi_byte_data_write(dut):
     nysa.read_sdb()
     yield (nysa.wait_clocks(10))
     #nysa.pretty_print_sdb()
-    #driver = wb_sd_hostDriver(nysa, nysa.find_device(wb_sd_hostDriver)[0])
-    driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    #driver = SDHostDriver(nysa, nysa.find_device(SDHostDriver)[0])
+    driver = yield cocotb.external(SDHostDriver)(nysa, nysa.find_device(SDHostDriver)[0])
     #Enable SDIO
     yield cocotb.external(driver.enable_sd_host)(True)
     yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
@@ -313,7 +313,7 @@ def small_multi_byte_data_read(dut):
     yield(nysa.reset())
     nysa.read_sdb()
     yield (nysa.wait_clocks(10))
-    driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    driver = yield cocotb.external(SDHostDriver)(nysa, nysa.find_device(SDHostDriver)[0])
 
     #Enable SDIO
     yield cocotb.external(driver.enable_sd_host)(True)
@@ -369,7 +369,7 @@ def data_block_write(dut):
     yield(nysa.reset())
     nysa.read_sdb()
     yield (nysa.wait_clocks(10))
-    driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    driver = yield cocotb.external(SDHostDriver)(nysa, nysa.find_device(SDHostDriver)[0])
     #Enable SDIO
 
     yield cocotb.external(driver.enable_sd_host)(True)
@@ -430,7 +430,7 @@ def data_block_read(dut):
     yield(nysa.reset())
     nysa.read_sdb()
     yield (nysa.wait_clocks(10))
-    driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    driver = yield cocotb.external(SDHostDriver)(nysa, nysa.find_device(SDHostDriver)[0])
     #Enable SDIO
     yield cocotb.external(driver.enable_sd_host)(True)
     yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
@@ -471,7 +471,7 @@ def data_async_block_read(dut):
     yield(nysa.reset())
     nysa.read_sdb()
     yield (nysa.wait_clocks(10))
-    driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    driver = yield cocotb.external(SDHostDriver)(nysa, nysa.find_device(SDHostDriver)[0])
     #Enable SDIO
     yield cocotb.external(driver.enable_sd_host)(True)
     yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
@@ -533,7 +533,7 @@ def data_async_block_read_with_read_wait(dut):
     yield(nysa.reset())
     nysa.read_sdb()
     yield (nysa.wait_clocks(10))
-    driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    driver = yield cocotb.external(SDHostDriver)(nysa, nysa.find_device(SDHostDriver)[0])
     #Enable SDIO
     yield cocotb.external(driver.enable_sd_host)(True)
     yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
@@ -609,7 +609,7 @@ def detect_interrupt(dut):
     yield(nysa.reset())
     nysa.read_sdb()
     yield (nysa.wait_clocks(10))
-    driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    driver = yield cocotb.external(SDHostDriver)(nysa, nysa.find_device(SDHostDriver)[0])
     #Enable SDIO
     yield cocotb.external(driver.enable_sd_host)(True)
     yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)
@@ -639,7 +639,7 @@ def detect_interrupt(dut):
     if not interrupt_called:
         raise TestFailure("Interrupt was not detected")
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def data_async_block_read_write_long_transfer(dut):
     """
     Description:
@@ -668,7 +668,7 @@ def data_async_block_read_write_long_transfer(dut):
     yield(nysa.reset())
     nysa.read_sdb()
     yield (nysa.wait_clocks(10))
-    driver = yield cocotb.external(wb_sd_hostDriver)(nysa, nysa.find_device(wb_sd_hostDriver)[0])
+    driver = yield cocotb.external(SDHostDriver)(nysa, nysa.find_device(SDHostDriver)[0])
     #Enable SDIO
     yield cocotb.external(driver.enable_sd_host)(True)
     yield cocotb.external(driver.cmd_io_send_op_cond)(enable_1p8v = True)

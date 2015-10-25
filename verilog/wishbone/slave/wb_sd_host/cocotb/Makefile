@@ -8,6 +8,7 @@ SDIO_DEV:= $(shell $(python) nysa paths -s -v sdio-device)
 XILINX 	:= $(shell $(python) nysa paths -s -x)
 PYTHONPATH := ./model:$(PYTHONPATH)
 export PYTHONPATH
+export PYTHONHOME=$(shell python -c "from distutils.sysconfig import get_config_var; print(get_config_var('prefix'))")
 
 EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/ -DSIMULATION -DCOCOTB_WORKAROUND -I${SDIO_DEV}/rtl/ -I${SDIO_DEV}/rtl/cia -DCOCOTB_SIMULATION
 

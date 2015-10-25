@@ -60,13 +60,11 @@ SOFTWARE.
   SDB_WRITEABLE:True
 
   Device Size: Number of Registers
-  SDB_SIZE:3
+  SDB_SIZE:0x22
 */
-
 
 `define DEFAULT_MEM_0_BASE        32'h00000000
 `define DEFAULT_MEM_1_BASE        32'h00100000
-
 
 //control bit definition
 `define CONTROL_ENABLE_SD                     0
@@ -88,6 +86,7 @@ SOFTWARE.
 `define STATUS_ENABLE                         4
 `define STATUS_SD_BUSY                        5
 `define STATUS_SD_DATA_BUSY                   6
+`define STATUS_SD_READY                       7
 `define STATUS_ERROR_BIT_TOP                  31
 `define STATUS_ERROR_BIT_BOT                  24
 
@@ -107,10 +106,12 @@ SOFTWARE.
 `define DEFAULT_BLOCK_SLEEP                   32'h00000100
 
 module wb_sd_host #(
-  parameter                 SD_MODE       = 1,
-  parameter                 FOUR_BIT_DATA = 1,
-  parameter                 DDR_EN        = 1,
-  parameter                 BUFFER_DEPTH  = 11  //2048
+  parameter           SD_MODE                 = 1,
+  parameter           FOUR_BIT_DATA           = 1,
+  parameter           DDR_EN                  = 1,
+  parameter           BUFFER_DEPTH            = 11,  //2048
+  parameter           INITIAL_DELAY_IN_VALUE  = 63,
+  parameter           INITIAL_DELAY_OUT_VALUE = 0
 )(
   input               clk,
   input               rst,
@@ -173,6 +174,13 @@ localparam          SD_F5_BLOCK_SIZE    = 32'h00000015;
 localparam          SD_F6_BLOCK_SIZE    = 32'h00000016;
 localparam          SD_F7_BLOCK_SIZE    = 32'h00000017;
 localparam          SD_MEM_BLOCK_SIZE   = 32'h00000018;
+
+localparam          SD_PHY_STATE        = 32'h00000020;
+localparam          SD_PHY_DATA_STATE   = 32'h00000021;
+
+localparam          SD_DELAY_VALUE      = 32'h00000022;
+localparam          SD_DBG_CRC_GEN      = 32'h00000023;
+localparam          SD_DBG_RMT_GEN      = 32'h00000024;
 
 //Local Registers/Wires
 reg         [31:0]      control         = 32'h00000000;
@@ -249,6 +257,12 @@ wire        [31:0]      p2m_mem_o_adr;
 wire        [31:0]      p2m_mem_o_dat;
 
 
+
+reg         [7:0]       delay_value;
+reg         [7:0]       current_delay_value;
+reg                     delay_dir;
+reg                     delay_en;
+
 //Submodules
 wire                    sd_ready;
 reg         [15:0]      sd_timeout;
@@ -301,13 +315,21 @@ reg         [23:0]      mem_block_size;
 reg         [31:0]      block_sleep_count;
 wire                    sd_int_detected;
 
+wire        [3:0]       sd_phy_state;
+wire        [3:0]       sd_phy_data_state;
+
+wire        [7:0]       gen_crc;
+wire        [7:0]       rmt_crc;
+
+wire                    sd_rsp_long_flag;
+
 sd_host_stack #(
   .SD_MODE              (SD_MODE                  ),
   .FOUR_BIT_DATA        (FOUR_BIT_DATA            ),
   .DDR_EN               (DDR_EN                   ),
   .BUFFER_DEPTH         (BUFFER_DEPTH             )
 )sd_stack(
-  .clk                  (clk                      ),
+  .clk                  (sd_clk                   ),
   .rst                  (rst                      ),
 
   //Control/Status/Error
@@ -329,6 +351,8 @@ sd_host_stack #(
   .i_cmd_arg            (sd_cmd_arg               ),
   .i_rsp_long_flag      (sd_rsp_long_flag         ),
   .o_rsp                (sd_rsp                   ),
+
+  .i_crc_en_flag        (1'b1                     ),
 
   //Data Interface
   .i_data_txrx          (data_txrx_en             ),
@@ -375,6 +399,12 @@ sd_host_stack #(
   .o_sd_cmd_dir         (sd_cmd_dir               ),
   .i_sd_cmd             (sd_cmd_in                ),
   .o_sd_cmd             (sd_cmd_out               ),
+
+  //FPGA Debug
+  .o_phy_state          (sd_phy_state             ),
+  .o_phy_data_state     (sd_phy_data_state        ),
+  .o_gen_crc            (gen_crc                  ),
+  .o_rmt_crc            (rmt_crc                  ),
 
   .o_sd_data_dir        (sd_data_dir              ),
   .i_sd_data            (sd_data_in               ),
@@ -505,8 +535,8 @@ sd_host_platform_cocotb platform(
 `else
 //Spartan 6 Platform
 sd_host_platform_spartan6 #(
-  .OUTPUT_DELAY         (63                       ),
-  .INPUT_DELAY          (63                       )
+  .INPUT_DELAY          (INITIAL_DELAY_IN_VALUE   ),
+  .OUTPUT_DELAY         (INITIAL_DELAY_OUT_VALUE  )
 )platform(
   .rst                  (rst                      ),
   .clk                  (clk                      ),
@@ -523,6 +553,9 @@ sd_host_platform_spartan6 #(
   .i_sd_data_out        (sd_data_out              ),
   .o_sd_data_in         (sd_data_in               ),
 
+  .i_cfg_inc            (delay_dir                ),
+  .i_cfg_en             (delay_en                 ),
+
   .o_phy_clk            (o_sd_clk                 ),
   .io_phy_cmd           (io_sd_cmd                ),
   .io_phy_data          (io_sd_data               )
@@ -530,37 +563,36 @@ sd_host_platform_spartan6 #(
 `endif
 
 //Asynchronous Logic
-assign  w_sd_enable                       = control[`CONTROL_ENABLE_SD        ];
-assign  w_interrupt_enable                = control[`CONTROL_ENABLE_INTERRUPT ];
-assign  w_mem_write_enable                = control[`CONTROL_ENABLE_DMA_WR    ];
-assign  w_mem_read_enable                 = control[`CONTROL_ENABLE_DMA_RD    ];
-assign  data_write_flag                   = control[`CONTROL_DATA_WRITE_FLAG  ];
-assign  data_block_mode                   = control[`CONTROL_DATA_BLOCK_MODE  ];
-assign  function_address                  = control[`CONTROL_FUNCTION_ADDRESS ];
-assign  data_txrx_en                      = control[`CONTROL_DATA_BIT_ACTIVATE];
+assign  w_sd_enable       = control[`CONTROL_ENABLE_SD        ];
+assign  w_interrupt_enable= control[`CONTROL_ENABLE_INTERRUPT ];
+assign  w_mem_write_enable= control[`CONTROL_ENABLE_DMA_WR    ];
+assign  w_mem_read_enable = control[`CONTROL_ENABLE_DMA_RD    ];
+assign  data_write_flag   = control[`CONTROL_DATA_WRITE_FLAG  ];
+assign  data_block_mode   = control[`CONTROL_DATA_BLOCK_MODE  ];
+assign  function_address  = control[`CONTROL_FUNCTION_ADDRESS ];
+assign  data_txrx_en      = control[`CONTROL_DATA_BIT_ACTIVATE];
 
-//assign  o_wbs_int                         = w_interrupt_enable ? w_int : 1'b0;
-assign  mem_o_we                          = w_mem_write_enable ? m2p_mem_o_we :
-                                            w_mem_read_enable  ? p2m_mem_o_we :
-                                            1'b0;
-assign  mem_o_stb                         = w_mem_write_enable ? m2p_mem_o_stb :
-                                            w_mem_read_enable  ? p2m_mem_o_stb :
-                                            1'b0;
-assign  mem_o_cyc                         = w_mem_write_enable ? m2p_mem_o_cyc :
-                                            w_mem_read_enable  ? p2m_mem_o_cyc :
-                                            1'b0;
-assign  mem_o_sel                         = w_mem_write_enable ? m2p_mem_o_sel :
-                                            w_mem_read_enable  ? p2m_mem_o_sel :
-                                            4'b0000;
-assign  mem_o_adr                         = w_mem_write_enable ? m2p_mem_o_adr :
-                                            w_mem_read_enable  ? p2m_mem_o_adr :
-                                            31'h00000000;
-assign  mem_o_dat                         = w_mem_write_enable ? m2p_mem_o_dat :
-                                            w_mem_read_enable  ? p2m_mem_o_dat :
-                                            4'b0000;
-
+//assign  o_wbs_int         = w_interrupt_enable ? w_int : 1'b0;
+assign  mem_o_we          = w_mem_write_enable ? m2p_mem_o_we :
+                            w_mem_read_enable  ? p2m_mem_o_we :
+                            1'b0;
+assign  mem_o_stb         = w_mem_write_enable ? m2p_mem_o_stb :
+                            w_mem_read_enable  ? p2m_mem_o_stb :
+                            1'b0;
+assign  mem_o_cyc         = w_mem_write_enable ? m2p_mem_o_cyc :
+                            w_mem_read_enable  ? p2m_mem_o_cyc :
+                            1'b0;
+assign  mem_o_sel         = w_mem_write_enable ? m2p_mem_o_sel :
+                            w_mem_read_enable  ? p2m_mem_o_sel :
+                            4'b0000;
+assign  mem_o_adr         = w_mem_write_enable ? m2p_mem_o_adr :
+                            w_mem_read_enable  ? p2m_mem_o_adr :
+                            31'h00000000;
+assign  mem_o_dat         = w_mem_write_enable ? m2p_mem_o_dat :
+                            w_mem_read_enable  ? p2m_mem_o_dat :
+                            4'b0000;
+assign  sd_rsp_long_flag  = 1'b0;
 //Synchronous Logic
-
 always @ (posedge clk) begin
 
   if (rst) begin
@@ -597,6 +629,8 @@ always @ (posedge clk) begin
     block_sleep_count     <= `DEFAULT_BLOCK_SLEEP;
     o_wbs_int             <=  0;
 
+    delay_value           <=  INITIAL_DELAY_IN_VALUE;
+
   end
   else begin
     r_memory_0_new_data   <=  0;
@@ -626,7 +660,6 @@ always @ (posedge clk) begin
           case (i_wbs_adr)
             CONTROL: begin
 //TODO: Remove Verbose Messages
-              //$display ("Control: %X", i_wbs_dat);
               control                 <=  i_wbs_dat;
             end
             REG_MEM_0_BASE: begin
@@ -665,7 +698,6 @@ always @ (posedge clk) begin
               sd_cmd_rsp_long_flag    <=  i_wbs_dat[`COMMAND_BIT_RSP_LONG_FLG];
               sd_cmd                  <=  i_wbs_dat[`COMMAND_BIT_CMD_TOP:`COMMAND_BIT_CMD_BOT];
 //TODO: Remove Verbose Messages
-              //$display ("Command: %X, Go Bit: %X", sd_cmd, sd_cmd_en);
             end
             SD_CONFIGURE: begin
               enable_crc              <=  i_wbs_dat[`CONFIGURE_EN_CRC];
@@ -703,6 +735,9 @@ always @ (posedge clk) begin
             SD_MEM_BLOCK_SIZE: begin
               mem_block_size          <=  i_wbs_dat[23:0];
             end
+            SD_DELAY_VALUE: begin
+              delay_value             <=  i_wbs_dat[7:0];
+            end
             default: begin
             end
           endcase
@@ -711,118 +746,132 @@ always @ (posedge clk) begin
           //read request
           case (i_wbs_adr)
             CONTROL: begin
-              o_wbs_dat           <= control;
+              o_wbs_dat               <= control;
             end
             STATUS: begin
-              //o_wbs_dat           <= status;
-              o_wbs_dat             <=  0;
-              o_wbs_dat[`STATUS_MEMORY_0_FINISHED] <= w_mem_read_enable ? w_p2m_0_finished : 1'b0;
-              o_wbs_dat[`STATUS_MEMORY_1_FINISHED] <= w_mem_read_enable ? w_p2m_1_finished : 1'b0;
-              o_wbs_dat[`STATUS_ENABLE]            <= w_sd_enable;
-              o_wbs_dat[`STATUS_MEMORY_0_EMPTY]    <= w_mem_write_enable ? w_m2p_0_empty    :
-                                                      w_mem_read_enable  ? w_p2m_0_empty    :
-                                                      1'b0;
-              o_wbs_dat[`STATUS_MEMORY_1_EMPTY]    <= w_mem_write_enable ? w_m2p_1_empty    :
-                                                      w_mem_read_enable  ? w_p2m_1_empty    :
-                                                      1'b0;
+              //o_wbs_dat                                             <= status;
+              o_wbs_dat                                               <=  0;
+              o_wbs_dat[`STATUS_MEMORY_0_FINISHED]                    <= w_mem_read_enable ? w_p2m_0_finished : 1'b0;
+              o_wbs_dat[`STATUS_MEMORY_1_FINISHED]                    <= w_mem_read_enable ? w_p2m_1_finished : 1'b0;
+              o_wbs_dat[`STATUS_ENABLE]                               <= w_sd_enable;
+              o_wbs_dat[`STATUS_MEMORY_0_EMPTY]                       <= w_mem_write_enable ? w_m2p_0_empty    :
+                                                                         w_mem_read_enable  ? w_p2m_0_empty    :
+                                                                         1'b0;
+              o_wbs_dat[`STATUS_MEMORY_1_EMPTY]                       <= w_mem_write_enable ? w_m2p_1_empty    :
+                                                                         w_mem_read_enable  ? w_p2m_1_empty    :
+                                                                         1'b0;
               o_wbs_dat[`STATUS_SD_BUSY]                              <= sd_cmd_en;
               o_wbs_dat[`STATUS_SD_DATA_BUSY]                         <= data_txrx_en;
+              o_wbs_dat[`STATUS_SD_READY]                             <= sd_ready;
               o_wbs_dat[`STATUS_ERROR_BIT_TOP:`STATUS_ERROR_BIT_BOT]  <= sd_error;
               if (w_p2m_0_finished) begin
-                //$display ("Reset size 0");
-                r_memory_0_size   <=  0;
+                r_memory_0_size       <=  0;
               end
               if (w_p2m_1_finished) begin
-                //$display ("Reset size 1");
-                r_memory_1_size   <=  0;
+                r_memory_1_size       <=  0;
               end
-              o_wbs_int           <=  0;
+              o_wbs_int               <=  0;
             end
             REG_MEM_0_BASE: begin
-              o_wbs_dat <=  r_memory_0_base;
+              o_wbs_dat               <=  r_memory_0_base;
             end
             REG_MEM_0_SIZE: begin
               if (w_mem_write_enable) begin
-                o_wbs_dat <=  w_m2p_0_count;
+                o_wbs_dat             <=  w_m2p_0_count;
               end
               else if (w_mem_read_enable) begin
-                o_wbs_dat <=  w_p2m_0_count;
+                o_wbs_dat             <=  w_p2m_0_count;
               end
               else begin
-                o_wbs_dat <=  r_memory_0_size;
+                o_wbs_dat             <=  r_memory_0_size;
               end
             end
             REG_MEM_1_BASE: begin
-              o_wbs_dat <=  r_memory_1_base;
+              o_wbs_dat               <=  r_memory_1_base;
             end
             REG_MEM_1_SIZE: begin
               if (w_mem_write_enable) begin
-                o_wbs_dat <=  w_m2p_1_count;
+                o_wbs_dat             <=  w_m2p_1_count;
               end
               else if (w_mem_read_enable) begin
-                o_wbs_dat <=  w_p2m_1_count;
+                o_wbs_dat             <=  w_p2m_1_count;
               end
               else begin
-                o_wbs_dat <=  r_memory_1_size;
+                o_wbs_dat             <=  r_memory_1_size;
               end
             end
             SD_RESPONSE0: begin
-              o_wbs_dat   <=  sd_rsp[127:96];
+              o_wbs_dat               <=  sd_rsp[127:96];
             end
             SD_RESPONSE1: begin
-              o_wbs_dat   <=  sd_rsp[95:64];
+              o_wbs_dat               <=  sd_rsp[95:64];
             end
             SD_RESPONSE2: begin
-              o_wbs_dat   <=  sd_rsp[63:32];
+              o_wbs_dat               <=  sd_rsp[63:32];
             end
             SD_RESPONSE3: begin
-              o_wbs_dat   <=  sd_rsp[31:0];
+              o_wbs_dat               <=  sd_rsp[31:0];
             end
             SD_DATA_BYTE_COUNT: begin
-              o_wbs_dat   <=  {8'h00, data_size};
+              o_wbs_dat               <=  {8'h00, data_size};
             end
             SD_BLOCK_SLEEP: begin
-              o_wbs_dat   <=  block_sleep_count;
+              o_wbs_dat               <=  block_sleep_count;
             end
             SD_F0_BLOCK_SIZE: begin
-              o_wbs_dat   <=  {8'h00, f0_block_size};
+              o_wbs_dat               <=  {8'h00, f0_block_size};
             end
             SD_F1_BLOCK_SIZE: begin
-              o_wbs_dat   <=  {8'h00, f1_block_size};
+              o_wbs_dat               <=  {8'h00, f1_block_size};
             end
             SD_F2_BLOCK_SIZE: begin
-              o_wbs_dat   <=  {8'h00, f2_block_size};
+              o_wbs_dat               <=  {8'h00, f2_block_size};
             end
             SD_F3_BLOCK_SIZE: begin
-              o_wbs_dat   <=  {8'h00, f3_block_size};
+              o_wbs_dat               <=  {8'h00, f3_block_size};
             end
             SD_F4_BLOCK_SIZE: begin
-              o_wbs_dat   <=  {8'h00, f4_block_size};
+              o_wbs_dat               <=  {8'h00, f4_block_size};
             end
             SD_F5_BLOCK_SIZE: begin
-              o_wbs_dat   <=  {8'h00, f5_block_size};
+              o_wbs_dat               <=  {8'h00, f5_block_size};
             end
             SD_F6_BLOCK_SIZE: begin
-              o_wbs_dat   <=  {8'h00, f6_block_size};
+              o_wbs_dat               <=  {8'h00, f6_block_size};
             end
             SD_F7_BLOCK_SIZE: begin
-              o_wbs_dat   <=  {8'h00, f7_block_size};
+              o_wbs_dat               <=  {8'h00, f7_block_size};
             end
             SD_MEM_BLOCK_SIZE: begin
-              o_wbs_dat   <=  {8'h00, mem_block_size};
+              o_wbs_dat               <=  {8'h00, mem_block_size};
+            end
+            SD_PHY_STATE: begin
+              o_wbs_dat               <=  {24'h00, sd_phy_state};
+            end
+            SD_PHY_DATA_STATE: begin
+              o_wbs_dat               <=  {24'h00, sd_phy_data_state};
+            end
+            SD_DELAY_VALUE: begin
+              o_wbs_dat               <=  {24'h00, delay_value};
+            end
+            SD_DBG_CRC_GEN: begin
+              o_wbs_dat               <=  {24'h00, gen_crc};
+            end
+            SD_DBG_RMT_GEN: begin
+              o_wbs_dat               <=  {24'h00, rmt_crc};
             end
             default: begin
-              o_wbs_dat <=  32'h00;
+              o_wbs_dat               <=  32'h00;
             end
           endcase
         end
-        o_wbs_ack <= 1;
+        o_wbs_ack                     <= 1;
       end
     end
 
     //Stack Says We're finished so put down our enable/busy signal
     if (sd_cmd_finished_en) begin
-      sd_cmd_en   <=  0;
+      sd_cmd_en           <=  0;
     end
     if (data_txrx_finished) begin
       control[`CONTROL_DATA_BIT_ACTIVATE] <=  0;
@@ -833,20 +882,20 @@ end
 //initerrupt controller
 always @ (posedge clk) begin
   if (rst) begin
-    w_int <=  0;
+    w_int           <=  0;
   end
   //Write Memory Controller
   else if (w_mem_write_enable) begin
     if (!w_m2p_0_empty && !w_m2p_1_empty) begin
-      w_int <=  0;
+      w_int         <=  0;
     end
     if (i_wbs_stb) begin
       //de-assert the interrupt on wbs transactions so I can launch another
       //interrupt when the wbs is de-asserted
-      w_int <=  0;
+      w_int         <=  0;
     end
     else if (w_m2p_0_empty || w_m2p_1_empty) begin
-      w_int <=  1;
+      w_int         <=  1;
     end
   end
   //Memory Read Interface
@@ -868,6 +917,27 @@ always @ (posedge clk) begin
     end
     else begin
       w_int         <=  0;
+    end
+  end
+end
+
+always @ (posedge clk) begin
+  delay_en                <=  0;
+  if (rst) begin
+    current_delay_value   <=  INITIAL_DELAY_IN_VALUE;
+    delay_dir             <=  0;
+  end
+  else begin
+    if (delay_value < current_delay_value) begin
+      //Direction Down
+      delay_dir           <=  0;
+      delay_en            <=  1;
+      current_delay_value <=  current_delay_value - 1;
+    end
+    else if (delay_value > current_delay_value) begin
+      delay_dir           <=  1;
+      delay_en            <=  1;
+      current_delay_value <=  current_delay_value + 1;
     end
   end
 end

@@ -1,25 +1,19 @@
 [*]
-[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Fri Oct 16 04:50:35 2015
+[*] GTKWave Analyzer v3.3.62 (w)1999-2014 BSI
+[*] Thu Oct 22 21:43:01 2015
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/cocotb/design.vcd"
-[dumpfile_mtime] "Fri Oct 16 04:33:11 2015"
-[dumpfile_size] 2111496
+[dumpfile_mtime] "Thu Oct 22 21:33:08 2015"
+[dumpfile_size] 686473
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/cocotb/waveforms.gtkw"
-[timestart] 45149
+[timestart] 2764
 [size] 1918 1059
 [pos] -1 -1
-*-8.811047 46750 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-8.566113 4100 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.demo.
 [treeopen] tb_cocotb.s1.
 [treeopen] tb_cocotb.s1.sd_stack.
-[treeopen] tb_cocotb.s1.sd_stack.phy.
-[treeopen] tb_cocotb.s1.sd_stack.phy.genblk1.
-[treeopen] tb_cocotb.s1.sd_stack.phy.genblk1.sd4.
-[treeopen] tb_cocotb.s1.sd_stack.phy.genblk1.sd4.genblk0001.
-[treeopen] tb_cocotb.s1.sd_stack.phy.genblk1.sd4.genblk001.
-[treeopen] tb_cocotb.s1.sd_stack.phy.genblk1.sd4.genblk01.
 [treeopen] tb_cocotb.sdio_device.
 [treeopen] tb_cocotb.sdio_device.card_controller.
 [treeopen] tb_cocotb.sdio_device.phy.
@@ -57,18 +51,19 @@ tb_cocotb.s1.sd_stack.cmd.state[3:0]
 @200
 -
 @22
-tb_cocotb.s1.sd_stack.cmd.data_state[3:0]
+tb_cocotb.s1.sd_stack.cmd.i_cmd[5:0]
 @28
-tb_cocotb.s1.sd_stack.cmd.i_data_txrx
-tb_cocotb.s1.sd_stack.cmd.o_data_txrx_activate
-tb_cocotb.s1.sd_stack.cmd.o_data_txrx_finished
-@22
-tb_cocotb.s1.sd_stack.cmd.count[23:0]
-tb_cocotb.s1.sd_stack.cmd.block_count[23:0]
-tb_cocotb.s1.sd_stack.cmd.i_data_size[23:0]
+tb_cocotb.s1.sd_stack.cmd.i_cmd_en
+tb_cocotb.s1.sd_stack.cmd.o_cmd_finished_en
 @200
 -
+@28
+tb_cocotb.s1.sd_stack.cmd.o_phy_cmd_en
+tb_cocotb.s1.sd_stack.cmd.i_phy_rsp_finished_en
+@200
 -
+@28
+tb_cocotb.s1.platform.io_phy_sd_cmd
 @1000200
 -Command
 @800200
@@ -80,46 +75,6 @@ tb_cocotb.s1.sd_stack.cmd.i_data_size[23:0]
 -cocotb platform
 @200
 -
-@22
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.data_count[11:0]
-@200
--
-@28
-tb_cocotb.s1.sd_stack.phy.i_data_txrx_activate
-tb_cocotb.s1.sd_stack.phy.o_data_txrx_finished
-@200
--
-@28
-tb_cocotb.s1.sd_stack.phy.i_data_txrx_activate
-@22
-tb_cocotb.s1.sd_stack.phy.i_data_byte_count[11:0]
-tb_cocotb.s1.sd_stack.phy.data_state[3:0]
-tb_cocotb.s1.sd_stack.phy.data_h2s[7:0]
-@800022
-tb_cocotb.s1.sd_stack.phy.o_sd_data[7:0]
-@28
-(0)tb_cocotb.s1.sd_stack.phy.o_sd_data[7:0]
-(1)tb_cocotb.s1.sd_stack.phy.o_sd_data[7:0]
-(2)tb_cocotb.s1.sd_stack.phy.o_sd_data[7:0]
-(3)tb_cocotb.s1.sd_stack.phy.o_sd_data[7:0]
-(4)tb_cocotb.s1.sd_stack.phy.o_sd_data[7:0]
-(5)tb_cocotb.s1.sd_stack.phy.o_sd_data[7:0]
-(6)tb_cocotb.s1.sd_stack.phy.o_sd_data[7:0]
-(7)tb_cocotb.s1.sd_stack.phy.o_sd_data[7:0]
-@1001200
--group_end
-@28
-tb_cocotb.s1.sd_stack.phy.data_byte_req_stb
-@22
-tb_cocotb.s1.sd_stack.phy.o_s2h_fifo_data[31:0]
-@200
--
-@22
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc0[15:0]
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc1[15:0]
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc2[15:0]
-@23
-tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc3[15:0]
 @1000200
 -SD4
 -phy
@@ -128,14 +83,14 @@ tb_cocotb.s1.sd_stack.phy.genblk1.sd4.gen_crc3[15:0]
 -
 @800200
 -SDIO Device
-@c00200
 -Command
 @28
 tb_cocotb.sdio_device.card_controller.v1p8_sel
 @22
 tb_cocotb.sdio_device.card_controller.voltage_select[23:0]
-@28
+@29
 tb_cocotb.sdio_device.phy.o_cmd_stb
+@28
 tb_cocotb.sdio_device.phy.o_cmd_crc_good_stb
 @22
 tb_cocotb.sdio_device.phy.o_cmd[5:0]
@@ -154,7 +109,7 @@ tb_cocotb.sdio_device.card_controller.i_func_finished
 @22
 tb_cocotb.sdio_device.card_controller.state[3:0]
 tb_cocotb.sdio_device.card_controller.i_func_read_data[7:0]
-@1401200
+@1000200
 -Command
 @c00200
 -Data Bus
@@ -337,7 +292,6 @@ tb_cocotb.s1.sd_stack.phy.byte_index[1:0]
 -Demo
 @200
 -
--
 @22
 tb_cocotb.s1.p2m.state[3:0]
 @28
@@ -361,6 +315,7 @@ tb_cocotb.s1.p2m.o_memory_0_finished
 tb_cocotb.s1.p2m.o_memory_1_empty
 tb_cocotb.s1.p2m.o_memory_1_finished
 @200
+-
 -
 [pattern_trace] 1
 [pattern_trace] 0

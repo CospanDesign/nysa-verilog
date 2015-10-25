@@ -66,6 +66,8 @@ SOFTWARE.
 `define     CONTROL_BIT_ENABLE_SDIO         0
 `define     CONTROL_BIT_ENABLE_SDIO_INT     1
 `define     CONTROL_BIT_ENABLE_SDIO_INT_EN  2
+`define     CONTROL_BIT_ENABLE_DEBUG_INT    3
+`define     CONTROL_BIT_USER_RESET          4
 
 `define     BUFFER_OFFSET                   32'h00000400
 
@@ -100,17 +102,29 @@ module wb_sdio_device (
 );
 
 //Local Parameters
-localparam     CONTROL  = 32'h00000000;
-localparam     STATUS   = 32'h00000001;
+localparam    CONTROL               = 32'h00000000;
+localparam    STATUS                = 32'h00000001;
+localparam    CLOCK_COUNT           = 32'h00000002;
+localparam    DEBUG_SD_CMD          = 32'h00000003;
+localparam    DEBUG_SD_CMD_ARG      = 32'h00000004;
+localparam    DEBUG_SD_PHY_STATE    = 32'h00000005;
+localparam    DEBUG_SD_CONTROL_STATE= 32'h00000006;
+
+localparam    SD_DELAY_VALUE        = 32'h00000007; 
+localparam    SD_DBG_CRC_GEN        = 32'h00000023;
+localparam    SD_DBG_RMT_GEN        = 32'h00000024;
+
+
 
 //Local Registers/Wires
 wire              pll_locked;
 wire              sd_clk;
+wire              debug_interrupts;
+reg               debug_interrupt_detect;
 
 wire              sd_cmd_dir;
 wire              sd_cmd_in;
 wire              sd_cmd_out;
-
 
 wire              sd_data_dir;
 wire    [7:0]     sd_data_in;
@@ -191,13 +205,44 @@ reg     [3:0]     mem_delay_count;
 wire              posedge_buffer;
 reg               prev_buffer_en;
 
+reg     [31:0]    clock_count = 0;
+
+wire    [5:0]     sd_cmd;
+wire              sd_cmd_stb;
+wire              sd_phy_idle;
+wire    [31:0]    sd_cmd_arg;
+wire    [3:0]     sd_phy_state;
+reg               user_reset;
+wire              user_reset_control;
+wire              sdio_rst;
+
+reg     [7:0]     delay_value;
+reg     [7:0]     current_delay_value;
+reg               delay_dir;
+reg               delay_en;
+
+wire    [3:0]     sd_control_state;
+reg               sd_cntrl_stb_det;
+wire    [7:0]     gen_crc;
+wire    [7:0]     rmt_crc;
+
+
+
 
 //Submodules
+cross_clock_strobe ccstb (
+  .rst                  (rst                  ),
+  .in_clk               (clk                  ),
+  .in_stb               (user_reset           ),
+
+  .out_clk              (sd_clk               ),
+  .out_stb              (sdio_rst             )
+);
 
 //Possibly replace with a generate statement using an input parameter
 sdio_device_stack sdio_device (
   .sdio_clk             (sd_clk               ),
-  .rst                  (rst   || !pll_locked ),
+  .rst                  (rst   || sdio_rst  || !pll_locked),
 
   // Function Interfacee From CIA
   .o_fbr1_csa_en        (fbr1_csa_en          ),
@@ -319,6 +364,17 @@ sdio_device_stack sdio_device (
 
   .i_interrupt          (function_interrupt   ),
 
+  //Debug
+  .o_sd_cmd             (sd_cmd               ),
+  .o_sd_cmd_arg         (sd_cmd_arg           ),
+  .o_sd_cmd_stb         (sd_cmd_stb           ),
+  .o_sd_phy_idle        (sd_phy_idle          ),
+  .o_sd_phy_state       (sd_phy_state         ),
+  .o_sd_control_state   (sd_control_state     ),
+  .o_gen_crc            (gen_crc              ),
+  .o_rmt_crc            (rmt_crc              ),
+
+
   //Platform Interface
   .o_sd_cmd_dir         (sd_cmd_dir           ),
   .i_sd_cmd_in          (sd_cmd_in            ),
@@ -336,7 +392,7 @@ sdio_memory_function #(
 )memory_function(
   .clk                  (clk                  ),
   .sdio_clk             (sd_clk               ),
-  .rst                  (rst   || !pll_locked ),
+  .rst                  (rst   || sdio_rst  || !pll_locked),
 
   //Boiler Plate SDIO Function Interface
   .i_csa_en             (fbr1_csa_en          ),
@@ -370,7 +426,7 @@ sdio_memory_function #(
   //User Interface
   .i_en_in_interrupts   (enable_interrupts    ),
   //Memory
-  .i_user_write_en      (local_buffer_we      ), 
+  .i_user_write_en      (local_buffer_we      ),
   .i_user_address       (local_buffer_addr    ),
   .i_user_data_in       (i_wbs_dat            ),
   .o_user_data_out      (local_buffer_data    ),
@@ -383,7 +439,7 @@ sd_dev_platform_cocotb sdio_dev_plat(
   .clk            (clk                        ),
   .rst            (rst                        ),
 
-  .o_locked       (pll_locked                 ),
+  .rst            (rst   || sdio_rst  || !pll_locked),
 
   .o_sd_clk       (sd_clk                     ),
 
@@ -402,27 +458,30 @@ sd_dev_platform_cocotb sdio_dev_plat(
 `else
 //Spartan 6 Platform
 sd_dev_platform_spartan6 #(
-  .OUTPUT_DELAY   (63                         ),
-  .INPUT_DELAY    (63                         )
+  .OUTPUT_DELAY        (0                         ),
+  .INPUT_DELAY         (63                        )
 )sdio_dev_plat (
-  .clk            (clk                        ),
-  .rst            (rst                        ),
+  .clk                 (clk                       ),
+  .rst                 (rst                       ),
 
-  .o_locked       (pll_locked                 ),
+  .o_locked            (pll_locked                ),
 
-  .o_sd_clk       (sd_clk                     ),
+  .o_sd_clk            (sd_clk                    ),
 
-  .i_sd_cmd_dir   (sd_cmd_dir                 ),
-  .o_sd_cmd_in    (sd_cmd_in                  ),
-  .i_sd_cmd_out   (sd_cmd_out                 ),
+  .i_sd_cmd_dir        (sd_cmd_dir                ),
+  .o_sd_cmd_in         (sd_cmd_in                 ),
+  .i_sd_cmd_out        (sd_cmd_out                ),
 
-  .i_sd_data_dir  (sd_data_dir                ),
-  .o_sd_data_in   (sd_data_in                 ),
-  .i_sd_data_out  (sd_data_out                ),
+  .i_sd_data_dir       (sd_data_dir               ),
+  .o_sd_data_in        (sd_data_in                ),
+  .i_sd_data_out       (sd_data_out               ),
 
-  .i_phy_clk      (i_phy_sd_clk               ),
-  .io_phy_sd_cmd  (io_phy_sd_cmd              ),
-  .io_phy_sd_data (io_phy_sd_data             )
+  .i_cfg_inc           (delay_dir                 ),
+  .i_cfg_en            (delay_en                  ),
+
+  .i_phy_clk           (i_phy_sd_clk              ),
+  .io_phy_sd_cmd       (io_phy_sd_cmd             ),
+  .io_phy_sd_data      (io_phy_sd_data            )
 );
 `endif
 
@@ -431,7 +490,7 @@ assign  function_ready            = {6'b000000, sdio_func_ready,          1'b0};
 assign  function_exec_status      = {6'b000000, sdio_func_exec_sts,       1'b0};
 assign  function_ready_for_data   = {6'b000000, sdio_func_ready_for_data, 1'b0};
 assign  function_interrupt        = {6'b000000, sdio_func_interrupt,      1'b0};
-                                 
+
 assign  local_buffer_we           = (local_buffer_en & i_wbs_we);
 assign  local_buffer_en           = (i_wbs_stb &&
                                     (i_wbs_adr >= `BUFFER_OFFSET) &&
@@ -442,24 +501,49 @@ assign  local_buffer_addr         = local_buffer_en ? (i_wbs_adr - `BUFFER_OFFSE
 assign  enable_sdio_device        = control[`CONTROL_BIT_ENABLE_SDIO];
 assign  enable_interrupts         = control[`CONTROL_BIT_ENABLE_SDIO_INT];
 assign  request_interrupts        = control[`CONTROL_BIT_ENABLE_SDIO_INT_EN];
-assign  status                    = {28'h000000, 
+assign  debug_interrupts          = control[`CONTROL_BIT_ENABLE_DEBUG_INT];
+assign  user_reset_control        = control[`CONTROL_BIT_USER_RESET];
+assign  status                    = {26'h000000,
+                                    sd_cntrl_stb_det,
+                                    sd_phy_idle,
                                     sdio_func_ready,
                                     sdio_func_exec_sts,
                                     sdio_func_ready_for_data,
                                     pll_locked};
-assign  o_wbs_int                 = sdio_func_interrupt;
+assign  o_wbs_int                 = (sdio_func_interrupt | (debug_interrupts & debug_interrupt_detect));
 assign  posedge_buffer            = !prev_buffer_en & local_buffer_en;
 
 //Synchronous Logic
-always @ (posedge clk) begin
-  if (rst) begin
-    o_wbs_dat       <=  32'h0;
-    o_wbs_ack       <=  0;
-    control         <=  0;
-    mem_delay_count <=  `MEM_DELAY_COUNT;
-    prev_buffer_en  <=  0;
+always @ (posedge sd_clk) begin
+  if (rst || sdio_rst) begin
+    clock_count                   <=  0;
   end
   else begin
+    clock_count                   <=  clock_count + 1;
+  end
+end
+always @ (posedge clk) begin
+  user_reset                    <=  0;
+  if (rst) begin
+    sd_cntrl_stb_det  <=  0;
+    o_wbs_dat                   <=  32'h0;
+    o_wbs_ack                   <=  0;
+    control                     <=  0;
+    mem_delay_count             <=  `MEM_DELAY_COUNT;
+    prev_buffer_en              <=  0;
+    debug_interrupt_detect      <=  0;
+    delay_value                 <=  0;
+  end
+  else begin
+    if (sd_cmd_stb) begin
+      sd_cntrl_stb_det  <=  1;
+      debug_interrupt_detect      <=  1;
+    end
+    if (user_reset_control) begin
+      //Strobe Reset
+      control[`CONTROL_BIT_USER_RESET]  <=  0;
+      user_reset                <=  1;
+    end
 
     if (mem_delay_count < `MEM_DELAY_COUNT) begin
       mem_delay_count <=  mem_delay_count + 1;
@@ -477,6 +561,9 @@ always @ (posedge clk) begin
             CONTROL: begin
               control   <=  i_wbs_dat;
             end
+            SD_DELAY_VALUE: begin
+              delay_value   <=  i_wbs_dat[7:0];
+            end
             default: begin
             end
           endcase
@@ -488,7 +575,33 @@ always @ (posedge clk) begin
               o_wbs_dat <= control;
             end
             STATUS: begin
-              o_wbs_dat <= status;
+              o_wbs_dat                   <= status;
+              debug_interrupt_detect      <=  0;
+              sd_cntrl_stb_det            <=  0;
+            end
+            CLOCK_COUNT: begin
+              o_wbs_dat <=  clock_count;
+            end
+            DEBUG_SD_CMD: begin
+              o_wbs_dat <=  {27'h0, sd_cmd};
+            end
+            DEBUG_SD_CMD_ARG: begin
+              o_wbs_dat <=  sd_cmd_arg;
+            end
+            DEBUG_SD_PHY_STATE: begin
+              o_wbs_dat <=  sd_phy_state;
+            end
+            DEBUG_SD_CONTROL_STATE: begin
+              o_wbs_dat <=  sd_control_state;
+            end
+            SD_DELAY_VALUE: begin
+              o_wbs_dat   <=  {24'h00, delay_value};
+            end
+            SD_DBG_CRC_GEN: begin
+              o_wbs_dat               <=  {24'h00, gen_crc};
+            end
+            SD_DBG_RMT_GEN: begin
+              o_wbs_dat               <=  {24'h00, rmt_crc};
             end
             default: begin
               if (posedge_buffer) begin
@@ -511,5 +624,28 @@ always @ (posedge clk) begin
     prev_buffer_en        <=  local_buffer_en;
   end
 end
+
+always @ (posedge clk) begin
+  delay_en                <=  0;
+  if (rst) begin
+    current_delay_value   <=  0;
+    delay_dir             <=  0;
+  end
+  else begin
+    if (delay_value < current_delay_value) begin
+      //Direction Down
+      delay_dir           <=  0;
+      delay_en            <=  1;
+      current_delay_value <=  current_delay_value - 1;
+    end
+    else if (delay_value > current_delay_value) begin
+      delay_dir           <=  1;
+      delay_en            <=  1;
+      current_delay_value <=  current_delay_value + 1;
+    end
+  end
+end
+
+
 
 endmodule
