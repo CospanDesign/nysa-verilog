@@ -2,10 +2,11 @@
 TOPLEVEL_LANG ?= verilog
 PWD=$(shell pwd)
 TOPDIR=$(PWD)/..
-COCOTB	:= $(shell $(python) nysa paths -c -s)
-NYSA		:= $(shell $(python) nysa paths -s -v nysa-verilog)
-SDIO_DEV:= $(shell $(python) nysa paths -s -v sdio-device)
-XILINX 	:= $(shell $(python) nysa paths -s -x)
+COCOTB		:= $(shell $(python) nysa paths -c -s)
+NYSA			:= $(shell $(python) nysa paths -s -v nysa-verilog)
+SDIO_DEV	:= $(shell $(python) nysa paths -s -v sdio-device)
+XILINX 		:= $(shell $(python) nysa paths -s -x)
+WB_SD_SLV := $(PWD)/../../wb_sdio_device
 PYTHONPATH := ./model:$(PYTHONPATH)
 export PYTHONPATH
 export PYTHONHOME=$(shell python -c "from distutils.sysconfig import get_config_var; print(get_config_var('prefix'))")
@@ -14,7 +15,8 @@ EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/ -DSIMULATION -DCOCOTB_WORKAROUND
 
 #Dependencies
 VERILOG_SOURCES = $(NYSA)/verilog/wishbone/master/wishbone_master.v
-VERILOG_SOURCES += $(NYSA)/verilog/sim/wishbone/interconnect/example_2port_interconnect/wishbone_interconnect.v
+#VERILOG_SOURCES += $(NYSA)/verilog/sim/wishbone/interconnect/example_2port_interconnect/wishbone_interconnect.v
+VERILOG_SOURCES += ${TOPDIR}/sim/wishbone_interconnect.v
 
 #Simulation Devices
 
@@ -27,7 +29,9 @@ VERILOG_SOURCES += ${TOPDIR}/sim/wishbone_mem_interconnect.v
 VERILOG_SOURCES += ${NYSA}/verilog/wishbone/common/wb_mem_2_ppfifo/rtl/wb_mem_2_ppfifo.v
 VERILOG_SOURCES += ${NYSA}/verilog/wishbone/common/wb_ppfifo_2_mem/rtl/wb_ppfifo_2_mem.v
 VERILOG_SOURCES += ${NYSA}/verilog/generic/cross_clock_enable.v
+VERILOG_SOURCES += ${NYSA}/verilog/generic/cross_clock_strobe.v
 VERILOG_SOURCES += ${NYSA}/verilog/generic/blk_mem.v
+VERILOG_SOURCES += ${NYSA}/verilog/generic/dpb.v
 VERILOG_SOURCES += ${NYSA}/verilog/generic/ppfifo.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/generic/sd_crc_16.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/generic/sd_crc_7.v
@@ -47,6 +51,10 @@ VERILOG_SOURCES += $(SDIO_DEV)/rtl/control/sdio_card_control.v
 VERILOG_SOURCES += $(SDIO_DEV)/rtl/phy/sdio_phy.v
 VERILOG_SOURCES += $(SDIO_DEV)/rtl/phy/sdio_data_phy.v
 VERILOG_SOURCES += $(SDIO_DEV)/rtl/sdio_device_stack.v
+
+#SDIO Slave
+VERILOG_SOURCES += $(WB_SD_SLV)/rtl/sdio_memory_function.v
+VERILOG_SOURCES += $(WB_SD_SLV)/rtl/wb_sdio_device.v
 
 #SD Host
 VERILOG_SOURCES += ${TOPDIR}/rtl/platform/sd_host_platform_cocotb.v

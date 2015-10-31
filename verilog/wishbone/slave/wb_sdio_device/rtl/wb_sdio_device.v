@@ -200,7 +200,7 @@ wire    [(`BUFFER_EXP - 1):0]     local_buffer_addr;
 wire    [31:0]    local_buffer_data;
 
 wire              enable_interrupts;
-wire              request_interrupt;
+reg               request_interrupt;
 reg     [31:0]    control;
 wire    [31:0]    status;
 
@@ -453,6 +453,30 @@ sdio_memory_function #(
   .i_request_interrupt  (request_interrupt    )
 );
 
+
+`ifdef COCOTB_SIMULATION
+sd_dev_platform_cocotb sdio_dev_plat(
+  .clk                 (clk                       ),
+  .rst                 (rst                       ),
+                                                  
+  .o_locked            (pll_locked                ),
+                                                  
+  .o_sd_clk            (sd_clk                    ),
+                                                  
+                                                  
+  .i_sd_cmd_dir        (sd_cmd_dir                ),
+  .o_sd_cmd_in         (sd_cmd_in                 ),
+  .i_sd_cmd_out        (sd_cmd_out                ),
+                                                  
+  .i_sd_data_dir       (sd_data_dir               ),
+  .o_sd_data_in        (sd_data_in                ),
+  .i_sd_data_out       (sd_data_out               ),
+                                                  
+  .i_phy_clk           (i_phy_sd_clk              ),
+  .io_phy_sd_cmd       (io_phy_sd_cmd             ),
+  .io_phy_sd_data      (io_phy_sd_data            )
+);
+`else
 //Spartan 6 Platform
 sd_dev_platform_spartan6 #(
   .OUTPUT_DELAY        (0                         ),
@@ -481,6 +505,7 @@ sd_dev_platform_spartan6 #(
   .io_phy_sd_cmd       (io_phy_sd_cmd             ),
   .io_phy_sd_data      (io_phy_sd_data            )
 );
+`endif
 
 //Asynchronous Logic
 assign  function_ready            = {6'b000000, sdio_func_ready,          1'b0};
@@ -530,6 +555,7 @@ always @ (posedge clk) begin
     prev_buffer_en              <=  0;
     debug_interrupt_detect      <=  0;
     delay_value                 <=  0;
+    request_interrupt           <=  0;
   end
   else begin
     if (sd_cmd_stb) begin
