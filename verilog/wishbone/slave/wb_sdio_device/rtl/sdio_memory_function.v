@@ -265,6 +265,10 @@ always @ (posedge sdio_clk) begin
       end
       WRITE: begin
         if (data_count < i_data_count) begin
+
+          if (mem_write_stb) begin
+            mem_addr        <=  mem_addr + 1;
+          end
           if (i_data_stb) begin
             //Shift Data In
             write_data          <= {write_data[23:0], i_write_data};
@@ -274,7 +278,7 @@ always @ (posedge sdio_clk) begin
               1: begin
               end
               2: begin
-                mem_addr          <= address[MEM_EXP - 1: 0];
+                //mem_addr          <= address[MEM_EXP - 1: 0];
               end
               3: begin
                 write_stb         <=  1;

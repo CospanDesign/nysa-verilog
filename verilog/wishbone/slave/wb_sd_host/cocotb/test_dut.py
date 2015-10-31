@@ -73,9 +73,7 @@ def first_test(dut):
             raise TestFailure("Data into memory != Data out of memory: %s != %s" %
                                 (print_hex_array(test_data), print_hex_array(data)))
 
-
-
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def send_simple_command(dut):
     """
     Description:
@@ -239,7 +237,7 @@ def receive_byte_test(dut):
     yield (nysa.wait_clocks(1000))
 
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def small_multi_byte_data_write(dut):
     """
     Description:
@@ -289,7 +287,7 @@ def small_multi_byte_data_write(dut):
     yield (nysa.wait_clocks(1000))
 
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def small_multi_byte_data_read(dut):
     """
     Description:

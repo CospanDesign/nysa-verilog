@@ -1,37 +1,37 @@
 [*]
 [*] GTKWave Analyzer v3.3.62 (w)1999-2014 BSI
-[*] Sat Oct 24 16:04:38 2015
+[*] Fri Oct 30 06:00:03 2015
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/design.vcd"
-[dumpfile_mtime] "Sat Oct 24 16:04:29 2015"
-[dumpfile_size] 3135755
+[dumpfile_mtime] "Fri Oct 30 05:55:27 2015"
+[dumpfile_size] 3081694
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_sd_host/sd_host_wave.gtkw"
-[timestart] 0
-[size] 958 1059
+[timestart] 206940000
+[size] 1920 1017
 [pos] -1 -1
-*-23.276777 16310000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-20.189722 212052000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] wishbone_master_tb.
 [treeopen] wishbone_master_tb.s1.
-[treeopen] wishbone_master_tb.s1.platform.
 [treeopen] wishbone_master_tb.s1.sd_stack.
 [treeopen] wishbone_master_tb.s1.sd_stack.phy.
+[treeopen] wishbone_master_tb.s1.sd_stack.phy.sd4_gen.
 [treeopen] wishbone_master_tb.sdio_device.
 [treeopen] wishbone_master_tb.sdio_device.phy.
 [sst_width] 213
-[signals_width] 494
+[signals_width] 227
 [sst_expanded] 1
-[sst_vpaned_height] 298
+[sst_vpaned_height] 284
 @28
 wishbone_master_tb.s1.sd_stack.clk
 wishbone_master_tb.rst
 @200
 -
-@800200
+@c00200
 -Spartan 6 Platform
 @28
 wishbone_master_tb.s1.platform.o_sd_clk
 wishbone_master_tb.s1.platform.o_locked
-@1000200
+@1401200
 -Spartan 6 Platform
 @800200
 -Host Stack
@@ -55,26 +55,93 @@ wishbone_master_tb.s1.platform.io_phy_data[3:0]
 (1)wishbone_master_tb.s1.platform.io_phy_data[3:0]
 (2)wishbone_master_tb.s1.platform.io_phy_data[3:0]
 (3)wishbone_master_tb.s1.platform.io_phy_data[3:0]
+@200
+-
+@800023
+wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.o_sd_data[7:0]
+@29
+(0)wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.o_sd_data[7:0]
+(1)wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.o_sd_data[7:0]
+(2)wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.o_sd_data[7:0]
+(3)wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.o_sd_data[7:0]
+(4)wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.o_sd_data[7:0]
+(5)wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.o_sd_data[7:0]
+(6)wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.o_sd_data[7:0]
+(7)wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.o_sd_data[7:0]
+@1001201
+-group_end
 @1001200
 -group_end
 @200
 -
+-
+@28
+wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.crc_en
+@22
+wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.gen_crc0[15:0]
+wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.gen_crc1[15:0]
+wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.gen_crc2[15:0]
+wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.gen_crc3[15:0]
+wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.o_crc0_gen[15:0]
+wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.o_crc1_gen[15:0]
+wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.o_crc2_gen[15:0]
+wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.o_crc3_gen[15:0]
+wishbone_master_tb.s1.sd_stack.phy.sd4_gen.sd4.state[3:0]
 @1000200
 -Host Stack
 @800200
 -SDIO Device Stack
 -Phy
 @28
+wishbone_master_tb.sdio_device.phy.data_phy.capture_crc
+wishbone_master_tb.sdio_device.phy.data_phy.i_write_flag
+@800022
+wishbone_master_tb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
+@28
+(0)wishbone_master_tb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
+(1)wishbone_master_tb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
+(2)wishbone_master_tb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
+(3)wishbone_master_tb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
+(4)wishbone_master_tb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
+(5)wishbone_master_tb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
+(6)wishbone_master_tb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
+(7)wishbone_master_tb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
+@1001200
+-group_end
+@28
+wishbone_master_tb.sdio_device.phy.data_phy.enable_crc
+@200
+-
+@28
 wishbone_master_tb.sdio_device.phy.data_phy.enable_crc
 @22
+wishbone_master_tb.sdio_device.phy.data_phy.i_sdio_data_in[7:0]
 wishbone_master_tb.sdio_device.phy.data_phy.host_crc0[15:0]
+wishbone_master_tb.sdio_device.phy.data_phy.state[3:0]
+@200
+-
+@22
+wishbone_master_tb.sdio_device.phy.data_phy.data_count[12:0]
+wishbone_master_tb.sdio_device.phy.data_phy.i_data_count[12:0]
 wishbone_master_tb.sdio_device.phy.data_phy.crc_out0[15:0]
 @28
 wishbone_master_tb.sdio_device.phy.data_phy.data_crc_good
 @22
 wishbone_master_tb.sdio_device.phy.data_phy.crc_state[3:0]
+@200
+-
+@28
+wishbone_master_tb.sdio_device.phy.data_phy.enable_crc
+@22
+wishbone_master_tb.sdio_device.phy.data_phy.crc_out0[15:0]
+wishbone_master_tb.sdio_device.phy.data_phy.crc_out1[15:0]
+wishbone_master_tb.sdio_device.phy.data_phy.crc_out2[15:0]
+wishbone_master_tb.sdio_device.phy.data_phy.crc_out3[15:0]
 @1000200
 -Phy
 -SDIO Device Stack
+@200
+-
+-
 [pattern_trace] 1
 [pattern_trace] 0

@@ -88,6 +88,19 @@ module sd_phy_layer #(
   output  reg [7:0]         o_gen_crc,
   output  reg [7:0]         o_rmt_crc,
 
+  //Debug
+  output      [15:0]        o_crc0_data_rmt,
+  output      [15:0]        o_crc1_data_rmt,
+  output      [15:0]        o_crc2_data_rmt,
+  output      [15:0]        o_crc3_data_rmt,
+
+  output      [15:0]        o_crc0_data_gen,
+  output      [15:0]        o_crc1_data_gen,
+  output      [15:0]        o_crc2_data_gen,
+  output      [15:0]        o_crc3_data_gen,
+
+
+
   //Physical Interface
   output                    o_sd_data_dir,
   input       [7:0]         i_sd_data,
@@ -185,6 +198,16 @@ sd_sd4_phy sd4 (
   .i_data_h2s   (data_h2s                 ),
   .o_data_s2h   (data_s2h                 ),
 
+  .o_crc0_rmt   (o_crc0_data_rmt          ),
+  .o_crc1_rmt   (o_crc1_data_rmt          ),
+  .o_crc2_rmt   (o_crc2_data_rmt          ),
+  .o_crc3_rmt   (o_crc3_data_rmt          ),
+
+  .o_crc0_gen   (o_crc0_data_gen          ),
+  .o_crc1_gen   (o_crc1_data_gen          ),
+  .o_crc2_gen   (o_crc2_data_gen          ),
+  .o_crc3_gen   (o_crc3_data_gen          ),
+
   .o_sd_data_dir(sd4_data_dir             ),
   .i_sd_data    (i_sd_data                ),
   .o_sd_data    (sd4_data                 )
@@ -269,6 +292,7 @@ always @ (posedge i_sd_clk) begin
     case (data_state)
       IDLE: begin
         o_data_txrx_finished          <=  0;
+        data_txrx_en                  <=  0;
         byte_index                    <=  2'b11;
         total_byte_count              <=  0;
         write_flag                    <=  1;

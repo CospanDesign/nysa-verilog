@@ -111,6 +111,18 @@ module sd_host_stack #(
   output      [7:0]         o_gen_crc,
   output      [7:0]         o_rmt_crc,
 
+  output      [15:0]        o_crc0_data_rmt,
+  output      [15:0]        o_crc1_data_rmt,
+  output      [15:0]        o_crc2_data_rmt,
+  output      [15:0]        o_crc3_data_rmt,
+
+  output      [15:0]        o_crc0_data_gen,
+  output      [15:0]        o_crc1_data_gen,
+  output      [15:0]        o_crc2_data_gen,
+  output      [15:0]        o_crc3_data_gen,
+
+
+
   output                    o_sd_data_dir,
   input       [7:0]         i_sd_data,
   output      [7:0]         o_sd_data
@@ -342,6 +354,18 @@ sd_phy_layer #(
   .o_data_state         (o_phy_data_state         ),
   .o_gen_crc            (o_gen_crc                ),
   .o_rmt_crc            (o_rmt_crc                ),
+
+  .o_crc0_data_rmt      (o_crc0_data_rmt          ),
+  .o_crc1_data_rmt      (o_crc1_data_rmt          ),
+  .o_crc2_data_rmt      (o_crc2_data_rmt          ),
+  .o_crc3_data_rmt      (o_crc3_data_rmt          ),
+                        
+  .o_crc0_data_gen      (o_crc0_data_gen          ),
+  .o_crc1_data_gen      (o_crc1_data_gen          ),
+  .o_crc2_data_gen      (o_crc2_data_gen          ),
+  .o_crc3_data_gen      (o_crc3_data_gen          ),
+
+
 
   .o_sd_data_dir        (o_sd_data_dir            ),
   .i_sd_data            (i_sd_data                ),

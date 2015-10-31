@@ -105,12 +105,14 @@ SOFTWARE.
 
 `define DEFAULT_BLOCK_SLEEP                   32'h00000100
 
+
 module wb_sd_host #(
   parameter           SD_MODE                 = 1,
   parameter           FOUR_BIT_DATA           = 1,
   parameter           DDR_EN                  = 1,
   parameter           BUFFER_DEPTH            = 11,  //2048
-  parameter           INITIAL_DELAY_IN_VALUE  = 63,
+  //parameter           INITIAL_DELAY_IN_VALUE  = 63,
+  parameter           INITIAL_DELAY_IN_VALUE  = 0,
   parameter           INITIAL_DELAY_OUT_VALUE = 0
 )(
   input               clk,
@@ -180,7 +182,10 @@ localparam          SD_PHY_DATA_STATE   = 32'h00000021;
 
 localparam          SD_DELAY_VALUE      = 32'h00000022;
 localparam          SD_DBG_CRC_GEN      = 32'h00000023;
-localparam          SD_DBG_RMT_GEN      = 32'h00000024;
+localparam          SD_DBG_CRC_RMT      = 32'h00000024;
+
+localparam          SD_DBG_CRC_DATA_GEN = 32'h00000028;
+localparam          SD_DBG_CRC_DATA_RMT = 32'h0000002C;
 
 //Local Registers/Wires
 reg         [31:0]      control         = 32'h00000000;
@@ -321,6 +326,16 @@ wire        [3:0]       sd_phy_data_state;
 wire        [7:0]       gen_crc;
 wire        [7:0]       rmt_crc;
 
+wire        [15:0]      crc0_data_rmt;
+wire        [15:0]      crc1_data_rmt;
+wire        [15:0]      crc2_data_rmt;
+wire        [15:0]      crc3_data_rmt;
+                        
+wire        [15:0]      crc0_data_gen;
+wire        [15:0]      crc1_data_gen;
+wire        [15:0]      crc2_data_gen;
+wire        [15:0]      crc3_data_gen;
+
 wire                    sd_rsp_long_flag;
 
 sd_host_stack #(
@@ -329,7 +344,7 @@ sd_host_stack #(
   .DDR_EN               (DDR_EN                   ),
   .BUFFER_DEPTH         (BUFFER_DEPTH             )
 )sd_stack(
-  .clk                  (sd_clk                   ),
+  .clk                  (clk                      ),
   .rst                  (rst                      ),
 
   //Control/Status/Error
@@ -405,6 +420,18 @@ sd_host_stack #(
   .o_phy_data_state     (sd_phy_data_state        ),
   .o_gen_crc            (gen_crc                  ),
   .o_rmt_crc            (rmt_crc                  ),
+
+  .o_crc0_data_rmt      (crc0_data_rmt            ),
+  .o_crc1_data_rmt      (crc1_data_rmt            ),
+  .o_crc2_data_rmt      (crc2_data_rmt            ),
+  .o_crc3_data_rmt      (crc3_data_rmt            ),
+                                                 
+  .o_crc0_data_gen      (crc0_data_gen            ),
+  .o_crc1_data_gen      (crc1_data_gen            ),
+  .o_crc2_data_gen      (crc2_data_gen            ),
+  .o_crc3_data_gen      (crc3_data_gen            ),
+
+
 
   .o_sd_data_dir        (sd_data_dir              ),
   .i_sd_data            (sd_data_in               ),
@@ -592,6 +619,10 @@ assign  mem_o_dat         = w_mem_write_enable ? m2p_mem_o_dat :
                             w_mem_read_enable  ? p2m_mem_o_dat :
                             4'b0000;
 assign  sd_rsp_long_flag  = 1'b0;
+
+//XXX: This should be connected to an external pin that indicates connection
+assign  sd_card_detect    = 1'b1;
+
 //Synchronous Logic
 always @ (posedge clk) begin
 
@@ -659,7 +690,6 @@ always @ (posedge clk) begin
           //write request
           case (i_wbs_adr)
             CONTROL: begin
-//TODO: Remove Verbose Messages
               control                 <=  i_wbs_dat;
             end
             REG_MEM_0_BASE: begin
@@ -857,8 +887,32 @@ always @ (posedge clk) begin
             SD_DBG_CRC_GEN: begin
               o_wbs_dat               <=  {24'h00, gen_crc};
             end
-            SD_DBG_RMT_GEN: begin
+            SD_DBG_CRC_RMT: begin
               o_wbs_dat               <=  {24'h00, rmt_crc};
+            end
+            (SD_DBG_CRC_DATA_GEN + 0): begin
+              o_wbs_dat               <=  {16'h00, crc0_data_gen};
+            end
+            (SD_DBG_CRC_DATA_GEN + 1): begin
+              o_wbs_dat               <=  {16'h00, crc1_data_gen};
+            end
+            (SD_DBG_CRC_DATA_GEN + 2): begin
+              o_wbs_dat               <=  {16'h00, crc2_data_gen};
+            end
+            (SD_DBG_CRC_DATA_GEN + 3): begin
+              o_wbs_dat               <=  {16'h00, crc3_data_gen};
+            end
+            (SD_DBG_CRC_DATA_RMT + 0): begin
+              o_wbs_dat               <=  {16'h00, crc0_data_rmt};
+            end
+            (SD_DBG_CRC_DATA_RMT + 1): begin
+              o_wbs_dat               <=  {16'h00, crc1_data_rmt};
+            end
+            (SD_DBG_CRC_DATA_RMT + 2): begin
+              o_wbs_dat               <=  {16'h00, crc2_data_rmt};
+            end
+            (SD_DBG_CRC_DATA_RMT + 3): begin
+              o_wbs_dat               <=  {16'h00, crc3_data_rmt};
             end
             default: begin
               o_wbs_dat               <=  32'h00;

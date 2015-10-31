@@ -28,6 +28,9 @@ SOFTWARE.
  * Changes:
  */
 
+
+`define HOST_DATA_DELAY_FIXED
+
 module sd_host_platform_spartan6 #(
   parameter                 OUTPUT_DELAY  = 0,
   parameter                 INPUT_DELAY   = 0
@@ -57,6 +60,8 @@ module sd_host_platform_spartan6 #(
 
 );
 //local parameters
+
+localparam                 USER_RESET_TIMEOUT  = 4'hF;
 //registes/wires
 wire                [7:0]   sd_data_out;
 wire                        pll_serdes_clk;
@@ -81,7 +86,9 @@ wire                        serdes_strobe;
 
 wire                        din_serdes_strobe_buf;
 reg                         sd_clk;
+//wire                        !o_sd_clk;
 reg                         user_reset = 1;
+reg                 [3:0]   user_reset_count = 0;
 wire                        sd_data_direction;
 
 
@@ -99,7 +106,7 @@ ODDR2 #(
   .D0                   (1'b1                             ),
   .D1                   (1'b0                             ),
   .C0                   (o_sd_clk                         ),
-  .C1                   (~o_sd_clk                        ),
+  .C1                   (!o_sd_clk                        ),
   .CE                   (1'b1                             ),
   .Q                    (o_phy_clk                        ),
   .R                    (1'b0                             ),
@@ -123,7 +130,6 @@ IODELAY2 #(
   .IDELAY_VALUE         (INPUT_DELAY                      ),
   .ODELAY_VALUE         (OUTPUT_DELAY                     ),
   .IDELAY_TYPE          ("FIXED"                          ),
-  //.IDELAY_TYPE          ("VARIABLE_FROM_ZERO"             ),
   .COUNTER_WRAPAROUND   ("STAY_AT_LIMIT"                  ),
   .DELAY_SRC            ("IO"                             ),
   .SERDES_MODE          ("NONE"                           ),
@@ -141,8 +147,8 @@ IODELAY2 #(
   .IDATAIN              (sd_cmd_in_delay                  ),
   .DOUT                 (sd_cmd_out_delay                 ),
 
-  .IOCLK0               (clk                              ),
-  .IOCLK1               (1'b0                             ),
+  .IOCLK0               (o_sd_clk                         ),
+  //.IOCLK1               (!o_sd_clk                        ),
   .CAL                  (1'b0                             ),
   .BUSY                 (                                 ),
 
@@ -150,10 +156,15 @@ IODELAY2 #(
   .INC                  (i_cfg_inc                        ),
   .CE                   (i_cfg_en                         ),
   .RST                  (rst                              )
-  //.RST                  (rst & !o_locked                  )
 );
 
 //DATA Lines
+
+wire          [3:0]     sd_data_dir;
+wire          [3:0]     sd_data_dir_predelay;
+
+assign        sd_data_dir = {sd_data_direction, sd_data_direction, sd_data_direction, sd_data_direction};
+
 genvar pcnt;
 generate
 for (pcnt = 0; pcnt < 4; pcnt = pcnt + 1) begin: sgen
@@ -168,18 +179,24 @@ IOBUF #(
 );
 
 IODELAY2 #(
-  .DATA_RATE            ("SDR"                            ),
+  .DATA_RATE            ("DDR"                            ),
+`ifdef HOST_DATA_DELAY_FIXED
+  .IDELAY_TYPE          ("FIXED"                          ),
   .IDELAY_VALUE         (INPUT_DELAY                      ),
   .ODELAY_VALUE         (OUTPUT_DELAY                     ),
-  .IDELAY_TYPE          ("FIXED"                          ),
+`else
+  .IDELAY_TYPE          ("VARIABLE_FROM_ZERO" ),
+  .ODELAY_VALUE         (0                                ),
+`endif
   .COUNTER_WRAPAROUND   ("STAY_AT_LIMIT"                  ),
   .DELAY_SRC            ("IO"                             ),
   .SERDES_MODE          ("NONE"                           ),
   .SIM_TAPDELAY_VALUE   (75                               )
+
 )sd_data_delay(
   //IOSerdes
-  //.T                    (pin_data_tristate_predelay[pcnt] ),
-  .T                    (sd_data_direction                ),
+  //.T                    (1'b0),
+  .T                    (sd_data_dir_predelay[pcnt]       ),
   .ODATAIN              (pin_data_in_predelay[pcnt]       ),
   .DATAOUT              (pin_data_out_delay[pcnt]         ),
 
@@ -188,22 +205,56 @@ IODELAY2 #(
   .IDATAIN              (pin_data_in[pcnt]                ),
   .DOUT                 (pin_data_out[pcnt]               ),
 
-  .DATAOUT2             (                                 ),
-  .IOCLK0               (1'b0                             ),  //This one is not SERDESized.. Do I need to add a clock??
-  .IOCLK1               (1'b0                             ),
-  .CLK                  (1'b0                             ),
+  .BUSY                 (                                 ),
   .CAL                  (1'b0                             ),
+
+  .IOCLK0               (o_sd_clk                         ),
+  .IOCLK1               (!o_sd_clk                        ),
+`ifdef HOST_DATA_DELAY_FIXED
+  .CLK                  (1'b0                             ),
   .INC                  (1'b0                             ),
   .CE                   (1'b0                             ),
-  .BUSY                 (                                 ),
   .RST                  (1'b0                             )
+
+`else
+  .CLK                  (clk                              ),
+  .INC                  (i_cfg_inc                        ),
+  .CE                   (i_cfg_en                         ),
+  .RST                  (rst                              )
+`endif
+
+
 );
 
+
+ODDR2 #(
+  .DDR_ALIGNMENT        ("C0"                             ),
+  .SRTYPE               ("ASYNC"                           ),
+
+  .INIT                 (1                                )
+) data_dir_ddr (
+  .C0                   (o_sd_clk                         ),
+  .C1                   (!o_sd_clk                        ),
+  .CE                   (1'b1                             ),
+  .S                    (1'b0                             ),
+  .R                    (1'b0                             ),
+
+  .D0                   (sd_data_dir[pcnt]                ),
+  .D1                   (sd_data_dir[pcnt]                ),
+ // .D0                   (1'b0            ),
+ // .D1                   (1'b0            ),
+
+  .Q                    (sd_data_dir_predelay[pcnt]       )
+);
+
+
 IDDR2 #(
-  .DDR_ALIGNMENT        ("NONE"                           ),
-  .INIT_Q0              (0                                ),
-  .INIT_Q1              (0                                ),
-  .SRTYPE               ("SYNC"                           )
+  //.DDR_ALIGNMENT        ("NONE"                           ),
+  .DDR_ALIGNMENT        ("C0"                           ),
+  .INIT_Q0              (1                                ),
+  .INIT_Q1              (1                                ),
+  .SRTYPE               ("ASYNC"                           )
+  //.SRTYPE               ("SYNC"                           )
 ) data_in_ddr (
   .C0                   (o_sd_clk                         ),
   .C1                   (!o_sd_clk                        ),
@@ -215,11 +266,13 @@ IDDR2 #(
   .Q0                   (o_sd_data_in[pcnt]               ),
   .Q1                   (o_sd_data_in[pcnt + 4]           )
 );
-
 ODDR2 #(
-  .DDR_ALIGNMENT        ("C0"                             ),
-  .INIT                 (1                                ),
-  .SRTYPE               ("ASYNC"                          )
+//  .DDR_ALIGNMENT        ("NONE"                           ),
+//  .SRTYPE               ("SYNC"                           ),
+  .DDR_ALIGNMENT        ("C0"                           ),
+  .SRTYPE               ("ASYNC"                           ),
+
+  .INIT                 (1                                )
 ) data_out_ddr (
   .C0                   (o_sd_clk                         ),
   .C1                   (!o_sd_clk                        ),
@@ -229,24 +282,35 @@ ODDR2 #(
 
   .D0                   (sd_data_out[pcnt + 4]            ),
   .D1                   (sd_data_out[pcnt]                ),
+ // .D0                   (1'b0            ),
+ // .D1                   (1'b0            ),
+
   .Q                    (pin_data_in_predelay[pcnt]       )
 
 );
 
-
 end
+//`define ADJUSTABLE_DELAY
 endgenerate
 
-
-BUFG sd_clk_buffer(
+BUFG sd_clk_buffer_p(
   .I                      (sd_clk                         ),
   .O                      (o_sd_clk                       )
 );
+/*
+BUFG sd_clk_buffer_n(
+  .I                      (!sd_clk                        ),
+  .O                      (!o_sd_clk                     )
+);
+*/
 
 //asynchronous logic
 assign  sd_data_out       = i_read_wait ? {1'b1, 1'b0, 1'b1, 1'b1, 1'b1, 1'b0, 1'b1, 1'b1}:
                                           i_sd_data_out;
+//assign  sd_data_out                 = i_sd_data_out;
+
 assign  sd_data_direction = (!i_sd_data_dir && !i_read_wait);
+//assign  sd_data_direction = (!i_sd_data_dir);
 assign  o_locked          = !user_reset;
 
 //Synchronous Logic
@@ -255,7 +319,6 @@ always @ (posedge clk) begin
   if (rst) begin
     sd_clk                <=  0;
     count                 <=  0;
-    user_reset            <=  1;
   end
   else begin
     if (count < 4) begin
@@ -264,6 +327,24 @@ always @ (posedge clk) begin
     else begin
       sd_clk              <=  ~sd_clk;
       count               <=  0;
+    end
+  end
+end
+
+initial begin
+  user_reset_count        <=  0;
+end
+
+always @ (posedge o_sd_clk or posedge rst) begin
+  if (rst) begin 
+    user_reset            <=  1;
+    user_reset_count      <=  0;
+  end
+  else begin
+    if (user_reset_count < USER_RESET_TIMEOUT) begin
+      user_reset_count    <=  user_reset_count + 1;
+    end
+    else begin
       user_reset          <=  0;
     end
   end

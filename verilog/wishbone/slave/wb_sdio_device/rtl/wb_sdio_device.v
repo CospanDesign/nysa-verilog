@@ -110,9 +110,12 @@ localparam    DEBUG_SD_CMD_ARG      = 32'h00000004;
 localparam    DEBUG_SD_PHY_STATE    = 32'h00000005;
 localparam    DEBUG_SD_CONTROL_STATE= 32'h00000006;
 
-localparam    SD_DELAY_VALUE        = 32'h00000007; 
+localparam    SD_DELAY_VALUE        = 32'h00000007;
 localparam    SD_DBG_CRC_GEN        = 32'h00000023;
-localparam    SD_DBG_RMT_GEN        = 32'h00000024;
+localparam    SD_DBG_CRC_RMT        = 32'h00000024;
+
+localparam    SD_DBG_CRC_DATA_GEN   = 32'h00000028;
+localparam    SD_DBG_CRC_DATA_RMT   = 32'h0000002C;
 
 
 
@@ -226,8 +229,15 @@ reg               sd_cntrl_stb_det;
 wire    [7:0]     gen_crc;
 wire    [7:0]     rmt_crc;
 
+wire    [15:0]    crc0_data_rmt;
+wire    [15:0]    crc1_data_rmt;
+wire    [15:0]    crc2_data_rmt;
+wire    [15:0]    crc3_data_rmt;
 
-
+wire    [15:0]    crc0_data_gen;
+wire    [15:0]    crc1_data_gen;
+wire    [15:0]    crc2_data_gen;
+wire    [15:0]    crc3_data_gen;
 
 //Submodules
 cross_clock_strobe ccstb (
@@ -374,6 +384,15 @@ sdio_device_stack sdio_device (
   .o_gen_crc            (gen_crc              ),
   .o_rmt_crc            (rmt_crc              ),
 
+  .o_crc0_data_rmt      (crc0_data_rmt        ),
+  .o_crc1_data_rmt      (crc1_data_rmt        ),
+  .o_crc2_data_rmt      (crc2_data_rmt        ),
+  .o_crc3_data_rmt      (crc3_data_rmt        ),
+ 
+  .o_crc0_data_gen      (crc0_data_gen        ),
+  .o_crc1_data_gen      (crc1_data_gen        ),
+  .o_crc2_data_gen      (crc2_data_gen        ),
+  .o_crc3_data_gen      (crc3_data_gen        ),
 
   //Platform Interface
   .o_sd_cmd_dir         (sd_cmd_dir           ),
@@ -434,32 +453,11 @@ sdio_memory_function #(
   .i_request_interrupt  (request_interrupt    )
 );
 
-`ifdef COCOTB_SIMULATION
-sd_dev_platform_cocotb sdio_dev_plat(
-  .clk            (clk                        ),
-  .rst            (rst                        ),
-
-  .rst            (rst   || sdio_rst  || !pll_locked),
-
-  .o_sd_clk       (sd_clk                     ),
-
-  .i_sd_cmd_dir   (sd_cmd_dir                 ),
-  .o_sd_cmd_in    (sd_cmd_in                  ),
-  .i_sd_cmd_out   (sd_cmd_out                 ),
-
-  .i_sd_data_dir  (sd_data_dir                ),
-  .o_sd_data_in   (sd_data_in                 ),
-  .i_sd_data_out  (sd_data_out                ),
-
-  .i_phy_clk      (i_phy_sd_clk               ),
-  .io_phy_sd_cmd  (io_phy_sd_cmd              ),
-  .io_phy_sd_data (io_phy_sd_data             )
-);
-`else
 //Spartan 6 Platform
 sd_dev_platform_spartan6 #(
   .OUTPUT_DELAY        (0                         ),
-  .INPUT_DELAY         (63                        )
+  //.INPUT_DELAY         (63                        )
+  .INPUT_DELAY         (0                         )
 )sdio_dev_plat (
   .clk                 (clk                       ),
   .rst                 (rst                       ),
@@ -483,7 +481,6 @@ sd_dev_platform_spartan6 #(
   .io_phy_sd_cmd       (io_phy_sd_cmd             ),
   .io_phy_sd_data      (io_phy_sd_data            )
 );
-`endif
 
 //Asynchronous Logic
 assign  function_ready            = {6'b000000, sdio_func_ready,          1'b0};
@@ -546,11 +543,11 @@ always @ (posedge clk) begin
     end
 
     if (mem_delay_count < `MEM_DELAY_COUNT) begin
-      mem_delay_count <=  mem_delay_count + 1;
+      mem_delay_count                     <=  mem_delay_count + 1;
     end
     //when the master acks our ack, then put our ack down
     if (o_wbs_ack && ~i_wbs_stb)begin
-      o_wbs_ack <= 0;
+      o_wbs_ack                           <= 0;
     end
     if (i_wbs_stb && i_wbs_cyc) begin
       //master is requesting somethign
@@ -559,10 +556,10 @@ always @ (posedge clk) begin
           //write request
           case (i_wbs_adr)
             CONTROL: begin
-              control   <=  i_wbs_dat;
+              control                     <=  i_wbs_dat;
             end
             SD_DELAY_VALUE: begin
-              delay_value   <=  i_wbs_dat[7:0];
+              delay_value                 <=  i_wbs_dat[7:0];
             end
             default: begin
             end
@@ -572,7 +569,7 @@ always @ (posedge clk) begin
           //read request
           case (i_wbs_adr)
             CONTROL: begin
-              o_wbs_dat <= control;
+              o_wbs_dat                   <= control;
             end
             STATUS: begin
               o_wbs_dat                   <= status;
@@ -580,48 +577,72 @@ always @ (posedge clk) begin
               sd_cntrl_stb_det            <=  0;
             end
             CLOCK_COUNT: begin
-              o_wbs_dat <=  clock_count;
+              o_wbs_dat                   <=  clock_count;
             end
             DEBUG_SD_CMD: begin
-              o_wbs_dat <=  {27'h0, sd_cmd};
+              o_wbs_dat                   <=  {27'h0, sd_cmd};
             end
             DEBUG_SD_CMD_ARG: begin
-              o_wbs_dat <=  sd_cmd_arg;
+              o_wbs_dat                   <=  sd_cmd_arg;
             end
             DEBUG_SD_PHY_STATE: begin
-              o_wbs_dat <=  sd_phy_state;
+              o_wbs_dat                   <=  sd_phy_state;
             end
             DEBUG_SD_CONTROL_STATE: begin
-              o_wbs_dat <=  sd_control_state;
+              o_wbs_dat                   <=  sd_control_state;
             end
             SD_DELAY_VALUE: begin
-              o_wbs_dat   <=  {24'h00, delay_value};
+              o_wbs_dat                   <=  {24'h00, delay_value};
             end
             SD_DBG_CRC_GEN: begin
-              o_wbs_dat               <=  {24'h00, gen_crc};
+              o_wbs_dat                   <=  {24'h00, gen_crc};
             end
-            SD_DBG_RMT_GEN: begin
-              o_wbs_dat               <=  {24'h00, rmt_crc};
+            SD_DBG_CRC_RMT: begin
+              o_wbs_dat                   <=  {24'h00, rmt_crc};
+            end
+            (SD_DBG_CRC_DATA_GEN + 0): begin
+              o_wbs_dat               <=  {16'h00, crc0_data_gen};
+            end
+            (SD_DBG_CRC_DATA_GEN + 1): begin
+              o_wbs_dat               <=  {16'h00, crc1_data_gen};
+            end
+            (SD_DBG_CRC_DATA_GEN + 2): begin
+              o_wbs_dat               <=  {16'h00, crc2_data_gen};
+            end
+            (SD_DBG_CRC_DATA_GEN + 3): begin
+              o_wbs_dat               <=  {16'h00, crc3_data_gen};
+            end
+            (SD_DBG_CRC_DATA_RMT + 0): begin
+              o_wbs_dat               <=  {16'h00, crc0_data_rmt};
+            end
+            (SD_DBG_CRC_DATA_RMT + 1): begin
+              o_wbs_dat               <=  {16'h00, crc1_data_rmt};
+            end
+            (SD_DBG_CRC_DATA_RMT + 2): begin
+              o_wbs_dat               <=  {16'h00, crc2_data_rmt};
+            end
+            (SD_DBG_CRC_DATA_RMT + 3): begin
+              o_wbs_dat               <=  {16'h00, crc3_data_rmt};
             end
             default: begin
               if (posedge_buffer) begin
-                mem_delay_count <=  0;
+                mem_delay_count           <=  0;
               end
             end
           endcase
         end
         if (local_buffer_en) begin
-          o_wbs_dat       <=  local_buffer_data;
+          o_wbs_dat                       <=  local_buffer_data;
           if ((mem_delay_count == `MEM_DELAY_COUNT) && !posedge_buffer) begin
-            o_wbs_ack     <= 1;
+            o_wbs_ack                     <= 1;
           end
         end
         else begin
-          o_wbs_ack       <= 1;
+          o_wbs_ack                       <= 1;
         end
       end
     end
-    prev_buffer_en        <=  local_buffer_en;
+    prev_buffer_en                        <=  local_buffer_en;
   end
 end
 

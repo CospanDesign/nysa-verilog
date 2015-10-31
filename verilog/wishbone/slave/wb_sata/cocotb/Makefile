@@ -7,6 +7,7 @@ NYSA		:= $(shell $(python) nysa paths -s -v nysa-verilog)
 NYSA_SATA	:= $(shell $(python) nysa paths -s -v nysa-sata)
 PYTHONPATH 	:= ./model:$(PYTHONPATH)
 export PYTHONPATH
+export PYTHONHOME=$(shell python -c "from distutils.sysconfig import get_config_var; print(get_config_var('prefix'))")
 
 
 EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/ -I${NYSA_SATA}/rtl/ -I$(TOPDIR)/../wb_dma/rtl/
