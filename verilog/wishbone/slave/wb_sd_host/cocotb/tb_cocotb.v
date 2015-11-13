@@ -47,7 +47,6 @@ reg               r_request_interrupt;
 wire              request_read_wait = 0;
 
 wire              dev_sd_clk;
-wire              dev_sd_clk_x2;
 
 //There is a bug in COCOTB when stiumlating a signal, sometimes it can be corrupted if not registered
 always @ (*) r_rst           = rst;
@@ -187,6 +186,38 @@ wire  [31:0]      w_wbs1_dat_i;
 wire  [31:0]      w_wbs1_dat_o;
 wire  [31:0]      w_wbs1_adr;
 wire              w_wbs1_int;
+
+wire              w_wbs2_we;
+wire              w_wbs2_cyc;
+wire              w_wbs2_stb;
+wire  [3:0]       w_wbs2_sel;
+wire              w_wbs2_ack;
+wire  [31:0]      w_wbs2_dat_i;
+wire  [31:0]      w_wbs2_dat_o;
+wire  [31:0]      w_wbs2_adr;
+wire              w_wbs2_int;
+
+wire              w_wbs3_we;
+wire              w_wbs3_cyc;
+wire              w_wbs3_stb;
+wire  [3:0]       w_wbs3_sel;
+wire              w_wbs3_ack;
+wire  [31:0]      w_wbs3_dat_i;
+wire  [31:0]      w_wbs3_dat_o;
+wire  [31:0]      w_wbs3_adr;
+wire              w_wbs3_int;
+
+wire              w_wbs4_we;
+wire              w_wbs4_cyc;
+wire              w_wbs4_stb;
+wire  [3:0]       w_wbs4_sel;
+wire              w_wbs4_ack;
+wire  [31:0]      w_wbs4_dat_i;
+wire  [31:0]      w_wbs4_dat_o;
+wire  [31:0]      w_wbs4_adr;
+wire              w_wbs4_int;
+
+
 
 //Memory Interface
 wire              w_mem_we_o;
@@ -354,7 +385,35 @@ wishbone_interconnect wi (
   .o_s1_dat   (w_wbs1_dat_i         ),
   .i_s1_dat   (w_wbs1_dat_o         ),
   .o_s1_adr   (w_wbs1_adr           ),
-  .i_s1_int   (w_wbs1_int           )
+  .i_s1_int   (w_wbs1_int           ),
+
+  .o_s2_we    (w_wbs2_we            ),
+  .o_s2_cyc   (w_wbs2_cyc           ),
+  .o_s2_stb   (w_wbs2_stb           ),
+  .i_s2_ack   (w_wbs2_ack           ),
+  .o_s2_dat   (w_wbs2_dat_i         ),
+  .i_s2_dat   (w_wbs2_dat_o         ),
+  .o_s2_adr   (w_wbs2_adr           ),
+  .i_s2_int   (w_wbs2_int           ),
+
+  .o_s3_we    (w_wbs3_we            ),
+  .o_s3_cyc   (w_wbs3_cyc           ),
+  .o_s3_stb   (w_wbs3_stb           ),
+  .i_s3_ack   (w_wbs3_ack           ),
+  .o_s3_dat   (w_wbs3_dat_i         ),
+  .i_s3_dat   (w_wbs3_dat_o         ),
+  .o_s3_adr   (w_wbs3_adr           ),
+  .i_s3_int   (w_wbs3_int           ),
+
+  .o_s4_we    (w_wbs4_we            ),
+  .o_s4_cyc   (w_wbs4_cyc           ),
+  .o_s4_stb   (w_wbs4_stb           ),
+  .i_s4_ack   (w_wbs4_ack           ),
+  .o_s4_dat   (w_wbs4_dat_i         ),
+  .i_s4_dat   (w_wbs4_dat_o         ),
+  .o_s4_adr   (w_wbs4_adr           ),
+  .i_s4_int   (w_wbs4_int           )
+
 );
 
 
@@ -415,6 +474,28 @@ wb_bram #(
 );
 
 
+
+wb_sdio_device  s2(
+  .clk                 (clk                 ),
+  .rst                 (r_rst               ),
+  .i_wbs_cyc           (w_wbs2_cyc          ),
+  .i_wbs_dat           (w_wbs2_dat_i        ),
+  .i_wbs_we            (w_wbs2_we           ),
+  .i_wbs_stb           (w_wbs2_stb          ),
+  .i_wbs_sel           (w_wbs2_sel          ),
+  .i_wbs_adr           (w_wbs2_adr          ),
+  .o_wbs_int           (w_wbs2_int          ),
+  .o_wbs_dat           (w_wbs2_dat_o        ),
+  .o_wbs_ack           (w_wbs2_ack          ),
+
+  .i_phy_sd_clk        (sd_clk              ),
+  .io_phy_sd_cmd       (phy_sd_cmd          ),
+  .io_phy_sd_data      (phy_sd_data[3:0]    )
+);
+
+
+
+/*
 sd_dev_platform_cocotb sdio_dev_plat(
   .clk            (clk              ),
   .rst            (r_rst            ),
@@ -422,7 +503,6 @@ sd_dev_platform_cocotb sdio_dev_plat(
   .o_locked       (dev_pll_locked   ),
 
   .o_sd_clk       (dev_sd_clk       ),
-  .o_sd_clk_x2    (dev_sd_clk_x2    ),
 
 
   .i_sd_cmd_dir   (dev_sd_cmd_dir   ),
@@ -442,7 +522,6 @@ sd_dev_platform_cocotb sdio_dev_plat(
 
 sdio_device_stack sdio_device (
   .sdio_clk             (sd_clk               ),
-  .sdio_clk_x2          (clk                  ),
   .rst                  (r_rst || !dev_pll_locked),
 
   // Function Interfacee From CIA
@@ -624,6 +703,16 @@ assign  function_ready          = {6'b000000, demo_func_ready,          1'b0};
 assign  function_exec_status    = {6'b000000, demo_func_exec_sts,       1'b0};
 assign  function_ready_for_data = {6'b000000, demo_func_ready_for_data, 1'b0};
 assign  function_interrupt      = {6'b000000, demo_func_interrupt,      1'b0};
+*/
+
+assign  w_wbs3_int              = 0;
+assign  w_wbs3_ack              = 0;
+assign  w_wbs3_dat_o            = 0;
+
+assign  w_wbs4_int              = 0;
+assign  w_wbs4_ack              = 0;
+assign  w_wbs4_dat_o            = 0;
+
 
 //Synchronous Logic
 //Simulation Control

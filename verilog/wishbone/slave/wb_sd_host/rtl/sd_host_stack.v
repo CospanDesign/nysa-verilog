@@ -104,6 +104,25 @@ module sd_host_stack #(
   input                     i_sd_cmd,
   output                    o_sd_cmd,
 
+  //FPGA Debug Interface
+  output      [3:0]         o_phy_state,
+  output      [3:0]         o_phy_data_state,
+
+  output      [7:0]         o_gen_crc,
+  output      [7:0]         o_rmt_crc,
+
+  output      [15:0]        o_crc0_data_rmt,
+  output      [15:0]        o_crc1_data_rmt,
+  output      [15:0]        o_crc2_data_rmt,
+  output      [15:0]        o_crc3_data_rmt,
+
+  output      [15:0]        o_crc0_data_gen,
+  output      [15:0]        o_crc1_data_gen,
+  output      [15:0]        o_crc2_data_gen,
+  output      [15:0]        o_crc3_data_gen,
+
+
+
   output                    o_sd_data_dir,
   input       [7:0]         i_sd_data,
   output      [7:0]         o_sd_data
@@ -160,7 +179,7 @@ cross_clock_enable ccstb_cmd_finished_en(
   .rst                (rst || !i_sd_pll_locked    ),
   .in_en              (sd_cmd_finished_en         ),
 
-  .out_clk            (i_sd_clk                   ),
+  .out_clk            (clk                        ),
   .out_en             (o_cmd_finished_en          )
 );
 
@@ -228,7 +247,6 @@ sd_cmd_layer cmd(
   .o_error_flag         (o_error_flag             ),
   .o_error              (o_error                  ),
 
-
   //Data Interface
   .i_data_read_stb      (rfifo_stb                ),
   .i_data_write_stb     (wfifo_stb                ),
@@ -247,7 +265,7 @@ sd_cmd_layer cmd(
   .i_cmd_arg            (i_cmd_arg                ),
 
   //Flags
-  .i_rsp_type           (i_rsp_long_flag          ),
+  .i_rsp_long           (i_rsp_long_flag          ),
   .o_rsp                (o_rsp                    ),
 
   //Interrupt From the Card
@@ -331,12 +349,28 @@ sd_phy_layer #(
   .i_sd_cmd             (i_sd_cmd                 ),
   .o_sd_cmd             (o_sd_cmd                 ),
 
+  //Debug Interface
+  .o_state              (o_phy_state              ),
+  .o_data_state         (o_phy_data_state         ),
+  .o_gen_crc            (o_gen_crc                ),
+  .o_rmt_crc            (o_rmt_crc                ),
+
+  .o_crc0_data_rmt      (o_crc0_data_rmt          ),
+  .o_crc1_data_rmt      (o_crc1_data_rmt          ),
+  .o_crc2_data_rmt      (o_crc2_data_rmt          ),
+  .o_crc3_data_rmt      (o_crc3_data_rmt          ),
+                        
+  .o_crc0_data_gen      (o_crc0_data_gen          ),
+  .o_crc1_data_gen      (o_crc1_data_gen          ),
+  .o_crc2_data_gen      (o_crc2_data_gen          ),
+  .o_crc3_data_gen      (o_crc3_data_gen          ),
+
+
+
   .o_sd_data_dir        (o_sd_data_dir            ),
   .i_sd_data            (i_sd_data                ),
   .o_sd_data            (o_sd_data                )
 );
-
-
 
 //Clock Generator
 

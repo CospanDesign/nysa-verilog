@@ -28,6 +28,7 @@ SOFTWARE.
  * Changes:
  */
 
+`include "sd_host_defines.v"
 `include "sd_host_stack_defines.v"
 
 module sd_cmd_layer (
@@ -51,8 +52,7 @@ module sd_cmd_layer (
   input       [31:0]        i_cmd_arg,
 
   //Flags
-  input                     i_rsp_type,
-  output                    o_rsp_stb,
+  input                     i_rsp_long,
   output      [127:0]       o_rsp,
 
   //User control side
@@ -86,7 +86,7 @@ module sd_cmd_layer (
 
   input                     i_phy_rsp_finished_en,
   input       [135:0]       i_phy_rsp,
-  output  reg [7:0]         o_phy_rsp_len,
+  output      [7:0]         o_phy_rsp_len,
 
   input                     i_phy_crc_bad,
 
@@ -116,11 +116,11 @@ reg           [23:0]        block_count;
 wire          [23:0]        func_block_size [0:7];
 //submodules
 //asynchronous logic
-assign                      o_phy_cmd_len     = 40;
-assign                      o_rsp             = i_phy_rsp[127:0];
-//assign                      o_data_byte_count = i_data_size[11:0];
-assign                      o_data_byte_count = transfer_count[11:0];
-assign                      o_data_write_flag = i_data_write_flag;
+assign                      o_phy_cmd_len       = 8'd40;
+assign                      o_rsp               = i_phy_rsp[127:0];
+//assign                      o_data_byte_count   = i_data_size[11:0];
+assign                      o_data_byte_count   = transfer_count[11:0];
+assign                      o_data_write_flag   = i_data_write_flag;
 
 assign                      func_block_size[0]  = i_f0_block_size;
 assign                      func_block_size[1]  = i_f1_block_size;
@@ -131,25 +131,12 @@ assign                      func_block_size[5]  = i_f5_block_size;
 assign                      func_block_size[6]  = i_f6_block_size;
 assign                      func_block_size[7]  = i_f7_block_size;
 
-always @ (*) begin
-  if (rst) begin
-    o_phy_rsp_len               = 40;
-  end
-  else begin
-    if (i_rsp_type == `RSP_TYPE_LONG) begin
-      o_phy_rsp_len             = 136;
-    end
-    else begin
-      o_phy_rsp_len             = 40;
-    end
-  end
-end
+assign                      o_phy_rsp_len       = i_rsp_long ? 8'd136 : 8'd40;
 
 //synchronous logic
 always @ (posedge clk) begin
   //De-assert Strobes
   o_phy_cmd_en                  <= 0;
-
   if (rst) begin
     state                       <= IDLE;
     o_phy_cmd                   <= 0;

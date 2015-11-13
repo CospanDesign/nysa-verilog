@@ -82,7 +82,7 @@ reg               r_ih_reset      = 0;
 wire              phy_sd_cmd;
 wire    [3:0]     phy_sd_data;
 
-wire              dev_pll_locked;
+wire              pll_locked;
 
 wire              dev_sd_cmd_dir;
 wire              dev_sd_cmd_in;
@@ -485,36 +485,14 @@ wb_bram #(
   .o_wbs_int  (w_arb0_o_wbs_int     )
 );
 
-
-/*
-sd_dev_platform_cocotb sdio_dev_plat(
-  .clk            (clk              ),
-  .rst            (rst              ),
-
-  .o_locked       (dev_pll_locked   ),
-
-  .i_sd_cmd_dir   (dev_sd_cmd_dir   ),
-  .o_sd_cmd_in    (dev_sd_cmd_in    ),
-  .i_sd_cmd_out   (dev_sd_cmd_out   ),
-
-  .i_sd_data_dir  (dev_sd_data_dir  ),
-  .o_sd_data_in   (dev_sd_data_in   ),
-  .i_sd_data_out  (dev_sd_data_out  ),
-
-  .i_phy_clk      (sd_clk           ),
-  .io_phy_sd_cmd  (phy_sd_cmd       ),
-  .io_phy_sd_data (phy_sd_data      )
-);
-*/
-
 sd_dev_platform_spartan6 #(
-  .OUTPUT_DELAY   (63               ),
-  .INPUT_DELAY    (63               )
+  .OUTPUT_DELAY   (0                ),
+  .INPUT_DELAY    (0                )
 )sdio_dev_plat (
   .clk            (clk              ),
   .rst            (rst              ),
 
-  .o_locked       (dev_pll_locked   ),
+  .o_locked       (pll_locked       ),
 
   .o_sd_clk       (dev_sd_clk       ),
 
@@ -531,6 +509,8 @@ sd_dev_platform_spartan6 #(
   .io_phy_sd_data (phy_sd_data      )
 );
 
+pullup (phy_sd_cmd    );
+
 pullup (phy_sd_data[0]);
 pullup (phy_sd_data[1]);
 pullup (phy_sd_data[2]);
@@ -538,8 +518,8 @@ pullup (phy_sd_data[3]);
 
 //TODO ADAPT sdio_device to use the platform based phy_sd_cmd and phy_sd_data
 sdio_device_stack sdio_device (
-  .sdio_clk             (sd_clk               ),
-  .rst                  (rst   || !dev_pll_locked),
+  .sdio_clk             (dev_sd_clk           ),
+  .rst                  (rst   || !pll_locked ),
 
   // Function Interfacee From CIA
   .o_fbr1_csa_en        (fbr1_csa_en          ),
@@ -673,8 +653,8 @@ sdio_device_stack sdio_device (
 
 demo_function demo (
   .clk                  (clk                 ),
-  .sdio_clk             (sd_clk              ),
-  .rst                  (rst   || !dev_pll_locked),
+  .sdio_clk             (dev_sd_clk          ),
+  .rst                  (rst   || !pll_locked),
 
   .i_csa_en             (fbr1_csa_en         ),
   .i_pwr_mode           (fbr1_pwr_mode       ),

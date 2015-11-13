@@ -152,72 +152,11 @@ dpb #(
 );
 //asynchronous logic
 assign  o_busy              =   state != IDLE;
-//assign  count_finished      =   i_block_mode ?  (block_data_count >= i_data_count) :
-//                                                (data_count       >= i_data_count);
 assign  count_finished      =   (data_count >= i_data_count);
-//assign  o_read_wait         =   (`SRW && i_request_read_wait);
 assign  o_interrupt         =   i_request_interrupt;
 assign  o_ready             =   i_enable;
 assign  o_execution_status  =   o_busy;
 assign  o_ready_for_data    =   1'b1;
-//assign  mem_write_data      =   {write_data[23:0], i_write_data};
-
-//synchronous logic
-/*
-always @ (*) begin
-  if(rst) begin
-    o_read_data             <=  8'h0;
-  end
-  else begin
-    case (byte_count)
-      2'b00:
-        o_read_data         <=  mem_read_data[7:0];
-      2'b01:
-        o_read_data         <=  mem_read_data[15:8];
-      2'b10:
-        o_read_data         <=  mem_read_data[23:16];
-      2'b11:
-        o_read_data         <=  mem_read_data[31:24];
-    endcase
-  end
-end
-*/
-
-//Counter
-//XXX: This may need to be a mealy state machine
-/*
-always @ (posedge sdio_clk) begin
-  if (rst) begin
-    data_count              <=  0;
-    block_data_count        <=  0;
-  end
-  else begin
-    if (state == IDLE) begin
-        data_count          <=  0;
-        block_data_count    <=  0;
-    end
-    else if ((state == WRITE) || (state == READ)) begin
-      if (i_data_stb || o_data_stb) begin
-        if (i_block_mode) begin
-          if (data_count < i_block_size) begin
-            data_count            <=  data_count + 13'h1;
-          end
-          else begin
-            if (block_data_count  < data_count) begin
-              block_data_count    <=  block_data_count + 1;
-              data_count          <=  13'h0;
-            end
-          end
-        end
-        else begin
-          data_count              <=  data_count + 13'h1;
-        end
-      end
-    end
-  end
-end
-*/
-
 //Main State Machine
 always @ (posedge sdio_clk) begin
   mem_write_stb             <=  0;
@@ -225,7 +164,6 @@ always @ (posedge sdio_clk) begin
   o_data_stb                <=  0;
   if (rst) begin
     byte_count              <=  0;
-    //mem_write_data          <=  0;
     o_finished              <=  0;
     o_data_rdy              <=  0;
     write_data              <=  0;
@@ -265,6 +203,10 @@ always @ (posedge sdio_clk) begin
       end
       WRITE: begin
         if (data_count < i_data_count) begin
+
+          if (mem_write_stb) begin
+            mem_addr        <=  mem_addr + 1;
+          end
           if (i_data_stb) begin
             //Shift Data In
             write_data          <= {write_data[23:0], i_write_data};
@@ -274,7 +216,6 @@ always @ (posedge sdio_clk) begin
               1: begin
               end
               2: begin
-                mem_addr          <= address[MEM_EXP - 1: 0];
               end
               3: begin
                 write_stb         <=  1;
