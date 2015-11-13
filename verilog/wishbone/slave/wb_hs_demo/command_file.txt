@@ -1,0 +1,22 @@
+#Add other command line options here
++libext+.v
++incdir+${NYSA}/verilog
+#In order to use Xilinx libraris use the ${XILINX} to replace, the path will include ISE_DS
+#An example:
+#+incdir+${XILINX}/ISE/verilog/src
+
+#Use the NYSA keyword to point to the nysa-verilog base directory
+
+${NYSA}/verilog/sim/wishbone/interconnect/example_2port_interconnect/wishbone_interconnect.v
+#${NYSA}/verilog/wishbone/slave/device_rom_table/device_rom_table.v
+${NYSA}/verilog/wishbone/master/wishbone_master.v
+
+#Example module from Xilinx
+#${XILINX}/ISE/verilog/src/glbl.v
+
+#The generic directory contains a lot of non-platform specific verilog code
+#${NYSA}/verilog/generic/<some name here>.v
+
+rtl/wb_hs_demo.v
+sim/tb_wishbone_master.v
+
