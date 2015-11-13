@@ -136,7 +136,6 @@ module wb_sata (
   output      [31:0]  o_read_data,
   input               i_read_strobe
 
-
 );
 
 //Local Parameters
