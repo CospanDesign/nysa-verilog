@@ -1,21 +1,91 @@
 [*]
-[*] GTKWave Analyzer v3.3.62 (w)1999-2014 BSI
-[*] Wed Aug  5 18:24:36 2015
+[*] GTKWave Analyzer v3.3.64 (w)1999-2014 BSI
+[*] Sun Nov 15 03:53:19 2015
 [*]
-[dumpfile] "design.vcd"
-[dumpfile_mtime] "Wed Aug  5 18:24:09 2015"
-[dumpfile_size] 133235
-[savefile] "waveforms.gtkw"
-[timestart] 0
-[size] 958 1059
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_hs_demo/cocotb/design.vcd"
+[dumpfile_mtime] "Sun Nov 15 03:52:28 2015"
+[dumpfile_size] 3560497
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_hs_demo/cocotb/waveforms.gtkw"
+[timestart] 114696
+[size] 1918 1059
 [pos] -1 -1
-*0.000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-4.872622 114800 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_cocotb.
+[treeopen] tb_cocotb.dma.
+[treeopen] tb_cocotb.s1.
+[treeopen] tb_cocotb.s1.demo.
+[treeopen] tb_cocotb.tdm0.
 [sst_width] 213
-[signals_width] 78
+[signals_width] 214
 [sst_expanded] 1
 [sst_vpaned_height] 313
 @28
 tb_cocotb.s1.clk
 tb_cocotb.s1.rst
+@22
+tb_cocotb.test_id[31:0]
+tb_cocotb.s1.i_wbs_adr[31:0]
+@28
+tb_cocotb.s1.i_wbs_cyc
+tb_cocotb.s1.i_wbs_stb
+tb_cocotb.s1.i_wbs_we
+@22
+tb_cocotb.s1.i_wbs_adr[31:0]
+tb_cocotb.s1.i_wbs_dat[31:0]
+tb_cocotb.s1.o_wbs_dat[31:0]
+@200
+-
+@28
+tb_cocotb.dma.dma_enable
+@200
+-
+-
+-
+@800200
+-DEMO INGRESS PATH
+@28
+tb_cocotb.s1.demo.w_ingress_rd_rdy
+tb_cocotb.s1.demo.r_ingress_rd_act
+@22
+tb_cocotb.s1.demo.w_ingress_rd_data[31:0]
+@28
+tb_cocotb.s1.demo.r_ingress_rd_stb
+@200
+-
+@22
+tb_cocotb.s1.demo.r_count[23:0]
+@28
+tb_cocotb.s1.demo.r_wea_a
+@200
+-
+@22
+tb_cocotb.s1.demo.r_addr_a[9:0]
+tb_cocotb.s1.demo.w_din_a[31:0]
+@1000200
+-DEMO INGRESS PATH
+@200
+-
+@800201
+-DEMO EGRESS PATH
+@23
+tb_cocotb.s1.demo.r_addr_a[9:0]
+tb_cocotb.s1.demo.state[3:0]
+@29
+tb_cocotb.s1.demo.r_egress_wr_act[1:0]
+tb_cocotb.s1.demo.r_egress_wr_stb
+@23
+tb_cocotb.s1.demo.r_egress_wr_data[31:0]
+@1000201
+-DEMO EGRESS PATH
+@c00200
+-DMA SINK
+@28
+tb_cocotb.tdm0.tmd.f2m_strobe
+@22
+tb_cocotb.tdm0.tmd.f2m_count[23:0]
+tb_cocotb.tdm0.tmd.prev_f2m_data[31:0]
+tb_cocotb.tdm0.tmd.f2m_data[31:0]
+@1401200
+-DMA SINK
 [pattern_trace] 1
 [pattern_trace] 0

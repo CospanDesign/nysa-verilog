@@ -454,9 +454,6 @@ def test_single_instruction_from_sata(dut):
     source_error_monitor.kill()
     sink_error_monitor.kill()
 
-
-
-
 @cocotb.test(skip = True)
 def test_continuous_transfer(dut):
     """

@@ -9,7 +9,6 @@ PYTHONPATH 	:= ./model:$(PYTHONPATH)
 export PYTHONPATH
 export PYTHONHOME=$(shell python -c "from distutils.sysconfig import get_config_var; print(get_config_var('prefix'))")
 
-
 EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/ -I${NYSA_SATA}/rtl/ -I$(TOPDIR)/../wb_dma/rtl/
 
 #Dependencies
@@ -45,10 +44,8 @@ VERILOG_SOURCES += $(NYSA_SATA)/sim/test_out.v
 VERILOG_SOURCES += $(NYSA_SATA)/sim/hd_data_reader.v
 VERILOG_SOURCES += $(NYSA_SATA)/sim/hd_data_writer.v
 
-
 VERILOG_SOURCES += $(NYSA)/verilog/wishbone/slave/wb_test_dma_mem/rtl/test_mem_dev.v
 VERILOG_SOURCES += $(NYSA)/verilog/wishbone/slave/wb_test_dma_mem/rtl/wb_test_dma_mem.v
-
 
 #Simulation Devices
 VERILOG_SOURCES += ${TOPDIR}/rtl/sata_dma_interface.v

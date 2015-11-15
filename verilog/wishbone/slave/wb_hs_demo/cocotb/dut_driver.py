@@ -1,4 +1,23 @@
-#PUT LICENCE HERE!
+#Distributed under the MIT licesnse.
+#Copyright (c) 2015 Dave McCoy (dave.mccoy@cospandesign.com)
+
+#Permission is hereby granted, free of charge, to any person obtaining a copy of
+#this software and associated documentation files (the "Software"), to deal in
+#the Software without restriction, including without limitation the rights to
+#use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+#of the Software, and to permit persons to whom the Software is furnished to do
+#so, subject to the following conditions:
+#
+#The above copyright notice and this permission notice shall be included in all
+#copies or substantial portions of the Software.
+#
+#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#SOFTWARE.
 
 """
 wb_hs_demo Driver
@@ -49,14 +68,10 @@ class wb_hs_demoDriver(driver.Driver):
     def __init__(self, nysa, urn, debug = False):
         super(wb_hs_demoDriver, self).__init__(nysa, urn, debug)
 
-    def set_control(self, control):
-        self.write_register(CONTROL_ADDR, control)
+    def write_data(self, address, data):
+        self.write(address, data)
 
-    def get_control(self):
-        return self.read_register(CONTROL_ADDR)
+    def read_data(self, address, length = 1):
+        return self.read(address, length)
 
-    def enable_control_0_bit(self, enable):
-        self.enable_register_bit(CONTROL_ADDR, ZERO_BIT, enable)
 
-    def is_control_0_bit_set(self):
-        return self.is_register_bit_set(CONTROL_ADDR, ZERO_BIT)

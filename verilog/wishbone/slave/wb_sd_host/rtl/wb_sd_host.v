@@ -330,7 +330,7 @@ wire        [15:0]      crc0_data_rmt;
 wire        [15:0]      crc1_data_rmt;
 wire        [15:0]      crc2_data_rmt;
 wire        [15:0]      crc3_data_rmt;
-                        
+
 wire        [15:0]      crc0_data_gen;
 wire        [15:0]      crc1_data_gen;
 wire        [15:0]      crc2_data_gen;
@@ -425,7 +425,7 @@ sd_host_stack #(
   .o_crc1_data_rmt      (crc1_data_rmt            ),
   .o_crc2_data_rmt      (crc2_data_rmt            ),
   .o_crc3_data_rmt      (crc3_data_rmt            ),
-                                                 
+
   .o_crc0_data_gen      (crc0_data_gen            ),
   .o_crc1_data_gen      (crc1_data_gen            ),
   .o_crc2_data_gen      (crc2_data_gen            ),
