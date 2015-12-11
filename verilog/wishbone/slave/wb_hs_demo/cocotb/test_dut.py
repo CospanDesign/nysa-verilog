@@ -122,7 +122,7 @@ def stream_read_write_bram(dut):
 
 
 @cocotb.test(skip = False)
-def test_dma_simple_transfer(dut):
+def test_dma_read_write_transfer(dut):
     """
     Description:
         Simple DMA Transfer

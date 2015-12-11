@@ -67,9 +67,11 @@ SOFTWARE.
 
 
 module wb_test_dma_mem #(
-  parameter ADDR_WIDTH      = 10,
-  parameter READ_FIFO_SIZE  = 8,
-  parameter WRITE_FIFO_SIZE = 8
+  parameter ADDR_WIDTH          = 10,
+  parameter READ_FIFO_SIZE      = 8,
+  parameter WRITE_FIFO_SIZE     = 8,
+  parameter ENABLE_ERROR_CHECK  = 1,
+  parameter INITIALIZE_MEM      = 1
 )(
   input                                 clk,
   input                                 rst,
@@ -133,7 +135,9 @@ wire  [31:0]              bram_read_data;
 test_mem_dev #(
   .READ_FIFO_SIZE     (READ_FIFO_SIZE     ),
   .WRITE_FIFO_SIZE    (WRITE_FIFO_SIZE    ),
-  .ADDRESS_WIDTH      (ADDR_WIDTH         )
+  .ADDRESS_WIDTH      (ADDR_WIDTH         ),
+  .ENABLE_ERROR_CHECK (ENABLE_ERROR_CHECK ),
+  .INITIALIZE_MEM     (INITIALIZE_MEM     )
 )tmd(
   .clk                (clk                ),
   .rst                (rst                ),

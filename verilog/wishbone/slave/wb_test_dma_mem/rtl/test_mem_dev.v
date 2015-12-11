@@ -1,8 +1,10 @@
 
 module test_mem_dev #(
-    parameter           READ_FIFO_SIZE  = 8,
-    parameter           WRITE_FIFO_SIZE = 8,
-    parameter           ADDRESS_WIDTH   = 8
+    parameter           READ_FIFO_SIZE     = 8,
+    parameter           WRITE_FIFO_SIZE    = 8,
+    parameter           ADDRESS_WIDTH      = 8,
+    parameter           ENABLE_ERROR_CHECK = 1,
+    parameter           INITIALIZE_MEM     = 1
 )(
     input                                 clk,
     input                                 rst,
@@ -100,6 +102,8 @@ wire    [(ADDRESS_WIDTH - 1):0]         blk_mem_wr_addr;
 wire    [(ADDRESS_WIDTH - 1):0]         blk_mem_rd_addr;
 wire    [31:0]                          blk_mem_data_in;
 
+wire                                    enable_error_check;
+
 //Submodules
 blk_mem #(
     .DATA_WIDTH         (32             ),
@@ -193,6 +197,7 @@ assign blk_mem_data_in              =   bram_en ? bram_data_in      : din;
 assign bram_data_out                =   m2f_data;
 
 assign initializing                 =   fill_mem_wea;
+assign enable_error_check           =   ENABLE_ERROR_CHECK;
 
 
 //Synchronous Logic
@@ -223,9 +228,9 @@ always @ (posedge clk) begin
     prev_f2m_data                   <=  0;
     first_write                     <=  0;
 
-    fill_mem                        <=  1;
+    fill_mem                        <=  INITIALIZE_MEM;
     fill_mem_data                   <=  0;
-    fill_mem_wea                    <=  1;
+    fill_mem_wea                    <=  INITIALIZE_MEM;
 
     prev_m2f_data                   <=  0;
 
@@ -257,18 +262,24 @@ always @ (posedge clk) begin
       if ((prev_f2m_data == (2 ** ADDRESS_WIDTH) - 1) && (f2m_data != 0)) begin
       //if ((mem_addr_in == (2 ** ADDRESS_WIDTH) - 1) && (f2m_data != 0)) begin
         f2m_data_error              <=   1;
-        $display ("Write: Wrap Error @ 0x%h: 0x%h != 0x%h", mem_addr_in, prev_f2m_data + 1, f2m_data);
+        if (enable_error_check) begin
+          $display ("Write: Wrap Error @ 0x%h: 0x%h != 0x%h", mem_addr_in, prev_f2m_data + 1, f2m_data);
+        end
       end
       else if ((prev_f2m_data + 1) != f2m_data) begin
         if (first_write) begin
           if (prev_f2m_data != f2m_data) begin
             f2m_data_error          <=  1;
-            $display ("Write: First Write Error @ 0x%h: 0x%h != 0x%h", mem_addr_in, prev_f2m_data + 1, f2m_data);
+            if (enable_error_check) begin
+              $display ("Write: First Write Error @ 0x%h: 0x%h != 0x%h", mem_addr_in, prev_f2m_data + 1, f2m_data);
+            end
           end
         end
         else begin
           f2m_data_error              <=  1;
-          $display ("Write: Error @ 0x%h: 0x%h != 0x%h", mem_addr_in, prev_f2m_data + 1, f2m_data);
+          if (enable_error_check) begin
+            $display ("Write: Error @ 0x%h: 0x%h != 0x%h", mem_addr_in, prev_f2m_data + 1, f2m_data);
+          end
         end
       end
     end
@@ -278,11 +289,15 @@ always @ (posedge clk) begin
     if ((m2f_count > 0) && m2f_strobe && !read_flush && ((m2f_activate & m2f_ready) == 0)) begin
       if (((prev_m2f_data + 1)== (2 ** ADDRESS_WIDTH)) && (m2f_data != 0))begin
         m2f_data_error                  <= 1;
-        $display ("Read: Wrap Error @ 0x%h should be 0", prev_m2f_data);
+        if (enable_error_check) begin
+          $display ("Read: Wrap Error @ 0x%h should be 0", prev_m2f_data);
+        end
       end
       else if ((prev_m2f_data + 1) != m2f_data) begin
         m2f_data_error                  <= 1;
-        $display ("Read: Error @ 0x%h: 0x%h != 0x%h", mem_addr_out, m2f_data, (prev_m2f_data + 1));
+        if (enable_error_check) begin
+          $display ("Read: Error @ 0x%h: 0x%h != 0x%h", mem_addr_out, m2f_data, (prev_m2f_data + 1));
+        end
       end
     end
 

@@ -361,7 +361,7 @@ always @ (posedge clk) begin
             if (i_read_addr_inc) begin
               r_addr_a              <=  r_addr_a + 1;
             end
-            else begin
+            else if (i_read_addr_dec) begin
               r_addr_a              <=  r_addr_a - 1;
             end
           end

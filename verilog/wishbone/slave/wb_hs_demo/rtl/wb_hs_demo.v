@@ -137,7 +137,7 @@ reg   [3:0]                 ram_sleep;
 //Submodules
 hs_demo #(
   .BUFFER_WIDTH       (BUFFER_WIDTH     ),
-  .FIFO_WIDTH         (10               )
+  .FIFO_WIDTH         (7                )
 ) demo (
   .clk                (clk              ),
   .rst                (rst              ),
@@ -181,6 +181,8 @@ hs_demo #(
   .o_read_size        (o_read_size      ),
   .o_read_data        (o_read_data      ),
   .i_read_strobe      (i_read_strobe    )
+
+
 );
 
 //Asynchronous Logic

@@ -12,7 +12,8 @@ module dpb #(
   parameter DATA_WIDTH = 32,
   parameter ADDR_WIDTH = 10,
   parameter MEM_FILE  = "NOTHING",
-  parameter MEM_FILE_LENGTH = 0
+  parameter MEM_FILE_LENGTH = 0,
+  parameter INITIALIZE = 0
 ) (
     input                             clka,
     input                             wea,
@@ -30,11 +31,21 @@ module dpb #(
 //Shared Memory
 reg     [DATA_WIDTH - 1: 0]       mem [(1 << ADDR_WIDTH) - 1: 0];
 
+integer i;
 generate
 if (MEM_FILE != "NOTHING") begin
-initial begin
+  initial begin
     $readmemh(MEM_FILE, mem, 0, MEM_FILE_LENGTH - 1);
+  end
 end
+else begin
+  initial begin
+    if (INITIALIZE == 1) begin
+      for (i = 0; i < (1 << ADDR_WIDTH); i = i + 1) begin
+        mem[i]      <= 0;
+      end
+    end
+  end
 end
 endgenerate
 
