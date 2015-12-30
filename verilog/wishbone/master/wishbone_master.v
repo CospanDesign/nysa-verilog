@@ -23,6 +23,9 @@ SOFTWARE.
 */
 
 /*
+  12/29/2015
+    -Fixed very latent bug where the write command would not wait for
+      the host interface to be ready before outputting a response
   10/14/2014
     -Made sure the interrupt data was getting the correct interrupt
       values from the peripheral bus
@@ -119,14 +122,15 @@ module wishbone_master (
 
 
   //parameters
-  localparam       IDLE                  = 32'h00000000;
-  localparam       WRITE                 = 32'h00000001;
-  localparam       READ                  = 32'h00000002;
-  localparam       DUMP_CORE             = 32'h00000003;
+  localparam        IDLE                  = 0;
+  localparam        WRITE                 = 1;
+  localparam        WRITE_RESP            = 2;
+  localparam        READ                  = 3;
+  localparam        DUMP_CORE             = 4;
 
-  localparam       S_PING_RESP           = 32'h0000C594;
+  localparam        S_PING_RESP           = 32'h0000C594;
 
-  localparam       DUMP_COUNT            = 14;
+  localparam        DUMP_COUNT            = 14;
 
 
   // registers
@@ -370,15 +374,16 @@ always @ (posedge clk) begin
             if (local_data_count <= 1) begin
               //finished all writes
               `ifdef MASTER_VERBOSE $display ("WBM: i_data_count == 0"); `endif
-              o_debug[12]           <= ~o_debug[12];
               o_mem_cyc             <= 0;
-              state                 <= IDLE;
-              prev_int              <= 0;
-              o_en                  <= 1;
-              o_mem_we              <= 0;
+              o_debug[12]           <= ~o_debug[12];
+              prev_int               <= 0;
+              o_mem_we               <= 0;
+              state                  <= WRITE_RESP;
             end
             //tell the IO handler were ready for the next one
-            o_master_ready          <=  1;
+            else begin
+              o_master_ready        <=  1;
+            end
           end
           else if ((local_data_count > 1) && i_ready && (o_mem_stb == 0)) begin
             local_data_count        <= local_data_count - 28'h1;
@@ -396,13 +401,14 @@ always @ (posedge clk) begin
             if (local_data_count    <= 1) begin
               `ifdef MASTER_VERBOSE $display ("WBM: i_data_count == 0"); `endif
               o_per_cyc             <= 0;
-              state                 <= IDLE;
               prev_int              <= 0;
-              o_en                  <= 1;
               o_per_we              <= 0;
+              state                 <= WRITE_RESP;
             end
             //tell the IO handler were ready for the next one
-            o_master_ready  <= 1;
+            else begin
+              o_master_ready        <= 1;
+            end
           end
           else if ((local_data_count > 1) && i_ready && (o_per_stb == 0)) begin
             local_data_count        <= local_data_count - 28'h1;
@@ -416,6 +422,13 @@ always @ (posedge clk) begin
             o_per_dat               <= i_data;
             nack_count              <= nack_timeout;
           end
+        end
+      end
+      WRITE_RESP: begin
+        if (i_out_ready) begin
+          $display ("OUT READY!");
+          o_en                      <=  1;
+          state                     <= IDLE;
         end
       end
       DUMP_CORE: begin
