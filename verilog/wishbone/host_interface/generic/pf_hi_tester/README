@@ -1,0 +1,3 @@
+This Slave is not intended to be used within an FPGA, it is here to test out the PPFIFO Test Interface
+
+The slave is left untouched while the tb_cocotb in te cocotb folder is where the PPFIFO is implemented

@@ -1,0 +1,164 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Thu Dec 31 19:41:02 2015
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/generic/pf_hi_tester/cocotb/design.vcd"
+[dumpfile_mtime] "Thu Dec 31 19:35:52 2015"
+[dumpfile_size] 54142
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/generic/pf_hi_tester/cocotb/waveforms.gtkw"
+[timestart] 0
+[size] 1918 1059
+[pos] -1 -1
+*-8.769303 1870 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_cocotb.
+[treeopen] tb_cocotb.ctb_2_ppfifo.
+[sst_width] 213
+[signals_width] 238
+[sst_expanded] 1
+[sst_vpaned_height] 313
+@28
+tb_cocotb.s1.clk
+tb_cocotb.s1.rst
+@200
+-
+@800200
+-Cocotob 2 PPFIFO
+@22
+[color] 5
+tb_cocotb.ctb_2_ppfifo.state[3:0]
+@28
+tb_cocotb.ctb_2_ppfifo.o_ctb_master_ready
+tb_cocotb.ctb_2_ppfifo.i_ctb_in_ready
+@200
+-
+@800200
+-Incomming Command
+@22
+tb_cocotb.ctb_2_ppfifo.i_ctb_in_command[31:0]
+tb_cocotb.ctb_2_ppfifo.i_ctb_in_data_count[27:0]
+tb_cocotb.ctb_2_ppfifo.i_ctb_in_address[31:0]
+tb_cocotb.ctb_2_ppfifo.i_ctb_in_data[31:0]
+@1000200
+-Incomming Command
+@200
+-
+@800200
+-Outgoing
+@22
+tb_cocotb.ctb_2_ppfifo.in_packet_pos[23:0]
+tb_cocotb.ctb_2_ppfifo.in_data_count[23:0]
+@200
+-
+@28
+tb_cocotb.ctb_2_ppfifo.hst_in_rdy[1:0]
+tb_cocotb.ctb_2_ppfifo.hst_in_act[1:0]
+@22
+tb_cocotb.ctb_2_ppfifo.hst_in_size[23:0]
+@28
+tb_cocotb.ctb_2_ppfifo.hst_in_stb
+@22
+tb_cocotb.ctb_2_ppfifo.hst_in_data[31:0]
+@200
+-
+@28
+tb_cocotb.ctb_2_ppfifo.o_ctb_master_ready
+tb_cocotb.ctb_2_ppfifo.o_ctb_out_en
+@200
+-
+@22
+tb_cocotb.ctb_2_ppfifo.o_ctb_out_status[31:0]
+tb_cocotb.ctb_2_ppfifo.o_ctb_out_address[31:0]
+tb_cocotb.ctb_2_ppfifo.o_ctb_out_data_count[27:0]
+tb_cocotb.ctb_2_ppfifo.o_ctb_out_data[31:0]
+tb_cocotb.ctb_2_ppfifo.out_data_count[23:0]
+tb_cocotb.ctb_2_ppfifo.out_count[23:0]
+@28
+tb_cocotb.ctb_2_ppfifo.hst_out_act
+tb_cocotb.ctb_2_ppfifo.hst_out_rdy
+@200
+-
+@28
+tb_cocotb.ctb_2_ppfifo.i_ctb_out_ready
+@200
+-
+@1000200
+-Outgoing
+@200
+-
+@1000200
+-Cocotob 2 PPFIFO
+@200
+-
+@800200
+-PPFIFO Host Adapter
+-Input Path
+@22
+[color] 5
+tb_cocotb.ppfifo_host_interface.ih_state[3:0]
+@28
+tb_cocotb.ppfifo_host_interface.i_master_ready
+tb_cocotb.ppfifo_host_interface.i_in_rdy
+@22
+tb_cocotb.ppfifo_host_interface.i_in_data[31:0]
+@28
+tb_cocotb.ppfifo_host_interface.o_in_act
+tb_cocotb.ppfifo_host_interface.in_fifo_has_data
+@22
+tb_cocotb.ppfifo_host_interface.i_in_size[23:0]
+@28
+tb_cocotb.ppfifo_host_interface.o_in_rd_stb
+@200
+-
+@22
+tb_cocotb.ppfifo_host_interface.o_in_command[31:0]
+tb_cocotb.ppfifo_host_interface.o_in_data_count[27:0]
+tb_cocotb.ppfifo_host_interface.local_data_count[23:0]
+@28
+tb_cocotb.ppfifo_host_interface.i_master_ready
+tb_cocotb.ppfifo_host_interface.o_ih_ready
+@1000200
+-Input Path
+@200
+-
+@800200
+-Output Path
+@22
+[color] 5
+tb_cocotb.ppfifo_host_interface.oh_state[3:0]
+@200
+-
+@28
+tb_cocotb.ppfifo_host_interface.i_out_rdy[1:0]
+tb_cocotb.ppfifo_host_interface.o_out_act[1:0]
+tb_cocotb.ppfifo_host_interface.o_out_wr_stb
+@200
+-
+@22
+tb_cocotb.ppfifo_host_interface.out_fifo_count[23:0]
+tb_cocotb.ppfifo_host_interface.out_data_pos[23:0]
+tb_cocotb.ppfifo_host_interface.o_out_data[31:0]
+tb_cocotb.ppfifo_host_interface.out_data_count[23:0]
+@200
+-
+@28
+tb_cocotb.ppfifo_host_interface.o_oh_ready
+tb_cocotb.ppfifo_host_interface.i_oh_en
+tb_cocotb.ppfifo_host_interface.o_oh_ready
+@1000200
+-Output Path
+@200
+-
+@1000200
+-PPFIFO Host Adapter
+@200
+-
+@800201
+-Master
+@23
+tb_cocotb.wm.state[31:0]
+tb_cocotb.wm.o_per_adr[31:0]
+tb_cocotb.wm.i_per_dat[31:0]
+@1000201
+-Master
+[pattern_trace] 1
+[pattern_trace] 0
