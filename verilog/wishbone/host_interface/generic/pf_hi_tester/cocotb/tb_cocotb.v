@@ -220,18 +220,18 @@ ppfifo_host_interface ppfifo_host_interface (
   .i_out_data_count     (w_hi_out_data_count  ),
 
   //Ingress Ping Pong FIFO
-  .i_in_rdy             (w_in_rdy             ),
-  .o_in_act             (w_in_act             ),
-  .i_in_size            (w_in_size            ),
-  .o_in_rd_stb          (w_in_stb             ),
-  .i_in_data            (w_in_data            ),
+  .i_ingress_rdy        (w_in_rdy             ),
+  .o_ingress_act        (w_in_act             ),
+  .i_ingress_size       (w_in_size            ),
+  .o_ingress_stb        (w_in_stb             ),
+  .i_ingress_data       (w_in_data            ),
 
   //Egress Ping Pong FIFO
-  .i_out_rdy            (w_out_rdy            ),
-  .o_out_act            (w_out_act            ),
-  .i_out_size           (w_out_size           ),
-  .o_out_wr_stb         (w_out_stb            ),
-  .o_out_data           (w_out_data           )
+  .i_egress_rdy         (w_out_rdy            ),
+  .o_egress_act         (w_out_act            ),
+  .i_egress_size        (w_out_size           ),
+  .o_egress_stb         (w_out_stb            ),
+  .o_egress_data        (w_out_data           )
 );
 
 

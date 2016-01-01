@@ -73,18 +73,18 @@ module ppfifo_host_interface (
   input       [27:0]  i_out_data_count,
 
   //Ingress Ping Pong FIFO
-  input               i_in_rdy,
-  output  reg         o_in_act,
-  output  reg         o_in_rd_stb,
-  input       [23:0]  i_in_size,
-  input       [31:0]  i_in_data,
+  input               i_ingress_rdy,
+  output  reg         o_ingress_act,
+  output  reg         o_ingress_stb,
+  input       [23:0]  i_ingress_size,
+  input       [31:0]  i_ingress_data,
 
   //Egress Ping Pong FIFO
-  input       [1:0]   i_out_rdy,
-  output  reg [1:0]   o_out_act,
-  output  reg         o_out_wr_stb,
-  input       [23:0]  i_out_size,
-  output  reg [31:0]  o_out_data
+  input       [1:0]   i_egress_rdy,
+  output  reg [1:0]   o_egress_act,
+  output  reg         o_egress_stb,
+  input       [23:0]  i_egress_size,
+  output  reg [31:0]  o_egress_data
 );
 
 //local wires/registers
@@ -127,7 +127,7 @@ wire                in_fifo_has_data;
 
 //modules
 //asynchronous logic
-assign  in_fifo_has_data    = (o_in_act && (in_data_count < i_in_size));
+assign  in_fifo_has_data    = (o_ingress_act && (in_data_count < i_ingress_size));
 assign  out_packet[0]       = `ID_RESP;
 assign  out_packet[1]       = i_out_status;
 assign  out_packet[2]       = i_out_data_count + 1;
@@ -144,7 +144,7 @@ assign  o_ih_reset          = 0;
 //dissassembler
 always @ (posedge clk ) begin
   //Deassert Strobes
-  o_in_rd_stb             <=  0;
+  o_ingress_stb             <=  0;
   o_ih_ready              <=  0;
 
   if (rst) begin
@@ -155,22 +155,22 @@ always @ (posedge clk ) begin
     o_in_data_count       <=  0;
     local_data_count      <=  0;
 
-    o_in_act              <=  0;
+    o_ingress_act              <=  0;
     in_data_count         <=  0;
   end
   else begin
     //Look for available Ping Pong FIFO
-    if (i_in_rdy && !o_in_act) begin
+    if (i_ingress_rdy && !o_ingress_act) begin
       in_data_count       <=  0;
-      o_in_act            <=  1;
+      o_ingress_act            <=  1;
     end
     case (ih_state)
       IDLE: begin
         if (in_fifo_has_data) begin
-          o_in_rd_stb           <=  1;
+          o_ingress_stb           <=  1;
           in_data_count         <=  in_data_count + 1;
           ih_state              <=  READ_ID;
-          id                    <=  i_in_data;
+          id                    <=  i_ingress_data;
         end                  
       end                    
       READ_ID: begin
@@ -183,11 +183,11 @@ always @ (posedge clk ) begin
       end
       READ_COMMAND: begin
         if (in_fifo_has_data) begin
-          o_in_data_count       <=  i_in_data[23:0];
-          o_in_command          <=  {12'h000, i_in_data[31:28], 12'h000, i_in_data[27:24]};
+          o_in_data_count       <=  i_ingress_data[23:0];
+          o_in_command          <=  {12'h000, i_ingress_data[31:28], 12'h000, i_ingress_data[27:24]};
           local_data_count      <=  0;
 
-          o_in_rd_stb           <=  1;
+          o_ingress_stb           <=  1;
           in_data_count         <=  in_data_count + 1;
           ih_state              <=  PROCESS_COMMAND;
         end
@@ -216,9 +216,9 @@ always @ (posedge clk ) begin
       end
       READ_ADDRESS: begin
         if (in_fifo_has_data) begin
-          o_in_address            <=  i_in_data;
+          o_in_address            <=  i_ingress_data;
 
-          o_in_rd_stb             <=  1;
+          o_ingress_stb             <=  1;
           in_data_count           <=  in_data_count + 1;
           ih_state                <=  PROCESS_ADDRESS;
         end
@@ -237,18 +237,18 @@ always @ (posedge clk ) begin
       WAIT_FOR_DATA: begin
         if (!o_ih_ready && i_master_ready) begin
           if (in_fifo_has_data) begin
-            o_in_data             <=  i_in_data;
+            o_in_data             <=  i_ingress_data;
             if(local_data_count < o_in_data_count) begin
                 local_data_count  <=  local_data_count + 1;
-                o_in_rd_stb       <=  1;
+                o_ingress_stb       <=  1;
                 in_data_count     <=  in_data_count + 1;
             end
             $display ("Go to Notify Master!");
             ih_state              <=  NOTIFY_MASTER;
             o_ih_ready            <=  1;
           end
-          else if (o_in_act)begin
-            o_in_act              <=  0;
+          else if (o_ingress_act)begin
+            o_ingress_act              <=  0;
           end
         end
       end
@@ -266,11 +266,11 @@ always @ (posedge clk ) begin
       end
       FLUSH_FIFO: begin
         if (in_fifo_has_data) begin
-          o_in_rd_stb             <=  1;
+          o_ingress_stb             <=  1;
           in_data_count           <=  in_data_count + 1;
         end
         else begin
-          o_in_act                <=  0;
+          o_ingress_act                <=  0;
           ih_state                <=  IDLE;
         end
       end
@@ -285,7 +285,7 @@ integer i;
 
 //state machine to read data from the master and send it to the out FIFO
 always @ (posedge clk ) begin
-  o_out_wr_stb                <=  0;
+  o_egress_stb                <=  0;
   o_oh_ready                  <=  0;
   if (rst) begin
     //Output handler
@@ -293,8 +293,8 @@ always @ (posedge clk ) begin
 
     //Output FIFO
     out_fifo_count            <=  0;
-    o_out_act                 <=  0;
-    o_out_data                <=  0;
+    o_egress_act                 <=  0;
+    o_egress_data                <=  0;
     out_packet_count          <=  0;
     oh_status                 <=  0;
     out_packet_pos            <=  0;
@@ -304,13 +304,13 @@ always @ (posedge clk ) begin
   else begin
 
     //Get an Output FIFO
-    if ((i_out_rdy > 0) && (o_out_act == 0)) begin
+    if ((i_egress_rdy > 0) && (o_egress_act == 0)) begin
       out_fifo_count          <=  0;
-      if (i_out_rdy[0]) begin
-        o_out_act[0]          <=  1;
+      if (i_egress_rdy[0]) begin
+        o_egress_act[0]          <=  1;
       end
       else begin
-        o_out_act[1]          <=  1;
+        o_egress_act[1]          <=  1;
       end
     end
 
@@ -344,12 +344,12 @@ always @ (posedge clk ) begin
         end
       end
       WRITE_TO_FIFO: begin
-        if ((o_out_act > 0) && out_fifo_count < i_out_size) begin
+        if ((o_egress_act > 0) && out_fifo_count < i_egress_size) begin
           if (out_packet_pos < out_packet_count) begin
-            o_out_data          <=  out_packet[out_packet_pos];
+            o_egress_data          <=  out_packet[out_packet_pos];
             out_packet_pos      <=  out_packet_pos + 1;
             out_fifo_count      <=  out_fifo_count + 1;
-            o_out_wr_stb        <=  1;
+            o_egress_stb        <=  1;
           end
           else begin
             //were done sending the initial packet, check to see if there is more data to send
@@ -358,40 +358,40 @@ always @ (posedge clk ) begin
               oh_state            <=  WRITE_DATA;
             end
             else begin
-              o_out_act           <=  0;
+              o_egress_act           <=  0;
               oh_state            <=  IDLE;
             end
           end
         end
         else begin
-          o_out_act               <=  0;
+          o_egress_act               <=  0;
         end
       end
       WRITE_DATA: begin
-        if (o_out_act > 0) begin
-          if (out_fifo_count < i_out_size) begin
+        if (o_egress_act > 0) begin
+          if (out_fifo_count < i_egress_size) begin
             o_oh_ready              <=  1;
             if (i_oh_en && o_oh_ready) begin
               o_oh_ready            <=  0;
-              o_out_data            <=  i_out_data;
-              o_out_wr_stb          <=  1;
+              o_egress_data            <=  i_out_data;
+              o_egress_stb          <=  1;
               out_fifo_count        <=  out_fifo_count + 1;
               out_data_pos          <=  out_data_pos + 1;
             end
           end
           else begin
-            o_out_act               <=  0;
+            o_egress_act               <=  0;
           end
         end
 
         if (out_data_pos >= out_data_count) begin
-          o_out_act               <=  0;
+          o_egress_act               <=  0;
           oh_state                <=  IDLE;
         end
       end
       default: begin
         //Should not have gotten here
-        o_out_act                 <=  0;
+        o_egress_act                 <=  0;
         oh_state                  <=  IDLE;
       end
     endcase
