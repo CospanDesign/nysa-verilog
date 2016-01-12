@@ -36,7 +36,7 @@ SOFTWARE.
 
 
 module uart_v3 #(
-    parameter DEFAULT_BAUDRATE  = 115200
+  parameter DEFAULT_BAUDRATE  = 115200
 )(
   input               clk,
   input               rst,
