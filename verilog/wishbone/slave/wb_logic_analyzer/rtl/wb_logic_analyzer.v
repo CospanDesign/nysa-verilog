@@ -118,10 +118,8 @@ localparam     BOTH_EDGES    = 32'h00000006;
 localparam     REPEAT_COUNT  = 32'h00000007;
 localparam     DATA_COUNT    = 32'h00000008;
 localparam     CLOCK_DIVIDER = 32'h00000009;
-localparam     READ_DATA     = 32'h00000010;
-localparam     START_POS     = 32'h00000011;
-
-
+localparam     READ_DATA     = 32'h0000000A;
+localparam     START_POS     = 32'h0000000B;
 
 //register/wires
 
