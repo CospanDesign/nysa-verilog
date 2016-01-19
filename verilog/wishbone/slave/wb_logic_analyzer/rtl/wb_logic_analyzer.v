@@ -177,34 +177,6 @@ wire  [31:0]                w_uart_start_pos;
 wire                        w_uart_la_reset;
 
 //submodule
-uart_la_interface #(
-  .DEFAULT_BAUDRATE     (`LA_DEFAULT_BAUDRATE     )
-  
-)ulac (
-  .rst                  (reset                    ),
-  .clk                  (clk                      ),
-
-  .trigger              (uart_trigger             ),
-  .trigger_mask         (uart_trigger_mask        ),
-  .trigger_after        (uart_trigger_after       ),
-  .trigger_edge         (uart_trigger_edge        ),
-  .both_edges           (uart_both_edges          ),
-  .repeat_count         (uart_repeat_count        ),
-  .set_strobe           (uart_set_strobe          ),
-  .disable_uart         (disable_uart             ),
-  .enable               (uart_enable              ),
-  .finished             (finished                 ),
-  .start                (w_uart_start_pos         ),
-  .la_reset             (w_uart_la_reset          ),
-
-  .data_read_strobe     (udata_read_strobe        ),
-  .data_read_size       (w_la_data_read_size      ),
-  .data                 (w_la_data_out            ),
-
-  .phy_rx               (i_la_uart_rx             ),
-  .phy_tx               (o_la_uart_tx             )
-);
-
 logic_analyzer #(
   .CAPTURE_WIDTH        (`CAP_DAT_WIDTH           ),
   .CAPTURE_DEPTH        (DEPTH                    )
@@ -247,7 +219,7 @@ assign  status[`STATUS_FINISHED]  = finished;
 assign  status[31:1]              = 31'h0000000;
 
 assign  w_la_data_read_strobe = (udata_read_strobe || wb_data_read_strobe);
-assign  enable              = (uart_enable | control_enable_la);
+assign  enable              = control_enable_la;
 assign  w_uart_start_pos    = w_start;
 
 
@@ -260,7 +232,7 @@ end
 
 //extended reset logic
 always @ (posedge clk) begin
-  if (control_reset | w_uart_la_reset) begin
+  if (control_reset) begin
     reset                   <=  1;
     read_history            <=  0;
   end
@@ -293,7 +265,7 @@ always @ (posedge clk) begin
     trigger                 <=  0;
     trigger_mask            <=  0;
     trigger_after           <=  0;
-    trigger_edge            <=  0;
+    trigger_edge            <=  32'hFFFFFFFF;
     both_edges              <=  0;
     repeat_count            <=  0;
     data_read_en            <=  0;
