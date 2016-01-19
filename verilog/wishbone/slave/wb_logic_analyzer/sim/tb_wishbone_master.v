@@ -116,26 +116,12 @@ wire  [31:0]      w_wbs1_dat_o;
 wire  [31:0]      w_wbs1_adr;
 wire              w_wbs1_int;
 
-reg               uart_finished;
 
 reg               la_clk = 0;
 reg   [31:0]      la_data;
 reg               la_ext_trigger;
-wire              la_uart_tx;
-wire              la_uart_rx;
-
-reg               test_transmit = 0;
-reg   [7:0]       test_tx_byte  = 8'h55;
-wire              test_received;
-wire  [7:0]       test_rx_byte;
-wire              test_is_receiving;
-wire              test_is_transmitting;
-wire              test_rx_error;
-
-
 
 //Local Parameters
-
 localparam        IDLE            = 4'h0;
 localparam        EXECUTE         = 4'h1;
 localparam        RESET           = 4'h2;
@@ -215,11 +201,8 @@ wb_logic_analyzer #(
 
   .i_la_clk         (la_clk               ),
   .i_la_data        (la_data              ),
-  .i_la_ext_trig    (la_ext_trigger       ),
+  .i_la_ext_trig    (la_ext_trigger       )
 
-  //uart interface
-  .o_la_uart_tx     (la_uart_tx           ),
-  .i_la_uart_rx     (la_uart_rx           )
 
 );
 
@@ -254,23 +237,6 @@ wishbone_interconnect wi (
   .o_s1_adr         (w_wbs1_adr           ),
   .i_s1_int         (w_wbs1_int           )
 );
-
-uart_v3  u_test (
-  .clk              (clk                  ),
-  .rst              (rst                  ),
-  .rx               (la_uart_tx           ),
-  .tx               (la_uart_rx           ),
-  .transmit         (test_transmit        ),
-  .tx_byte          (test_tx_byte         ),
-  .received         (test_received        ),
-  .rx_byte          (test_rx_byte         ),
-  .is_receiving     (test_is_receiving    ),
-  .is_transmitting  (test_is_transmitting ),
-  .rx_error         (test_rx_error        )
-);
-
-
-
 
 
 
@@ -388,9 +354,6 @@ initial begin
   end //end not reset
 
 
-  while (!uart_finished) begin
-    #100;
-  end
   #10000
   $fclose (fd_in);
   $fclose (fd_out);
@@ -599,135 +562,6 @@ initial begin
 //Ping
 rbyte = 0;
 #20;
-
-uart_finished   <=  0;
-/*
-write_byte(`START_ID);
-write_byte(`LA_PING);
-write_byte(`LINE_FEED);
-
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-
-$display ("Writing Trigger After");
-write_byte(`START_ID);
-write_byte(`LA_WRITE_TRIGGER_AFTER);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(1);
-write_byte(`LINE_FEED);
-
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-
-
-$display ("Writing Trigger");
-write_byte(`START_ID);
-write_byte(`LA_WRITE_TRIGGER);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(1);
-write_byte(0);
-write_byte(0);
-write_byte(`LINE_FEED);
-
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-
-$display ("Writing Mask");
-write_byte(`START_ID);
-write_byte(`LA_WRITE_MASK);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(1);
-write_byte(0);
-write_byte(0);
-write_byte(`LINE_FEED);
-
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-
-write_byte(`START_ID);
-write_byte(`LA_SET_ENABLE);
-write_byte(1 + `HEX_0);
-write_byte(`LINE_FEED);
-
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-
-
-$display ("Waiting for a trigger");
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %c", test_rx_byte);
-
-
-  #10000;
-*/
-  uart_finished   <=  1;
-
 end
-
-task write_byte;
-  input [7:0] in_byte;
-  begin
-    $display (".");
-    test_transmit       <=  0;
-    //initiate a write
-    test_tx_byte        <=  in_byte;
-    #1000;
-
-    test_transmit       <=  1;
-    #20;
-    test_transmit       <=  0;
-    #20;
-    while (test_is_transmitting) begin
-    #20;
-    end
-    #20;
- 
-  end
-endtask
-
-task read_byte;
-  begin
-    while (!test_received) begin
-    #20;
-    end
-    #20;
-  end
-endtask
-
 
 endmodule
