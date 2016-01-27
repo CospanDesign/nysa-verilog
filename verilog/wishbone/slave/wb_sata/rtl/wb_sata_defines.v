@@ -52,7 +52,7 @@
 `define BIT_OOB_STATE_LOW               0
 `define BIT_RESET_COUNT_HIGH            11
 `define BIT_RESET_COUNT_LOW             4
-`define BIT_D2H_INTERRUPT_EN            12 
+`define BIT_D2H_INTERRUPT_EN            12
 `define BIT_DMA_ACTIVATE_EN             13
 `define BIT_D2H_PIO_SETUP_EN            14
 `define BIT_D2H_DATA_EN                 15
