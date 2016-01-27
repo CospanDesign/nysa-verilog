@@ -1,12 +1,12 @@
 SATA Wishbone Slave Core
 
-Core used to control a SATA hard drive
+A wishbone core used to control a SATA hard drive
 
-This core was tested with Nysa: http://nysa.readthedocs.org/en/latest/ and uses a python driver to test it out. This drive can be used as a reference for controlling the hard drive.
+This core was tested with Nysa: http://nysa.readthedocs.org/en/latest/ using the following Python driver.
 
 https://github.com/CospanDesign/nysa/blob/master/nysa/host/driver/sata_driver.py
 
-The script that is used to test this can be found here:
+The following script was used to exercise the Python driver
 
 https://github.com/CospanDesign/nysa/blob/master/test/hardware/test_dma_sata.py
 
