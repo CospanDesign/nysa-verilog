@@ -98,8 +98,6 @@ module wb_logic_analyzer #(
   input                                 i_la_clk,
   input       [`CAP_DAT_WIDTH - 1: 0]   i_la_data,
   input                                 i_la_ext_trig
-
-
 );
 
 //parameters

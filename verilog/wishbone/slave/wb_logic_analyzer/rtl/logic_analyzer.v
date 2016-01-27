@@ -36,7 +36,6 @@ module logic_analyzer #(
   input                               cap_external_trigger,
   input       [31:0]                  cap_data,
   input       [31:0]                  clk_div,
-  input                               clk_select,
 
   //logic analyzer control
   input       [31:0]                  trigger,
