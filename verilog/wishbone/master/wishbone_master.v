@@ -426,7 +426,7 @@ always @ (posedge clk) begin
       end
       WRITE_RESP: begin
         if (i_out_ready) begin
-          $display ("OUT READY!");
+          //$display ("OUT READY!");
           o_en                      <=  1;
           state                     <= IDLE;
         end
