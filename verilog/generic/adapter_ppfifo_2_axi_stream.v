@@ -42,7 +42,8 @@ module adapter_ppfifo_2_axi_stream (
   //AXI Stream Output
   output                    o_axi_clk,
   input                     i_axi_ready,
-  output  reg [31:0]        o_axi_data,
+  //output  reg [31:0]        o_axi_data,
+  output      [31:0]        o_axi_data,
   output      [3:0]         o_axi_keep,
   output  reg               o_axi_last,
   output  reg               o_axi_valid
@@ -62,6 +63,7 @@ reg     [3:0]             state;
 assign  o_axi_clk       = i_ppfifo_clk;
 assign  clk             = i_ppfifo_clk;
 assign  o_axi_keep      = 4'b1111;
+assign  o_axi_data      = i_ppfifo_data;
 //synchronous logic
 
 always @ (posedge clk) begin
@@ -71,7 +73,7 @@ always @ (posedge clk) begin
 
   if (rst) begin
     state               <=  IDLE;
-    o_axi_data          <=  0;
+    //o_axi_data          <=  0;
     o_ppfifo_act        <=  0;
     r_count             <=  0;
   end
@@ -90,7 +92,7 @@ always @ (posedge clk) begin
         if (i_axi_ready) begin
           //Axi Bus is ready, PPFIFO is ready, send data
           o_axi_valid     <=  1;
-          o_axi_data      <=  i_ppfifo_data;
+          //o_axi_data      <=  i_ppfifo_data;
 
           if (r_count >= (i_ppfifo_size - 1)) begin
             //No more data within the PPFIFO
