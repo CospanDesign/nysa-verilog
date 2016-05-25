@@ -97,13 +97,7 @@ module wb_logic_analyzer #(
   //logic anayzer signals
   input                                 i_la_clk,
   input       [`CAP_DAT_WIDTH - 1: 0]   i_la_data,
-  input                                 i_la_ext_trig,
-
-  //uart interface
-  input                                 i_la_uart_rx,
-  output                                o_la_uart_tx
-
-
+  input                                 i_la_ext_trig
 );
 
 //parameters
@@ -155,26 +149,12 @@ reg   [3:0]                 sleep;
 //logic analyzer finished capture
 wire                        finished;
 
-reg                         disable_uart;
-wire  [31:0]                uart_trigger;
-wire  [31:0]                uart_trigger_mask;
-wire  [31:0]                uart_trigger_after;
-wire  [31:0]                uart_trigger_edge;
-wire  [31:0]                uart_both_edges;
-wire  [31:0]                uart_repeat_count;
-wire                        uart_set_strobe;
-wire                        uart_enable;
-
-wire                        udata_read_strobe;
 
 
 wire                        w_la_data_read_strobe;
 wire  [31:0]                w_la_data_read_size;
 wire  [31:0]                w_la_data_out;
 wire  [DEPTH - 1: 0]        w_start;
-
-wire  [31:0]                w_uart_start_pos;
-wire                        w_uart_la_reset;
 
 //submodule
 logic_analyzer #(
@@ -218,9 +198,8 @@ assign  control_restart_la  = control[`CONTROL_RESTART_LA];
 assign  status[`STATUS_FINISHED]  = finished;
 assign  status[31:1]              = 31'h0000000;
 
-assign  w_la_data_read_strobe = (udata_read_strobe || wb_data_read_strobe);
+assign  w_la_data_read_strobe = wb_data_read_strobe;
 assign  enable              = control_enable_la;
-assign  w_uart_start_pos    = w_start;
 
 
 //synchronous logic
@@ -254,10 +233,9 @@ always @ (posedge clk) begin
     data_read_count         <=  0;
     wb_data_read_strobe     <=  0;
     sleep                   <=  0;
-    disable_uart            <=  0;
   end
 
-  else if (control_reset | w_uart_la_reset) begin
+  else if (control_reset) begin
     //reset the rest flag
     control[`CONTROL_RESET] <=  0;
 
@@ -271,28 +249,16 @@ always @ (posedge clk) begin
     data_read_en            <=  0;
     wb_data_read_strobe     <=  0;
     sleep                   <=  0;
-    disable_uart            <=  0;
   end
 
   else begin
     control[`CONTROL_RESTART_LA]  <=  0;
-    disable_uart                  <=  0;
 
     if (~i_wbs_cyc) begin
       set_strobe                  <=  0;
     end
 
     //check to see if the UART device sent a set_strobe
-    if (uart_set_strobe) begin
-      trigger               <=  uart_trigger;
-      trigger_mask          <=  uart_trigger_mask;
-      trigger_after         <=  uart_trigger_after;
-      trigger_edge          <=  uart_trigger_edge;
-      both_edges            <=  uart_both_edges;
-      repeat_count          <=  uart_repeat_count;
-      set_strobe            <=  1;
-    end
-
     wb_data_read_strobe     <=  0;
     //when the master acks our ack, then put our ack down
     if (o_wbs_ack & ~i_wbs_stb)begin
@@ -309,7 +275,6 @@ always @ (posedge clk) begin
         case (i_wbs_adr)
           CONTROL: begin
             control         <=  i_wbs_dat;
-            disable_uart    <=  1;
           end
           TRIGGER: begin
             trigger         <=  i_wbs_dat;

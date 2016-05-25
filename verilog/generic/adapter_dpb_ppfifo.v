@@ -215,6 +215,7 @@ always @ (posedge ppfifo_clk) begin
       end
       READ: begin
         //Memory Interface
+        r_we                      <=  1;
         if (r_we) begin
           if (count < i_read_size) begin
             o_read_stb            <=  1;
@@ -225,9 +226,9 @@ always @ (posedge ppfifo_clk) begin
             //Done Reading
             o_read_activate       <=  0;
             state                 <=  IDLE;
+            r_we                  <=  0;
           end
         end
-        r_we                      <=  1;
         if (o_read_stb) begin
           //Delay incrementing the address
           r_addr                  <=  r_addr + 1;
