@@ -28,6 +28,8 @@ SOFTWARE.
  * Changes:
  */
 
+`timescale 1ps / 1ps
+
 module TEMPLATE (
   input                     clk,
   input                     rst
