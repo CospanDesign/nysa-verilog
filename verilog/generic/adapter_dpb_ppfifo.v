@@ -31,8 +31,8 @@ SOFTWARE.
 `define MEM_WAIT  2
 
 module adapter_dpb_ppfifo #(
-  parameter       MEM_DEPTH   = 8,
-  parameter       DATA_WIDTH  = 32
+  parameter                           MEM_DEPTH   = 9,
+  parameter                           DATA_WIDTH  = 32
 )(
   input                               clk,
   input                               rst,
@@ -44,7 +44,7 @@ module adapter_dpb_ppfifo #(
 
   //User Memory Interface
   input                               i_bram_we,
-  input           [MEM_DEPTH -1: 0]   i_bram_addr,
+  input           [MEM_DEPTH  - 1: 0] i_bram_addr,
   input           [DATA_WIDTH - 1: 0] i_bram_din,
   output          [DATA_WIDTH - 1: 0] o_bram_dout,
   output                              o_bram_valid,
@@ -80,7 +80,7 @@ wire                                  w_pf_wr_stb;
 wire                                  w_pf_cancel_stb;
 reg   [3:0]                           state;
 reg   [23:0]                          count;
-                                      
+
 reg                                   r_we;
 reg   [MEM_DEPTH - 1: 0]              r_addr;
 reg   [3:0]                           mem_wait_count;
@@ -134,6 +134,7 @@ dpb #(
   .doutb          (o_write_data         )
 );
 
+//assign  o_write_data      = 32'h01234567;
 //asynchronous logic
 assign  o_idle            = (state == IDLE);
 //synchronous logic
@@ -159,42 +160,39 @@ end
 
 
 always @ (posedge ppfifo_clk) begin
-  o_read_stb          <=  0;
-  o_write_stb         <=  0;
-
-  r_we                <=  0;
+  o_read_stb                      <=  0;
+  o_write_stb                     <=  0;
+  r_we                            <=  0;
   if (rst || w_pf_cancel_stb) begin
-    o_write_activate  <=  0;
-    o_read_activate   <=  0;
+    o_write_activate              <=  0;
+    o_read_activate               <=  0;
+    o_num_reads                   <=  0;
+    count                         <=  0;
+    r_addr                        <=  0;
 
-    o_num_reads       <=  0;
-
-    state             <=  IDLE;
-    count             <=  0;
-
-    r_addr            <=  0;
+    state                         <=  IDLE;
   end
   else begin
     case (state)
       IDLE: begin
-        o_read_activate   <=  0;
-        o_write_activate  <=  0;
-        r_addr            <=  0;
+        o_read_activate           <=  0;
+        o_write_activate          <=  0;
+        r_addr                    <=  0;
 
-        count             <=  0;
+        count                     <=  0;
         if (w_pf_wr_stb) begin
           //Load the memory data into the PPFIFO
-          state           <=  WRITE_SETUP;
+          state                   <=  WRITE_SETUP;
         end
         else if (w_pf_rd_en) begin
           if (i_read_ready) begin
-            o_read_activate <=  1;
-            state           <=  READ;
+            o_read_activate       <=  1;
+            state                 <=  READ;
           end
         end
       end
       WRITE_SETUP: begin
-        if ((i_write_ready > 0) && !o_write_activate) begin
+        if ((i_write_ready > 0) && (o_write_activate == 0)) begin
           if (i_write_ready[0]) begin
             o_write_activate[0]   <=  1;
           end
@@ -221,10 +219,10 @@ always @ (posedge ppfifo_clk) begin
           if (count < i_read_size) begin
             o_read_stb            <=  1;
             count                 <=  count + 1;
+            o_num_reads           <=  o_num_reads + 1;
           end
           else begin
             //Done Reading
-            o_num_reads           <=  o_num_reads + 1;
             o_read_activate       <=  0;
             state                 <=  IDLE;
           end
@@ -237,12 +235,10 @@ always @ (posedge ppfifo_clk) begin
       end
       default: begin
         //Shouldn't get here
-        state               <= IDLE;
+        state                     <= IDLE;
       end
     endcase
   end
 end
-
-
 
 endmodule
