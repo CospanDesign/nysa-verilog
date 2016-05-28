@@ -144,30 +144,30 @@ assign  o_ih_reset          = 0;
 //dissassembler
 always @ (posedge clk ) begin
   //Deassert Strobes
-  o_ingress_stb             <=  0;
-  o_ih_ready              <=  0;
-
-  if (rst) begin
-    ih_state              <=  IDLE;
-    o_in_command          <=  0;
-    o_in_address          <=  0;
-    o_in_data             <=  0;
-    o_in_data_count       <=  0;
-    local_data_count      <=  0;
-
-    o_ingress_act              <=  0;
-    in_data_count         <=  0;
+  o_ingress_stb                 <=  0;
+  o_ih_ready                    <=  0;
+                                
+  if (rst) begin                
+    ih_state                    <=  IDLE;
+    o_in_command                <=  0;
+    o_in_address                <=  0;
+    o_in_data                   <=  0;
+    o_in_data_count             <=  0;
+    local_data_count            <=  0;
+                                
+    o_ingress_act               <=  0;
+    in_data_count               <=  0;
   end
   else begin
     //Look for available Ping Pong FIFO
     if (i_ingress_rdy && !o_ingress_act) begin
-      in_data_count       <=  0;
-      o_ingress_act            <=  1;
+      in_data_count             <=  0;
+      o_ingress_act             <=  1;
     end
     case (ih_state)
       IDLE: begin
         if (in_fifo_has_data) begin
-          o_ingress_stb           <=  1;
+          o_ingress_stb         <=  1;
           in_data_count         <=  in_data_count + 1;
           ih_state              <=  READ_ID;
           id                    <=  i_ingress_data;
@@ -187,7 +187,7 @@ always @ (posedge clk ) begin
           o_in_command          <=  {12'h000, i_ingress_data[31:28], 12'h000, i_ingress_data[27:24]};
           local_data_count      <=  0;
 
-          o_ingress_stb           <=  1;
+          o_ingress_stb         <=  1;
           in_data_count         <=  in_data_count + 1;
           ih_state              <=  PROCESS_COMMAND;
         end
@@ -293,8 +293,8 @@ always @ (posedge clk ) begin
 
     //Output FIFO
     out_fifo_count            <=  0;
-    o_egress_act                 <=  0;
-    o_egress_data                <=  0;
+    o_egress_act              <=  0;
+    o_egress_data             <=  0;
     out_packet_count          <=  0;
     oh_status                 <=  0;
     out_packet_pos            <=  0;
@@ -346,7 +346,7 @@ always @ (posedge clk ) begin
       WRITE_TO_FIFO: begin
         if ((o_egress_act > 0) && out_fifo_count < i_egress_size) begin
           if (out_packet_pos < out_packet_count) begin
-            o_egress_data          <=  out_packet[out_packet_pos];
+            o_egress_data       <=  out_packet[out_packet_pos];
             out_packet_pos      <=  out_packet_pos + 1;
             out_fifo_count      <=  out_fifo_count + 1;
             o_egress_stb        <=  1;
