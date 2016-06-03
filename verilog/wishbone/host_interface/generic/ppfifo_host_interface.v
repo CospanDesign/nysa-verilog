@@ -182,18 +182,10 @@ always @ (posedge clk ) begin
       end
       WAIT_FOR_START: begin
         if (in_fifo_has_data) begin
-          if (o_ing_fin) begin
-            ih_state            <=  FLUSH_FIFO;
-          end
-          else begin
-            o_ingress_stb       <=  1;
-            in_data_count       <=  in_data_count + 1;
-            ih_state            <=  READ_ID;
-            id                  <=  i_ingress_data;
-          end
-        end
-        if (!i_ing_en) begin
-          ih_state              <=  IDLE;
+          o_ingress_stb         <=  1;
+          in_data_count         <=  in_data_count + 1;
+          ih_state              <=  READ_ID;
+          id                    <=  i_ingress_data;
         end
       end
       READ_ID: begin

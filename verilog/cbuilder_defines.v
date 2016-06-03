@@ -54,12 +54,22 @@ SOFTWARE.
 `ifndef __CBUILDER_DEFINES__
 `define __CBUILDER_DEFINES__
 
-`define COMMAND_PING            32'h00000000
-`define COMMAND_WRITE           32'h00000001
-`define COMMAND_READ            32'h00000002
-`define COMMAND_RESET           32'h00000003
-`define COMMAND_MASTER_ADDR     32'h00000004
-`define COMMAND_CORE_DUMP       32'h0000000F
+`define COMMAND_PING              16'h0000
+`define COMMAND_WRITE             16'h0001
+`define COMMAND_READ              16'h0002
+`define COMMAND_RESET             16'h0003
+`define COMMAND_MASTER_CFG_WRITE  16'h0004
+`define COMMAND_MASTER_CFG_READ   16'h0005
+
+`define STATUS_BIT_CMPLT          0
+`define STATUS_BIT_PING           1
+`define STATUS_BIT_READ           2
+`define STATUS_BIT_WRITE          3
+`define STATUS_BIT_MSTR_CFG_WR    4
+`define STATUS_BIT_MSTR_CFG_RD    5
+`define STATUS_BIT_UNREC_CMD      6
+`define STATUS_BIT_RESET          7
+`define STATUS_BIT_UNUSED         31:7
 
 //master address space
 `define MADDR_WR_FLAGS          32'h00000000
@@ -78,8 +88,15 @@ SOFTWARE.
 `define FLAG_MEM_BUS            16'h0001
 `define FLAG_DISABLE_AUTO_INC   16'h0002
 
+
+`define FLAG_RANGE              31:16
+`define COMMAND_RANGE           15:0
+
 //default variables
 `define DEF_NACK_TIMEOUT        32'h00000100
+
+
+
 
 
 //AXI Defines
