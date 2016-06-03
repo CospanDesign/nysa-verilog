@@ -146,15 +146,15 @@ always @ (posedge clk ) begin
   //Deassert Strobes
   o_ingress_stb                 <=  0;
   o_ih_ready                    <=  0;
-                                
-  if (rst) begin                
+
+  if (rst) begin
     ih_state                    <=  IDLE;
     o_in_command                <=  0;
     o_in_address                <=  0;
     o_in_data                   <=  0;
     o_in_data_count             <=  0;
     local_data_count            <=  0;
-                                
+
     o_ingress_act               <=  0;
     in_data_count               <=  0;
   end
@@ -171,8 +171,8 @@ always @ (posedge clk ) begin
           in_data_count         <=  in_data_count + 1;
           ih_state              <=  READ_ID;
           id                    <=  i_ingress_data;
-        end                  
-      end                    
+        end
+      end
       READ_ID: begin
         if (id == `ID_DWORD) begin
           ih_state              <= READ_COMMAND;

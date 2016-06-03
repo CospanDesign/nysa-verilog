@@ -54,14 +54,24 @@ SOFTWARE.
 `ifndef __CBUILDER_DEFINES__
 `define __CBUILDER_DEFINES__
 
-`define COMMAND_PING            32'h00000000
-`define COMMAND_WRITE           32'h00000001
-`define COMMAND_READ            32'h00000002
-`define COMMAND_RESET           32'h00000003
-`define COMMAND_MASTER_ADDR     32'h00000004
-`define COMMAND_CORE_DUMP       32'h0000000F
-                                
-//master address space          
+`define COMMAND_PING              16'h0000
+`define COMMAND_WRITE             16'h0001
+`define COMMAND_READ              16'h0002
+`define COMMAND_RESET             16'h0003
+`define COMMAND_MASTER_CFG_WRITE  16'h0004
+`define COMMAND_MASTER_CFG_READ   16'h0005
+
+`define STATUS_BIT_CMPLT          0
+`define STATUS_BIT_PING           1
+`define STATUS_BIT_READ           2
+`define STATUS_BIT_WRITE          3
+`define STATUS_BIT_MSTR_CFG_WR    4
+`define STATUS_BIT_MSTR_CFG_RD    5
+`define STATUS_BIT_UNREC_CMD      6
+`define STATUS_BIT_RESET          7
+`define STATUS_BIT_UNUSED         31:7
+
+//master address space
 `define MADDR_WR_FLAGS          32'h00000000
 `define MADDR_RD_FLAGS          32'h00000001
 `define MADDR_WR_INT_EN         32'h00000002
@@ -69,8 +79,8 @@ SOFTWARE.
 `define MADDR_NACK_TO_WR        32'h00000004
 `define MADDR_NACK_TO_RD        32'h00000005
 `define MADDR_CORE_DUMP         32'h00000006
-                                
-//conditions                    
+
+//conditions
 `define PERIPH_INTERRUPT        32'h00000001
 `define NACK_TIMEOUT            32'h00000002
 
@@ -78,8 +88,15 @@ SOFTWARE.
 `define FLAG_MEM_BUS            16'h0001
 `define FLAG_DISABLE_AUTO_INC   16'h0002
 
+
+`define FLAG_RANGE              31:16
+`define COMMAND_RANGE           15:0
+
 //default variables
 `define DEF_NACK_TIMEOUT        32'h00000100
+
+
+
 
 
 //AXI Defines
@@ -88,8 +105,8 @@ SOFTWARE.
 `define AXI_BURST_FIXED         2'b00
 `define AXI_BURST_INCR          2'b01
 `define AXI_BURST_WRAP          2'b10
-                                
-//--Burst Size                  
+
+//--Burst Size
 `define AXI_BURST_SIZE_1        3'b000
 `define AXI_BURST_SIZE_2        3'b001
 `define AXI_BURST_SIZE_4        3'b010
@@ -98,51 +115,51 @@ SOFTWARE.
 `define AXI_BURST_SIZE_32       3'b101
 `define AXI_BURST_SIZE_64       3'b110
 `define AXI_BURST_SIZE_128      3'b111
-                                
-//--Response                    
+
+//--Response
 `define AXI_RESP_OKAY           2'b00
 `define AXI_RESP_EXOKAY         2'b01
 `define AXI_RESP_SLVERR         2'b10
 `define AXI_RESP_DECERR         2'b11
-                                
-//--Lock                        
+
+//--Lock
 `define AXI_LOCK_NORMAL         2'b00
 `define AXI_LOCK_EXCLUSIVE      2'b01
 `define AXI_LOCK_LOCKED         2'b10
-                                
-//--cache                       
-//----Bufferable                
+
+//--cache
+//----Bufferable
 `define AXI_CACHE_NON_BUF       1'b0
 `define AXI_CACHE_BUF           1'b1
-//----Cachable                  
+//----Cachable
 `define AXI_CACHE_NON_CACHE     1'b0
 `define AXI_CACHE_CACHE         1'b1
-//----Read Allocate             
+//----Read Allocate
 `define AXI_CACHE_NON_RA        1'b0
 `define AXI_CACHE_RA            1'b1
-//----Write Allocate            
+//----Write Allocate
 `define AXI_CACHE_NON_WA        1'b0
 `define AXI_CACHE_WA            1'b1
-//----Unused                    
+//----Unused
 `define AXI_CACHE_UNUSED        4'b0000
-                                
-//--Protection                  
-//----ARPROT[0]                 
+
+//--Protection
+//----ARPROT[0]
 `define AXI_PROT_NORMAL         1'b0
 `define AXI_PROT_PRIVLEDGE      1'b1
-                                
-//----ARPROT[1]                 
+
+//----ARPROT[1]
 `define AXI_PROT_SECURE         1'b0
 `define AXI_PROT_NON_SECURE     1'b1
-                                
-//----ARPROT[2]                 
+
+//----ARPROT[2]
 `define AXI_PROT_DATA           1'b0
 `define AXI_PROT_INST           1'b1
-                                
-//----Unused:                   
+
+//----Unused:
 `define AXI_PROT_UNUSED         {`AXI_PROT_NORMAL, `AXI_PROT_NON_SECURE, `AXI_PROT_DATA}
-                                
-//--Low Power Mode              
+
+//--Low Power Mode
 `define AXI_POWER_LOW           1'b0
 `define AXI_POWER_NORMAL        1'b1
 
