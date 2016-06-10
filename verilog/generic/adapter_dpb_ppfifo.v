@@ -22,8 +22,14 @@ SOFTWARE.
 */
 
 /*
- * Author:
- * Description:
+ * Author: dave.mccoy@cospandesign.com
+ * Description: PPFIFO -> BRAM and BRM -> PPFIFO
+ *  Attaches two PPFIFO to a block RAM.
+ *
+ *  How to use:
+ *
+ *  PPFIFO (Read to the BRAM) Interface Attached to read_*
+ *  PPFIFO (Write from the BRAM) Interface Attached to write_*
  *
  * Changes:
  */
