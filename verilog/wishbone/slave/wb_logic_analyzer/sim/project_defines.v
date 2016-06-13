@@ -4,8 +4,6 @@
 `timescale 1 ns/1 ps
 
 //project_defines.v
-`define DRT_NUM_OF_DEVICES 1
-`define DRT_INPUT_FILE "drt_rom_file.txt"
 `define SIM
 
 `define CLOCK_RATE 50000000

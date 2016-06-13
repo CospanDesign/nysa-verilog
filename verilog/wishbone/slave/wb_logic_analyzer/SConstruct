@@ -3,19 +3,20 @@ import sys
 import json
 import SCons
 import site
+import utils
 
 from string import Template
 
 SITE_PATH = os.path.join(site.getuserbase(), "nysa")
 PATHS_PATH = os.path.join(SITE_PATH, "paths.json")
 
-verilog_builder = Builder ( action = 'iverilog -o$TARGET -c$SOURCE', 
+verilog_builder = Builder ( action = 'iverilog -o$TARGET -c$SOURCE',
                             suffix = '.sim')
-sim_builder = Builder     ( action = 'vvp $SOURCE', suffix='.vcd')
+sim_builder = Builder     ( action = 'vvp -n $SOURCE', suffix='.vcd')
 wave_builder = Builder    ( action = 'gtkwave design.vcd &')
 
 env = Environment(ENV=os.environ,
-                  BUILDERS={'verilog':verilog_builder, 
+                  BUILDERS={'verilog':verilog_builder,
                     'sim':sim_builder,
                     'wave':wave_builder})
 
@@ -47,10 +48,12 @@ def fix_verilog_paths():
 
   #Apply the configuration directory
   buf = template.safe_substitute(
-    NYSA=paths_dict["verilog"]["nysa-verilog"]["path"]
+    NYSA=paths_dict["verilog"]["nysa-verilog"]["path"],
+    XILINX=utils.find_xilinx_path()
   )
-  
-  buf = buf.replace('/', os.path.sep) 
+
+
+  buf = buf.replace('/', os.path.sep)
 
   #Write the output file
   #print "Opened up the temp file"
