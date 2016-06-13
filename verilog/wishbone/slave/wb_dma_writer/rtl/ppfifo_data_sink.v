@@ -30,12 +30,14 @@ always @ (posedge clk) begin
       o_rd_act        <=  1;
     end
     else begin
-      if (r_count < i_rd_size) begin
-        o_rd_stb      <=  1;
-        r_count       <=  r_count + 1;
-      end
-      else begin
-        o_rd_act      <=  0;
+      if (o_rd_act) begin
+        if (r_count < i_rd_size) begin
+          o_rd_stb      <=  1;
+          r_count       <=  r_count + 1;
+        end
+        else begin
+          o_rd_act      <=  0;
+        end
       end
     end
   end
