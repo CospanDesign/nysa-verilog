@@ -72,6 +72,12 @@ module ppfifo_host_interface (
   input       [31:0]  i_out_data,
   input       [27:0]  i_out_data_count,
 
+  input               i_ing_en,
+  output  reg         o_ing_fin,
+
+  input               i_egr_en,
+  output  reg         o_egr_fin,
+
   //Ingress Ping Pong FIFO
   input               i_ingress_rdy,
   output  reg         o_ingress_act,
@@ -97,14 +103,15 @@ reg     [23:0]      in_data_count;
 reg     [31:0]      id;
 
 //input handler specific states
-localparam            READ_ID         = 1;
-localparam            READ_COMMAND    = 2;
-localparam            PROCESS_COMMAND = 3;
-localparam            READ_ADDRESS    = 4;
-localparam            PROCESS_ADDRESS = 5;
-localparam            WAIT_FOR_DATA   = 6;
-localparam            NOTIFY_MASTER   = 7;
-localparam            FLUSH_FIFO      = 8;
+localparam            WAIT_FOR_START  = 4'h1;
+localparam            READ_ID         = 4'h2;
+localparam            READ_COMMAND    = 4'h3;
+localparam            READ_DATA_COUNT = 4'h4;
+localparam            READ_ADDRESS    = 4'h5;
+localparam            PROCESS_COMMAND = 4'h6;
+localparam            WAIT_FOR_DATA   = 4'h7;
+localparam            NOTIFY_MASTER   = 4'h8;
+localparam            FLUSH_FIFO      = 4'h9;
 
 reg     [3:0]       ih_state;
 reg     [23:0]      local_data_count;
@@ -113,6 +120,7 @@ reg     [23:0]      local_data_count;
 localparam           WAIT_FOR_STATUS   = 1;
 localparam           WRITE_TO_FIFO     = 2;
 localparam           WRITE_DATA        = 3;
+localparam           FINISHED          = 4;
 
 reg     [3:0]       oh_state;
 reg     [23:0]      out_fifo_count;
@@ -146,17 +154,18 @@ always @ (posedge clk ) begin
   //Deassert Strobes
   o_ingress_stb                 <=  0;
   o_ih_ready                    <=  0;
-                                
-  if (rst) begin                
+
+  if (rst) begin
     ih_state                    <=  IDLE;
     o_in_command                <=  0;
     o_in_address                <=  0;
     o_in_data                   <=  0;
     o_in_data_count             <=  0;
     local_data_count            <=  0;
-                                
+
     o_ingress_act               <=  0;
     in_data_count               <=  0;
+    o_ing_fin                   <=  0;
   end
   else begin
     //Look for available Ping Pong FIFO
@@ -166,29 +175,65 @@ always @ (posedge clk ) begin
     end
     case (ih_state)
       IDLE: begin
+        o_ing_fin               <=  0;
+        if (i_ing_en) begin
+          ih_state              <=  WAIT_FOR_START;
+        end
+      end
+      WAIT_FOR_START: begin
         if (in_fifo_has_data) begin
-          o_ingress_stb         <=  1;
-          in_data_count         <=  in_data_count + 1;
-          ih_state              <=  READ_ID;
-          id                    <=  i_ingress_data;
-        end                  
-      end                    
+          if (o_ing_fin) begin
+            ih_state            <=  FLUSH_FIFO;
+          end
+          else begin
+            o_ingress_stb       <=  1;
+            in_data_count       <=  in_data_count + 1;
+            ih_state            <=  READ_ID;
+            id                  <=  i_ingress_data;
+          end
+        end
+        if (!i_ing_en) begin
+          ih_state              <=  IDLE;
+        end
+      end
       READ_ID: begin
         if (id == `ID_DWORD) begin
           ih_state              <= READ_COMMAND;
+          o_ingress_stb         <=  1;
         end
         else begin
-          ih_state              <=  IDLE;
+          ih_state              <=  WAIT_FOR_START;
         end
       end
       READ_COMMAND: begin
         if (in_fifo_has_data) begin
-          o_in_data_count       <=  i_ingress_data[23:0];
-          o_in_command          <=  {12'h000, i_ingress_data[31:28], 12'h000, i_ingress_data[27:24]};
-          local_data_count      <=  0;
-
-          o_ingress_stb         <=  1;
           in_data_count         <=  in_data_count + 1;
+          o_ingress_stb         <=  1;
+        end
+        if (o_ingress_stb) begin
+          o_in_command          <=  i_ingress_data;
+          ih_state              <=  READ_DATA_COUNT;
+        end
+      end
+      READ_DATA_COUNT: begin
+        if (in_fifo_has_data) begin
+          in_data_count         <=  in_data_count + 1;
+          o_ingress_stb         <=  1;
+        end
+        if (o_ingress_stb) begin
+          o_in_data_count       <=  i_ingress_data;
+          ih_state              <=  READ_ADDRESS;
+        end
+      end
+      READ_ADDRESS: begin
+        if (in_fifo_has_data) begin
+          local_data_count      <=  0;
+          in_data_count         <=  in_data_count + 1;
+          o_ingress_stb         <=  1;
+        end
+        if (o_ingress_stb) begin
+          o_in_address          <=  i_ingress_data;
+          o_ingress_stb         <=  0;
           ih_state              <=  PROCESS_COMMAND;
         end
       end
@@ -203,35 +248,15 @@ always @ (posedge clk ) begin
         end
         else if (o_in_command[3:0] == `COMMAND_READ) begin
           $display("Reading READ command");
-          ih_state <=  READ_ADDRESS;
+          ih_state <=  NOTIFY_MASTER;
         end
         else if (o_in_command[3:0] == `COMMAND_WRITE) begin
           $display("Reading WRITE command");
-          ih_state <=  READ_ADDRESS;
+          ih_state <=  WAIT_FOR_DATA;
         end
         else begin
-          $display("Reading OTHER command");
-          ih_state <=  READ_ADDRESS;
-        end
-      end
-      READ_ADDRESS: begin
-        if (in_fifo_has_data) begin
-          o_in_address            <=  i_ingress_data;
-
-          o_ingress_stb             <=  1;
-          in_data_count           <=  in_data_count + 1;
-          ih_state                <=  PROCESS_ADDRESS;
-        end
-      end
-      PROCESS_ADDRESS: begin
-        if (  (o_in_command[3:0]  ==  `COMMAND_WRITE)        ||
-              (o_in_command[3:0]  ==  `COMMAND_MASTER_ADDR)  ||
-              (o_in_command[3:0]  ==  `COMMAND_CORE_DUMP)) begin
-          ih_state                <=  WAIT_FOR_DATA;
-        end
-        else begin
-          //This is all the information we need from the FIFO
-          ih_state                <=  NOTIFY_MASTER;
+          $display("Reading OTHER command (Not supported right now)");
+          ih_state <= FLUSH_FIFO;
         end
       end
       WAIT_FOR_DATA: begin
@@ -239,21 +264,21 @@ always @ (posedge clk ) begin
           if (in_fifo_has_data) begin
             o_in_data             <=  i_ingress_data;
             if(local_data_count < o_in_data_count) begin
-                local_data_count  <=  local_data_count + 1;
-                o_ingress_stb       <=  1;
-                in_data_count     <=  in_data_count + 1;
+              local_data_count    <=  local_data_count + 1;
+              o_ingress_stb       <=  1;
+              in_data_count       <=  in_data_count + 1;
             end
-            $display ("Go to Notify Master!");
+            //$display ("Go to Notify Master!");
             ih_state              <=  NOTIFY_MASTER;
             o_ih_ready            <=  1;
           end
           else if (o_ingress_act)begin
-            o_ingress_act              <=  0;
+            o_ingress_act         <=  0;
           end
         end
       end
       NOTIFY_MASTER: begin
-        $display("In Notify Master!");
+        //$display("In Notify Master!");
         if (i_master_ready) begin
           o_ih_ready              <=  1;
           if ((o_in_command[3:0] == `COMMAND_WRITE) && (local_data_count < o_in_data_count)) begin
@@ -265,13 +290,14 @@ always @ (posedge clk ) begin
         end
       end
       FLUSH_FIFO: begin
+        o_ing_fin                 <=  1;
         if (in_fifo_has_data) begin
-          o_ingress_stb             <=  1;
+          o_ingress_stb           <=  1;
           in_data_count           <=  in_data_count + 1;
         end
         else begin
-          o_ingress_act                <=  0;
-          ih_state                <=  IDLE;
+          o_ingress_act           <=  0;
+          ih_state                <=  WAIT_FOR_START;
         end
       end
       default: begin
@@ -300,6 +326,7 @@ always @ (posedge clk ) begin
     out_packet_pos            <=  0;
     out_data_count            <=  0;
     out_data_pos              <=  0;
+    o_egr_fin                 <=  0;
   end
   else begin
 
@@ -319,52 +346,59 @@ always @ (posedge clk ) begin
         //Wait for status
         //It is strange to have this fall through state right now but later I might find a reason to NOT
         //  Leave this state
-        oh_state                <= WAIT_FOR_STATUS;
+        o_egr_fin                 <=  0;
+        if (i_egr_en) begin
+          oh_state                <= WAIT_FOR_STATUS;
+        end
       end
       WAIT_FOR_STATUS: begin
-        o_oh_ready              <=  1;
-        if (i_oh_en) begin
-          oh_state              <=  WRITE_TO_FIFO;
-          out_data_count        <=  i_out_data_count[23:0] + 1;
-          out_data_pos          <=  1;  //Account for the first piece of data sent out with the first packet
-          out_packet_pos        <=  0;
-          o_oh_ready            <=  0;
-          if ( (i_out_status[3:0] == `READ_RESP)        ||
-               (i_out_status[3:0] == `WRITE_RESP)       ||
-               (i_out_status[3:0] == `MASTER_ADDR_RESP) ||
-               (i_out_status[3:0] == `PERIPH_INTERRUPT) ||
-               (i_out_status[3:0] == `CORE_DUMP_RESP) ) begin
-            $display ("Standard Response!");
-            out_packet_count    <=  `STANDARD_RESPONSE;
+        if (o_egress_act > 0) begin
+          o_oh_ready              <=  1;
+          if (i_oh_en) begin
+            out_data_count        <=  i_out_data_count[23:0] + 1;
+            out_data_pos          <=  1;  //Account for the first piece of data sent out with the first packet
+            out_packet_pos        <=  0;
+            o_oh_ready            <=  0;
+            if ( (i_out_status[3:0] == `READ_RESP)        ||
+                 (i_out_status[3:0] == `PERIPH_INTERRUPT)) begin
+              $display ("Standard Response!");
+              out_packet_count    <=  `STANDARD_RESPONSE;
+              oh_state            <=  WRITE_TO_FIFO;
+            end
+            else begin
+              $display ("No Response");
+              out_packet_count    <=  0;
+              //oh_state            <=  IDLE;
+            end
           end
-          else begin
-            $display ("Ping Response!");
-            out_packet_count    <=  `PING_RESPONSE;
-          end
+        end
+        if (i_egress_size == 0) begin
+          o_oh_ready              <=  0;
+          o_egress_act            <=  0;
         end
       end
       WRITE_TO_FIFO: begin
-        if ((o_egress_act > 0) && out_fifo_count < i_egress_size) begin
+        if ((o_egress_act > 0) && (out_fifo_count < i_egress_size)) begin
           if (out_packet_pos < out_packet_count) begin
-            o_egress_data       <=  out_packet[out_packet_pos];
-            out_packet_pos      <=  out_packet_pos + 1;
-            out_fifo_count      <=  out_fifo_count + 1;
-            o_egress_stb        <=  1;
+            o_egress_data         <= out_packet[out_packet_pos];
+            out_packet_pos        <= out_packet_pos + 1;
+            out_fifo_count        <= out_fifo_count + 1;
+            o_egress_stb          <= 1;
           end
           else begin
             //were done sending the initial packet, check to see if there is more data to send
             //release this FIFO because the output FIFO is starving
             if (out_data_pos < out_data_count) begin
-              oh_state            <=  WRITE_DATA;
+              oh_state            <= WRITE_DATA;
             end
             else begin
-              o_egress_act           <=  0;
-              oh_state            <=  IDLE;
+              o_egress_act        <= 0;
+              oh_state            <= FINISHED;
             end
           end
         end
         else begin
-          o_egress_act               <=  0;
+          o_egress_act            <= 0;
         end
       end
       WRITE_DATA: begin
@@ -373,10 +407,13 @@ always @ (posedge clk ) begin
             o_oh_ready              <=  1;
             if (i_oh_en && o_oh_ready) begin
               o_oh_ready            <=  0;
-              o_egress_data            <=  i_out_data;
-              o_egress_stb          <=  1;
+              o_egress_data         <=  i_out_data;
               out_fifo_count        <=  out_fifo_count + 1;
+              o_egress_stb          <=  1;
               out_data_pos          <=  out_data_pos + 1;
+              if ((out_fifo_count + 1) < i_egress_size) begin
+                o_oh_ready          <=  0;
+              end
             end
           end
           else begin
@@ -385,14 +422,21 @@ always @ (posedge clk ) begin
         end
 
         if (out_data_pos >= out_data_count) begin
-          o_egress_act               <=  0;
-          oh_state                <=  IDLE;
+          oh_state                      <=  FINISHED;
+          o_egress_act                  <=  0;
+        end
+      end
+      FINISHED: begin
+        o_egr_fin                       <=  1;
+        if (!i_egr_en) begin
+          o_egr_fin                     <=  0;
+          oh_state                      <=  IDLE;
         end
       end
       default: begin
         //Should not have gotten here
-        o_egress_act                 <=  0;
-        oh_state                  <=  IDLE;
+        o_egress_act                  <=  0;
+        oh_state                      <=  IDLE;
       end
     endcase
   end
