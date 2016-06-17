@@ -1,19 +1,19 @@
 [*]
 [*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
-[*] Mon Jun 13 06:59:15 2016
+[*] Thu Jun 16 04:25:49 2016
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_logic_analyzer/cocotb/design.vcd"
-[dumpfile_mtime] "Mon Jun 13 06:57:36 2016"
-[dumpfile_size] 427611
+[dumpfile_mtime] "Thu Jun 16 04:24:38 2016"
+[dumpfile_size] 14222706
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_logic_analyzer/cocotb/waveforms.gtkw"
-[timestart] 2132
-[size] 1920 1137
+[timestart] 0
+[size] 1918 1059
 [pos] -1 -1
-*-4.102675 2208 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-16.260845 564500 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.s1.
 [sst_width] 213
-[signals_width] 180
+[signals_width] 198
 [sst_expanded] 1
 [sst_vpaned_height] 339
 @28
@@ -23,87 +23,38 @@ tb_cocotb.s1.rst
 tb_cocotb.test_id[31:0]
 @200
 -
-@28
-tb_cocotb.s1.la.clk
 @22
-tb_cocotb.s1.la.i_both_edges[31:0]
-tb_cocotb.s1.la.i_bram_addr[31:0]
-@28
-tb_cocotb.s1.la.i_cap_clk
-@22
-tb_cocotb.s1.la.i_cap_data[31:0]
-@28
-tb_cocotb.s1.la.i_cap_ext_trig
-tb_cocotb.s1.la.i_enable
-tb_cocotb.s1.la.i_force_stb
-@22
-tb_cocotb.s1.la.i_repeat_count[31:0]
-@28
-tb_cocotb.s1.la.i_restart
-@22
-tb_cocotb.s1.la.i_trigger[31:0]
-tb_cocotb.s1.la.i_trigger_edge[31:0]
-tb_cocotb.s1.la.i_trigger_mask[31:0]
-tb_cocotb.s1.la.o_bram_data[31:0]
-tb_cocotb.s1.la.o_capture_start[31:0]
-tb_cocotb.s1.la.r_repeat_count[31:0]
-@28
-tb_cocotb.s1.la.rst
-@22
-tb_cocotb.s1.la.w_cap_neg_edge[31:0]
-tb_cocotb.s1.la.w_cap_pos_edge[31:0]
-tb_cocotb.s1.la.w_cap_sig_start[31:0]
-@200
--
--
-@22
-tb_cocotb.s1.la.r_repeat_count[31:0]
-@200
--
--
-@22
-tb_cocotb.s1.la.o_capture_size[31:0]
-tb_cocotb.s1.la.r_start[4:0]
-tb_cocotb.s1.la.w_last[4:0]
-tb_cocotb.s1.la.i_trigger_after[31:0]
-@200
--
-@28
-tb_cocotb.s1.la.r_cap_wr_stb
-@22
-tb_cocotb.s1.la.r_in_pointer[4:0]
-@200
--
--
-@28
-tb_cocotb.s1.la.o_finished
-@22
-[color] 5
-tb_cocotb.s1.la.state[3:0]
-@28
-tb_cocotb.s1.la.w_cap_start
-tb_cocotb.s1.la.w_full
-@200
--
-@22
-tb_cocotb.s1.la.i_cap_data[31:0]
-tb_cocotb.s1.la.w_inv_cap_prev_data[31:0]
+tb_cocotb.s1.ula.rd_state[3:0]
+tb_cocotb.s1.ula.wr_state[3:0]
+tb_cocotb.s1.ula.o_trigger[31:0]
+tb_cocotb.s1.ula.o_trigger_mask[31:0]
+tb_cocotb.s1.ula.o_trigger_after[31:0]
+tb_cocotb.s1.ula.o_trigger_edge[31:0]
 @23
-tb_cocotb.s1.la.w_cap_pos_edge[31:0]
+tb_cocotb.s1.ula.o_both_edges[31:0]
+@22
+tb_cocotb.s1.ula.o_repeat_count[31:0]
+@28
+tb_cocotb.s1.ula.o_uart_set_value_stb
 @200
 -
 @22
-tb_cocotb.s1.la.w_inv_cap_data[31:0]
-tb_cocotb.s1.la.r_prev_cap[31:0]
+tb_cocotb.s1.ula.r_index[3:0]
+@800200
+-UART
+@22
+tb_cocotb.uart.tx_byte[7:0]
+@820
+[color] 2
+tb_cocotb.uart.tx_byte[7:0]
 @200
 -
 @22
-tb_cocotb.s1.la.w_cap_neg_edge[31:0]
-@200
--
-@22
-tb_cocotb.s1.la.w_cap_sig_start[31:0]
-tb_cocotb.s1.la.i_trigger_mask[31:0]
-tb_cocotb.s1.la.i_trigger_edge[31:0]
+tb_cocotb.uart.rx_byte[7:0]
+@820
+[color] 2
+tb_cocotb.uart.rx_byte[7:0]
+@1000200
+-UART
 [pattern_trace] 1
 [pattern_trace] 0

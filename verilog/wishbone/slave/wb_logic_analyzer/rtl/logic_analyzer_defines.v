@@ -162,6 +162,18 @@
 //LF:                   '\r'
 //CR:                   '\n'
 
+`define LA_FORCE_TRIGGER            (12 + `HEX_0)
+//reset all the state machine
+//ID:                   'w'
+//Command               '<'
+//CR:                   '\n'
+
+//Response ID:          'R'
+//Response Status:      'S' = Success, 'X' = Fail
+//LF:                   '\r'
+//CR:                   '\n'
+
+
 
 `endif
 

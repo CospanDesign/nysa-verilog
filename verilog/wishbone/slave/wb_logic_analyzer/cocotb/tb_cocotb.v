@@ -1,5 +1,7 @@
 `timescale 1ns/1ps
 
+`include "project_defines.v"
+
 module tb_cocotb (
 
 //Virtual Host Interface Signals
@@ -23,9 +25,7 @@ input   [31:0]    test_id,
 
 input             ih_reset,
 output            device_interrupt
-
 );
-
 
 //Parameters
 //Registers/Wires
@@ -129,6 +129,15 @@ wire              mem_i_ack;
 wire              mem_i_int;
 
 
+wire              w_phy_rx;
+wire              w_phy_tx;
+
+wire              uart_wr_stb;
+wire  [7:0]       uart_wr_data;
+wire              uart_wr_busy;
+wire  [7:0]       uart_rd_data;
+wire              uart_rd_stb;
+
 //Submodules
 wishbone_master wm (
   .clk            (clk            ),
@@ -173,9 +182,10 @@ wishbone_master wm (
 );
 
 //slave 1
+`define BAUDRATE (`CLOCK_RATE / 16)
 wb_logic_analyzer #(
-  .CAP_DATA_WIDTH       (32                   ),
-  .CAP_DATA_DEPTH       (5                    )
+  .DEFAULT_BAUDRATE     (`BAUDRATE            ),
+  .CAPTURE_DEPTH        (3                    ) //8
 ) s1 (
 
   .clk                  (clk                  ),
@@ -193,8 +203,31 @@ wb_logic_analyzer #(
 
   .i_la_clk             (clk                  ),
   .i_la_data            (i_la_data            ),
-  .i_la_ext_trig        (1'b0                 )
+  .i_la_ext_trig        (1'b0                 ),
 
+  .i_phy_rx             (w_phy_rx             ),
+  .o_phy_tx             (w_phy_tx             )
+
+
+
+);
+
+uart_v3 #(
+  .DEFAULT_BAUDRATE   (`BAUDRATE      )
+) uart (
+  .clk               (clk             ),
+  .rst               (rst             ),
+
+  .tx                (w_phy_rx        ),
+  .transmit          (uart_wr_stb     ),
+  .tx_byte           (uart_wr_data    ),
+  .is_transmitting   (uart_wr_busy    ),
+
+  .rx                (w_phy_tx        ),
+  .rx_byte           (uart_rd_data    ),
+  .received          (uart_rd_stb     ),
+
+  .set_clock_div     (1'h0            )
 );
 
 wishbone_interconnect wi (

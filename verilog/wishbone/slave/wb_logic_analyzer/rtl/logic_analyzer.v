@@ -21,7 +21,7 @@ module logic_analyzer # (
   input                               i_enable,
   input                               i_restart,
   output  reg [31:0]                  o_capture_start,
-  output  reg                         o_finished,
+  output  reg                         o_finished = 0,
   output      [31:0]                  o_capture_size,
 
   input       [31:0]                  i_bram_addr,
@@ -57,7 +57,6 @@ wire  [31:0]                      w_cap_pos_edge;
 wire  [31:0]                      w_cap_neg_edge;
 wire  [31:0]                      w_cap_sig_start;
 
-wire  [31:0]                      o_capture_size;
 wire                              w_cap_start;
 wire  [31:0]                      w_inv_cap_data;
 wire  [31:0]                      w_inv_cap_prev_data;
@@ -154,7 +153,13 @@ always @ (posedge i_cap_clk) begin
       CAPTURE: begin
         if (w_full) begin
           state             <=  FINISHED;
-          o_capture_start   <=  r_start - i_trigger_after;
+          if (r_start < i_trigger_after) begin
+            //Wrap around case
+            o_capture_start <=  (CAPTURE_SIZE - 1) + r_start - i_trigger_after;
+          end
+          else begin
+            o_capture_start <=  r_start - i_trigger_after;
+          end
         end
         else begin
           r_cap_wr_stb      <=  1;

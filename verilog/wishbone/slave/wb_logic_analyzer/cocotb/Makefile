@@ -20,9 +20,11 @@ VERILOG_SOURCES += ${TOPDIR}/sim/arbiter_2_masters.v
 VERILOG_SOURCES += ${TOPDIR}/sim/wishbone_mem_interconnect.v
 
 #Simulation Devices
+VERILOG_SOURCES += ${NYSA}/verilog/generic/uart_v3.v
 VERILOG_SOURCES += ${NYSA}/verilog/generic/dpb.v
 VERILOG_SOURCES += ${NYSA}/verilog/generic/cross_clock_enable.v
 VERILOG_SOURCES += ${NYSA}/verilog/generic/cross_clock_strobe.v
+VERILOG_SOURCES += ${TOPDIR}/rtl/uart_la_interface.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/logic_analyzer.v
 VERILOG_SOURCES += ${TOPDIR}/rtl/wb_logic_analyzer.v
 #DUT
