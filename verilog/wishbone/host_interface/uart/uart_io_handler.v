@@ -151,8 +151,8 @@ uart_v3 #(
 
   .set_clock_div      (1'b0               ),
 
-  .user_clock_div     (def_clock_div      ),
-  .default_clock_div  (def_clock_div      )
+  .user_clock_div     (1'b0               ),
+  .default_clock_div  (1'b0               )
 );
 
 //Asynchronous Logic
@@ -340,7 +340,7 @@ always @ (posedge clk) begin
         end
       end
       WRITE_DATA_COUNT: begin
-        out_byte        <=  gen_data_count;
+        out_byte            <=  gen_data_count;
         li_out_data_count_buf   <= li_out_data_count_buf[27:0] << 4;
         uart_out_byte_en    <= 1;
         uart_wait_for_tx    <= 1;
