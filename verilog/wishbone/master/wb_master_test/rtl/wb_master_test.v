@@ -124,6 +124,7 @@ always @ (posedge clk) begin
               //  THIS IS WHAT THE USER WILL READ FROM ADDRESS 0
               $display("ADDR: %h user wrote %h", i_wbs_adr, i_wbs_dat);
               r_control <=  i_wbs_dat;
+              o_wbs_int <=  i_wbs_dat[1];
             end
             ADDR_1: begin
               //writing something to address 1

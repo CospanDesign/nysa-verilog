@@ -152,7 +152,6 @@ uart_v3 #(
   .is_receiving       (uart_in_busy       ),
 
   .set_clock_div      (1'b0               )
-
 );
 
 //Asynchronous Logic
@@ -334,7 +333,7 @@ always @ (posedge clk) begin
             li_out_status     <= i_out_status;
             li_out_address    <= i_out_address;
             li_out_data       <= i_out_data;
-     
+
             out_byte          <= CHAR_S;
             out_state         <= WRITE_DATA_COUNT;
             o_oh_ready        <= 0;
@@ -369,13 +368,13 @@ always @ (posedge clk) begin
           else begin
             out_nibble_count    <= out_nibble_count + 1;
           end
-     
+
         end
         WRITE_ADDRESS: begin
           out_byte            <=  gen_address;
           li_out_address      <= (li_out_address[31:0] << 4);
           uart_wr_stb         <= 1;
-     
+
           if (out_nibble_count >= 7) begin
             out_state     <= WRITE_DATA;
             out_nibble_count  <= 4'h0;
@@ -383,15 +382,15 @@ always @ (posedge clk) begin
           else begin
             out_nibble_count    <= out_nibble_count + 1;
           end
-     
+
         end
         WRITE_DATA: begin
           out_byte              <=  gen_data;
-     
+
           li_out_data           <= (li_out_data[28:0] << 4);
           uart_wr_stb           <= 1;
           out_nibble_count      <= out_nibble_count + 1;
-     
+
           if (out_nibble_count >= 7) begin
             out_state           <= SEND_DATA_TO_HOST;
             out_data_pos        <= out_data_pos + 1;

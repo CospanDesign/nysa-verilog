@@ -91,10 +91,9 @@ def first_test(dut):
 
 
 @cocotb.test(skip = False)
-def memory_write_test(dut):
+def memory_read_write_test(dut):
 
     dut.test_id <= 1
-
 
     print "module path: %s" % MODULE_PATH
     nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
@@ -104,11 +103,7 @@ def memory_write_test(dut):
     yield (nysa.wait_clocks(10))
     nysa.pretty_print_sdb()
     driver = wb_master_testDriver(nysa, nysa.find_device(wb_master_testDriver)[0])
-    #yield cocotb.external(driver.set_control)(0x01)
     yield (nysa.wait_clocks(10))
-    #v = yield cocotb.external(driver.get_control)()
-    #dut.log.info("V: %d" % v)
-    #dut.log.info("DUT Opened!")
     dut.log.info("Ready")
     LENGTH = 100
     DATA = Array('B')
@@ -119,17 +114,54 @@ def memory_write_test(dut):
         DATA.append(0)
 
     yield cocotb.external(nysa.write_memory)(0x00000, DATA)
-    yield (nysa.wait_clocks(4000))
-    data = yield cocotb.external(nysa.read_memory)(0x00000, len(DATA))
-    print "Data: %s" % str(data)
+    data = yield cocotb.external(nysa.read_memory)(0x00000, (len(DATA) / 4))
+    for i in range (len(DATA)):
+        if DATA[i] != data[i]:
+            log.error("Failed at Address: %04d: 0x%02X != 0x%02X" % (i, DATA[i], data[i]))
 
-
-
-
-@cocotb.test(skip = True)
-def memory_read_test(dut):
+@cocotb.test(skip = False)
+def long_memory_read_write_test(dut):
 
     dut.test_id <= 2
+
+    print "module path: %s" % MODULE_PATH
+    nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
+    setup_dut(dut)
+    yield(nysa.reset())
+    nysa.read_sdb()
+    yield (nysa.wait_clocks(10))
+    nysa.pretty_print_sdb()
+    driver = wb_master_testDriver(nysa, nysa.find_device(wb_master_testDriver)[0])
+    yield (nysa.wait_clocks(10))
+    dut.log.info("Ready")
+    LENGTH = 1024
+    DATA = Array('B')
+    for i in range (LENGTH):
+        DATA.append(i % 256)
+
+    while len(DATA) % 4 != 0:
+        DATA.append(0)
+
+    yield cocotb.external(nysa.write_memory)(0x00000, DATA)
+    data = yield cocotb.external(nysa.read_memory)(0x00000, (len(DATA) / 4))
+    for i in range (len(DATA)):
+        if DATA[i] != data[i]:
+            log.error("Failed at Address: %04d: 0x%02X != 0x%02X" % (i, DATA[i], data[i]))
+
+
+@cocotb.test(skip = False)
+def interrupt_test(dut):
+    """
+    Description:
+        Initiate an interrupt
+
+    Test ID: 3
+
+    Expected Results:
+        Detect an interrupt
+    """
+
+    dut.test_id <= 3
 
 
     print "module path: %s" % MODULE_PATH
@@ -140,24 +172,8 @@ def memory_read_test(dut):
     yield (nysa.wait_clocks(10))
     nysa.pretty_print_sdb()
     driver = wb_master_testDriver(nysa, nysa.find_device(wb_master_testDriver)[0])
-    #yield cocotb.external(driver.set_control)(0x01)
-    yield (nysa.wait_clocks(10))
-    #v = yield cocotb.external(driver.get_control)()
-    #dut.log.info("V: %d" % v)
-    #dut.log.info("DUT Opened!")
-    dut.log.info("Ready")
-    LENGTH = 100
-    DATA = Array('B')
-    for i in range (LENGTH):
-        DATA.append(i % 256)
+    yield cocotb.external(driver.set_control)(0x02)
 
-    while len(DATA) % 4 != 0:
-        DATA.append(0)
-
-    #yield cocotb.external(nysa.write_memory)(0x00000, DATA)
-    data = yield cocotb.external(nysa.read_memory)(0x00000, len(DATA))
-    print "Data: %s" % str(data)
-
-    yield (nysa.wait_clocks(4000))
+    yield (nysa.wait_clocks(1000))
 
 

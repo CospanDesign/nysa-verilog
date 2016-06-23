@@ -21,6 +21,7 @@ input               egress_act,
 input               egress_stb,
 output      [31:0]  egress_data,
 output      [23:0]  egress_size
+
 );
 
 reg                 r_rst;

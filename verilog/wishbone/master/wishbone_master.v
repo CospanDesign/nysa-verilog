@@ -325,7 +325,7 @@ assign              o_mem_sel         = 4'hF;
 assign  o_per_cyc = w_mem_bus_select  ? 1'b0          : r_wb_cyc;
 assign  o_per_we  = w_mem_bus_select  ? 1'b0          : r_wb_we;
 assign  o_per_stb = w_mem_bus_select  ? 1'b0          : r_wb_stb;
-assign  o_per_adr = w_mem_bus_select  ? 32'hFFFFFFFF  : r_wb_adr; //When not used slect Interrupt
+assign  o_per_adr = w_mem_bus_select  ? 32'h0         : (state == IDLE) ? 32'hFFFFFFFF: r_wb_adr; //When not used slect Interrupt
 assign  o_per_dat = w_mem_bus_select  ? 32'b0         : r_wb_dat;
 
 assign  o_mem_cyc = w_mem_bus_select  ? r_wb_cyc      : 1'b0;
@@ -415,8 +415,6 @@ always @ (posedge clk) begin
       end
       READ_INGRESS_FIFO: begin
         r_ingress_stb         <=  1;
-        //w_command             <=  w_ingress_data[15:0];
-        //w_flags               <=  w_ingress_data[31:16];
         r_ingress_count       <=  r_ingress_count + 1;
         r_header[r_hdr_count] <=  w_ingress_data;
 
@@ -425,24 +423,8 @@ always @ (posedge clk) begin
       PARSE_COMMAND: begin
         if (r_ingress_act) begin
           if (r_ingress_count < `HEADER_SIZE) begin
-            //r_hdr_count           <=  r_hdr_count + 1;
             r_ingress_count       <=  r_ingress_count + 1;
             r_ingress_stb         <=  1;
-            //r_header[r_hdr_count] <=  w_ingress_data;
-            /*
-            case (r_ingress_count)
-              `COMMAND_POS: begin
-                w_command     <=  w_ingress_data[15:0];
-                w_flags       <=  w_ingress_data[31:16];
-              end
-              `DATA_COUNT_POS: begin
-                w_data_size   <=  w_ingress_data;
-              end
-              `ADDRESS_POS: begin 
-                r_address     <=  w_ingress_data;
-              end
-            endcase
-            */
           end
           else if (r_ingress_count >= w_ingress_size) begin
             r_ingress_act         <=  0;

@@ -84,27 +84,25 @@ class PPFIFOEgress(BusDriver):
         data_pos = 0
         length = byte_length / 4
         self.data = Array('B')
-        #log.info("Length: %d" % length)
 
         while data_pos < length:
             self.bus.stb            <=  0
+            if self.bus.stb.value:
+                self.data.extend(create_byte_array_from_dword(self.bus.data.value))
+                fifo_pos        +=  1
+                data_pos        +=  1
+
             if self.bus.rdy.value and not self.bus.act.value:
                 fifo_pos            =  0
                 self.bus.act        <=  1
 
             elif self.bus.act.value:
-                #log.info("Active: 0x%0X, Size: %d" % (self.bus.act.value, self.bus.size))
                 if fifo_pos < self.bus.size.value:
-                    #log.info("Reading a peice of data")
-                    self.data.extend(create_byte_array_from_dword(self.bus.data.value))
                     self.bus.stb    <=  1
-                    fifo_pos        +=  1
-                    data_pos        +=  1
                 else:
                     self.bus.act    <=  0
 
             yield RisingEdge(self.clock)
 
         yield RisingEdge(self.clock)
-        #log.info("Done!")
 
