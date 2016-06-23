@@ -90,8 +90,9 @@ reg   [31:0]                r_wr_pos;
 
 
 //Register/Wires
-reg   [3:0]                 rd_state;
-reg   [3:0]                 wr_state;
+reg   [3:0]                 rd_state = IDLE;
+reg                         r_lcl_rst = 1;
+reg   [3:0]                 wr_state = IDLE;
 
 reg                         r_wr_en;
 reg                         r_wr_fin;
@@ -153,7 +154,7 @@ always @ (posedge clk) begin
   o_la_reset                  <= 0;
   o_force_trigger             <= 0;
 
-  if (rst) begin
+  if (rst || r_lcl_rst) begin
     o_en_la                   <= 0;
     r_index                   <= 0;
 
@@ -302,6 +303,9 @@ always @ (posedge clk) begin
       end
     endcase
     //write data back to the host
+    if (wr_state == SEND_DATA_PACKET) begin
+      o_en_la                         <=  0;
+    end
   end
 end
 
@@ -324,11 +328,12 @@ always @ (posedge clk) begin
   r_uart_wr_stb                   <= 0;
   r_wr_fin                        <= 0;
 
-  if (rst) begin
-    r_uart_wr_data                <= 0;
+  if (rst || r_lcl_rst) begin
+    r_uart_wr_data                <= `CARRIAGE_RETURN;
     wr_state                      <= IDLE;
     o_la_rd_addr                  <= 0;
     r_wr_pos                      <= 0;
+    r_lcl_rst                     <= 0;
   end
   else begin
     case (wr_state)

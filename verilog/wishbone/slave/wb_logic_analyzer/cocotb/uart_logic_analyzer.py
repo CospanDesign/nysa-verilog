@@ -46,7 +46,7 @@ class UARTLogicAnalyzer(object):
         self.start_pos = 0
         if sim:
             self.uart = uart_path
-            
+
     @cocotb.coroutine
     def ping(self):
         yield self.uart.write(Array('B', "W0\n"))

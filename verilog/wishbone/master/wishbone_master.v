@@ -172,29 +172,26 @@ module wishbone_master (
   // wires
   wire [15:0]         command_flags;
   wire                enable_nack;
-
   wire [15:0]         real_command;
-
   wire                pos_edge_reset;
 
   // assigns
   assign              o_data_count      = ((state == READ) || (state == DUMP_CORE)) ? local_data_count : 28'h0;
   assign              command_flags     = i_command[31:16];
   assign              real_command      = i_command[15:0];
-
   assign              enable_nack       = master_flags[0];
-
   assign              pos_edge_reset    = rst & ~prev_reset;
 
-
+/*
 initial begin
-//$monitor("%t, int: %h, ih_ready: %h, ack: %h, stb: %h, cyc: %h", $time, i_per_int, i_ready, i_per_ack, o_per_stb_o, o_per_cyc_o);
-//$monitor( "%t, cyc: %h, stb: %h, ack: %h, i_ready: %h, o_en: %h, o_master_ready: %h",
-//          $time, o_per_cyc, o_per_stb, i_per_ack, i_ready, o_en, o_master_ready);
+$monitor("%t, int: %h, ih_ready: %h, ack: %h, stb: %h, cyc: %h", $time, i_per_int, i_ready, i_per_ack, o_per_stb_o, o_per_cyc_o);
+$monitor( "%t, cyc: %h, stb: %h, ack: %h, i_ready: %h, o_en: %h, o_master_ready: %h",
+          $time, o_per_cyc, o_per_stb, i_per_ack, i_ready, o_en, o_master_ready);
 
-//$monitor( "%t, addr: %h, data: %h", $time, o_per_adr, o_per_dat);
+$monitor( "%t, addr: %h, data: %h", $time, o_per_adr, o_per_dat);
 
 end
+*/
 
 
 //blocks
@@ -206,13 +203,13 @@ always @ (posedge clk) begin
 //clock cycle, but in the future this should be used to regulate data comming in so that the master can send data to the slaves without overflowing any buffers
   //o_master_ready  <= 1;
   if (pos_edge_reset) begin
-    dump_state        <=  state;
-    dump_status       <=  {26'h0, i_ih_rst, i_out_ready, o_en, i_ready, o_master_ready, mem_bus_select};
-    dump_flags        <=  master_flags;
-    dump_nack_count   <=  nack_count;
-    dump_lcommand     <=  {command_flags, real_command};
-    dump_laddress     <=  i_address;
-    dump_ldata_count  <=  local_data_count;
+    dump_state         <=  state;
+    dump_status        <=  {26'h0, i_ih_rst, i_out_ready, o_en, i_ready, o_master_ready, mem_bus_select};
+    dump_flags         <=  master_flags;
+    dump_nack_count    <=  nack_count;
+    dump_lcommand      <=  {command_flags, real_command};
+    dump_laddress      <=  i_address;
+    dump_ldata_count   <=  local_data_count;
     dump_per_state     <=  {11'h0, o_per_cyc, o_per_stb, o_per_we, i_per_ack, i_per_int,  12'h0, o_mem_cyc, o_mem_stb, o_mem_we, i_mem_ack};
     dump_per_p_addr    <=  o_per_adr;
     dump_per_p_dat_in  <=  i_per_dat;
@@ -220,19 +217,13 @@ always @ (posedge clk) begin
     dump_per_m_addr    <=  o_mem_adr;
     dump_per_m_dat_in  <=  i_mem_dat;
     dump_per_m_dat_out <=  o_mem_dat;
-
-
-
   end
 
   if (rst || i_ih_rst) begin
-
-
-
-    o_status        <= 32'h0;
-    o_address       <= 32'h0;
-    o_data          <= 32'h0;
-    //o_data_count  <= 28'h0;
+    o_status          <= 32'h0;
+    o_address         <= 32'h0;
+    o_data            <= 32'h0;
+    //o_data_count      <= 28'h0;
     local_address     <= 32'h0;
     //local_data        <= 32'h0;
     local_data_count  <= 28'h0;

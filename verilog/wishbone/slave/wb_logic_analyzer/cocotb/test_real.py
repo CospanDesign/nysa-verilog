@@ -15,6 +15,7 @@ from nysa.common.status import Status
 from nysa.host.driver.utils import *
 from nysa.host.driver.logic_analyzer import LogicAnalyzer
 from nysa.host.driver.logic_analyzer import *
+from nysa.host.nysa import NysaCommError
 
 from nysa.host.platform_scanner import PlatformScanner
 
@@ -60,20 +61,23 @@ class Test (unittest.TestCase):
 
             for name in instances_dict:
 
-                #s.Verbose("Found Platform Item: %s" % str(platform_item))
-                n = instances_dict[name]
-                plat = ["", None, None]
-
-                if n is not None:
-                    self.s.Important("Found a nysa instance: %s" % name)
-                    n.read_sdb()
-                    #import pdb; pdb.set_trace()
-                    if n.is_device_in_platform(DRIVER):
-                        plat = [platform_name, name, n]
-                        break
+                try:
+                    #s.Verbose("Found Platform Item: %s" % str(platform_item))
+                    n = instances_dict[name]
+                    plat = ["", None, None]
+                    
+                    if n is not None:
+                        self.s.Important("Found a nysa instance: %s" % name)
+                        n.read_sdb()
+                        #import pdb; pdb.set_trace()
+                        if n.is_device_in_platform(DRIVER):
+                            plat = [platform_name, name, n]
+                            break
+                        continue
+                    
+                    #self.s.Verbose("\t%s" % psi)
+                except NysaCommError:
                     continue
-
-                #self.s.Verbose("\t%s" % psi)
 
         if plat[1] is None:
             self.driver = None
@@ -88,10 +92,18 @@ class Test (unittest.TestCase):
         self.s.Info("Instantiated a PCIE Device Device: %s" % pcie_urn)
 
     def test_device(self):
+        print "Getting clock rate"
+        clock_rate = self.driver.get_clock_rate()
+        print "Clock Rate: %d" % clock_rate
         #print "Is enabled: %s" % self.driver.is_enabled()
         self.driver.enable(False)
-        self.driver.set_trigger         (0x00000001)
-        self.driver.set_trigger_mask    (0x00000001)
+        print "Is UART Enabled: %s" % self.driver.is_uart_enabled()
+        print "Enable UART"
+        self.driver.enable_uart_control(True)
+        print "Is UART Enabled: %s" % self.driver.is_uart_enabled()
+        '''
+        self.driver.set_trigger         (0x00000000)
+        self.driver.set_trigger_mask    (0x00000000)
         self.driver.set_trigger_edge    (0xFFFFFFFF)
         self.driver.set_repeat_count    (0x00000000)
 
@@ -115,6 +127,7 @@ class Test (unittest.TestCase):
         f.close()
         #self.driver.enable(False)
         #print "Is Finished: %s" % self.driver.is_finished()
+        '''
 
 
 if __name__ == "__main__":

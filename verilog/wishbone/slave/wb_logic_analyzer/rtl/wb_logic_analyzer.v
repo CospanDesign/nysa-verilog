@@ -122,8 +122,6 @@ localparam    START_POS     = 32'h00000009;
 localparam    CLOCK_RATE    = 32'h0000000A;
 localparam    READ_DATA     = 32'h0000000B;
 
-localparam    CAPTURE_SIZE = 2**CAPTURE_DEPTH;
-
 //Local Registers/Wires
 reg   [31:0]          r_trigger;
 reg   [31:0]          r_trigger_mask;
@@ -174,8 +172,8 @@ wire    [31:0]        w_uart_both_edges;
 wire    [31:0]        w_uart_repeat_count;
 wire                  w_uart_la_reset;
 wire                  w_uart_la_force_trig;
-                      
-                      
+
+
 wire                  w_uart_set_stb;
 wire                  w_uart_la_en;
 wire                  uart_la_reset;
@@ -307,7 +305,7 @@ always @ (posedge clk) begin
 
     //when the master acks our ack, then put our ack down
     if (o_wbs_ack && ~i_wbs_stb)begin
-      o_wbs_ack <= 0;
+      o_wbs_ack             <= 0;
     end
 
     if (i_wbs_stb && i_wbs_cyc) begin
@@ -356,6 +354,7 @@ always @ (posedge clk) begin
               o_wbs_dat[`CONTROL_ENABLE_INTERRUPT]  <= r_ctr_int_en;
               o_wbs_dat[`CONTROL_ENABLE_LA]         <= r_ctr_en_la;
               o_wbs_dat[`CONTROL_RESTART_LA]        <= r_ctr_restart_la;
+              o_wbs_dat[`CONTROL_ENABLE_UART]       <= r_uart_en;
               o_wbs_ack <=  1;
             end
             STATUS: begin

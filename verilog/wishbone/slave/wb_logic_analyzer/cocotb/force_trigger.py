@@ -17,6 +17,7 @@ from nysa.host.driver.logic_analyzer import LogicAnalyzer
 from nysa.host.driver.logic_analyzer import *
 
 from nysa.host.platform_scanner import PlatformScanner
+from nysa.host.nysa import NysaCommError
 
 DRIVER = LogicAnalyzer
 
@@ -60,20 +61,23 @@ class Test (unittest.TestCase):
 
             for name in instances_dict:
 
-                #s.Verbose("Found Platform Item: %s" % str(platform_item))
-                n = instances_dict[name]
-                plat = ["", None, None]
-
-                if n is not None:
-                    self.s.Important("Found a nysa instance: %s" % name)
-                    n.read_sdb()
-                    #import pdb; pdb.set_trace()
-                    if n.is_device_in_platform(DRIVER):
-                        plat = [platform_name, name, n]
-                        break
+                try:
+                    #s.Verbose("Found Platform Item: %s" % str(platform_item))
+                    n = instances_dict[name]
+                    plat = ["", None, None]
+                 
+                    if n is not None:
+                        self.s.Important("Found a nysa instance: %s" % name)
+                        n.read_sdb()
+                        #import pdb; pdb.set_trace()
+                        if n.is_device_in_platform(DRIVER):
+                            plat = [platform_name, name, n]
+                            break
+                        continue
+                 
+                    #self.s.Verbose("\t%s" % psi)
+                except NysaCommError:
                     continue
-
-                #self.s.Verbose("\t%s" % psi)
 
         if plat[1] is None:
             self.driver = None
