@@ -109,9 +109,8 @@ reg     [27:0]      in_data_count;
 
 wire                uart_out_busy;
 wire                uart_tx_ready;
-reg                 uart_out_byte_en;
+reg                 uart_wr_stb;
 reg                 oh_finished;
-reg                 uart_wait_for_tx;
 
 reg     [27:0]      li_out_data_count;
 reg     [27:0]      li_out_data_count_buf;
@@ -137,7 +136,7 @@ uart_v3 #(
   .rst                (rst                ),
 
   .tx                 (o_phy_uart_out     ),
-  .transmit           (uart_out_byte_en   ),
+  .transmit           (uart_wr_stb        ),
   .tx_byte            (out_byte           ),
   .is_transmitting    (uart_out_busy      ),
 
@@ -149,10 +148,8 @@ uart_v3 #(
 
   .prescaler          (                   ),
 
-  .set_clock_div      (1'b0               ),
+  .set_clock_div      (1'b0               )
 
-  .user_clock_div     (def_clock_div      ),
-  .default_clock_div  (def_clock_div      )
 );
 
 //Asynchronous Logic
@@ -160,7 +157,6 @@ assign          user_command   =  o_in_command[15:0];
 assign          is_writing     =  (user_command == `COMMAND_WRITE);
 assign          is_reading     =  (user_command == `COMMAND_READ);
 assign          o_ih_reset     =  0;
-assign          uart_tx_ready  =  ~uart_out_busy;
 assign          in_nibble      =  (in_byte >= CHAR_A) ? (in_byte - CHAR_HEX_OFFSET) :
                                                         (in_byte - CHAR_0);
 assign          illegal_value  =  (in_byte < CHAR_0) || ((in_byte > CHAR_0 + 10) && (in_byte < CHAR_A)) || (in_byte > CHAR_F);
@@ -291,9 +287,8 @@ end
 //output handler
 always @ (posedge clk) begin
 
-  //uart_out_byte_en should only be high for one clock cycle
   oh_finished               <= 0;
-  uart_out_byte_en          <= 0;
+  uart_wr_stb               <= 0;
   o_oh_ready                <= 0;
 
   if (rst) begin
@@ -305,7 +300,6 @@ always @ (posedge clk) begin
     li_out_data             <= 32'h0;
     li_out_status           <= 32'h0;
     li_out_address          <= 32'h0;
-    uart_wait_for_tx        <= 0;
     o_oh_ready              <= 0;
     out_data_count          <= 0;
     out_data_pos            <= 0;
@@ -313,110 +307,101 @@ always @ (posedge clk) begin
 
   else begin
     //don't do anything until the UART is ready
-    if (~uart_wait_for_tx & uart_tx_ready) begin
-    case (out_state)
-      IDLE: begin
-        out_byte            <=  8'h0;
-        out_nibble_count    <=  4'h0;
-        o_oh_ready          <=  1'h1;
-        out_data_pos        <=  0;
-        if (i_oh_en) begin
-//moved this outside because by the time it reaches this part, the out data_count is
-//changed
-          li_out_status     <= i_out_status;
-          li_out_address    <= i_out_address;
-          li_out_data       <= i_out_data;
-
-          out_byte          <= CHAR_S;
-          out_state         <= WRITE_DATA_COUNT;
-          o_oh_ready        <= 0;
-          uart_out_byte_en  <= 1;
-          uart_wait_for_tx  <= 1;
-        end
-        else begin
-          li_out_data_count     <= 0;
-          li_out_data_count_buf <= i_out_data_count;
-          out_data_count        <= i_out_data_count;
-        end
-      end
-      WRITE_DATA_COUNT: begin
-        out_byte        <=  gen_data_count;
-        li_out_data_count_buf   <= li_out_data_count_buf[27:0] << 4;
-        uart_out_byte_en    <= 1;
-        uart_wait_for_tx    <= 1;
-        if (out_nibble_count >= 6) begin
-          out_state     <= WRITE_STATUS;
-          out_nibble_count  <= 4'h0;
-        end
-        else begin
-          out_nibble_count    <= out_nibble_count + 1;
-        end
-      end
-      WRITE_STATUS: begin
-        out_byte            <=  gen_status;
-        li_out_status       <= (li_out_status[31:0] << 4);
-        uart_out_byte_en    <= 1;
-        uart_wait_for_tx    <= 1;
-        if (out_nibble_count >= 7) begin
-          out_state     <= WRITE_ADDRESS;
-          out_nibble_count  <= 4'h0;
-        end
-        else begin
-          out_nibble_count    <= out_nibble_count + 1;
-        end
-
-      end
-      WRITE_ADDRESS: begin
-        out_byte            <=  gen_address;
-        li_out_address      <= (li_out_address[31:0] << 4);
-        uart_out_byte_en    <= 1;
-        uart_wait_for_tx    <= 1;
-
-        if (out_nibble_count >= 7) begin
-          out_state     <= WRITE_DATA;
-          out_nibble_count  <= 4'h0;
-        end
-        else begin
-          out_nibble_count    <= out_nibble_count + 1;
-        end
-
-      end
-      WRITE_DATA: begin
-        out_byte              <=  gen_data;
-
-        li_out_data           <= (li_out_data[28:0] << 4);
-        uart_out_byte_en      <= 1;
-        uart_wait_for_tx      <= 1;
-        out_nibble_count      <= out_nibble_count + 1;
-
-        if (out_nibble_count >= 7) begin
-          out_state           <= SEND_DATA_TO_HOST;
-          out_data_pos        <= out_data_pos + 1;
-          out_nibble_count    <= 4'h0;
-        end
-      end
-      SEND_DATA_TO_HOST: begin
-        if (out_data_pos < out_data_count) begin
-          o_oh_ready            <=  1;
-          if (i_oh_en && o_oh_ready) begin
-            li_out_data         <= i_out_data;
-            out_state           <= WRITE_DATA;
+    if (!uart_wr_stb && !uart_out_busy) begin
+      case (out_state)
+        IDLE: begin
+          out_byte            <=  8'h0;
+          out_nibble_count    <=  4'h0;
+          o_oh_ready          <=  1'h1;
+          out_data_pos        <=  0;
+          if (i_oh_en) begin
+            //moved this outside because by the time it reaches this part, the out data_count is
+            //changed
+            li_out_status     <= i_out_status;
+            li_out_address    <= i_out_address;
+            li_out_data       <= i_out_data;
+     
+            out_byte          <= CHAR_S;
+            out_state         <= WRITE_DATA_COUNT;
+            o_oh_ready        <= 0;
+            uart_wr_stb       <= 1;
+          end
+          else begin
+            li_out_data_count     <= 0;
+            li_out_data_count_buf <= i_out_data_count;
+            out_data_count        <= i_out_data_count;
           end
         end
-        else begin
-          oh_finished           <= 1;
-          out_state             <= IDLE;
+        WRITE_DATA_COUNT: begin
+          out_byte                <=  gen_data_count;
+          li_out_data_count_buf   <= li_out_data_count_buf[27:0] << 4;
+          uart_wr_stb             <= 1;
+          if (out_nibble_count >= 6) begin
+            out_state             <= WRITE_STATUS;
+            out_nibble_count      <= 4'h0;
+          end
+          else begin
+            out_nibble_count    <= out_nibble_count + 1;
+          end
         end
-      end
-      default: begin
-          out_state <=  IDLE;
-      end
-    endcase
+        WRITE_STATUS: begin
+          out_byte            <=  gen_status;
+          li_out_status       <= (li_out_status[31:0] << 4);
+          uart_wr_stb         <= 1;
+          if (out_nibble_count >= 7) begin
+            out_state     <= WRITE_ADDRESS;
+            out_nibble_count  <= 4'h0;
+          end
+          else begin
+            out_nibble_count    <= out_nibble_count + 1;
+          end
+     
+        end
+        WRITE_ADDRESS: begin
+          out_byte            <=  gen_address;
+          li_out_address      <= (li_out_address[31:0] << 4);
+          uart_wr_stb         <= 1;
+     
+          if (out_nibble_count >= 7) begin
+            out_state     <= WRITE_DATA;
+            out_nibble_count  <= 4'h0;
+          end
+          else begin
+            out_nibble_count    <= out_nibble_count + 1;
+          end
+     
+        end
+        WRITE_DATA: begin
+          out_byte              <=  gen_data;
+     
+          li_out_data           <= (li_out_data[28:0] << 4);
+          uart_wr_stb           <= 1;
+          out_nibble_count      <= out_nibble_count + 1;
+     
+          if (out_nibble_count >= 7) begin
+            out_state           <= SEND_DATA_TO_HOST;
+            out_data_pos        <= out_data_pos + 1;
+            out_nibble_count    <= 4'h0;
+          end
+        end
+        SEND_DATA_TO_HOST: begin
+          if (out_data_pos < out_data_count) begin
+            o_oh_ready            <=  1;
+            if (i_oh_en && o_oh_ready) begin
+              li_out_data         <= i_out_data;
+              out_state           <= WRITE_DATA;
+            end
+          end
+          else begin
+            oh_finished           <= 1;
+            out_state             <= IDLE;
+          end
+        end
+        default: begin
+            out_state <=  IDLE;
+        end
+      endcase
     end
-  end
-
-  if (~uart_tx_ready) begin
-    uart_wait_for_tx    <= 0;
   end
 end
 
