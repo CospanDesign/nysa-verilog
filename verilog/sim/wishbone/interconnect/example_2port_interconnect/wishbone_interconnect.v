@@ -175,12 +175,12 @@ assign o_m_int  = (interrupts != 0);
 
 
 
-assign o_s0_we    =  (slave_select == ADDR_0) ? i_m_we: 0;
-assign o_s0_stb   =  (slave_select == ADDR_0) ? i_m_stb: 0;
-assign o_s0_sel   =  (slave_select == ADDR_0) ? i_m_sel: 0;
-assign o_s0_cyc   =  (slave_select == ADDR_0) ? i_m_cyc: 0;
-assign o_s0_adr   =  (slave_select == ADDR_0) ? {8'h0 , i_m_adr[23:0]}: 0;
-assign o_s0_dat   =  (slave_select == ADDR_0) ? i_m_dat: 0;
+assign o_s0_we    = (slave_select == ADDR_0) ? i_m_we: 0;
+assign o_s0_stb   = (slave_select == ADDR_0) ? i_m_stb: 0;
+assign o_s0_sel   = (slave_select == ADDR_0) ? i_m_sel: 0;
+assign o_s0_cyc   = (slave_select == ADDR_0) ? i_m_cyc: 0;
+assign o_s0_adr   = (slave_select == ADDR_0) ? {8'h0 , i_m_adr[23:0]}: 0;
+assign o_s0_dat   = (slave_select == ADDR_0) ? i_m_dat: 0;
 
 assign o_s1_we    = (slave_select == ADDR_1) ? i_m_we: 0;
 assign o_s1_stb   = (slave_select == ADDR_1) ? i_m_stb: 0;
