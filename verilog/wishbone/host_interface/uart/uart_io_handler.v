@@ -32,6 +32,7 @@ SOFTWARE.
 
 //generalize the uart handler
 `include "cbuilder_defines.v"
+`define LINE_FEED             8'h0A
 
 module uart_io_handler #(
   parameter BAUDRATE  = 115200
@@ -59,6 +60,8 @@ module uart_io_handler #(
   input [31:0]        i_out_address,
   input [31:0]        i_out_data,
   input [27:0]        i_out_data_count,
+
+  output [31:0]       o_ih_debug,
 
   //these are the only thing that are different between xxx_io_handler
   input               i_phy_uart_in,
@@ -125,12 +128,14 @@ wire                illegal_value;
 
 wire    [7:0]       gen_data_count;
 wire    [7:0]       gen_status;
-wire    [7:0]       gen_addr;
+wire    [7:0]       gen_address;
 wire    [7:0]       gen_data;
+
 
 //Submodules
 uart_v3 #(
-  .DEFAULT_BAUDRATE   (BAUDRATE           )
+  .DEFAULT_BAUDRATE   (BAUDRATE           ),
+  .STOP_BITS          (2                  )
 )uart(
   .clk                (clk                ),
   .rst                (rst                ),
@@ -146,25 +151,34 @@ uart_v3 #(
   .received           (in_byte_available  ),
   .is_receiving       (uart_in_busy       ),
 
-  .prescaler          (                   ),
-
   .set_clock_div      (1'b0               )
 
 );
 
 //Asynchronous Logic
-assign          user_command   =  o_in_command[15:0];
-assign          is_writing     =  (user_command == `COMMAND_WRITE);
-assign          is_reading     =  (user_command == `COMMAND_READ);
-assign          o_ih_reset     =  0;
-assign          in_nibble      =  (in_byte >= CHAR_A) ? (in_byte - CHAR_HEX_OFFSET) :
-                                                        (in_byte - CHAR_0);
-assign          illegal_value  =  (in_byte < CHAR_0) || ((in_byte > CHAR_0 + 10) && (in_byte < CHAR_A)) || (in_byte > CHAR_F);
+assign user_command   =  o_in_command[15:0];
+assign is_writing     =  (user_command == `COMMAND_WRITE);
+assign is_reading     =  (user_command == `COMMAND_READ);
+assign o_ih_reset     =  1'b0;
+assign in_nibble      =  (in_byte >= CHAR_A) ? (in_byte - CHAR_HEX_OFFSET) :
+                                               (in_byte - CHAR_0);
+assign illegal_value  =   (in_byte < CHAR_0)                              ||
+                         ((in_byte > CHAR_0 + 10) && (in_byte < CHAR_A))  ||
+                          (in_byte > CHAR_F);
 
-assign          gen_data_count  = (li_out_data_count_buf[27:24] < 10) ? li_out_data_count_buf[27:24] + CHAR_0 : li_out_data_count_buf[27:24] + CHAR_HEX_OFFSET;
-assign          gen_status      = (li_out_status[31:28] < 10) ? li_out_status[31:28] + CHAR_0 : li_out_status + CHAR_HEX_OFFSET;
-assign          gen_address     = (li_out_address[31:28] < 10) ? li_out_address[31:28] + CHAR_0 : li_out_address[31:28] + CHAR_HEX_OFFSET;
-assign          gen_data        = (li_out_data[31:28] < 10) ? li_out_data[31:28] + CHAR_0 : li_out_data[31:28] + CHAR_HEX_OFFSET;
+assign gen_data_count = (li_out_data_count_buf[27:24] < 8'hA) ? li_out_data_count_buf[27:24] + CHAR_0 :
+                                                                li_out_data_count_buf[27:24] + CHAR_HEX_OFFSET;
+assign gen_status     = (li_out_status[31:28] < 8'hA)         ? li_out_status[31:28]         + CHAR_0 :
+                                                                li_out_status[31:28]         + CHAR_HEX_OFFSET;
+assign gen_address    = (li_out_address[31:28] < 8'hA)        ? li_out_address[31:28]        + CHAR_0 :
+                                                                li_out_address[31:28]        + CHAR_HEX_OFFSET;
+assign gen_data       = (li_out_data[31:28] < 8'hA)           ? li_out_data[31:28]           + CHAR_0 :
+                                                                li_out_data[31:28]           + CHAR_HEX_OFFSET;
+
+
+assign  o_ih_debug[3:0]   = in_state;
+assign  o_ih_debug[7:4]   = out_state;
+assign  o_ih_debug[31:8]  = 24'h0;
 
 //Synchronous Logic
 //input handler
@@ -310,10 +324,10 @@ always @ (posedge clk) begin
     if (!uart_wr_stb && !uart_out_busy) begin
       case (out_state)
         IDLE: begin
-          out_byte            <=  8'h0;
-          out_nibble_count    <=  4'h0;
-          o_oh_ready          <=  1'h1;
-          out_data_pos        <=  0;
+          out_byte            <= 8'h0;
+          out_nibble_count    <= 4'h0;
+          o_oh_ready          <= 1'h1;
+          out_data_pos        <= 0;
           if (i_oh_en) begin
             //moved this outside because by the time it reaches this part, the out data_count is
             //changed
