@@ -207,9 +207,6 @@ wb_logic_analyzer #(
 
   .i_phy_rx             (w_phy_rx             ),
   .o_phy_tx             (w_phy_tx             )
-
-
-
 );
 
 uart_v3 #(

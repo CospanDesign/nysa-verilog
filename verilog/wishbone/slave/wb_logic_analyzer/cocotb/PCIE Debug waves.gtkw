@@ -1,108 +1,76 @@
 [*]
-[*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
-[*] Tue Jun 14 02:17:27 2016
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Mon Jun 27 17:19:13 2016
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_logic_analyzer/cocotb/f.vcd"
-[dumpfile_mtime] "Tue Jun 14 02:00:11 2016"
-[dumpfile_size] 81121
+[dumpfile_mtime] "Mon Jun 27 17:11:37 2016"
+[dumpfile_size] 81127
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_logic_analyzer/cocotb/PCIE Debug waves.gtkw"
-[timestart] 0
+[timestart] 20430
 [size] 1918 1059
-[pos] -185 160
-*-12.446360 21430 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
-[sst_width] 210
+[pos] -1 -1
+*-11.435589 37170 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 213
 [signals_width] 190
 [sst_expanded] 1
-[sst_vpaned_height] 349
+[sst_vpaned_height] 149
 @28
 logic_analyzer.clk
++{pcie_reset_n} logic_analyzer.signal0
++{clock_locked} logic_analyzer.signal1
+@200
+-
 @800200
--Control
+-PCIE Link State
+@c00028
++{PCIE Link State} #{logic_analyzer.signal[3:2]} logic_analyzer.signal3 logic_analyzer.signal2
 @28
-+{read_flag} logic_analyzer.signal0
-+{write_flag} logic_analyzer.signal1
+logic_analyzer.signal2
+logic_analyzer.signal3
+@1401200
+-group_end
 @200
 -
 @28
-+{DMA_sel} logic_analyzer.signal2
-+{MEM_sel} logic_analyzer.signal3
-+{PER_sel} logic_analyzer.signal4
+logic_analyzer.signal2
+logic_analyzer.signal3
 @1000200
--Control
-@28
-+{Finished} logic_analyzer.signal6
+-PCIE Link State
 @200
 -
-@c00022
-#{PCIE Controller[3:0]} logic_analyzer.signal11 logic_analyzer.signal10 logic_analyzer.signal9 logic_analyzer.signal8
+-
+@c02022
+^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_logic_analyzer/cocotb/sm_ltssm_state.txt
+#{logic_analyzer.signal[9:4]} logic_analyzer.signal9 logic_analyzer.signal8 logic_analyzer.signal7 logic_analyzer.signal6 logic_analyzer.signal5 logic_analyzer.signal4
 @28
+logic_analyzer.signal4
+logic_analyzer.signal5
+logic_analyzer.signal6
+logic_analyzer.signal7
 logic_analyzer.signal8
 logic_analyzer.signal9
-logic_analyzer.signal10
-logic_analyzer.signal11
-@1401200
--group_end
-@200
--
-@28
-+{PER ing stb} logic_analyzer.signal18
-+{PER ing act} logic_analyzer.signal19
-+{PER ing rdy} logic_analyzer.signal20
-@200
--
-@c00022
-#{IH State[3:0]} logic_analyzer.signal24 logic_analyzer.signal23 logic_analyzer.signal22 logic_analyzer.signal21
-@28
-logic_analyzer.signal21
-logic_analyzer.signal22
-logic_analyzer.signal23
-logic_analyzer.signal24
 @1401200
 -group_end
 @200
 -
 @c00028
-#{Command[1:0]} logic_analyzer.signal26 logic_analyzer.signal25
-@28
-logic_analyzer.signal25
-logic_analyzer.signal26
-@1401200
--group_end
-@200
--
-@c00022
-#{DATA[3:0]} logic_analyzer.signal30 logic_analyzer.signal29 logic_analyzer.signal28 logic_analyzer.signal27
-@28
-logic_analyzer.signal27
-logic_analyzer.signal28
-logic_analyzer.signal29
-logic_analyzer.signal30
-@1401200
--group_end
-@200
--
--
-@28
-+{PER egr stb} logic_analyzer.signal7
-@200
--
-@c00028
-#{PER egr act[1:0]} logic_analyzer.signal17 logic_analyzer.signal16
-@28
-logic_analyzer.signal16
-logic_analyzer.signal17
-@1401200
--group_end
-@200
--
-@c00022
-#{OH State[3:0]} logic_analyzer.signal15 logic_analyzer.signal14 logic_analyzer.signal13 logic_analyzer.signal12
++{rx status} #{logic_analyzer.signal[14:12]} logic_analyzer.signal14 logic_analyzer.signal13 logic_analyzer.signal12
 @28
 logic_analyzer.signal12
 logic_analyzer.signal13
 logic_analyzer.signal14
-logic_analyzer.signal15
 @1401200
+-group_end
+@200
+-
+@c00023
+#{logic_analyzer.signal[19:16]} logic_analyzer.signal19 logic_analyzer.signal18 logic_analyzer.signal17 logic_analyzer.signal16
+@29
+logic_analyzer.signal16
+logic_analyzer.signal17
+logic_analyzer.signal18
+logic_analyzer.signal19
+@1401201
 -group_end
 [pattern_trace] 1
 [pattern_trace] 0

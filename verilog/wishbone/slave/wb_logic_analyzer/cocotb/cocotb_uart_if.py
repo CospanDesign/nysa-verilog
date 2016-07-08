@@ -32,7 +32,7 @@ class UART(object):
 
     def set_baudrate(self):
         pass
-    
+
 
 class UARTCommWriter(BusDriver):
 
@@ -63,7 +63,7 @@ class UARTCommWriter(BusDriver):
             self.bus.wr_stb     <=  0
 
         self.write_data_busy.release()
-        
+
 
 class UARTCommReader(BusDriver):
 

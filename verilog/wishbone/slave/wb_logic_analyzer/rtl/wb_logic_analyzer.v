@@ -232,7 +232,7 @@ uart_la_interface # (
 );
 
 //Submodules
-logic_analyzer #(
+logic_analyzer # (
   .CAPTURE_WIDTH          (`CAPTURE_WIDTH           ),
   .CAPTURE_DEPTH          (CAPTURE_DEPTH            )
 ) la (

@@ -95,9 +95,9 @@ generate
     assign  w_cap_pos_edge[i]   =  i_cap_data[i] & ~r_prev_cap[i];
     assign  w_cap_neg_edge[i]   = ~i_cap_data[i] &  r_prev_cap[i];
     assign  w_cap_sig_start[i]  =
-              (~i_trigger_mask[i]) ? 1 :                                         //If the mask is 0 then this is true
-                i_trigger_edge[i] ?                                             //Look For Edge
-                  (i_both_edges[i] & (w_cap_pos_edge[i] | w_cap_neg_edge[i])) | //Both Edges
+              (~i_trigger_mask[i]) ? 1 :                                          //If the mask is 0 then this is true
+                i_trigger_edge[i] ?                                               //Look For Edge
+                  (i_both_edges[i] & (w_cap_pos_edge[i] | w_cap_neg_edge[i])) |   //Both Edges
                   (i_trigger[i] & w_cap_pos_edge[i]) | (~i_trigger[i] & w_cap_neg_edge[i]) :  //Pos/Neg Edge
                 (i_trigger[i] & i_cap_data[i]) | (~i_trigger[i] & ~i_cap_data[i]);//Not edge but level and data
   end

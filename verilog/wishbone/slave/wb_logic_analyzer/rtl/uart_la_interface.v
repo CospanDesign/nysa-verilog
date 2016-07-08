@@ -69,8 +69,6 @@ localparam  TRIGGER_EDGE          = 3;
 localparam  BOTH_EDGES            = 4;
 localparam  REPEAT_COUNT          = 5;
 
-
-
 //UART Control
 reg                         r_uart_wr_stb;
 reg   [7:0]                 r_uart_wr_data;
@@ -78,7 +76,6 @@ reg   [7:0]                 r_uart_wr_data;
 
 reg   [3:0]                 r_index;
 
-reg                         r_uart_rd_stb;
 wire                        w_uart_rd_empty;
 wire                        w_uart_rcv_stb;
 wire  [7:0]                 w_uart_rd_data;
@@ -87,7 +84,6 @@ reg   [31:0]                r_uart_rd_count;
 
 reg   [31:0]                r_packet_data[5:0];
 reg   [31:0]                r_wr_pos;
-
 
 //Register/Wires
 reg   [3:0]                 rd_state = IDLE;
@@ -134,8 +130,6 @@ assign  nibble                  = (w_uart_rd_data >= 8'h41) ? (w_uart_rd_data - 
 assign  valid_hex               = ((8'h41 <= w_uart_rd_data) && (w_uart_rd_data <= 8'h46)) ||
                                   ((8'h30 <= w_uart_rd_data) && (w_uart_rd_data <= 8'h39));
 
-
-
 assign  o_trigger               = r_packet_data[TRIGGER];
 assign  o_trigger_mask          = r_packet_data[TRIGGER_MASK];
 assign  o_trigger_after         = r_packet_data[TRIGGER_AFTER];
@@ -148,7 +142,6 @@ assign  o_repeat_count          = r_packet_data[REPEAT_COUNT];
 integer i;
 always @ (posedge clk) begin
   //De-assert strobes
-  r_uart_rd_stb               <= 0;
   r_wr_en                     <= 0;
   o_uart_set_value_stb        <= 0;
   o_la_reset                  <= 0;
@@ -255,56 +248,56 @@ always @ (posedge clk) begin
       end
       READ_VALUE: begin
         if (w_uart_rcv_stb) begin
-          r_packet_data[r_index]    <=  {r_packet_data[r_index][27:0], nibble};
-          r_uart_rd_count           <=  r_uart_rd_count +  1;
+          r_packet_data[r_index]    <= {r_packet_data[r_index][27:0], nibble};
+          r_uart_rd_count           <= r_uart_rd_count +  1;
           if (r_uart_rd_count >= 7) begin
-            o_uart_set_value_stb    <=  1;
-            r_cmd_rsps              <=  `RESPONSE_SUCCESS;
-            rd_state                <=  READ_LINE_FEED;
+            o_uart_set_value_stb    <= 1;
+            r_cmd_rsps              <= `RESPONSE_SUCCESS;
+            rd_state                <= READ_LINE_FEED;
           end
           else if (!valid_hex) begin
-            r_cmd_rsps              <=  `RESPONSE_FAIL;
-            rd_state                <=  READ_LINE_FEED;
+            r_cmd_rsps              <= `RESPONSE_FAIL;
+            rd_state                <= READ_LINE_FEED;
           end
         end
       end
       READ_ENABLE_SET: begin
         if (w_uart_rcv_stb) begin
           if (w_uart_rd_data == (0 + `HEX_0)) begin
-            o_en_la                  <=  0;
-            r_cmd_rsps               <=  `RESPONSE_SUCCESS;
+            o_en_la                  <= 0;
+            r_cmd_rsps               <= `RESPONSE_SUCCESS;
           end
           else if (w_uart_rd_data == (1 + `HEX_0)) begin
-            o_en_la                  <=  1;
-            r_cmd_rsps               <=  `RESPONSE_SUCCESS;
+            o_en_la                  <= 1;
+            r_cmd_rsps               <= `RESPONSE_SUCCESS;
           end
           else begin
-            r_cmd_rsps               <=  `RESPONSE_FAIL;
+            r_cmd_rsps               <= `RESPONSE_FAIL;
           end
-          rd_state                   <=  READ_LINE_FEED;
+          rd_state                   <= READ_LINE_FEED;
         end
       end
       READ_LINE_FEED: begin
         if (w_uart_rcv_stb) begin
           if (w_uart_rd_data == (`LINE_FEED)) begin
-            rd_state                  <=  SEND_RESPONSE;
+            rd_state                  <= SEND_RESPONSE;
           end
         end
       end
       SEND_RESPONSE: begin
-        r_wr_en                       <=  1;
+        r_wr_en                       <= 1;
         if (r_wr_fin) begin
-          r_wr_en                     <=  0;
-          rd_state                    <=  IDLE;
+          r_wr_en                     <= 0;
+          rd_state                    <= IDLE;
         end
       end
      default: begin
-        rd_state                      <=  IDLE;
+        rd_state                      <= IDLE;
       end
     endcase
     //write data back to the host
     if (wr_state == SEND_DATA_PACKET) begin
-      o_en_la                         <=  0;
+      o_en_la                         <= 0;
     end
   end
 end

@@ -65,7 +65,7 @@ class Test (unittest.TestCase):
                     #s.Verbose("Found Platform Item: %s" % str(platform_item))
                     n = instances_dict[name]
                     plat = ["", None, None]
-                    
+
                     if n is not None:
                         self.s.Important("Found a nysa instance: %s" % name)
                         n.read_sdb()
@@ -74,7 +74,7 @@ class Test (unittest.TestCase):
                             plat = [platform_name, name, n]
                             break
                         continue
-                    
+
                     #self.s.Verbose("\t%s" % psi)
                 except NysaCommError:
                     continue
@@ -92,32 +92,25 @@ class Test (unittest.TestCase):
         self.s.Info("Instantiated a PCIE Device Device: %s" % pcie_urn)
 
     def test_device(self):
+        self.driver.enable_uart_control(False)
+        self.driver.reset()
         print "Getting clock rate"
         clock_rate = self.driver.get_clock_rate()
         print "Clock Rate: %d" % clock_rate
         #print "Is enabled: %s" % self.driver.is_enabled()
         self.driver.enable(False)
-        print "Is UART Enabled: %s" % self.driver.is_uart_enabled()
         print "Enable UART"
-        self.driver.enable_uart_control(True)
-        print "Is UART Enabled: %s" % self.driver.is_uart_enabled()
-        '''
-        self.driver.set_trigger         (0x00000000)
-        self.driver.set_trigger_mask    (0x00000000)
+        self.driver.set_trigger         (0x00001000)
+        self.driver.set_trigger_mask    (0x00001000)
         self.driver.set_trigger_edge    (0xFFFFFFFF)
+        self.driver.set_trigger_after   (0x00000100)
         self.driver.set_repeat_count    (0x00000000)
 
-        #self.driver.set_trigger         (0x01400000)
-        #self.driver.set_trigger_mask    (0x01E00000)
-        #self.driver.set_trigger_edge    (0xFFFFFFFF)
- 
-        self.driver.set_trigger_after   (0x00000100)
-        #self.driver.set_trigger_after   (0x00000000)
         self.driver.enable(True)
         while not self.driver.is_finished():
             print "Waiting..."
-            time.sleep(0.5)
-            
+            time.sleep(0.2)
+
         print "Is Finished: %s" % self.driver.is_finished()
         data = self.driver.read_data()
         clock_rate = self.driver.get_clock_rate()
@@ -127,7 +120,6 @@ class Test (unittest.TestCase):
         f.close()
         #self.driver.enable(False)
         #print "Is Finished: %s" % self.driver.is_finished()
-        '''
 
 
 if __name__ == "__main__":
