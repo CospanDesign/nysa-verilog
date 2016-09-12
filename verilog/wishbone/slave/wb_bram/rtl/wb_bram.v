@@ -62,13 +62,13 @@ SOFTWARE.
   SDB_WRITEABLE:True
 
   Device Size: Number of Registers
-  SDB_SIZE:1024
+  SDB_SIZE:4096
 */
 
 
 module wb_bram #(
   parameter DATA_WIDTH = 32,
-  parameter ADDR_WIDTH = 10,
+  parameter ADDR_WIDTH = 12,
   parameter MEM_FILE  = "NOTHING",
   parameter MEM_FILE_LENGTH = 0
 
