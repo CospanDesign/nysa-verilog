@@ -70,20 +70,24 @@ SOFTWARE.
 
 `include "cbuilder_defines.v"
 
-`define COMMAND_POS     0
-`define DATA_COUNT_POS  1
-`define ADDRESS_POS     2
+`define COMMAND_POS             0
+`define DATA_COUNT_POS          1
+`define ADDRESS_POS             2
 
-`define HEADER_SIZE     3
+`define HEADER_SIZE             3
 
 `define MASTER_FLAG_UNUSED      31:2
 `define MASTER_FLAG_EN_WR_RESP  0
 `define MASTER_FLAG_EN_NACK     1
 
-`define MASTER_FLAGS      0
-`define MASTER_TIMEOUT    1
+`define MASTER_FLAGS            0
+`define MASTER_TIMEOUT          1
 
-`define MASTER_CFG_COUNT  2
+`define MASTER_CFG_COUNT        2
+
+`ifndef INTERRUPT_COUNT
+`define INTERRUPT_COUNT         1
+`endif
 
 module wishbone_master #(
   parameter           INGRESS_FIFO_DEPTH    = 9, //512
@@ -147,13 +151,17 @@ module wishbone_master #(
 localparam        IDLE                  = 4'h0;
 localparam        READ_INGRESS_FIFO     = 4'h1;
 localparam        PARSE_COMMAND         = 4'h2;
-localparam        PING                  = 4'h3;
-localparam        WRITE                 = 4'h4;
-localparam        READ                  = 4'h5;
-localparam        MASTER_CFG_WRITE      = 4'h6;
-localparam        MASTER_CFG_READ       = 4'h7;
-localparam        SEND_RESPONSE         = 4'h8;
-localparam        FLUSH                 = 4'h9;
+localparam        READ_ARG_DATA_SIZE    = 4'h3;
+localparam        READ_ARG_ADDRESS      = 4'h4;
+localparam        START_WRITE           = 4'h5;
+localparam        START_READ            = 4'h6;
+localparam        WRITE                 = 4'h7;
+localparam        READ                  = 4'h8;
+localparam        MASTER_CFG_WRITE      = 4'h9;
+localparam        MASTER_CFG_READ       = 4'hA;
+localparam        SEND_RESPONSE         = 4'hB;
+localparam        SEND_INTERRUPT        = 4'hC;
+localparam        FLUSH                 = 4'hD;
 
 
 // registers
@@ -166,7 +174,7 @@ reg                 mem_bus_select;
 
 wire[31:0]          w_master_config[0:`MASTER_CFG_COUNT];
 
-reg                 prev_int          = 0;
+reg                 r_prev_int        = 0;
 
 reg [31:0]          interrupt_mask    = 32'h00000000;
 
@@ -189,27 +197,25 @@ wire  [23:0]        w_egress_size;
 reg   [31:0]        r_egress_data;
 
 
-wire  [15:0]        w_command;
-wire  [15:0]        w_flags;
-wire  [31:0]        w_data_size;
-wire  [31:0]        w_address;
-reg   [31:0]        r_address;
+reg   [15:0]        r_command;
+reg   [15:0]        r_flags;
+reg   [31:0]        r_data_size;
+//reg   [31:0]        r_address;
 
 wire  [31:0]        w_status;
 reg                 r_unrec_cmd;
 
 wire                w_mem_bus_select;
 wire                w_auto_inc_addr;
-wire  [31:0]        w_mastew_flags;
+wire  [31:0]        w_master_flags;
 
 
 reg   [23:0]        r_ingress_count;
-reg   [3:0]         r_hdr_count;
 reg   [23:0]        r_egress_count;
 
 reg   [31:0]        r_data_count;
 
-reg   [31:0]        r_header  [0:(`HEADER_SIZE - 1)];
+//reg   [31:0]        r_header  [0:(`HEADER_SIZE - 1)];
 
 
 reg                 r_wb_cyc;
@@ -225,29 +231,21 @@ reg                 r_en_nack;
 //Enable a Response from Write Transactions
 reg                 r_en_wr_resp  = ENABLE_WRITE_RESP;
 
-assign  w_mastew_flags[`MASTER_FLAG_UNUSED]     = 0;
-assign  w_mastew_flags[`MASTER_FLAG_EN_WR_RESP] = r_en_wr_resp;
-assign  w_mastew_flags[`MASTER_FLAG_EN_NACK]    = r_en_nack;
+assign  w_master_flags[`MASTER_FLAG_UNUSED]     = 0;
+assign  w_master_flags[`MASTER_FLAG_EN_WR_RESP] = r_en_wr_resp;
+assign  w_master_flags[`MASTER_FLAG_EN_NACK]    = r_en_nack;
 
-assign  w_master_config[`MASTER_FLAGS]          = w_mastew_flags;
-assign  w_master_config[`MASTER_TIMEOUT]        = r_master_r_nack_timeout;
+assign  w_master_config[`MASTER_FLAGS]          = w_master_flags;
+assign  w_master_config[`MASTER_TIMEOUT]        = r_nack_timeout;
 
 
 assign  w_status[`STATUS_BIT_CMPLT]             = 1'h1;
-/*
-assign  w_status[`STATUS_BIT_PING]              = (w_command == `COMMAND_PING);
-assign  w_status[`STATUS_BIT_WRITE]             = (w_command == `COMMAND_WRITE);
-assign  w_status[`STATUS_BIT_READ]              = (w_command == `COMMAND_READ);
-assign  w_status[`STATUS_BIT_RESET]             = (w_command == `COMMAND_RESET);
-assign  w_status[`STATUS_BIT_MSTR_CFG_WR]       = (w_command == `COMMAND_MASTER_CFG_WRITE);
-assign  w_status[`STATUS_BIT_MSTR_CFG_RD]       = (w_command == `COMMAND_MASTER_CFG_READ);
-*/
-assign  w_status[`STATUS_BIT_PING]              = (w_command == `COMMAND_PING);
-assign  w_status[`STATUS_BIT_WRITE]             = (w_command == `COMMAND_WRITE);
-assign  w_status[`STATUS_BIT_READ]              = (w_command == `COMMAND_READ);
-assign  w_status[`STATUS_BIT_RESET]             = (w_command == `COMMAND_RESET);
-assign  w_status[`STATUS_BIT_MSTR_CFG_WR]       = (w_command == `COMMAND_MASTER_CFG_WRITE);
-assign  w_status[`STATUS_BIT_MSTR_CFG_RD]       = (w_command == `COMMAND_MASTER_CFG_READ);
+assign  w_status[`STATUS_BIT_PING]              = (r_command == `COMMAND_PING);
+assign  w_status[`STATUS_BIT_WRITE]             = (r_command == `COMMAND_WRITE);
+assign  w_status[`STATUS_BIT_READ]              = (r_command == `COMMAND_READ);
+assign  w_status[`STATUS_BIT_RESET]             = (r_command == `COMMAND_RESET);
+assign  w_status[`STATUS_BIT_MSTR_CFG_WR]       = (r_command == `COMMAND_MASTER_CFG_WRITE);
+assign  w_status[`STATUS_BIT_MSTR_CFG_RD]       = (r_command == `COMMAND_MASTER_CFG_READ);
 
 assign  w_status[`STATUS_BIT_UNREC_CMD]         = r_unrec_cmd;
 assign  w_status[`STATUS_BIT_UNUSED]            = 0;
@@ -304,17 +302,17 @@ ppfifo #(
 //  .inactive        (                      )
 );
 
-assign  w_command         = r_header[`COMMAND_POS][`COMMAND_RANGE];
-assign  w_flags           = r_header[`COMMAND_POS][`FLAG_RANGE];
-assign  w_data_size       = r_header[`DATA_COUNT_POS];
-assign  w_address         = r_header[`ADDRESS_POS];
+//assign  r_command         = r_header[`COMMAND_POS][`COMMAND_RANGE];
+//assign  r_flags           = r_header[`COMMAND_POS][`FLAG_RANGE];
+//assign  r_data_size       = r_header[`DATA_COUNT_POS];
+//assign  r_address         = r_header[`ADDRESS_POS];
 
-assign  w_mem_bus_select  = ((w_flags & `FLAG_MEM_BUS) > 0);
-assign  w_auto_inc_addr   = !((w_flags | `FLAG_DISABLE_AUTO_INC) == 0);
+assign  w_mem_bus_select  = ((r_flags & `FLAG_MEM_BUS) > 0);
+assign  w_auto_inc_addr   = ((r_flags & `FLAG_DISABLE_AUTO_INC) == 0);
 
 //Asynchronous Logic
 assign              o_data_count      = (state == READ) ? local_data_count : 31'h0;
-assign              enable_nack       = w_mastew_flags[0];
+assign              enable_nack       = w_master_flags[0];
 
 assign              o_per_msk         = 0;
 assign              o_per_sel         = 4'hF;
@@ -342,49 +340,49 @@ integer i;
 //Synchronous Logic
 always @ (posedge clk) begin
   //De-assert Strobes
-  r_ingress_stb       <= 0;
-  r_egress_stb        <= 0;
-  o_sync_rst          <= 0;
+  r_ingress_stb           <= 0;
+  r_egress_stb            <= 0;
+  o_sync_rst              <= 0;
 
   if (rst) begin
-    r_address         <= 32'h0;
-    r_ingress_count   <= 24'h0;
-    r_hdr_count       <= 4'h0;
-    r_data_count      <= 32'h0;
+    //r_address             <= 32'h0;
+    r_ingress_count       <= 24'h0;
+    r_data_count          <= 32'h0;
 
-    r_ingress_act     <= 1'b0;
-    r_egress_act      <= 2'b0;
-    r_egress_data     <= 32'h0;
+    r_ingress_act         <= 1'b0;
+    r_egress_act          <= 2'b0;
+    r_egress_data         <= 32'h0;
 
-    r_en_wr_resp      <= ENABLE_WRITE_RESP;
-    r_en_nack         <= ENABLE_NACK;
-    r_nack_timeout    <= DEFAULT_TIMEOUT;
+    r_en_wr_resp          <= ENABLE_WRITE_RESP;
+    r_en_nack             <= ENABLE_NACK;
+    r_nack_timeout        <= DEFAULT_TIMEOUT;
 
-    //r_sts_complte     <= 0;
-    r_unrec_cmd       <= 0;
+    //r_sts_complte         <= 0;
+    r_unrec_cmd           <= 0;
 
-    for (i = 0; i < `HEADER_SIZE; i = i + 1)
-      r_header[i]     <=  0;
-    //w_command         <=  16'h0;
-    //w_flags           <=  16'h0;
-    //w_data_size       <=  32'h0;
-    r_address         <=  32'h0;
+    //for (i = 0; i < `HEADER_SIZE; i = i + 1)
+    //  r_header[i]         <=  0;
+    r_command             <=  16'h0;
+    r_flags               <=  16'h0;
+    r_data_size           <=  32'h0;
+    //r_address             <=  32'h0;
 
     //Wishbone Bus
-    r_wb_we           <= 1'b0;
-    r_wb_cyc          <= 1'b0;
-    r_wb_adr          <= 32'h0;
-    r_wb_dat          <= 32'h0;
-    r_wb_stb          <= 1'b0;
+    r_wb_we               <= 1'b0;
+    r_wb_cyc              <= 1'b0;
+    r_wb_adr              <= 32'h0;
+    r_wb_dat              <= 32'h0;
+    r_wb_stb              <= 1'b0;
+
+    r_prev_int            <= 0;
+
   end
   else begin
-
     //Always get a free FIFO
     if (w_ingress_rdy && !r_ingress_act) begin
       r_ingress_count     <=  24'h0;
       r_ingress_act       <=  1'h1;
     end
-
     if ((w_egress_rdy > 0) && r_egress_act == 0) begin
       r_egress_count      <=  24'h0;
       if (w_egress_rdy[0])
@@ -392,6 +390,8 @@ always @ (posedge clk) begin
       else
         r_egress_act[1]   <=  1'h1;
     end
+
+
     case (state)
       IDLE: begin
         r_wb_we           <= 1'b0;
@@ -400,82 +400,96 @@ always @ (posedge clk) begin
         r_wb_dat          <= 32'h0;
         r_wb_stb          <= 1'b0;
 
-        r_address         <=  32'h0;
-        r_ingress_count   <=  24'h0;
-        r_egress_count    <=  24'h0;
-        r_data_count      <=  32'h0;
-        r_hdr_count       <=  4'h0;
-
+        //r_address         <= 32'h0;
+        r_ingress_count   <= 24'h0;
+        r_egress_count    <= 24'h0;
+        r_data_count      <= 32'h0;
         //r_sts_complte     <=  0;
         r_unrec_cmd       <=  0;
 
         if (r_ingress_act) begin
           state           <=  READ_INGRESS_FIFO;
         end
+        else if (!r_prev_int && i_per_int) begin
+          state           <= SEND_INTERRUPT;
+        end
       end
       READ_INGRESS_FIFO: begin
-        r_ingress_stb         <=  1;
-        r_ingress_count       <=  r_ingress_count + 1;
-        r_header[r_hdr_count] <=  w_ingress_data;
-
-        state             <=  PARSE_COMMAND;
+        r_ingress_stb           <=  1;
+        r_ingress_count         <=  r_ingress_count + 1;
+        r_flags                 <=  w_ingress_data[31:16];
+        r_command               <=  w_ingress_data[15:0];
+        state                   <=  PARSE_COMMAND;
       end
       PARSE_COMMAND: begin
-        if (r_ingress_act) begin
-          if (r_ingress_count < `HEADER_SIZE) begin
-            r_ingress_count       <=  r_ingress_count + 1;
-            r_ingress_stb         <=  1;
+        case (r_command)
+          `COMMAND_PING: begin
+            r_ingress_act       <=  0;
+            state               <=  SEND_RESPONSE;
           end
-          else if (r_ingress_count >= w_ingress_size) begin
-            r_ingress_act         <=  0;
+          `COMMAND_RESET: begin
+            o_sync_rst          <=  1;
+            r_ingress_act       <=  0;
+            state               <=  FLUSH;
           end
-        end
-        if (r_hdr_count < `HEADER_SIZE) begin
-          if (r_ingress_stb) begin
-            r_hdr_count           <=  r_hdr_count + 1;
-            r_header[r_hdr_count] <=  w_ingress_data;
+          `COMMAND_WRITE: begin
+            r_ingress_stb       <=  1;             
+            r_ingress_count     <=  r_ingress_count + 1;
+            state               <=  READ_ARG_DATA_SIZE;
           end
-        end
-        else begin
-        //if (r_hdr_count >= `HEADER_SIZE) begin
-          r_address               <=  w_address;
-          case (w_command)
-            `COMMAND_PING: begin
-              state               <=  SEND_RESPONSE;
-            end
-            `COMMAND_WRITE: begin
-              r_wb_cyc            <=  1;
-              r_wb_we             <=  1;
-              r_wb_adr            <=  w_address;
-              state               <=  WRITE;
-            end
-            `COMMAND_READ: begin
-              r_wb_cyc            <=  1;
-              r_wb_we             <=  0;
-              r_wb_adr            <=  w_address;
-              state               <=  READ;
-            end
-            `COMMAND_RESET: begin
-              o_sync_rst          <=  1;
-              if (r_ingress_act && (r_ingress_count < w_ingress_size)) begin
-                state             <=  FLUSH;
-              end
-              else begin
-                state             <=  IDLE;
-              end
-            end
-            `COMMAND_MASTER_CFG_WRITE: begin
-              state               <=  MASTER_CFG_WRITE;
-            end
-            `COMMAND_MASTER_CFG_READ: begin
-              state               <=  MASTER_CFG_READ;
-            end
-            default: begin
-              r_unrec_cmd         <=  1;
-              state               <=  SEND_RESPONSE;
-            end
-          endcase
-        end
+          `COMMAND_READ: begin
+            r_ingress_stb       <=  1;             
+            r_ingress_count     <=  r_ingress_count + 1;          
+            state               <=  READ_ARG_DATA_SIZE;
+          end
+          `COMMAND_MASTER_CFG_WRITE: begin
+            r_ingress_stb       <=  1;             
+            r_ingress_count     <=  r_ingress_count + 1;                      
+            state               <=  READ_ARG_DATA_SIZE;
+          end
+          `COMMAND_MASTER_CFG_READ: begin
+            r_ingress_stb       <=  1;             
+            r_ingress_count     <=  r_ingress_count + 1;                       
+            state               <=  READ_ARG_DATA_SIZE;
+          end
+          default: begin
+            r_unrec_cmd         <=  1;
+            r_ingress_act       <=  0;
+            state               <=  SEND_RESPONSE;
+          end
+        endcase
+      end
+      READ_ARG_DATA_SIZE: begin
+        r_ingress_stb       <=  1;             
+        r_data_size         <=  w_ingress_data;
+        r_ingress_count     <=  r_ingress_count + 1; 
+        state               <=  READ_ARG_ADDRESS;                     
+      end
+      READ_ARG_ADDRESS: begin
+        //r_ingress_stb           <=  1;           
+        //r_address               <=  w_ingress_data;
+        r_wb_adr                  <=  w_ingress_data;
+        //r_ingress_count         <=  r_ingress_count + 1;        
+        case (r_command)
+          `COMMAND_WRITE: begin
+            state                     <=  START_WRITE;
+          end
+          `COMMAND_READ: begin
+            state                     <=  START_READ;
+          end
+          `COMMAND_MASTER_CFG_WRITE: begin
+            state                     <=  MASTER_CFG_WRITE;
+          end
+          `COMMAND_MASTER_CFG_READ: begin
+            state                     <=  MASTER_CFG_READ;
+          end
+        endcase      
+      end
+      START_WRITE: begin
+         r_wb_cyc                 <=  1;
+         r_wb_we                  <=  1;
+         //r_wb_adr                 <=  r_address;
+         state                    <=  WRITE;
       end
       WRITE: begin
         if (w_wb_ack && r_wb_stb) begin
@@ -483,11 +497,10 @@ always @ (posedge clk) begin
           if (w_auto_inc_addr) begin
             r_wb_adr                  <=  r_wb_adr + 1;
           end
-
         end
         else if (!r_wb_stb && !w_wb_ack) begin
-          if (r_data_count < w_data_size) begin
-            if (r_ingress_act && (r_ingress_count < w_ingress_size))begin
+          if (r_data_count < (r_data_size)) begin
+            if (r_ingress_act && (r_ingress_count < (w_ingress_size)))begin
               r_wb_dat                <=  w_ingress_data;
               r_wb_stb                <=  1;
               r_ingress_stb           <=  1;
@@ -501,6 +514,7 @@ always @ (posedge clk) begin
           else begin
             r_wb_cyc                  <=  0;
             r_wb_we                   <=  0;
+            r_ingress_act             <=  0;
             //Send Response
             if (r_en_wr_resp) begin
               state                   <=  SEND_RESPONSE;
@@ -511,7 +525,14 @@ always @ (posedge clk) begin
           end
         end
       end
+      START_READ: begin
+        r_wb_cyc            <=  1;
+        r_wb_we             <=  0;
+        //r_wb_adr            <=  r_address;
+        state               <=  READ;
+      end
       READ: begin
+              
         if (w_wb_ack && r_wb_stb) begin
           r_wb_stb                    <=  0;
           r_egress_data               <=  w_wb_dat;
@@ -523,7 +544,7 @@ always @ (posedge clk) begin
           end
         end
         else if (!r_wb_stb && !w_wb_ack) begin
-          if (r_data_count < w_data_size) begin
+          if (r_data_count < r_data_size) begin
             if (r_egress_act) begin
               if (r_egress_count < w_egress_size) begin
                 //We are ready for data
@@ -535,6 +556,7 @@ always @ (posedge clk) begin
             end
           end
           else begin
+            r_ingress_act               <=  0;          
             r_egress_act                <=  0;
             r_wb_cyc                    <=  0;
             r_wb_we                     <=  0;
@@ -548,8 +570,9 @@ always @ (posedge clk) begin
             r_data_count                <=  r_data_count + 1;
             r_ingress_count             <=  r_ingress_count + 1;
             r_ingress_stb               <=  1;
-            if (r_data_count < w_data_size) begin
-              case (r_address)
+            if (r_data_count < r_data_size) begin
+              //case (r_address)
+              case (r_wb_adr)
                 `MASTER_FLAGS: begin
                   r_en_nack             <=  w_ingress_data[`MASTER_FLAG_EN_NACK];
                   r_en_wr_resp          <=  w_ingress_data[`MASTER_FLAG_EN_WR_RESP];
@@ -560,14 +583,15 @@ always @ (posedge clk) begin
                 default: begin
                 end
               endcase
-              r_address                 <=  r_address + 1;
+              r_wb_adr                  <=  r_wb_adr;
+              //r_address                 <=  r_address + 1;
             end
           end
           else begin
             r_ingress_act               <=  0;
           end
         end
-        if (r_data_count >= w_data_size) begin
+        if (r_data_count >= r_data_size) begin
           state                         <= SEND_RESPONSE;
         end
       end
@@ -577,33 +601,55 @@ always @ (posedge clk) begin
             r_egress_data         <=  w_status;
             r_egress_count        <=  r_egress_count + 1;
           end
-          else if (r_data_count < w_data_size) begin
-            if (r_address < `MASTER_CFG_COUNT) begin
-              r_egress_data         <=  w_master_config[r_address];
+          else if (r_data_count < r_data_size) begin
+            //if (r_address < `MASTER_CFG_COUNT) begin
+            if (r_wb_adr < `MASTER_CFG_COUNT) begin
+              //r_egress_data         <=  w_master_config[r_address];
+              r_egress_data         <=  w_master_config[r_wb_adr];
             end
             else begin
               r_egress_data         <=  32'h0;
             end
-            r_address               <=  r_address + 1;
+            //r_address               <=  r_address + 1;
+            r_wb_adr                <=  r_wb_adr;
             r_data_count            <=  r_data_count;
           end
           else begin
+            r_ingress_act           <=  0;
+            r_egress_act            <=  0;
             state                   <=  FLUSH;
           end
         end
       end
       SEND_RESPONSE: begin
+        r_prev_int                  <=  0;  //Repeat interrupt after all communication to make sure host sees it is picked up
         if (r_egress_act > 0) begin
           if (r_egress_count == 0) begin
-            r_egress_data         <=  w_status;
-            r_egress_count        <=  r_egress_count + 1;
+            r_egress_data           <=  w_status;
+            r_egress_count          <=  r_egress_count + 1;
+            r_egress_stb            <=  1;
           end
           else begin
-            state                 <=  FLUSH;
+            r_egress_act            <=  0;
+            state                   <=  FLUSH;
+          end
+        end
+      end
+      SEND_INTERRUPT: begin
+        r_prev_int                   <=  1;
+        if (r_egress_act > 0) begin
+          if (r_egress_count < `INTERRUPT_COUNT) begin
+            r_egress_data           <=  o_per_dat;
+            r_egress_count          <=  r_egress_count + 1;
+          end
+          else begin
+            r_ingress_act           <=  0;
+            state                   <=  FLUSH;
           end
         end
       end
       FLUSH: begin
+        /*
         if (r_ingress_act && (r_ingress_count > 0) && (r_ingress_count < w_ingress_size)) begin
           r_ingress_count         <=  r_ingress_count + 1;
           r_ingress_stb           <=  1;
@@ -614,6 +660,9 @@ always @ (posedge clk) begin
           end
           state                   <=  IDLE;
         end
+        */
+        //r_ingress_act             <=  0;
+        state                     <=  IDLE;
       end
       default: begin
       end

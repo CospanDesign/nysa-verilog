@@ -1,0 +1,141 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Sat Sep 10 14:10:17 2016
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/ft245_sync_fifo/ft_fifo_tester/cocotb/design.vcd"
+[dumpfile_mtime] "Sat Sep 10 14:10:14 2016"
+[dumpfile_size] 1069611
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/ft245_sync_fifo/ft_fifo_tester/cocotb/waveforms.gtkw"
+[timestart] 0
+[size] 1918 1059
+[pos] -1 -1
+*-12.889256 38740 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_cocotb.
+[treeopen] tb_cocotb.wm.
+[sst_width] 213
+[signals_width] 286
+[sst_expanded] 1
+[sst_vpaned_height] 313
+@28
+tb_cocotb.s1.clk
+@22
+[color] 3
+tb_cocotb.test_id[31:0]
+@28
+tb_cocotb.s1.rst
+@200
+-
+-
+@22
+tb_cocotb.ft245_data[7:0]
+@28
+tb_cocotb.ft245_rde_n
+tb_cocotb.ft245_oe_n
+tb_cocotb.ft245_rd_n
+tb_cocotb.ft245_siwu
+tb_cocotb.ft245_txe_n
+tb_cocotb.ft245_wr_n
+@200
+-
+@29
+tb_cocotb.back_preassure
+@200
+-
+@800200
+-IO
+@28
+tb_cocotb.io.i_ft245_clk
+@2022
+[color] 5
+^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/ft245_sync_fifo/ft_fifo_tester/cocotb/../../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/ft245_sync_fifo/ft_fifo_tester/cocotb/sm_ft245.txt
+tb_cocotb.io.state[3:0]
+@200
+-
+@800200
+-Ingress Path
+@200
+-
+@22
+tb_cocotb.io.io_ft245_data[7:0]
+tb_cocotb.io.byte_count[7:0]
+tb_cocotb.io.count[23:0]
+@28
+tb_cocotb.io.w_ft245_ingress_avail
+tb_cocotb.io.r_ft245_ingress_stb
+@22
+tb_cocotb.io.r_ft245_ingress_data_dword[31:0]
+@1000200
+-Ingress Path
+@200
+-
+@22
+tb_cocotb.io.count[23:0]
+tb_cocotb.io.byte_count[7:0]
+@28
+tb_cocotb.io.w_ft245_egress_avail
+@200
+-
+@28
+tb_cocotb.io.r_ft245_output_enable
+@200
+-
+@22
+tb_cocotb.io.r_ft245_egress_data_dword[31:0]
+@28
+tb_cocotb.io.r_ft245_egress_stb
+@22
+tb_cocotb.io.r_ft245_egress_data[7:0]
+@28
+tb_cocotb.io.r_ft245_egress_send_now
+@200
+-
+@22
+tb_cocotb.io.io_ft245_data[7:0]
+@1000200
+-IO
+@200
+-
+@28
+tb_cocotb.wm.i_egress_act
+tb_cocotb.wm.i_egress_clk
+tb_cocotb.wm.i_egress_stb
+@22
+tb_cocotb.wm.o_egress_data[31:0]
+@28
+tb_cocotb.wm.o_egress_rdy
+@22
+tb_cocotb.wm.o_egress_size[23:0]
+@28
+tb_cocotb.wm.r_egress_act[1:0]
+@22
+tb_cocotb.wm.r_egress_count[23:0]
+tb_cocotb.wm.r_egress_data[31:0]
+@28
+tb_cocotb.wm.r_egress_stb
+tb_cocotb.wm.w_egress_rdy[1:0]
+@22
+tb_cocotb.wm.w_egress_size[23:0]
+@c00200
+-DUT Signals
+@28
+tb_cocotb.s1.i_wbs_cyc
+tb_cocotb.s1.i_wbs_we
+tb_cocotb.s1.i_wbs_stb
+tb_cocotb.s1.o_wbs_ack
+@22
+tb_cocotb.s1.i_wbs_sel[3:0]
+@200
+-
+@22
+[color] 2
+tb_cocotb.s1.i_wbs_adr[31:0]
+tb_cocotb.s1.i_wbs_dat[31:0]
+tb_cocotb.s1.o_wbs_dat[31:0]
+@200
+-
+@28
+tb_cocotb.s1.o_wbs_int
+@1401200
+-DUT Signals
+[pattern_trace] 1
+[pattern_trace] 0

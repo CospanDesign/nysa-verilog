@@ -35,8 +35,10 @@ from cocotb import bus
 import json
 from collections import OrderedDict
 import cocotb.monitors
-from ppfifo_bus import PPFIFOIngress
-from ppfifo_bus import PPFIFOEgress
+from ft245_bus import FT245
+from ft245_bus import setup_ft245_clk
+#from ppfifo_bus import PPFIFOIngress
+#from ppfifo_bus import PPFIFOEgress
 
 #from nysa.host.nysa import Nysa
 from sim.sim import FauxNysa
@@ -97,13 +99,15 @@ class NysaSim (FauxNysa):
         self.response                         = Array('B')
 
         self.dut.rst                          <= 0
-        self.ingress = PPFIFOIngress(dut, "ingress", dut.clk)
-        self.egress  = PPFIFOEgress (dut, "egress",  dut.clk)
+        #self.ft245  =   FT245(dut, "ft245", dut.ft245_clk, buffer_size = 0x10)
+        self.ft245  =   FT245(dut, "ft245", dut.ft245_clk, buffer_size = 0x11)
+        #self.ft245  =   FT245(dut, "ft245", dut.ft245_clk, buffer_size = 0x200)
         gd = GenSDB()
         self.callbacks = {}
         self.rom = gd.gen_rom(self.dev_dict, user_paths = self.user_paths, debug = False)
 
         cocotb.fork(Clock(dut.clk, period).start())
+        setup_ft245_clk(dut)
         cocotb.fork(self.interrupt_interface())
 
     @cocotb.coroutine
@@ -156,7 +160,7 @@ class NysaSim (FauxNysa):
     @cocotb.function
     def _read(self, address, length = 1, mem_device = False):
         yield(self.comm_lock.acquire())
-        print "Reading"
+        #print "Reading"
 
         #print "_Read Acquire Lock"
         data_index = 0
@@ -172,15 +176,15 @@ class NysaSim (FauxNysa):
 
         data.extend(create_byte_array_from_dword(length))
         data.extend(create_byte_array_from_dword(address))
-        yield(self.ingress.write(data))
-        yield(self.egress.read(length * 4))
-        self.response = self.egress.get_data()
+        yield(self.ft245.write(data))
+        yield(self.ft245.read(length * 4))
+        self.response = self.ft245.get_data()
         self.comm_lock.release()
         raise ReturnValue(self.response)
 
     @cocotb.function
     def write(self, address, data = None, disable_auto_inc=False):
-        print "Writing"
+        #print "Writing"
         mem_device = False
         write_data = Array('B')
 
@@ -208,8 +212,7 @@ class NysaSim (FauxNysa):
         timeout_count       = 0
 
         yield(self.comm_lock.acquire())
-        #while data_index < data_count:
-        yield(self.ingress.write(write_data))
+        yield(self.ft245.write(write_data))
         self.comm_lock.release()
 
     def wait_for_interrupts(self, wait_time = 1):
