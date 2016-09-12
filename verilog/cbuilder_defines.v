@@ -69,7 +69,7 @@ SOFTWARE.
 `define STATUS_BIT_MSTR_CFG_RD    5
 `define STATUS_BIT_UNREC_CMD      6
 `define STATUS_BIT_RESET          7
-`define STATUS_BIT_UNUSED         31:7
+`define STATUS_BIT_UNUSED         31:8
 
 //master address space
 `define MADDR_WR_FLAGS          32'h00000000
