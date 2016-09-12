@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Sat Sep 10 14:10:17 2016
+[*] Mon Sep 12 23:31:22 2016
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/ft245_sync_fifo/ft_fifo_tester/cocotb/design.vcd"
-[dumpfile_mtime] "Sat Sep 10 14:10:14 2016"
-[dumpfile_size] 1069611
+[dumpfile_mtime] "Mon Sep 12 23:25:58 2016"
+[dumpfile_size] 59181
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/ft245_sync_fifo/ft_fifo_tester/cocotb/waveforms.gtkw"
-[timestart] 0
+[timestart] 628
 [size] 1918 1059
 [pos] -1 -1
-*-12.889256 38740 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-6.554827 953 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.wm.
 [sst_width] 213
@@ -37,17 +37,17 @@ tb_cocotb.ft245_txe_n
 tb_cocotb.ft245_wr_n
 @200
 -
-@29
+@28
 tb_cocotb.back_preassure
 @200
 -
-@800200
+@c00200
 -IO
 @28
 tb_cocotb.io.i_ft245_clk
 @2022
 [color] 5
-^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/ft245_sync_fifo/ft_fifo_tester/cocotb/../../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/ft245_sync_fifo/ft_fifo_tester/cocotb/sm_ft245.txt
+^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/ft245_sync_fifo/ft_fifo_tester/cocotb/../../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/ft245_sync_fifo/ft_fifo_tester/cocotb/../../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/ft245_sync_fifo/ft_fifo_tester/cocotb/sm_ft245.txt
 tb_cocotb.io.state[3:0]
 @200
 -
@@ -91,51 +91,34 @@ tb_cocotb.io.r_ft245_egress_send_now
 -
 @22
 tb_cocotb.io.io_ft245_data[7:0]
-@1000200
+@1401200
 -IO
 @200
 -
-@28
-tb_cocotb.wm.i_egress_act
-tb_cocotb.wm.i_egress_clk
-tb_cocotb.wm.i_egress_stb
+@800200
+-Master
+@2022
+^2 /tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/ft245_sync_fifo/ft_fifo_tester/cocotb/sm_master.txt
+tb_cocotb.wm.state[3:0]
+@200
+-
 @22
-tb_cocotb.wm.o_egress_data[31:0]
+tb_cocotb.wm.w_command[15:0]
 @28
-tb_cocotb.wm.o_egress_rdy
+tb_cocotb.wm.w_auto_inc_addr
+tb_cocotb.wm.w_master_config_space
 @22
-tb_cocotb.wm.o_egress_size[23:0]
+tb_cocotb.wm.r_data_count[31:0]
+tb_cocotb.wm.w_data_size[31:0]
+@200
+-
 @28
 tb_cocotb.wm.r_egress_act[1:0]
-@22
-tb_cocotb.wm.r_egress_count[23:0]
-tb_cocotb.wm.r_egress_data[31:0]
-@28
+@29
 tb_cocotb.wm.r_egress_stb
-tb_cocotb.wm.w_egress_rdy[1:0]
-@22
-tb_cocotb.wm.w_egress_size[23:0]
-@c00200
--DUT Signals
-@28
-tb_cocotb.s1.i_wbs_cyc
-tb_cocotb.s1.i_wbs_we
-tb_cocotb.s1.i_wbs_stb
-tb_cocotb.s1.o_wbs_ack
-@22
-tb_cocotb.s1.i_wbs_sel[3:0]
 @200
 -
-@22
-[color] 2
-tb_cocotb.s1.i_wbs_adr[31:0]
-tb_cocotb.s1.i_wbs_dat[31:0]
-tb_cocotb.s1.o_wbs_dat[31:0]
-@200
--
-@28
-tb_cocotb.s1.o_wbs_int
-@1401200
--DUT Signals
+@1000200
+-Master
 [pattern_trace] 1
 [pattern_trace] 0
