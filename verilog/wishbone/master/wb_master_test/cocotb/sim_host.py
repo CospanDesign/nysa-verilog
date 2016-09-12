@@ -41,7 +41,7 @@ from ppfifo_bus import PPFIFOEgress
 #from nysa.host.nysa import Nysa
 from sim.sim import FauxNysa
 
-from nysa.ibuilder.gen_scripts.gen_sdb import GenSDB
+from nysa.ibuilder.lib.gen_scripts.gen_sdb import GenSDB
 from nysa.host.nysa import NysaCommError
 from nysa.common.status import Status
 
