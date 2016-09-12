@@ -72,13 +72,8 @@ SOFTWARE.
 `define STATUS_BIT_UNUSED         31:8
 
 //master address space
-`define MADDR_WR_FLAGS          32'h00000000
-`define MADDR_RD_FLAGS          32'h00000001
-`define MADDR_WR_INT_EN         32'h00000002
-`define MADDR_RD_INT_EN         32'h00000003
-`define MADDR_NACK_TO_WR        32'h00000004
-`define MADDR_NACK_TO_RD        32'h00000005
-`define MADDR_CORE_DUMP         32'h00000006
+`define MADDR_CTR_FLAGS         32'h00000000
+`define MADDR_NACK_TIMEOUT      32'h00000001
 
 //conditions
 `define PERIPH_INTERRUPT        32'h00000001
@@ -87,6 +82,14 @@ SOFTWARE.
 //flags
 `define FLAG_MEM_BUS            16'h0001
 `define FLAG_DISABLE_AUTO_INC   16'h0002
+`define FLAG_MASTER_ADDR_SPACE  16'h0004
+
+//master control flags bit field location
+`define MASTER_FLAG_UNUSED      31:2
+`define MASTER_FLAG_EN_WR_RESP  0
+`define MASTER_FLAG_EN_NACK     1
+
+
 
 
 `define FLAG_RANGE              31:16

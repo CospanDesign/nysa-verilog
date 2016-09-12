@@ -402,8 +402,8 @@ end
 
 
 parameter TIMEOUT = 1000;
-//parameter PREASSURE_TIMEOUT = 0;
-parameter PREASSURE_TIMEOUT = 1;
+parameter PREASSURE_TIMEOUT = 0;
+//parameter PREASSURE_TIMEOUT = 1;
 //parameter PREASSURE_TIMEOUT = 2;
 
 reg [31:0]  count = 0;

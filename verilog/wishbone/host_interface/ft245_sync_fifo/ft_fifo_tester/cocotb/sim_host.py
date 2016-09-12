@@ -46,10 +46,14 @@ from sim.sim import FauxNysa
 from nysa.ibuilder.gen_scripts.gen_sdb import GenSDB
 from nysa.host.nysa import NysaCommError
 from nysa.common.status import Status
+from nysa.host.nysa import NYSA_FLAGS
 
-CLK_PERIOD = 10
-RESET_PERIOD = 20
+CLK_PERIOD                  = 10
+RESET_PERIOD                = 20
 
+FLAG_MEM_BUS                = 0x00010000
+FLAG_DISABLE_AUTO_INC       = 0x00020000
+FLAG_MASTER_CONFIG          = 0x00040000
 
 def create_byte_array_from_dword(dword):
     d = Array('B')
@@ -135,16 +139,17 @@ class NysaSim (FauxNysa):
 
         return self.nsm.read_sdb(self)
 
-    def read(self, address, length = 1, disable_auto_inc = False):
-        if (address * 4) + (length * 4) <= len(self.rom):
-            length *= 4
-            address *= 4
-
-            ra = Array('B')
-            for count in range (0, length, 4):
-                ra.extend(self.rom[address + count :address + count + 4])
-            #print "ra: %s" % str(ra)
-            return ra
+    def read(self, address, length = 1, flags = []):
+        if NYSA_FLAGS.MASTER_ADDRESS not in flags:
+            if (address * 4) + (length * 4) <= len(self.rom):
+                length *= 4
+                address *= 4
+            
+                ra = Array('B')
+                for count in range (0, length, 4):
+                    ra.extend(self.rom[address + count :address + count + 4])
+                #print "ra: %s" % str(ra)
+                return ra
 
         mem_device = False
         if self.mem_addr is None:
@@ -154,25 +159,31 @@ class NysaSim (FauxNysa):
             address = address - self.mem_addr
             mem_device = True
 
-        self._read(address, length, mem_device)
+        self._read(address, length, mem_device, flags)
         return self.response
 
     @cocotb.function
-    def _read(self, address, length = 1, mem_device = False):
+    def _read(self, address, length = 1, mem_device = False, flags = []):
         yield(self.comm_lock.acquire())
-        #print "Reading"
 
-        #print "_Read Acquire Lock"
         data_index = 0
         self.response = Array('B')
         yield( self.wait_clocks(10))
 
         data = Array('B')
 
+        command = 0x00000002
+
         if mem_device:
-            data.extend(create_byte_array_from_dword(0x00010002))
-        else:
-            data.extend(create_byte_array_from_dword(0x00000002))
+            command |= FLAG_MEM_BUS
+
+        if NYSA_FLAGS.DISABLE_AUTO_INC in flags:
+            command |= FLAG_DISABLE_AUTO_INC
+
+        if NYSA_FLAGS.MASTER_ADDRESS in flags:
+            command |= FLAG_MASTER_CONFIG
+
+        data.extend(create_byte_array_from_dword(command))
 
         data.extend(create_byte_array_from_dword(length))
         data.extend(create_byte_array_from_dword(address))
@@ -183,7 +194,7 @@ class NysaSim (FauxNysa):
         raise ReturnValue(self.response)
 
     @cocotb.function
-    def write(self, address, data = None, disable_auto_inc=False):
+    def write(self, address, data = None, flags = []):
         #print "Writing"
         mem_device = False
         write_data = Array('B')
@@ -191,11 +202,19 @@ class NysaSim (FauxNysa):
         if self.mem_addr is None:
             self.mem_addr = self.nsm.get_address_of_memory_bus()
 
+        command = 0x00000001
+
         if address >= self.mem_addr:
             address = address - self.mem_addr
-            write_data.extend(create_byte_array_from_dword(0x00010001))
-        else:
-            write_data.extend(create_byte_array_from_dword(0x00000001))
+            command |= FLAG_MEM_BUS
+
+        if NYSA_FLAGS.DISABLE_AUTO_INC in flags:
+            command |= FLAG_DISABLE_AUTO_INC
+
+        if NYSA_FLAGS.MASTER_ADDRESS in flags:
+            command |= FLAG_MASTER_CONFIG
+
+        write_data.extend(create_byte_array_from_dword(command))
 
         while (len(data) % 4) != 0:
             data.append(0)

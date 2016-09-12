@@ -76,13 +76,6 @@ SOFTWARE.
 
 `define HEADER_SIZE             3
 
-`define MASTER_FLAG_UNUSED      31:2
-`define MASTER_FLAG_EN_WR_RESP  0
-`define MASTER_FLAG_EN_NACK     1
-
-`define MASTER_FLAGS            0
-`define MASTER_TIMEOUT          1
-
 `define MASTER_CFG_COUNT        2
 
 `ifndef INTERRUPT_COUNT
@@ -204,7 +197,8 @@ reg                 r_unrec_cmd;
 
 wire                w_mem_bus_select;
 wire                w_auto_inc_addr;
-wire  [31:0]        w_mastew_flags;
+wire                w_master_config_space;
+wire  [31:0]        w_master_flags;
 
 
 reg   [23:0]        r_ingress_count;
@@ -228,22 +222,6 @@ reg                 r_en_nack;
 
 //Enable a Response from Write Transactions
 reg                 r_en_wr_resp  = ENABLE_WRITE_RESP;
-
-assign  w_mastew_flags[`MASTER_FLAG_UNUSED]     = 0;
-assign  w_mastew_flags[`MASTER_FLAG_EN_WR_RESP] = r_en_wr_resp;
-assign  w_mastew_flags[`MASTER_FLAG_EN_NACK]    = r_en_nack;
-
-assign  w_status[`STATUS_BIT_CMPLT]             = 1'h1;
-assign  w_status[`STATUS_BIT_PING]              = (r_command == `COMMAND_PING);
-assign  w_status[`STATUS_BIT_WRITE]             = (r_command == `COMMAND_WRITE);
-assign  w_status[`STATUS_BIT_READ]              = (r_command == `COMMAND_READ);
-assign  w_status[`STATUS_BIT_RESET]             = (r_command == `COMMAND_RESET);
-assign  w_status[`STATUS_BIT_MSTR_CFG_WR]       = (r_command == `COMMAND_MASTER_CFG_WRITE);
-assign  w_status[`STATUS_BIT_MSTR_CFG_RD]       = (r_command == `COMMAND_MASTER_CFG_READ);
-
-assign  w_status[`STATUS_BIT_UNREC_CMD]         = r_unrec_cmd;
-assign  w_status[`STATUS_BIT_UNUSED]            = 0;
-
 
 //Submodules
 ppfifo #(
@@ -301,12 +279,8 @@ ppfifo #(
 //assign  r_data_size       = r_header[`DATA_COUNT_POS];
 //assign  r_address         = r_header[`ADDRESS_POS];
 
-assign  w_mem_bus_select  = ((r_flags & `FLAG_MEM_BUS) > 0);
-assign  w_auto_inc_addr   = ((r_flags & `FLAG_DISABLE_AUTO_INC) == 0);
-
 //Asynchronous Logic
 assign              o_data_count      = (state == READ) ? local_data_count : 31'h0;
-assign              enable_nack       = w_master_flags[0];
 
 assign              o_per_msk         = 0;
 assign              o_per_sel         = 4'hF;
@@ -329,10 +303,12 @@ assign  o_mem_dat = w_mem_bus_select  ? r_wb_dat      : 32'b0;
 assign  w_wb_dat  = w_mem_bus_select  ? i_mem_dat     : i_per_dat;
 assign  w_wb_ack  = w_mem_bus_select  ? i_mem_ack     : i_per_ack;
 
+assign  w_master_flags[`MASTER_FLAG_UNUSED]         = 0;
+assign  w_master_flags[`MASTER_FLAG_EN_WR_RESP]     = r_en_wr_resp;
+assign  w_master_flags[`MASTER_FLAG_EN_NACK]        = r_en_nack;
 
-=======
-assign  w_master_config[`MASTER_FLAGS]          = w_mastew_flags;
-assign  w_master_config[`MASTER_TIMEOUT]        = r_master_r_nack_timeout;
+assign  w_master_config[`MADDR_CTR_FLAGS]           = w_master_flags;
+assign  w_master_config[`MADDR_NACK_TIMEOUT]        = r_nack_timeout;
 
 
 assign  w_status[`STATUS_BIT_CMPLT]             = 1'h1;
@@ -345,66 +321,15 @@ assign  w_status[`STATUS_BIT_MSTR_CFG_WR]       = (w_command == `COMMAND_MASTER_
 assign  w_status[`STATUS_BIT_MSTR_CFG_RD]       = (w_command == `COMMAND_MASTER_CFG_READ);
 */
 assign  w_status[`STATUS_BIT_PING]              = (w_command == `COMMAND_PING);
-assign  w_status[`STATUS_BIT_WRITE]             = (w_command == `COMMAND_WRITE);
-assign  w_status[`STATUS_BIT_READ]              = (w_command == `COMMAND_READ);
+assign  w_status[`STATUS_BIT_WRITE]             = (w_command == `COMMAND_WRITE & !w_master_config_space);
+assign  w_status[`STATUS_BIT_READ]              = (w_command == `COMMAND_READ  & !w_master_config_space);
 assign  w_status[`STATUS_BIT_RESET]             = (w_command == `COMMAND_RESET);
-assign  w_status[`STATUS_BIT_MSTR_CFG_WR]       = (w_command == `COMMAND_MASTER_CFG_WRITE);
-assign  w_status[`STATUS_BIT_MSTR_CFG_RD]       = (w_command == `COMMAND_MASTER_CFG_READ);
+assign  w_status[`STATUS_BIT_MSTR_CFG_WR]       = (w_command == `COMMAND_WRITE &  w_master_config_space);
+assign  w_status[`STATUS_BIT_MSTR_CFG_RD]       = (w_command == `COMMAND_READ  &  w_master_config_space);
 
 assign  w_status[`STATUS_BIT_UNREC_CMD]         = r_unrec_cmd;
 assign  w_status[`STATUS_BIT_UNUSED]            = 0;
 
-
-//Submodules
-ppfifo #(
-  .DATA_WIDTH       (32                   ),
-  .ADDRESS_WIDTH    (INGRESS_FIFO_DEPTH   )
-) ingress (
-  .reset            (rst                  ),
-
-  //write side
-  .write_clock     (i_ingress_clk         ),
-  .write_data      (i_ingress_data        ),
-  .write_ready     (o_ingress_rdy         ),
-  .write_activate  (i_ingress_act         ),
-  .write_fifo_size (o_ingress_size        ),
-  .write_strobe    (i_ingress_stb         ),
-//  .starved         (                      ),
-
-  //read side
-  .read_clock      (clk                   ),
-  .read_strobe     (r_ingress_stb         ),
-  .read_ready      (w_ingress_rdy         ),
-  .read_activate   (r_ingress_act         ),
-  .read_count      (w_ingress_size        ),
-  .read_data       (w_ingress_data        )
-//  .inactive        (                      )
-);
-
-ppfifo #(
-  .DATA_WIDTH      (32                    ),
-  .ADDRESS_WIDTH   (EGRESS_FIFO_DEPTH     )
-) egress (
-  .reset           (rst                   ),
-
-  //write side
-  .write_clock     (clk                   ),
-  .write_data      (r_egress_data         ),
-  .write_ready     (w_egress_rdy          ),
-  .write_activate  (r_egress_act          ),
-  .write_fifo_size (w_egress_size         ),
-  .write_strobe    (r_egress_stb          ),
-//  .starved         (  ),
-
-  //read side
-  .read_clock      (i_egress_clk          ),
-  .read_strobe     (i_egress_stb          ),
-  .read_ready      (o_egress_rdy          ),
-  .read_activate   (i_egress_act          ),
-  .read_count      (o_egress_size         ),
-  .read_data       (o_egress_data         )
-//  .inactive        (                      )
-);
 
 assign  w_command         = r_header[`COMMAND_POS][`COMMAND_RANGE];
 assign  w_flags           = r_header[`COMMAND_POS][`FLAG_RANGE];
@@ -412,12 +337,12 @@ assign  w_data_size       = r_header[`DATA_COUNT_POS];
 assign  w_address         = r_header[`ADDRESS_POS];
 
 
-assign  w_mem_bus_select  = ((w_flags & `FLAG_MEM_BUS) > 0);
-assign  w_auto_inc_addr   = !((w_flags | `FLAG_DISABLE_AUTO_INC) == 0);
+assign  w_mem_bus_select      =  ((w_flags & `FLAG_MEM_BUS            ) >  0);
+assign  w_auto_inc_addr       = !((w_flags | `FLAG_DISABLE_AUTO_INC   ) == 0);
+assign  w_master_config_space =  ((w_flags & `FLAG_MASTER_ADDR_SPACE  ) >  0);
 
 //Asynchronous Logic
 assign              o_data_count      = (state == READ) ? local_data_count : 31'h0;
-assign              enable_nack       = w_mastew_flags[0];
 
 assign              o_per_msk         = 0;
 assign              o_per_sel         = 4'hF;
@@ -551,13 +476,23 @@ always @ (posedge clk) begin
               r_wb_cyc            <=  1;
               r_wb_we             <=  1;
               r_wb_adr            <=  w_address;
-              state               <=  WRITE;
+              if (w_master_config_space) begin
+                state             <=  MASTER_CFG_WRITE;
+              end
+              else begin
+                state             <=  WRITE;
+              end
             end
             `COMMAND_READ: begin
               r_wb_cyc            <=  1;
               r_wb_we             <=  0;
               r_wb_adr            <=  w_address;
-              state               <=  READ;
+              if (w_master_config_space) begin
+                state             <=  MASTER_CFG_READ;
+              end
+              else begin
+                state             <=  READ;
+              end
             end
             `COMMAND_RESET: begin
               o_sync_rst          <=  1;
@@ -567,12 +502,6 @@ always @ (posedge clk) begin
               else begin
                 state             <=  IDLE;
               end
-            end
-            `COMMAND_MASTER_CFG_WRITE: begin
-              state               <=  MASTER_CFG_WRITE;
-            end
-            `COMMAND_MASTER_CFG_READ: begin
-              state               <=  MASTER_CFG_READ;
             end
             default: begin
               r_unrec_cmd         <=  1;
@@ -654,11 +583,11 @@ always @ (posedge clk) begin
             r_ingress_stb               <=  1;
             if (r_data_count < w_data_size) begin
               case (r_address)
-                `MASTER_FLAGS: begin
+                `MADDR_CTR_FLAGS: begin
                   r_en_nack             <=  w_ingress_data[`MASTER_FLAG_EN_NACK];
                   r_en_wr_resp          <=  w_ingress_data[`MASTER_FLAG_EN_WR_RESP];
                 end
-                `MASTER_TIMEOUT: begin
+                `MADDR_NACK_TIMEOUT: begin
                   r_nack_timeout        <=  w_ingress_data;
                 end
                 default: begin
@@ -684,14 +613,16 @@ always @ (posedge clk) begin
           else if (r_data_count < w_data_size) begin
             if (r_address < `MASTER_CFG_COUNT) begin
               r_egress_data         <=  w_master_config[r_address];
+              r_egress_stb          <=  1;
             end
             else begin
               r_egress_data         <=  32'h0;
             end
             r_address               <=  r_address + 1;
-            r_data_count            <=  r_data_count;
+            r_data_count            <=  r_data_count + 1;
           end
           else begin
+            r_egress_act            <=  0;
             state                   <=  FLUSH;
           end
         end

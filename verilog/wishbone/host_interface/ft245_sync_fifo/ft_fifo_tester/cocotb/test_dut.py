@@ -61,6 +61,9 @@ def small_write_read(dut):
     yield (nysa.wait_clocks(100))
     dut.log.info("Control Register: 0x%08X" % read_value)
 
+
+
+
 @cocotb.test(skip = True)
 def long_write_read(dut):
     """
@@ -200,7 +203,7 @@ def back_preassure_manager(dut, timeout):
     #    #yield ro
     #    yield clk_edge
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def long_write_read_with_back_preassure(dut):
     """
     Description:
@@ -256,6 +259,41 @@ def long_write_read_with_back_preassure(dut):
                 if fail_count < 16:
                     print "[0x%04X] %02X != %02X" % (i, write_data[i], read_data[i])
                 fail_count += 1
+
+@cocotb.test(skip = False)
+def master_write_read(dut):
+    """
+    Description:
+        Very Basic Functionality
+            Startup Nysa
+
+    Test ID: 4
+
+    Expected Results:
+        Write to all registers
+    """
+
+    dut.test_id = 4
+    print "module path: %s" % MODULE_PATH
+    nysa = NysaSim(dut, SIM_CONFIG, CLK_PERIOD, user_paths = [MODULE_PATH])
+    setup_dut(dut)
+    yield(nysa.reset())
+    nysa.read_sdb()
+    yield (nysa.wait_clocks(10))
+    nysa.pretty_print_sdb()
+
+    dut.log.info("Read Master Flags")
+    write_flags = yield cocotb.external(nysa.read_master_register)(0x00)
+    yield (nysa.wait_clocks(100))
+    dut.log.info("Writing flags: 0x%08X" % write_flags)
+    write_flags = 0x001
+    yield cocotb.external(nysa.write_master_register)(0x00, write_flags)
+    yield (nysa.wait_clocks(100))
+
+    write_flags = yield cocotb.external(nysa.read_master_register)(0x00)
+    yield (nysa.wait_clocks(100))
+    dut.log.info("Writing flags: 0x%08X" % write_flags)
+    yield cocotb.external(nysa.write_master_register)(0x00, 0x00)
 
 
 
