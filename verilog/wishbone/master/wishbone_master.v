@@ -150,7 +150,8 @@ localparam        READ                  = 4'h5;
 localparam        MASTER_CFG_WRITE      = 4'h6;
 localparam        MASTER_CFG_READ       = 4'h7;
 localparam        SEND_RESPONSE         = 4'h8;
-localparam        FLUSH                 = 4'h9;
+localparam        SEND_INTERRUPT        = 5'h9;
+localparam        FLUSH                 = 4'hA;
 
 
 // registers
@@ -393,61 +394,63 @@ always @ (posedge clk) begin
     r_prev_int        <= 0;
 
     for (i = 0; i < `HEADER_SIZE; i = i + 1)
-      r_header[i]     <=  0;
-    //w_command         <=  16'h0;
-    //w_flags           <=  16'h0;
-    //w_data_size       <=  32'h0;
-    r_address         <=  32'h0;
-
-    //Wishbone Bus
-    r_wb_we           <= 1'b0;
-    r_wb_cyc          <= 1'b0;
-    r_wb_adr          <= 32'h0;
-    r_wb_dat          <= 32'h0;
-    r_wb_stb          <= 1'b0;
+      r_header[i]             <=  0;
+    //w_command                 <=  16'h0;
+    //w_flags                   <=  16'h0;
+    //w_data_size               <=  32'h0;
+    r_address                 <=  32'h0;
+                              
+    //Wishbone Bus            
+    r_wb_we                   <= 1'b0;
+    r_wb_cyc                  <= 1'b0;
+    r_wb_adr                  <= 32'h0;
+    r_wb_dat                  <= 32'h0;
+    r_wb_stb                  <= 1'b0;
   end
   else begin
 
     //Always get a free FIFO
     if (w_ingress_rdy && !r_ingress_act) begin
-      r_ingress_count     <=  24'h0;
-      r_ingress_act       <=  1'h1;
+      r_ingress_count         <=  24'h0;
+      r_ingress_act           <=  1'h1;
     end
 
     if ((w_egress_rdy > 0) && r_egress_act == 0) begin
-      r_egress_count      <=  24'h0;
+      r_egress_count          <=  24'h0;
       if (w_egress_rdy[0])
-        r_egress_act[0]   <=  1'h1;
-      else
-        r_egress_act[1]   <=  1'h1;
-    end
-    case (state)
-      IDLE: begin
-        r_wb_we           <= 1'b0;
-        r_wb_cyc          <= 1'b0;
-        r_wb_adr          <= 32'h0;
-        r_wb_dat          <= 32'h0;
-        r_wb_stb          <= 1'b0;
+        r_egress_act[0]       <=  1'h1;
+      else                    
+        r_egress_act[1]       <=  1'h1;
+    end                       
+    case (state)              
+      IDLE: begin             
+        r_wb_we               <= 1'b0;
+        r_wb_cyc              <= 1'b0;
+        r_wb_adr              <= 32'h0;
+        r_wb_dat              <= 32'h0;
+        r_wb_stb              <= 1'b0;
+                              
+        r_address             <=  32'h0;
+        r_ingress_count       <=  24'h0;
+        r_egress_count        <=  24'h0;
+        r_data_count          <=  32'h0;
+        r_hdr_count           <=  4'h0;
 
-        r_address         <=  32'h0;
-        r_ingress_count   <=  24'h0;
-        r_egress_count    <=  24'h0;
-        r_data_count      <=  32'h0;
-        r_hdr_count       <=  4'h0;
-
-        //r_sts_complte     <=  0;
-        r_unrec_cmd       <=  0;
+        //r_sts_complte         <=  0;
+        r_unrec_cmd           <=  0;
 
         if (r_ingress_act) begin
-          state           <=  READ_INGRESS_FIFO;
+          state               <=  READ_INGRESS_FIFO;
         end
-      end
+        else if (!r_prev_int && i_per_int) begin
+ -          state             <=  SEND_INTERRUPT;
+ -      end
       READ_INGRESS_FIFO: begin
         r_ingress_stb         <=  1;
         r_ingress_count       <=  r_ingress_count + 1;
         r_header[r_hdr_count] <=  w_ingress_data;
 
-        state             <=  PARSE_COMMAND;
+        state                 <=  PARSE_COMMAND;
       end
       PARSE_COMMAND: begin
         if (r_ingress_act) begin
@@ -636,6 +639,20 @@ always @ (posedge clk) begin
           end
           else begin
             state                 <=  FLUSH;
+          end
+        end
+      end
+      SEND_INTERRUPT: begin
+        r_prev_int                <=  1;
+        if (r_egress_act > 0) begin
+          if (r_egress_count < `INTERRUPT_COUNT) begin
+            r_egress_data         <=  o_per_dat;
+            r_egress_count        <=  r_egress_count + 1;
+          end
+          else begin
+            r_ingress_act         <=  0;
+            state                 <=  FLUSH;
+            end
           end
         end
       end
