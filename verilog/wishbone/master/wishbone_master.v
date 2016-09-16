@@ -207,6 +207,7 @@ reg   [3:0]         r_hdr_count;
 reg   [23:0]        r_egress_count;
 
 reg   [31:0]        r_data_count;
+reg   [31:0]        r_interrupts;
 
 reg   [31:0]        r_header  [0:(`HEADER_SIZE - 1)];
 
@@ -399,13 +400,14 @@ always @ (posedge clk) begin
     //w_flags                   <=  16'h0;
     //w_data_size               <=  32'h0;
     r_address                 <=  32'h0;
-                              
-    //Wishbone Bus            
+
+    //Wishbone Bus
     r_wb_we                   <= 1'b0;
     r_wb_cyc                  <= 1'b0;
     r_wb_adr                  <= 32'h0;
     r_wb_dat                  <= 32'h0;
     r_wb_stb                  <= 1'b0;
+    r_interrupts              <= 32'h0;
   end
   else begin
 
@@ -419,17 +421,17 @@ always @ (posedge clk) begin
       r_egress_count          <=  24'h0;
       if (w_egress_rdy[0])
         r_egress_act[0]       <=  1'h1;
-      else                    
+      else
         r_egress_act[1]       <=  1'h1;
-    end                       
-    case (state)              
-      IDLE: begin             
+    end
+    case (state)
+      IDLE: begin
         r_wb_we               <= 1'b0;
         r_wb_cyc              <= 1'b0;
         r_wb_adr              <= 32'h0;
         r_wb_dat              <= 32'h0;
         r_wb_stb              <= 1'b0;
-                              
+
         r_address             <=  32'h0;
         r_ingress_count       <=  24'h0;
         r_egress_count        <=  24'h0;
@@ -444,6 +446,7 @@ always @ (posedge clk) begin
         end
         else if (!r_prev_int && i_per_int) begin
             state             <=  SEND_INTERRUPT;
+            r_interrupts      <=  w_wb_dat;
         end
       end
       READ_INGRESS_FIFO: begin
@@ -647,12 +650,13 @@ always @ (posedge clk) begin
         r_prev_int                <=  1;
         if (r_egress_act > 0) begin
           if (r_egress_count < `INTERRUPT_COUNT) begin
-            r_egress_data         <=  o_per_dat;
+            r_egress_data         <=  r_interrupts;
             r_egress_count        <=  r_egress_count + 1;
+            r_egress_stb          <=  1;
           end
           else begin
-            r_ingress_act         <=  0;
-            state                 <=  FLUSH;
+            r_egress_act          <=  0;
+            state                 <=  IDLE;
           end
         end
       end
@@ -667,9 +671,6 @@ always @ (posedge clk) begin
           end
           state                   <=  IDLE;
         end
-      end
-      FLUSH: begin
-        state                     <=  IDLE;
       end
       default: begin
       end
