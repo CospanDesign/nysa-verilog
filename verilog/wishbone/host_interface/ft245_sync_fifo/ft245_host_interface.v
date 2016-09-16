@@ -37,14 +37,14 @@ module ft245_host_interface (
   input                           rst,
 
   //FT245 Interface
-  (* keep = "true" *)   input                           i_ft245_clk,
+  input                           i_ft245_clk,
   inout     [7:0]                 io_ft245_data,
-  (* keep = "true" *)   input                           i_ft245_txe_n,
-  (* keep = "true" *)   output                          o_ft245_wr_n,
-  (* keep = "true" *)   input                           i_ft245_rde_n,
-  (* keep = "true" *)   output                          o_ft245_rd_n,
-  (* keep = "true" *)   output                          o_ft245_oe_n,
-  (* keep = "true" *)   output                          o_ft245_siwu,
+  input                           i_ft245_txe_n,
+  output                          o_ft245_wr_n,
+  input                           i_ft245_rde_n,
+  output                          o_ft245_rd_n,
+  output                          o_ft245_oe_n,
+  output                          o_ft245_siwu,
 
   //Ingress
   output                          ingress_clk,
@@ -52,7 +52,7 @@ module ft245_host_interface (
   output  reg [1:0]               ingress_act,
   output  reg                     ingress_stb,
   input       [23:0]              ingress_size,
-  (* KEEP = "true" *)   output  reg [`DATA_SIZE - 1: 0] ingress_data,
+  output  reg [`DATA_SIZE - 1: 0] ingress_data,
 
   //Egress
   output                          egress_clk,
@@ -77,7 +77,7 @@ localparam      EGRESS_SEND_IMMEDIATELY = 5;
 
 //registes/wires
 
-(* KEEP = "true" *) reg  [3:0]state = IDLE;
+reg   [3:0]state = IDLE;
 reg   [23:0]                    count = 0;
 reg   [7:0]                     byte_count = 0;
 
