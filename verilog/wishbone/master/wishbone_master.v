@@ -443,8 +443,9 @@ always @ (posedge clk) begin
           state               <=  READ_INGRESS_FIFO;
         end
         else if (!r_prev_int && i_per_int) begin
- -          state             <=  SEND_INTERRUPT;
- -      end
+            state             <=  SEND_INTERRUPT;
+        end
+      end
       READ_INGRESS_FIFO: begin
         r_ingress_stb         <=  1;
         r_ingress_count       <=  r_ingress_count + 1;
@@ -652,7 +653,6 @@ always @ (posedge clk) begin
           else begin
             r_ingress_act         <=  0;
             state                 <=  FLUSH;
-            end
           end
         end
       end
