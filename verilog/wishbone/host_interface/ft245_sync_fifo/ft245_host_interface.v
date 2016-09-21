@@ -91,7 +91,7 @@ reg                             r_ft245_read_tmp_data;
 wire                            w_ft245_ingress_avail;
 reg                             r_ft245_ingress_stb = 0;
 reg                             r_ft245_output_enable = 0;
-                                
+
 wire                            w_ft245_egress_avail;
 reg                             r_ft245_egress_stb = 0;
 reg                             r_ft245_egress_send_now = 0;
@@ -156,9 +156,9 @@ always @ (posedge i_ft245_clk) begin
     r_ft245_egress_data         <=  0;
     r_ft245_egress_data_dword   <=  0;
     r_ft245_ingress_data_dword  <=  0;
-    
+
     r_ft245_egress_tmp_data     <=  0;
-    r_ft245_read_tmp_data       <=  0;    
+    r_ft245_read_tmp_data       <=  0;
 
     ingress_act                 <=  0;
 
@@ -225,12 +225,12 @@ always @ (posedge i_ft245_clk) begin
         //count                     <=  count + 1;
         byte_count                <=  0;
         if (w_ft245_egress_avail) begin
-            state                 <=  EGRESS_SEND; 
-            egress_stb            <=  1;       
+            state                 <=  EGRESS_SEND;
+            egress_stb            <=  1;
         end
       end
       EGRESS_SEND: begin
-        r_ft245_read_tmp_data     <=  0;      
+        r_ft245_read_tmp_data     <=  0;
         r_ft245_egress_data       <=  r_ft245_egress_data_dword[31:24];
         if (w_ft245_egress_avail) begin
           if (byte_count < (BYTE_COUNT - 1)) begin
@@ -242,7 +242,7 @@ always @ (posedge i_ft245_clk) begin
             //Last get the next piece of data
             if (count == (egress_size - 1)) begin
               egress_act              <=  0;
-              state                   <=  EGRESS_SEND_IMMEDIATELY;    
+              state                   <=  EGRESS_SEND_IMMEDIATELY;
             end
             r_ft245_egress_data_dword <=  egress_data;
             count                     <=  count + 1;
@@ -270,11 +270,13 @@ always @ (posedge i_ft245_clk) begin
         end
       end
       EGRESS_SEND_IMMEDIATELY: begin
-        r_ft245_egress_send_now   <=  1;
-        state                     <=  IDLE;
+        if (w_ft245_egress_avail) begin
+          r_ft245_egress_send_now   <=  1;
+        end
+        state                       <=  IDLE;
       end
       default: begin
-        state                     <=  IDLE;
+        state                       <=  IDLE;
       end
     endcase
   end
