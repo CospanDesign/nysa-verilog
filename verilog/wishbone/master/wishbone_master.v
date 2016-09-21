@@ -503,12 +503,7 @@ always @ (posedge clk) begin
             end
             `COMMAND_RESET: begin
               o_sync_rst          <=  1;
-              if (r_ingress_act && (r_ingress_count < w_ingress_size)) begin
-                state             <=  FLUSH;
-              end
-              else begin
-                state             <=  IDLE;
-              end
+              state               <=  FLUSH;
             end
             default: begin
               r_unrec_cmd         <=  1;
@@ -661,16 +656,16 @@ always @ (posedge clk) begin
         end
       end
       FLUSH: begin
-        if (r_ingress_act && (r_ingress_count > 0) && (r_ingress_count < w_ingress_size)) begin
-          r_ingress_count         <=  r_ingress_count + 1;
-          r_ingress_stb           <=  1;
-        end
-        else begin
+        //if (r_ingress_act && (r_ingress_count > 0) && (r_ingress_count < w_ingress_size)) begin
+        //  r_ingress_count         <=  r_ingress_count + 1;
+        //  r_ingress_stb           <=  1;
+        //end
+        //else begin
           if (r_ingress_act && (r_ingress_count > 0)) begin
             r_ingress_act         <=  0;
           end
           state                   <=  IDLE;
-        end
+        //end
       end
       default: begin
       end
