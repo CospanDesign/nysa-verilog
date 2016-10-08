@@ -1,7 +1,7 @@
 #PUT LICENCE HERE!
 
 """
-master Driver
+axi4_sdb Driver
 
 """
 
@@ -30,11 +30,11 @@ except SyntaxError:
 CONTROL_ADDR            = 0x00000000
 ZERO_BIT                = 0
 
-class masterDriver(driver.Driver):
+class axi4_sdbDriver(driver.Driver):
 
-    """ master
+    """ axi4_sdb
 
-        Communication with a DutDriver master Core
+        Communication with a DutDriver axi4_sdb Core
     """
     @staticmethod
     def get_abi_class():
@@ -53,7 +53,7 @@ class masterDriver(driver.Driver):
         return SDB_VENDOR_ID
 
     def __init__(self, nysa, urn, debug = False):
-        super(masterDriver, self).__init__(nysa, urn, debug)
+        super(axi4_sdbDriver, self).__init__(nysa, urn, debug)
 
     def set_control(self, control):
         self.write_register(CONTROL_ADDR, control)

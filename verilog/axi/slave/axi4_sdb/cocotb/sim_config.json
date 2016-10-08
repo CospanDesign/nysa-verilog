@@ -46,8 +46,8 @@
         }
     },
     "SLAVES":{
-        "master":{
-            "filename":"master.v"
+        "axi4_sdb":{
+            "filename":"axi4_sdb.v"
         }
     },
     "MEMORY":{

@@ -20,7 +20,7 @@ VERILOG_SOURCES += ${TOPDIR}/sim/arbiter_2_masters.v
 VERILOG_SOURCES += ${TOPDIR}/sim/wishbone_mem_interconnect.v
 
 #Simulation Devices
-VERILOG_SOURCES += ${TOPDIR}/rtl/master.v
+VERILOG_SOURCES += ${TOPDIR}/rtl/axi4_sdb.v
 #DUT
 #Test Benches
 VERILOG_SOURCES += $(TOPDIR)/cocotb/tb_cocotb.v

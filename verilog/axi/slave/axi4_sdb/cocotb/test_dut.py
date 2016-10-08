@@ -8,7 +8,7 @@ from nysa.host.sim.sim_host import NysaSim
 from cocotb.clock import Clock
 import time
 from array import array as Array
-from dut_driver import masterDriver
+from dut_driver import axi4_sdbDriver
 
 SIM_CONFIG = "sim_config.json"
 
@@ -53,7 +53,7 @@ def first_test(dut):
     nysa.read_sdb()
     yield (nysa.wait_clocks(10))
     nysa.pretty_print_sdb()
-    driver = masterDriver(nysa, nysa.find_device(masterDriver)[0])
+    driver = axi4_sdbDriver(nysa, nysa.find_device(axi4_sdbDriver)[0])
     print "here!"
     yield cocotb.external(driver.set_control)(0x01)
     yield (nysa.wait_clocks(100))
