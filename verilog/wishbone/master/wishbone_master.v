@@ -171,7 +171,7 @@ reg [31:0]          interrupt_mask    = 32'h00000000;
 reg [31:0]          r_nack_timeout    = `DEF_NACK_TIMEOUT;
 reg [31:0]          r_nack_count      = 0;
 
-reg                 prev_reset        = 0;
+reg                 r_sync_rst = 0;
 
 // wires
 wire                w_ingress_rdy;
