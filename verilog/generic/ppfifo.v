@@ -41,7 +41,7 @@ module ppfifo
   output      [23:0]                write_fifo_size,
   input                             write_strobe,
   input       [DATA_WIDTH - 1: 0]   write_data,
-  output                            starved,
+  output reg                        starved,
 
   //read side
   input                             read_clock,
@@ -69,7 +69,7 @@ reg                         r_wselect;      // Select the FIFO to work with
 reg                         write_enable;  // Enable a write to the BRAM
 
 reg   [1:0]                 wcc_read_ready;// Tell read side a FIFO is ready
-wire  [1:0]                 wcc_read_done;
+reg   [1:0]                 wcc_read_done;
                                             // write status of the read
                                             // available
 reg                         wcc_tie_select; //because it's possible if the read
@@ -93,10 +93,10 @@ reg   [4:0]                 r_reset_timeout;
 reg   [ADDRESS_WIDTH - 1: 0]r_address;    //Address to access a bank
 reg                         r_rselect;     //Select a bank (Select a FIFO)
 
-wire  [1:0]                 rcc_read_ready;
+reg   [1:0]                 rcc_read_ready;
                                           // Write side says X is ready
 reg   [1:0]                 rcc_read_done;// Tell write side X is ready
-wire                        rcc_tie_select;
+reg                         rcc_tie_select;
                                           //If there is a tie, then this will
                                           //break it
 
@@ -115,18 +115,8 @@ reg   [1:0]                 r_pre_activate; //Used to delay the clock cycle by
 reg                         r_pre_strobe;
 reg                         r_pre_read_wait;//Wait an extra cycle so the registered data has a chance to set
                                             //the data to be registered
-wire  [DATA_WIDTH - 1: 0]   w_read_data;    //data from the read FIFO
+reg   [DATA_WIDTH - 1: 0]   r_br_read_data; //data from the read FIFO
 reg   [DATA_WIDTH - 1: 0]   r_read_data;    //data from the read FIFO
-
-
-
-//assign  r_wselect           = (write_activate == 2'b00) ? 1'b0 :
-//                              (write_activate == 2'b01) ? 1'b0 :
-//                              (write_activate == 2'b10) ? 1'b1 :
-//                              reset ?                     1'b0 :
-//                              r_wselect;
-//                            //I know this can be shortened down but it's more
-//                            //readible thi way
 
 assign  write_fifo_size     = FIFO_DEPTH;
 
@@ -135,42 +125,18 @@ assign  addr_in             = {r_wselect, write_address};
 assign  ppfifo_ready        = !(w_reset || r_reset);
 assign  ready               = ppfifo_ready;
 
-//assign  wcc_tie_select      = (wcc_read_ready == 2'b00) ? 1'b0 :
-//                              (wcc_read_ready == 2'b01) ? 1'b0 :
-//                              (wcc_read_ready == 2'b10) ? 1'b1 :
-//                              wcc_tie_select;
-                                            // If the first FIFO is ready,
-                                            // then both FIFOs are ready then
-                                            // keep the first FIFO
 
 assign  addr_out            = {r_rselect, r_address};
-
-
-//Debug
-//wire  [23:0]                debug_f0_w_count;
-//wire  [23:0]                debug_f1_w_count;
-
-//wire  [23:0]                debug_f0_r_size;
-//wire  [23:0]                debug_f1_r_size;
-
-//wire  [23:0]                debug_f0_r_count;
-//wire  [23:0]                debug_f1_r_count;
-
-//assign  debug_f0_w_count    = w_count[0];
-//assign  debug_f1_w_count    = w_count[1];
-
-//assign  debug_f0_r_size     = r_size[0];
-//assign  debug_f1_r_size     = r_size[1];
-
 assign  inactive            = (w_count[0] == 0) &&
                               (w_count[1] == 0) &&
                               (write_ready == 2'b11) &&
                               (!write_strobe);
 
 
-assign  read_data           = (r_pre_strobe) ? w_read_data : r_read_data;
+assign  read_data           = (r_pre_strobe) ? r_br_read_data : r_read_data;
 
 
+/*
 //Submodules
 blk_mem #(
   .DATA_WIDTH(DATA_WIDTH),
@@ -183,10 +149,28 @@ blk_mem #(
   .addra    (addr_in            ),
 
   .clkb     (read_clock         ),
-  .doutb    (w_read_data        ),
+  .doutb    (r_br_read_data        ),
   .addrb    (addr_out           )
 );
+*/
+//BLOCK MEM INNARDS
+reg [DATA_WIDTH - 1:0] mem [0:2 ** (ADDRESS_WIDTH + 1)];
+always @ (posedge write_clock)
+begin
+  if ( write_enable ) begin
+     mem[addr_in]   <= write_data;
+  end
+end
 
+//read only on the b side
+always @ (posedge read_clock)
+begin
+     r_br_read_data    <= mem[addr_out];
+end
+
+//BLOCK MEM INNARDS DONE
+
+/*
 //W - R FIFO 0
 cross_clock_enable ccwf0 (
   .rst      (reset              ),
@@ -213,6 +197,53 @@ cross_clock_enable ccts (
   .out_clk  (read_clock         ),
   .out_en   (rcc_tie_select     )
 );
+*/
+
+//Cross Clock (Write -> Read)
+
+reg         [2:0] ccfw0;  //W - R FIFO0 Read FIFO Ready
+reg         [2:0] ccfw1;  //W - R FIFO1 Read FIFO Ready
+reg         [2:0] ccts;   //W - R Tie Select
+
+always @ (posedge read_clock) begin
+  if (reset) begin
+    ccfw0             <=  3'b000;
+    ccfw1             <=  3'b000;
+    ccts              <=  3'b000;
+    rcc_read_ready[0] <=  0;
+    rcc_read_ready[1] <=  0;
+    rcc_tie_select    <=  0;
+   end
+  else begin
+    if (ccfw0[2:1] == 2'b11) begin
+      rcc_read_ready[0] <=  1;
+    end
+    else if (ccfw0[2:1] == 2'b00) begin
+      rcc_read_ready[0] <=  0;
+    end
+
+    if (ccfw1[2:1] == 2'b11) begin
+      rcc_read_ready[1] <=  1;
+    end
+    else if (ccfw1[2:1] == 2'b00) begin
+      rcc_read_ready[1] <=  0;
+    end
+
+    if (ccts[2:1] == 2'b11) begin
+      rcc_tie_select    <=  1;
+    end
+    else if (ccts[2:1] == 2'b00) begin
+      rcc_tie_select    <=  0;
+    end
+
+    //Clock in everything on the local clock
+    ccfw0     <=  {ccfw0[1:0], wcc_read_ready[0]};
+    ccfw1     <=  {ccfw1[1:0], wcc_read_ready[1]};
+    ccts      <=  {ccts[1:0],  wcc_tie_select};
+  end
+end
+
+/*
 
 //R - W FIFO 0
 cross_clock_enable ccrf0 (
@@ -239,8 +270,50 @@ cross_clock_enable cc_starved(
   .out_clk  (write_clock                   ),
   .out_en   (starved                       )
 );
+*/
 
+reg         [2:0] ccrf0;  //R - W FIFO0 Read Done
+reg         [2:0] ccrf1;  //R - W FIFO2 Read Done
+reg         [2:0] ccstv;  //R - W No data in the FIFO
 
+always @ (posedge write_clock) begin
+  if (reset) begin
+    ccrf0             <=  3'b000;
+    ccrf1             <=  3'b000;
+    ccstv             <=  3'b000;
+
+    wcc_read_done[0]  <=  0;
+    wcc_read_done[1]  <=  0;
+    starved           <=  0;
+  end
+  else begin
+
+    if (ccrf0[2:1] == 2'b11) begin
+      wcc_read_done[0]  <=  1;
+    end
+    else if (ccrf0[2:1] == 2'b00) begin
+      wcc_read_done[0]  <=  0;
+    end
+
+    if (ccrf1[2:1] == 2'b11) begin
+      wcc_read_done[1]  <=  1;
+    end
+    else if (ccrf1[2:1] == 2'b00) begin
+      wcc_read_done[1]  <=  0;
+    end
+
+    if (ccstv[2:1] == 2'b11) begin
+      starved           <=  1;
+    end
+    else if (ccstv[2:1] == 2'b00) begin
+      starved           <=  0;
+    end
+
+    ccrf0     <=  {ccrf0[1:0], rcc_read_done[0]};
+    ccrf1     <=  {ccrf1[1:0], rcc_read_done[1]};
+    ccstv     <=  {ccstv[1:0], (!read_ready && !read_activate)};
+  end
+end
 
 
 //asynchronous logic
@@ -448,6 +521,7 @@ always @ (posedge read_clock) begin
 
     r_next_fifo                     <=  0;
     r_read_data                     <=  0;
+    read_ready                      <=  0;
 
   end
   else begin
@@ -519,7 +593,7 @@ always @ (posedge read_clock) begin
 
       //XXX: There should be a better way to handle these edge conditions
       if (!r_activate && r_pre_read_wait) begin
-        r_read_data                     <=  w_read_data;
+        r_read_data                     <=  r_br_read_data;
         r_address                       <=  r_address + 1;
         r_activate                      <=  r_pre_activate;
         r_pre_activate                  <=  0;
@@ -530,11 +604,11 @@ always @ (posedge read_clock) begin
 
       if (read_strobe && (r_address < (r_size[r_rselect] + 1))) begin
         //Increment the address
-        r_read_data                     <=  w_read_data;
+        r_read_data                     <=  r_br_read_data;
         r_address                       <=  r_address + 1;
       end
       if (r_pre_strobe && !read_strobe) begin
-        r_read_data                     <=  w_read_data;
+        r_read_data                     <=  r_br_read_data;
       end
     end
     if (!rcc_read_ready[0] && !r_ready[0] && !r_activate[0]) begin

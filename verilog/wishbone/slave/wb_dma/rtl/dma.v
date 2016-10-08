@@ -747,7 +747,7 @@ assign flag_instruction_continue7 = flag_instruction_continue[7];
 
 genvar g;
 generate
-for (g = 0; g < `SOURCE_COUNT; g = g + 1) begin
+for (g = 0; g < `SOURCE_COUNT; g = g + 1) begin: src_cntl_for
   assign  src_dma_busy[g]               = (state[g] != IDLE);
   assign  flag_src_addr_inc[g]          = src_control[g][`BIT_CFG_SRC_ADDR_INC];
   assign  flag_src_addr_dec[g]          = src_control[g][`BIT_CFG_SRC_ADDR_DEC];
@@ -757,7 +757,7 @@ endgenerate
 
 genvar h;
 generate
-for (h = 0; h < `INST_COUNT; h = h + 1) begin
+for (h = 0; h < `INST_COUNT; h = h + 1) begin: cmd_flg_for
   assign  flag_egress_bond[h]          = cmd_flags[h][`BIT_CMD_EGRESS_BOND];
   assign  flag_ingress_bond[h]         = cmd_flags[h][`BIT_CMD_INGRESS_BOND];
   assign  flag_dest_addr_rst_on_cmd[h] = cmd_flags[h][`BIT_CMD_DEST_ADDR_RST_ON_CMD];
@@ -768,7 +768,7 @@ endgenerate
 
 genvar j;
 generate
-for (j = 0; j < `SINK_COUNT; j = j + 1) begin
+for (j = 0; j < `SINK_COUNT; j = j + 1) begin: snk_cntl_for
   assign  flag_dest_data_quantum[j]     = snk_control[j][`BIT_CFG_DEST_DATA_QUANTUM];
   assign  flag_dest_addr_inc[j]         = snk_control[j][`BIT_CFG_DEST_ADDR_INC];
   assign  flag_dest_addr_dec[j]         = snk_control[j][`BIT_CFG_DEST_ADDR_DEC];

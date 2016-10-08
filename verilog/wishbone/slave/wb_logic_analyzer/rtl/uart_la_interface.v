@@ -1,6 +1,6 @@
 /*
 Distributed under the MIT license.
-Copyright (c) 2012 Dave McCoy (dave.mccoy@cospandesign.com)
+Copyright (c) 2016 Dave McCoy (dave.mccoy@cospandesign.com)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -21,6 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+`define PKT_SIZE 6
 `include "logic_analyzer_defines.v"
 
 module uart_la_interface #(
@@ -30,624 +31,425 @@ module uart_la_interface #(
   input                       rst,
   input                       clk,
 
+  output reg                  o_en_la,
+  output reg                  o_la_reset,
+  input                       i_finished,
+  input       [31:0]          i_start_pos,
+  output reg                  o_uart_set_value_stb,
+  output reg                  o_force_trigger,
+
   //logic analyzer control
-  output reg  [31:0]          trigger,
-  output reg  [31:0]          trigger_mask,
-  output reg  [31:0]          trigger_after,
-  output reg  [31:0]          trigger_edge,
-  output reg  [31:0]          both_edges,
-  output reg  [31:0]          repeat_count,
-  output reg                  set_strobe,
-  input                       disable_uart,
-  output reg                  enable,
-  output reg                  la_reset,
-  input                       finished,
-  input       [31:0]          start,
+  output      [31:0]          o_trigger,
+  output      [31:0]          o_trigger_mask,
+  output      [31:0]          o_trigger_after,
+  output      [31:0]          o_trigger_edge,
+  output      [31:0]          o_both_edges,
+  output      [31:0]          o_repeat_count,
 
   //data interface
-  input       [31:0]          data_read_size,
-  output reg                  data_read_strobe,
-  input       [31:0]          data,
+  input       [31:0]          i_la_rd_size,
+  output reg  [31:0]          o_la_rd_addr,
+  input       [31:0]          i_la_rd_data,
 
-  input                       phy_rx,
-  output                      phy_tx
+  input                       i_phy_rx,
+  output                      o_phy_tx
 );
 
+localparam  IDLE                  = 0;
+localparam  READ_COMMAND          = 1;
+localparam  READ_VALUE            = 2;
+localparam  READ_ENABLE_SET       = 3;
+localparam  READ_LINE_FEED        = 4;
+localparam  SEND_RESPONSE         = 5;
 
-
-
-parameter                   IDLE                  = 0;
-parameter                   READ_COMMAND          = 1;
-parameter                   READ_ENABLE_SET       = 2;
-parameter                   READ_TRIGGER          = 3;
-parameter                   READ_TRIGGER_MASK     = 4;
-parameter                   READ_TRIGGER_AFTER    = 5;
-parameter                   READ_TRIGGER_EDGE     = 6;
-parameter                   READ_BOTH_EDGES       = 7;
-parameter                   READ_REPEAT_COUNT     = 8;
-parameter                   READ_LINE_FEED        = 9;
-parameter                   SEND_RESPONSE         = 10;
+localparam  TRIGGER               = 0;
+localparam  TRIGGER_MASK          = 1;
+localparam  TRIGGER_AFTER         = 2;
+localparam  TRIGGER_EDGE          = 3;
+localparam  BOTH_EDGES            = 4;
+localparam  REPEAT_COUNT          = 5;
 
 //UART Control
-reg                         write_strobe;
-wire                        write_full;
-wire  [31:0]                write_available;
-reg   [7:0]                 write_data;
-wire  [31:0]                write_size;
+reg                         r_uart_wr_stb;
+reg   [7:0]                 r_uart_wr_data;
 
-wire                        read_overflow;
-reg                         read_strobe;
-wire                        read_empty;
-wire  [31:0]                read_size;
-wire  [7:0]                 read_data;
-wire  [31:0]                uart_read_count;
+
+reg   [3:0]                 r_index;
+
+wire                        w_uart_rd_empty;
+wire                        w_uart_rcv_stb;
+wire  [7:0]                 w_uart_rd_data;
+reg   [31:0]                r_uart_rd_count;
+
+
+reg   [31:0]                r_packet_data[5:0];
+reg   [31:0]                r_wr_pos;
 
 //Register/Wires
-reg                         ready;
-reg   [3:0]                 read_state;
-reg   [3:0]                 write_state;
+reg   [3:0]                 rd_state = IDLE;
+reg                         r_lcl_rst = 1;
+reg   [3:0]                 wr_state = IDLE;
 
-reg                         write_status;
-reg                         status_written;
+reg                         r_wr_en;
+reg                         r_wr_fin;
 
-reg   [7:0]                 command_response;
-reg   [7:0]                 response_status;
-reg                         process_byte;
-reg   [31:0]                read_count;
+reg   [7:0]                 r_cmd_rsps;
+reg   [7:0]                 r_rsp_sts;
 
-reg   [31:0]                la_data_read_count;
-reg   [31:0]                la_data;
-reg   [2:0]                 byte_count;
 
 wire  [3:0]                 nibble;
 wire  [7:0]                 hex_value;
-reg   [3:0]                 nibble_value;
-reg   [3:0]                 in_nibble;
-reg   [3:0]                 size_count;
-wire  [31:0]                readible_write_size;
-reg   [31:0]                la_write_size;
-reg   [31:0]                la_start_pos;
 
-reg   [7:0]                 command;
-wire                        init_packet_read;
-reg                         prev_packet_read;
-reg                         data_ready;
-reg                         send_la_data;
-reg   [3:0]                 sleep;
+reg   [7:0]                 r_command;
+reg   [31:0]                r_value;
 
+wire                        w_uart_wr_busy;
 
 //submodules
-uart_controller #(
-  .DEFAULT_BAUDRATE             (DEFAULT_BAUDRATE)
-) uc (
-  .clk                          (clk             ),
-  //should this be reset here?
-  .rst                          (rst             ),
-  .rx                           (phy_rx          ),
-  .tx                           (phy_tx          ),
-  .rts                          (0               ),
+uart_v3 #(
+  .DEFAULT_BAUDRATE   (DEFAULT_BAUDRATE )
+) uart (
+  .clk               (clk               ),
+  .rst               (rst               ),
 
-  .control_reset                (rst             ),
-  .cts_rts_flowcontrol          (0               ),
-  .read_overflow                (read_overflow   ),
-  .set_clock_div                (0               ),
-  .clock_div                    (0               ),
+  .tx                (o_phy_tx          ),
+  .transmit          (r_uart_wr_stb     ),
+  .tx_byte           (r_uart_wr_data    ),
+  .is_transmitting   (w_uart_wr_busy    ),
 
-  //Data in
-  .write_strobe                 (write_strobe    ),
-  .write_data                   (write_data      ),
-  .write_full                   (write_full      ),
-  .write_available              (write_available ),
-  .write_size                   (write_size      ),
+  .rx                (i_phy_rx          ),
+  .rx_byte           (w_uart_rd_data    ),
+  .received          (w_uart_rcv_stb    ),
 
-  //Data Out
-  .read_strobe                  (read_strobe     ),
-  .read_data                    (read_data       ),
-  .read_empty                   (read_empty      ),
-  .read_count                   (uart_read_count ),
-  .read_size                    (read_size       )
+  .set_clock_div     (1'h0              )
 );
 
-
 //asynchronous logic
-//assign  nibble              = decode_ascii(read_data);
-//assign  hex_value           = encode_ascii(in_nibble);
-assign  hex_value             = (nibble_value >= 8'hA) ? (nibble_value + 8'h37) : (nibble_value + 8'h30);
-assign  nibble                = (read_data >= 8'h41) ? (read_data - 8'h37) : (read_data - 8'h30);
-assign  init_packet_read      = (enable & finished);
-assign  pos_edge_packet_read  = (init_packet_read & ~prev_packet_read);
-assign  readible_write_size   = data_read_size - 1;
+assign  hex_value               = (r_value[31:28]   >= 8'hA)  ? (r_value[31:28]   + 8'h37) : (r_value[31:28]    + 8'h30);
+assign  nibble                  = (w_uart_rd_data >= 8'h41) ? (w_uart_rd_data - 8'h37) : (w_uart_rd_data  - 8'h30);
+assign  valid_hex               = ((8'h41 <= w_uart_rd_data) && (w_uart_rd_data <= 8'h46)) ||
+                                  ((8'h30 <= w_uart_rd_data) && (w_uart_rd_data <= 8'h39));
 
-//signal for sending logic signal to the UART host
-always @ (posedge clk) begin
-  if (rst) begin
-    send_la_data  <=  0;
-    data_ready    <=  0;
-  end
-  else begin
-    send_la_data  <=  0;
-    if (pos_edge_packet_read) begin
-      data_ready  <=  1;
-    end
-    if (data_ready && (read_state == IDLE) && (write_state == IDLE)) begin
-      send_la_data  <=  1;
-      data_ready    <=  0;
-    end
-  end
-end
+assign  o_trigger               = r_packet_data[TRIGGER];
+assign  o_trigger_mask          = r_packet_data[TRIGGER_MASK];
+assign  o_trigger_after         = r_packet_data[TRIGGER_AFTER];
+assign  o_trigger_edge          = r_packet_data[TRIGGER_EDGE];
+assign  o_both_edges            = r_packet_data[BOTH_EDGES];
+assign  o_repeat_count          = r_packet_data[REPEAT_COUNT];
+
 
 //UART Interface Controller
+integer i;
 always @ (posedge clk) begin
-  if (rst) begin
-    read_strobe             <=  0;
-    trigger                 <=  0;
-    repeat_count            <=  0;
-    trigger_mask            <=  0;
-    trigger_after           <=  0;
-    trigger_edge            <=  0;
-    both_edges              <=  0;
-    set_strobe              <=  0;
-    enable                  <=  0;
+  //De-assert strobes
+  r_wr_en                     <= 0;
+  o_uart_set_value_stb        <= 0;
+  o_la_reset                  <= 0;
+  o_force_trigger             <= 0;
 
-    ready                   <=  0;
-    read_state              <=  IDLE;
-    command_response        <=  0;
-    command                 <=  0;
-    response_status         <=  0;
-    write_status            <=  0;
-    la_reset                <=  0;
+  if (rst || r_lcl_rst) begin
+    o_en_la                   <= 0;
+    r_index                   <= 0;
+
+    rd_state                  <= IDLE;
+    r_cmd_rsps                <= 0;
+    r_command                 <= 0;
+    r_rsp_sts                 <= 0;
+    r_uart_rd_count           <= 0;
+    for (i = 0; i < `PKT_SIZE; i = i + 1) begin
+      r_packet_data[i]        <=  0;
+    end
   end
   else begin
-    //read commands from the host computer
-
-
-    //De-assert strobes
-    read_strobe             <=  0;
-    process_byte            <=  0;
-    write_status            <=  0;
-    set_strobe              <=  0;
-    la_reset                <=  0;
-
-    if (disable_uart) begin
-      enable                <=  0;
-    end
-
-
-    if (ready && !read_empty && !read_strobe) begin
-      //new command data to process
-      read_strobe       <=  1;
-      ready             <=  0;
-    end
-    if (read_strobe) begin
-      process_byte      <=  1;
-    end
-    if (read_state != READ_LINE_FEED) begin
-      //reset everything
-      if (process_byte) begin
-        if (read_data == (`LINE_FEED)) begin
-          read_state    <=  IDLE;
-        end
-      end
-    end
     //check if incomming UART is not empty
-    case (read_state)
+    case (rd_state)
       IDLE: begin
-        ready               <=  1;
-        response_status     <=  0;
-        if (process_byte) begin
-          if (read_data != `START_ID) begin
-            $display ("Start ID not found");
-            read_state             <=  IDLE;
-          end
-          else begin
-            $display ("Start ID Found!");
-            read_state            <=  READ_COMMAND;
-            ready                 <=  1;
-          end
+        r_uart_rd_count       <= 0;
+        r_rsp_sts             <= 0;
+        if (w_uart_rcv_stb && (w_uart_rd_data == `START_ID)) begin
+          rd_state            <=  READ_COMMAND;
         end
       end
       READ_COMMAND: begin
-        ready               <=  1;
-        if (process_byte) begin
-          command                 <=  read_data;
-          case (read_data)
+        if (w_uart_rcv_stb) begin
+          r_command             <=  w_uart_rd_data;
+          case (w_uart_rd_data)
             `LA_PING: begin
-              command_response    <=  `RESPONSE_SUCCESS;
-              read_state          <=  READ_LINE_FEED;
+              r_cmd_rsps      <=  `RESPONSE_SUCCESS;
+              rd_state        <=  READ_LINE_FEED;
             end
             `LA_RESET: begin
-              la_reset            <=  1;
-              command_response    <=  `RESPONSE_SUCCESS;
-              read_state          <=  READ_LINE_FEED;
+              o_la_reset      <=  1;
+              r_cmd_rsps      <=  `RESPONSE_SUCCESS;
+              rd_state        <=  READ_LINE_FEED;
+            end
+            `LA_FORCE_TRIGGER: begin
+              o_force_trigger <=  1;
+              r_cmd_rsps      <=  `RESPONSE_SUCCESS;
+              rd_state        <=  READ_LINE_FEED;
             end
             `LA_WRITE_TRIGGER: begin
               //disable the LA when updating settings
-              $display("ULA: Write settings (Disable LA)");
-              enable              <=  0;
-              read_state          <=  READ_TRIGGER;
-              read_count          <=  7;
+              o_en_la         <=  0;
+              rd_state        <=  READ_VALUE;
+              r_index         <=  TRIGGER;
             end
             `LA_WRITE_MASK: begin
               //disable the LA when updating settings
-              $display("ULA: Write settings (Disable LA)");
-              enable              <=  0;
-              read_state          <=  READ_TRIGGER_MASK;
-              read_count          <=  7;
+              o_en_la         <=  0;
+              rd_state        <=  READ_VALUE;
+              r_index         <=  TRIGGER_MASK;
             end
              `LA_WRITE_TRIGGER_AFTER: begin
               //disable the LA when updating settings
-              $display("ULA: Write settings (Disable LA)");
-              enable              <=  0;
-              read_state          <=  READ_TRIGGER_AFTER;
-              read_count          <=  7;
+              o_en_la         <=  0;
+              rd_state        <=  READ_VALUE;
+              r_index         <=  TRIGGER_AFTER;
             end
              `LA_WRITE_TRIGGER_EDGE: begin
               //disable the LA when updating settings
-              $display("ULA: Write settings (Disable LA)");
-              enable              <=  0;
-              read_state          <=  READ_TRIGGER_EDGE;
-              read_count          <=  7;
+              o_en_la         <=  0;
+              rd_state        <=  READ_VALUE;
+              r_index         <=  TRIGGER_EDGE;
             end
              `LA_WRITE_BOTH_EDGES: begin
               //disable the LA when updating settings
-              $display("ULA: Write settings (Disable LA)");
-              enable              <=  0;
-              read_state          <=  READ_BOTH_EDGES;
-              read_count          <=  7;
+              o_en_la         <=  0;
+              rd_state        <=  READ_VALUE;
+              r_index         <=  BOTH_EDGES;
             end
              `LA_WRITE_REPEAT_COUNT: begin
               //disable the LA when updating settings
-              $display("ULA: Write settings (Disable LA)");
-              enable              <=  0;
-              read_state          <=  READ_REPEAT_COUNT;
-              read_count          <=  7;
+              o_en_la         <=  0;
+              rd_state        <=  READ_VALUE;
+              r_index         <=  REPEAT_COUNT;
             end
             `LA_SET_ENABLE: begin
-              read_state          <=  READ_ENABLE_SET;
+              rd_state        <=  READ_ENABLE_SET;
             end
             `LA_GET_ENABLE: begin
-              command_response    <=  `RESPONSE_SUCCESS;
-              read_state          <=  READ_LINE_FEED;
-              response_status     <=  enable + `HEX_0;
+              r_cmd_rsps      <=  `RESPONSE_SUCCESS;
+              rd_state        <=  READ_LINE_FEED;
+              r_rsp_sts <=  o_en_la + `HEX_0;
+            end
+            `LA_GET_START_POS: begin
+              rd_state        <=  READ_LINE_FEED;
             end
             `LA_GET_SIZE: begin
-              read_state          <=  READ_LINE_FEED;
+              rd_state        <=  READ_LINE_FEED;
             end
             default: begin
-              //unrecognized command
-              command_response    <=  `RESPONSE_FAIL;
-              read_state          <=  READ_LINE_FEED;
+              //unrecognized r_command
+              r_cmd_rsps      <=  `RESPONSE_FAIL;
+              rd_state        <=  READ_LINE_FEED;
             end
           endcase
         end
       end
-      READ_TRIGGER: begin
-        ready <=  1;
-        if (process_byte) begin
-          trigger                 <=  {trigger[27:0], nibble};
-          read_count              <=  read_count -  1;
-          if (read_count == 0) begin
-            set_strobe            <=  1;
-            command_response      <=  `RESPONSE_SUCCESS;
-            read_state            <=  READ_LINE_FEED;
+      READ_VALUE: begin
+        if (w_uart_rcv_stb) begin
+          r_packet_data[r_index]    <= {r_packet_data[r_index][27:0], nibble};
+          r_uart_rd_count           <= r_uart_rd_count +  1;
+          if (r_uart_rd_count >= 7) begin
+            o_uart_set_value_stb    <= 1;
+            r_cmd_rsps              <= `RESPONSE_SUCCESS;
+            rd_state                <= READ_LINE_FEED;
+          end
+          else if (!valid_hex) begin
+            r_cmd_rsps              <= `RESPONSE_FAIL;
+            rd_state                <= READ_LINE_FEED;
           end
         end
       end
-      READ_TRIGGER_MASK: begin
-        ready <=  1;
-        if (process_byte) begin
-          trigger_mask            <=  {trigger_mask[27:0], nibble};
-          read_count              <=  read_count -  1;
-          if (read_count == 0) begin
-            set_strobe            <=  1;
-            command_response      <=  `RESPONSE_SUCCESS;
-            read_state            <=  READ_LINE_FEED;
-          end
-        end
-      end
-      READ_TRIGGER_AFTER: begin
-        ready <=  1;
-        if (process_byte) begin
-          trigger_after           <=  {trigger_after[27:0], nibble};
-          read_count              <=  read_count -  1;
-          if (read_count == 0) begin
-            set_strobe            <=  1;
-            command_response      <=  `RESPONSE_SUCCESS;
-            read_state            <=  READ_LINE_FEED;
-          end
-        end
-      end
-      READ_TRIGGER_EDGE: begin
-        ready <=  1;
-        if (process_byte) begin
-          trigger_edge            <=  {trigger_edge[27:0], nibble};
-          read_count              <=  read_count -  1;
-          if (read_count == 0) begin
-            set_strobe            <=  1;
-            command_response      <=  `RESPONSE_SUCCESS;
-            read_state            <=  READ_LINE_FEED;
-          end
-        end
-      end
-      READ_BOTH_EDGES: begin
-        ready <=  1;
-        if (process_byte) begin
-          both_edges              <=  {both_edges[27:0], nibble};
-          read_count              <=  read_count -  1;
-          if (read_count == 0) begin
-            set_strobe            <=  1;
-            command_response      <=  `RESPONSE_SUCCESS;
-            read_state            <=  READ_LINE_FEED;
-          end
-        end
-
-      end
-      READ_REPEAT_COUNT: begin
-        ready <=  1;
-        if (process_byte) begin
-          repeat_count            <=  {repeat_count[27:0], nibble};
-          read_count              <=  read_count -  1;
-          if (read_count == 0) begin
-            set_strobe            <=  1;
-            command_response      <=  `RESPONSE_SUCCESS;
-            read_state            <=  READ_LINE_FEED;
-          end
-        end
-      end
-
       READ_ENABLE_SET: begin
-        ready <=  1;
-        if (process_byte) begin
-          if (read_data == (0 + `HEX_0)) begin
-            enable              <=  0;
-            command_response    <=  `RESPONSE_SUCCESS;
+        if (w_uart_rcv_stb) begin
+          if (w_uart_rd_data == (0 + `HEX_0)) begin
+            o_en_la                  <= 0;
+            r_cmd_rsps               <= `RESPONSE_SUCCESS;
           end
-          else if (read_data == (1 + `HEX_0)) begin
-            enable              <=  1;
-            command_response    <=  `RESPONSE_SUCCESS;
+          else if (w_uart_rd_data == (1 + `HEX_0)) begin
+            o_en_la                  <= 1;
+            r_cmd_rsps               <= `RESPONSE_SUCCESS;
           end
           else begin
-            command_response    <=  `RESPONSE_FAIL;
+            r_cmd_rsps               <= `RESPONSE_FAIL;
           end
-          read_state            <=  READ_LINE_FEED;
+          rd_state                   <= READ_LINE_FEED;
         end
       end
       READ_LINE_FEED: begin
-        ready <=  1;
-        if (process_byte) begin
-          if (read_data == (`LINE_FEED)) begin
-            ready <=  0;
-            read_state          <=  SEND_RESPONSE;
-            write_status        <=  1;
+        if (w_uart_rcv_stb) begin
+          if (w_uart_rd_data == (`LINE_FEED)) begin
+            rd_state                  <= SEND_RESPONSE;
           end
         end
       end
       SEND_RESPONSE: begin
-        if (status_written) begin
-          $display ("ULA: Got a response back from the write state machine that data was sent");
-          read_state           <=  IDLE;
+        r_wr_en                       <= 1;
+        if (r_wr_fin) begin
+          r_wr_en                     <= 0;
+          rd_state                    <= IDLE;
         end
       end
      default: begin
-        read_state             <=  IDLE;
+        rd_state                      <= IDLE;
       end
     endcase
     //write data back to the host
+    if (wr_state == SEND_DATA_PACKET) begin
+      o_en_la                         <= 0;
+    end
   end
 end
 
-localparam                   RESPONSE_WRITE_ID     = 1;
-localparam                   RESPONSE_WRITE_STATUS = 2;
-localparam                   RESPONSE_WRITE_ARG    = 3;
-localparam                   RESPONSE_WRITE_SIZE   = 4;
-localparam                   RESPONSE_START_POS    = 5;
-localparam                   GET_DATA_PACKET       = 6;
-localparam                   SEND_START_POS        = 7;
-localparam                   SEND_DATA_PACKET      = 8;
-localparam                   SEND_CARRIAGE_RETURN  = 9;
-localparam                   SEND_LINE_FEED        = 10;
+localparam  RESPONSE_WRITE_ID     = 1;
+localparam  RESPONSE_WRITE_STATUS = 2;
+localparam  RESPONSE_WRITE_ARG    = 3;
+localparam  RESPONSE_WRITE_VALUE  = 4;
+localparam  SEND_START_POS        = 5;
+localparam  GET_DATA_PACKET       = 6;
+localparam  SEND_DATA_PACKET      = 7;
+localparam  SEND_CARRIAGE_RETURN  = 8;
+localparam  SEND_LINE_FEED        = 9;
+localparam  FINISHED              = 10;
 
 
 //write data state machine
 always @ (posedge clk) begin
-  if (rst) begin
-    write_strobe                <=  0;
-    write_data                  <=  0;
-    status_written              <=  0;
-    write_state                 <=  IDLE;
-    la_data_read_count          <=  0;
-    la_data                     <=  0;
-    size_count                  <=  0;
-    byte_count                  <=  0;
-    la_start_pos                <=  0;
+
+  //Deassert Strobes
+  r_uart_wr_stb                   <= 0;
+  r_wr_fin                        <= 0;
+
+  if (rst || r_lcl_rst) begin
+    r_uart_wr_data                <= `CARRIAGE_RETURN;
+    wr_state                      <= IDLE;
+    o_la_rd_addr                  <= 0;
+    r_wr_pos                      <= 0;
+    r_lcl_rst                     <= 0;
   end
   else begin
-    write_strobe                <=  0;
-    status_written              <=  0;
-    data_read_strobe            <=  0;
-
-    case (write_state)
+    case (wr_state)
       IDLE: begin
-        if (write_status) begin
-          write_state           <=  RESPONSE_WRITE_ID;
+
+        r_wr_pos                  <= 0;
+        o_la_rd_addr              <= 0;
+        if (r_wr_en) begin
+          wr_state                <= RESPONSE_WRITE_ID;
         end
-        if (send_la_data) begin
-          write_state           <=  GET_DATA_PACKET;
-          la_data_read_count    <=  data_read_size - 1;
-          data_read_strobe      <=  0;
-          sleep                 <=  3;
+
+        else if ((rd_state == IDLE) && i_finished) begin
+          wr_state                <= SEND_START_POS;
+          r_value                 <= i_start_pos;
         end
+
       end
       RESPONSE_WRITE_ID: begin
-        if (!write_full) begin
-          write_data            <=  `RESPONSE_ID;
-          write_strobe          <=  1;
-          write_state           <=  RESPONSE_WRITE_STATUS;
+        if (!w_uart_wr_busy && !r_uart_wr_stb) begin
+          r_uart_wr_data          <= `RESPONSE_ID;
+          r_uart_wr_stb           <= 1;
+          wr_state                <= RESPONSE_WRITE_STATUS;
         end
       end
       RESPONSE_WRITE_STATUS: begin
-        if (!write_full) begin
-          write_data            <=  command_response;
-          write_strobe          <=  1;
-          if (command == `LA_GET_ENABLE) begin
-            write_state          <=  RESPONSE_WRITE_ARG;
+        if (!w_uart_wr_busy && !r_uart_wr_stb) begin
+          r_uart_wr_data          <= r_cmd_rsps;
+          r_uart_wr_stb           <= 1;
+          if (r_command       == `LA_GET_ENABLE) begin
+            wr_state              <= RESPONSE_WRITE_ARG;
           end
-          else if (command == `LA_GET_SIZE) begin
-            write_state         <=  RESPONSE_WRITE_SIZE;
-            nibble_value        <=  readible_write_size[31:28];
-            la_write_size       <=  {readible_write_size[27:0], 4'h0};
-            size_count          <=  0;
+          else if (r_command  == `LA_GET_SIZE) begin
+            wr_state              <= RESPONSE_WRITE_VALUE;
+            r_value               <= i_la_rd_size;
           end
-          else if (command == `LA_GET_START_POS) begin
-            write_state         <=  RESPONSE_START_POS;
-            la_start_pos        <=  {start[27:0], 4'h0};
-            nibble_value        <=  start[31:28];
-            size_count          <=  0;
+          else if (r_command  == `LA_GET_START_POS) begin
+            wr_state              <= RESPONSE_WRITE_VALUE;
+            r_value               <= i_start_pos;
           end
           else begin
-            write_state         <=  SEND_CARRIAGE_RETURN;
+            wr_state              <= SEND_CARRIAGE_RETURN;
           end
         end
       end
       RESPONSE_WRITE_ARG: begin
-        if (!write_full) begin
-          write_data            <=  response_status;
-          write_strobe          <=  1;
-          write_state           <=  SEND_CARRIAGE_RETURN;
+        if (!w_uart_wr_busy && !r_uart_wr_stb) begin
+          r_uart_wr_data          <= r_rsp_sts;
+          r_uart_wr_stb           <= 1;
+          wr_state                <= SEND_CARRIAGE_RETURN;
         end
       end
-
-      RESPONSE_WRITE_SIZE: begin
-        if (!write_full) begin
-          if (size_count == 8) begin
-            write_state         <=  SEND_CARRIAGE_RETURN;
-          end
-          else begin
-            //in_nibble           <=  la_write_size[31:28];
-            nibble_value        <=  la_write_size[31:28];
-            write_data          <=  hex_value;
-            la_write_size       <=  {la_write_size[27:0], 4'h0};
-            write_strobe        <=  1;
-            size_count          <= size_count + 1;
+      RESPONSE_WRITE_VALUE: begin
+        if (!w_uart_wr_busy && !r_uart_wr_stb) begin
+          r_value                 <= {r_value[27:0], 4'h0};
+          r_uart_wr_stb           <= 1;
+          r_uart_wr_data          <= hex_value;
+          r_wr_pos                <=  r_wr_pos + 1;
+          if (r_wr_pos >= 7) begin
+            wr_state              <=  SEND_CARRIAGE_RETURN;
           end
         end
       end
-      RESPONSE_START_POS: begin
-        if (!write_full) begin
-          if (size_count == 8) begin
-            write_state         <=  SEND_CARRIAGE_RETURN;
-          end
-          else begin
-            nibble_value        <=  la_start_pos[31:28];
-            write_data          <=  hex_value;
-            la_start_pos        <=  {la_start_pos[27:0], 4'h0};
-            write_strobe        <=  1;
-            size_count          <= size_count + 1;
+      //Write Data
+      SEND_START_POS: begin
+        if (!w_uart_wr_busy && !r_uart_wr_stb) begin
+          r_value                 <= {r_value[27:0], 4'h0};
+          r_uart_wr_stb           <= 1;
+          r_uart_wr_data          <= hex_value;
+          r_wr_pos                <= r_wr_pos + 1;
+          if (r_wr_pos >= 7) begin
+            wr_state              <= GET_DATA_PACKET;
           end
         end
       end
       GET_DATA_PACKET: begin
-        if (sleep > 0) begin
-          sleep   <=  sleep - 1;
-        end
-        else begin
-          byte_count              <=  0;
-          la_data                 <=  data;
-          data_read_strobe        <=  1;
-          //write_state             <=  SEND_DATA_PACKET;
-
-          la_start_pos            <=  {start[27:0], 4'h0};
-          nibble_value            <=  start[31:28];
-          size_count              <=  0;
-          write_state             <=  SEND_START_POS;
-
-        end
-      end
-      SEND_START_POS: begin
-        if (!write_full) begin
-          if (size_count == 8) begin
-            write_state         <=  SEND_DATA_PACKET;
-          end
-          else begin
-            nibble_value        <=  la_start_pos[31:28];
-            write_data          <=  hex_value;
-            la_start_pos        <=  {la_start_pos[27:0], 4'h0};
-            write_strobe        <=  1;
-            size_count          <= size_count + 1;
-          end
-        end
+        r_value                   <= i_la_rd_data;
+        r_wr_pos                  <= 0;
+        o_la_rd_addr              <= o_la_rd_addr + 1;
+        wr_state                  <= SEND_DATA_PACKET;
       end
       SEND_DATA_PACKET: begin
-        if (write_available > 4) begin
-          write_data              <=  {4'h0, la_data[31:28]};
-          if (byte_count == 7) begin
-            if (la_data_read_count > 0) begin
-              la_data_read_count  <=  la_data_read_count - 1;
-              data_read_strobe    <=  1;
-              la_data             <=  data;
+        if (!w_uart_wr_busy && !r_uart_wr_stb) begin
+          r_value                 <= {r_value[27:0], 4'h0};
+          r_uart_wr_stb           <= 1;
+          r_uart_wr_data          <= hex_value;
+          r_wr_pos                <= r_wr_pos + 1;
+          if (r_wr_pos >= 7) begin
+            if (o_la_rd_addr < i_la_rd_size) begin
+              wr_state            <= GET_DATA_PACKET;
             end
             else begin
-              write_state         <=  SEND_CARRIAGE_RETURN;
+              wr_state            <= SEND_CARRIAGE_RETURN;
             end
           end
-          else begin
-            la_data               <=  {la_data[27:0], 4'h0};
-          end
-          write_strobe            <=  1;
-          byte_count              <=  byte_count + 1;
         end
       end
       SEND_CARRIAGE_RETURN: begin
-        if (!write_full) begin
-          write_strobe            <=  1;
-          write_data              <=  `CARRIAGE_RETURN;
-          write_state             <=  SEND_LINE_FEED;
+        if (!w_uart_wr_busy && !r_uart_wr_stb) begin
+          r_uart_wr_stb           <= 1;
+          r_uart_wr_data          <= `CARRIAGE_RETURN;
+          wr_state                <= SEND_LINE_FEED;
         end
       end
       SEND_LINE_FEED: begin
-        if (!write_full) begin
-          $display ("Writing Line Feed");
-          write_strobe            <=  1;
-          write_data              <=  `LINE_FEED;
-          write_state             <=  IDLE;
-          status_written          <=  1;
+        if (!w_uart_wr_busy && !r_uart_wr_stb) begin
+          r_uart_wr_stb           <= 1;
+          r_uart_wr_data          <= `LINE_FEED;
+          wr_state                <= FINISHED;
+          r_wr_fin                <= 1;
+        end
+      end
+      FINISHED: begin
+        r_wr_fin                  <= 1;
+        if (!r_wr_en) begin
+          r_wr_fin                <= 0;
+          wr_state                <= IDLE;
         end
       end
       default begin
-        write_state               <=  IDLE;
+        wr_state                  <= IDLE;
       end
     endcase
-    //Only allow this to update in an IDLE state
-    prev_packet_read              <=  init_packet_read;
   end
 end
-
-/*
-//nibble -> ascii
-function encode_ascii;
-input raw_nibble;
-begin
-  if (raw_nibble >= 10) begin
-    encode_ascii  = raw_nibble + 55;
-  end
-  else begin
-    encode_ascii  = raw_nibble + 32;
-  end
-end
-endfunction
-
-//ascii -> nibble
-function decode_ascii;
-input ascii_byte;
-begin
-  if (ascii_byte >= 8'h41) begin
-    decode_ascii  =  ascii_byte - 55;
-  end
-  else begin
-    decode_ascii  =  ascii_byte - 32;
-  end
-end
-endfunction
-*/
 
 endmodule

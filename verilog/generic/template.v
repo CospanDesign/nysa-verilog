@@ -1,6 +1,6 @@
 /*
 Distributed under the MIT license.
-Copyright (c) 2015 Dave McCoy (dave.mccoy@cospandesign.com)
+Copyright (c) 2016 Dave McCoy (dave.mccoy@cospandesign.com)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -27,6 +27,8 @@ SOFTWARE.
  *
  * Changes:
  */
+
+`timescale 1ps / 1ps
 
 module TEMPLATE (
   input                     clk,

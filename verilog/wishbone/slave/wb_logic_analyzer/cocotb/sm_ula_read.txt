@@ -1,0 +1,6 @@
+0 IDLE                  
+1 READ_COMMAND          
+2 READ_VALUE            
+3 READ_ENABLE_SET       
+4 READ_LINE_FEED        
+5 SEND_RESPONSE         

@@ -39,7 +39,7 @@ always @ (posedge clk) begin
           o_wr_act[1]  <=  1;
         end
       end
-      else begin
+      else if (o_wr_act > 0) begin
         if (r_count < i_wr_size) begin
           //More room left in the buffer
           r_count   <=  r_count + 1;

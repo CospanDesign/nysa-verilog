@@ -1,0 +1,76 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Mon Jun 27 17:19:13 2016
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_logic_analyzer/cocotb/f.vcd"
+[dumpfile_mtime] "Mon Jun 27 17:11:37 2016"
+[dumpfile_size] 81127
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_logic_analyzer/cocotb/PCIE Debug waves.gtkw"
+[timestart] 20430
+[size] 1918 1059
+[pos] -1 -1
+*-11.435589 37170 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 213
+[signals_width] 190
+[sst_expanded] 1
+[sst_vpaned_height] 149
+@28
+logic_analyzer.clk
++{pcie_reset_n} logic_analyzer.signal0
++{clock_locked} logic_analyzer.signal1
+@200
+-
+@800200
+-PCIE Link State
+@c00028
++{PCIE Link State} #{logic_analyzer.signal[3:2]} logic_analyzer.signal3 logic_analyzer.signal2
+@28
+logic_analyzer.signal2
+logic_analyzer.signal3
+@1401200
+-group_end
+@200
+-
+@28
+logic_analyzer.signal2
+logic_analyzer.signal3
+@1000200
+-PCIE Link State
+@200
+-
+-
+@c02022
+^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_logic_analyzer/cocotb/sm_ltssm_state.txt
+#{logic_analyzer.signal[9:4]} logic_analyzer.signal9 logic_analyzer.signal8 logic_analyzer.signal7 logic_analyzer.signal6 logic_analyzer.signal5 logic_analyzer.signal4
+@28
+logic_analyzer.signal4
+logic_analyzer.signal5
+logic_analyzer.signal6
+logic_analyzer.signal7
+logic_analyzer.signal8
+logic_analyzer.signal9
+@1401200
+-group_end
+@200
+-
+@c00028
++{rx status} #{logic_analyzer.signal[14:12]} logic_analyzer.signal14 logic_analyzer.signal13 logic_analyzer.signal12
+@28
+logic_analyzer.signal12
+logic_analyzer.signal13
+logic_analyzer.signal14
+@1401200
+-group_end
+@200
+-
+@c00023
+#{logic_analyzer.signal[19:16]} logic_analyzer.signal19 logic_analyzer.signal18 logic_analyzer.signal17 logic_analyzer.signal16
+@29
+logic_analyzer.signal16
+logic_analyzer.signal17
+logic_analyzer.signal18
+logic_analyzer.signal19
+@1401201
+-group_end
+[pattern_trace] 1
+[pattern_trace] 0

@@ -67,15 +67,15 @@ module uart_controller #(
 
   output              write_full,
   output      [31:0]  write_available,
-  output wire [31:0]  write_size,
-  output wire         write_overflow,
-
+  output      [31:0]  write_size,
+  output              write_overflow,
+              
   output      [7:0]   read_data,
   input               read_strobe,
   output              read_empty,
-  output wire [31:0]  read_count,
-  output wire [31:0]  read_size,
-  output wire         read_overflow
+  output      [31:0]  read_count,
+  output      [31:0]  read_size,
+  output              read_overflow
 );
 
 
@@ -116,23 +116,23 @@ reg                 test;
 
 
 
-uart_fifo uf_tx (
-  .clk(clk),
-  .rst(rst || control_reset),
+uart_fifo uf_tx    (
+  .clk             (clk                  ),
+  .rst             (rst || control_reset ),
 
-  .size(write_size),
+  .size            (write_size           ),
 
-  .write_strobe(write_strobe),
-  .write_available(write_available),
-  .write_data(write_data),
+  .write_strobe    (write_strobe         ),
+  .write_available (write_available      ),
+  .write_data      (write_data           ),
 
-  .read_strobe(tx_read_strobe),
-  .read_count(tx_read_count),
-  .read_data(tx_fifo_read_data),
-  .overflow(write_overflow),
-  .underflow(tx_underflow),
-  .full(tx_full),
-  .empty(tx_empty)
+  .read_strobe     (tx_read_strobe       ),
+  .read_count      (tx_read_count        ),
+  .read_data       (tx_fifo_read_data    ),
+  .overflow        (write_overflow       ),
+  .underflow       (tx_underflow         ),
+  .full            (tx_full              ),
+  .empty           (tx_empty             )
 );
 
 uart_fifo uf_rx (

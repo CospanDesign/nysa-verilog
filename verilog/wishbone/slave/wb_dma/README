@@ -67,7 +67,7 @@ Registers:
         04: Decrement Destination address on every write
         05: Increment Destination address on every write
         06: Respect the Quantum of a write packet
-            0: Send data to the destination as fast as possible
+            0: Send data to the destination as fast as possible (PPFIFO will empty itself as fast as possible)
             1: Do not finish a write until an entire packet of data is written, this is useful for things like SATA
         07: Reset address on every command (Set this low to allow the address to continuously increment or decrement)
         08: Use CMD_BOND_ADDR_INGRESS with this bit to block on the action

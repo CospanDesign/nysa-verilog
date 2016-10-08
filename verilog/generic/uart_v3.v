@@ -36,7 +36,8 @@ SOFTWARE.
 
 
 module uart_v3 #(
-    parameter DEFAULT_BAUDRATE  = 115200
+  parameter DEFAULT_BAUDRATE  = 115200,
+  parameter STOP_BITS         = 1
 )(
   input               clk,
   input               rst,
@@ -247,7 +248,7 @@ always @ (posedge clk) begin
         end
       end
       TX_FINISHED: begin
-        if (tx_prescaler_count >= (`FULL_PERIOD)) begin
+        if (tx_prescaler_count >= (STOP_BITS * `FULL_PERIOD)) begin
           tx_state            <=  TX_IDLE;
         end
       end

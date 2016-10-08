@@ -1,0 +1,60 @@
+[*]
+[*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
+[*] Thu Jun 16 04:25:49 2016
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_logic_analyzer/cocotb/design.vcd"
+[dumpfile_mtime] "Thu Jun 16 04:24:38 2016"
+[dumpfile_size] 14222706
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/slave/wb_logic_analyzer/cocotb/waveforms.gtkw"
+[timestart] 0
+[size] 1918 1059
+[pos] -1 -1
+*-16.260845 564500 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_cocotb.
+[treeopen] tb_cocotb.s1.
+[sst_width] 213
+[signals_width] 198
+[sst_expanded] 1
+[sst_vpaned_height] 339
+@28
+tb_cocotb.s1.clk
+tb_cocotb.s1.rst
+@22
+tb_cocotb.test_id[31:0]
+@200
+-
+@22
+tb_cocotb.s1.ula.rd_state[3:0]
+tb_cocotb.s1.ula.wr_state[3:0]
+tb_cocotb.s1.ula.o_trigger[31:0]
+tb_cocotb.s1.ula.o_trigger_mask[31:0]
+tb_cocotb.s1.ula.o_trigger_after[31:0]
+tb_cocotb.s1.ula.o_trigger_edge[31:0]
+@23
+tb_cocotb.s1.ula.o_both_edges[31:0]
+@22
+tb_cocotb.s1.ula.o_repeat_count[31:0]
+@28
+tb_cocotb.s1.ula.o_uart_set_value_stb
+@200
+-
+@22
+tb_cocotb.s1.ula.r_index[3:0]
+@800200
+-UART
+@22
+tb_cocotb.uart.tx_byte[7:0]
+@820
+[color] 2
+tb_cocotb.uart.tx_byte[7:0]
+@200
+-
+@22
+tb_cocotb.uart.rx_byte[7:0]
+@820
+[color] 2
+tb_cocotb.uart.rx_byte[7:0]
+@1000200
+-UART
+[pattern_trace] 1
+[pattern_trace] 0

@@ -96,9 +96,9 @@ dual_port_bram #(
   //.a_dout(),
 
   .b_clk(clk),
-  .b_wr(0),
+  .b_wr(1'b0),
   .b_addr(out_pointer),
-  .b_din(0),
+  .b_din(8'h0),
   .b_dout(read_data)
 );
 

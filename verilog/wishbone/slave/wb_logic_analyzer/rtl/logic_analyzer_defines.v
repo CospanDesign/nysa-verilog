@@ -1,8 +1,6 @@
 `ifndef __LA_DEFINES__
 `define __LA_DEFINES__
 
-`define CAP_DAT_WIDTH         32
-`define CAP_MEM_SIZE          11
 `define TRIG                  32'h00000000
 
 `define LA_DEFAULT_BAUDRATE   115200
@@ -163,6 +161,18 @@
 //Response Status:      'S' = Success, 'X' = Fail
 //LF:                   '\r'
 //CR:                   '\n'
+
+`define LA_FORCE_TRIGGER            (12 + `HEX_0)
+//reset all the state machine
+//ID:                   'w'
+//Command               '<'
+//CR:                   '\n'
+
+//Response ID:          'R'
+//Response Status:      'S' = Success, 'X' = Fail
+//LF:                   '\r'
+//CR:                   '\n'
+
 
 
 `endif

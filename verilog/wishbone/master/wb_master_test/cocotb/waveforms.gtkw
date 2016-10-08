@@ -1,0 +1,131 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Sun Jun  5 13:15:18 2016
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/master/wb_master_test/cocotb/design.vcd"
+[dumpfile_mtime] "Fri Jun  3 22:14:52 2016"
+[dumpfile_size] 1043983
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/master/wb_master_test/cocotb/waveforms.gtkw"
+[timestart] 0
+[size] 1918 1059
+[pos] -1 -1
+*-10.995632 3146 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_cocotb.
+[sst_width] 213
+[signals_width] 198
+[sst_expanded] 1
+[sst_vpaned_height] 313
+@28
+tb_cocotb.s1.clk
+tb_cocotb.s1.rst
+@22
+tb_cocotb.test_id[31:0]
+@28
+tb_cocotb.device_interrupt
+@22
+tb_cocotb.wm.o_per_adr[31:0]
+@23
+tb_cocotb.wm.i_per_dat[31:0]
+@200
+-
+@28
+tb_cocotb.egress_act
+@22
+tb_cocotb.egress_data[31:0]
+@28
+tb_cocotb.egress_rdy
+@22
+tb_cocotb.egress_size[23:0]
+@28
+tb_cocotb.egress_stb
+@200
+-
+@28
+tb_cocotb.s1.o_wbs_int
+@2022
+^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/master/wb_master_test/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/master/wb_master_test/cocotb/sm_master.txt
+tb_cocotb.wm.state[3:0]
+@200
+-
+@800200
+-Ingress FIFO
+@28
+tb_cocotb.wm.w_ingress_rdy
+tb_cocotb.wm.r_ingress_act
+@22
+tb_cocotb.wm.r_ingress_count[23:0]
+@28
+tb_cocotb.wm.r_ingress_stb
+@22
+tb_cocotb.wm.w_ingress_data[31:0]
+tb_cocotb.wm.w_ingress_size[23:0]
+@200
+-
+@1000200
+-Ingress FIFO
+@200
+-
+@22
+tb_cocotb.wm.w_command[15:0]
+tb_cocotb.wm.w_flags[15:0]
+tb_cocotb.wm.w_data_size[31:0]
+tb_cocotb.wm.w_address[31:0]
+tb_cocotb.wm.r_hdr_count[3:0]
+@200
+-
+@22
+tb_cocotb.wm.r_address[31:0]
+@800200
+-Egress FIFO
+@28
+tb_cocotb.wm.w_egress_rdy[1:0]
+tb_cocotb.wm.r_egress_act[1:0]
+@22
+tb_cocotb.wm.w_egress_size[23:0]
+tb_cocotb.wm.r_egress_count[23:0]
+tb_cocotb.wm.r_egress_data[31:0]
+@28
+tb_cocotb.wm.r_egress_stb
+@1000200
+-Egress FIFO
+@200
+-
+@28
+tb_cocotb.wm.w_mem_bus_select
+@200
+-
+@22
+tb_cocotb.wm.r_hdr_count[3:0]
+@200
+-
+@28
+tb_cocotb.wm.r_wb_cyc
+tb_cocotb.wm.r_wb_we
+@22
+tb_cocotb.wm.r_wb_adr[31:0]
+tb_cocotb.wm.r_wb_dat[31:0]
+@28
+tb_cocotb.wm.r_wb_stb
+tb_cocotb.wm.w_wb_ack
+@22
+tb_cocotb.wm.w_wb_dat[31:0]
+@200
+-
+@22
+tb_cocotb.wm.r_data_count[31:0]
+tb_cocotb.wm.w_data_size[31:0]
+@200
+-
+@28
+tb_cocotb.s1.i_wbs_cyc
+@22
+tb_cocotb.s1.i_wbs_adr[31:0]
+tb_cocotb.s1.i_wbs_dat[31:0]
+@28
+tb_cocotb.s1.i_wbs_stb
+tb_cocotb.s1.i_wbs_we
+tb_cocotb.s1.o_wbs_ack
+@22
+tb_cocotb.s1.o_wbs_dat[31:0]
+[pattern_trace] 1
+[pattern_trace] 0

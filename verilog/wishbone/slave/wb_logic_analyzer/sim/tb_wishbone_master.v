@@ -41,9 +41,6 @@ SOFTWARE.
     -added interrupt support
 */
 
-
-`include "logic_analyzer_defines.v"
-
 `timescale 1 ns/1 ps
 
 `define TIMEOUT_COUNT 40
@@ -59,13 +56,14 @@ SOFTWARE.
 
 //Sleep a number of clock cycles
 `define SLEEP_CLK(x)  #(x * `CLK_PERIOD)
+//`define VERBOSE
 
 module wishbone_master_tb (
 );
 
 //Virtual Host Interface Signals
-reg               clk           = 0;
-reg               rst           = 0;
+reg               clk             = 0;
+reg               rst             = 0;
 wire              w_master_ready;
 reg               r_in_ready      = 0;
 reg   [31:0]      r_in_command    = 32'h00000000;
@@ -93,7 +91,7 @@ wire              w_wbm_int;
 
 
 
-//Wishbone Slave 0 (DRT) signals
+//Wishbone Slave 0 (SDB) signals
 wire              w_wbs0_we;
 wire              w_wbs0_cyc;
 wire  [31:0]      w_wbs0_dat_o;
@@ -116,35 +114,19 @@ wire  [31:0]      w_wbs1_dat_o;
 wire  [31:0]      w_wbs1_adr;
 wire              w_wbs1_int;
 
-reg               uart_finished;
-
-reg               la_clk = 0;
-reg   [31:0]      la_data;
-reg               la_ext_trigger;
-wire              la_uart_tx;
-wire              la_uart_rx;
-
-reg               test_transmit = 0;
-reg   [7:0]       test_tx_byte  = 8'h55;
-wire              test_received;
-wire  [7:0]       test_rx_byte;
-wire              test_is_receiving;
-wire              test_is_transmitting;
-wire              test_rx_error;
-
-
-
 //Local Parameters
-
-localparam        IDLE            = 4'h0;
-localparam        EXECUTE         = 4'h1;
-localparam        RESET           = 4'h2;
-localparam        PING_RESPONSE   = 4'h3;
-localparam        WRITE_DATA      = 4'h4;
-localparam        WRITE_RESPONSE  = 4'h5;
-localparam        GET_WRITE_DATA  = 4'h6;
-localparam        READ_RESPONSE   = 4'h7;
-localparam        READ_MORE_DATA  = 4'h8;
+localparam        WAIT_FOR_SDRAM      = 8'h00;
+localparam        IDLE                = 8'h01;
+localparam        SEND_COMMAND        = 8'h02;
+localparam        MASTER_READ_COMMAND = 8'h03;
+localparam        RESET               = 8'h04;
+localparam        PING_RESPONSE       = 8'h05;
+localparam        WRITE_DATA          = 8'h06;
+localparam        WRITE_RESPONSE      = 8'h07;
+localparam        GET_WRITE_DATA      = 8'h08;
+localparam        READ_RESPONSE       = 8'h09;
+localparam        READ_MORE_DATA      = 8'h0A;
+localparam        FINISHED            = 8'h0B;
 
 //Registers/Wires/Simulation Integers
 integer           fd_in;
@@ -159,11 +141,13 @@ reg [3:0]         state           =   IDLE;
 reg               prev_int        = 0;
 
 
+wire              start;
 reg               execute_command;
 reg               command_finished;
 reg               request_more_data;
 reg               request_more_data_ack;
 reg     [27:0]    data_write_count;
+reg     [27:0]    data_read_count;
 
 //Submodules
 wishbone_master wm (
@@ -197,104 +181,80 @@ wishbone_master wm (
 );
 
 //slave 1
-wb_logic_analyzer #(
-  .DEPTH            (4                    )
-)s1(
+wb_logic_analyzer s1 (
 
-  .clk              (clk                  ),
-  .rst              (rst                  ),
+  .clk        (clk                  ),
+  .rst        (rst                  ),
 
-  .i_wbs_we         (w_wbs1_we            ),
-  .i_wbs_cyc        (w_wbs1_cyc           ),
-  .i_wbs_dat        (w_wbs1_dat_i         ),
-  .i_wbs_stb        (w_wbs1_stb           ),
-  .o_wbs_ack        (w_wbs1_ack           ),
-  .o_wbs_dat        (w_wbs1_dat_o         ),
-  .i_wbs_adr        (w_wbs1_adr           ),
-  .o_wbs_int        (w_wbs1_int           ),
-
-  .i_la_clk         (la_clk               ),
-  .i_la_data        (la_data              ),
-  .i_la_ext_trig    (la_ext_trigger       ),
-
-  //uart interface
-  .o_la_uart_tx     (la_uart_tx           ),
-  .i_la_uart_rx     (la_uart_rx           )
-
+  .i_wbs_we   (w_wbs1_we            ),
+  .i_wbs_cyc  (w_wbs1_cyc           ),
+  .i_wbs_dat  (w_wbs1_dat_i         ),
+  .i_wbs_stb  (w_wbs1_stb           ),
+  .o_wbs_ack  (w_wbs1_ack           ),
+  .o_wbs_dat  (w_wbs1_dat_o         ),
+  .i_wbs_adr  (w_wbs1_adr           ),
+  .o_wbs_int  (w_wbs1_int           )
 );
 
 wishbone_interconnect wi (
-  .clk              (clk                  ),
-  .rst              (rst                  ),
+  .clk        (clk                  ),
+  .rst        (rst                  ),
 
-  .i_m_we           (w_wbm_we             ),
-  .i_m_cyc          (w_wbm_cyc            ),
-  .i_m_stb          (w_wbm_stb            ),
-  .o_m_ack          (w_wbm_ack            ),
-  .i_m_dat          (w_wbm_dat_i          ),
-  .o_m_dat          (w_wbm_dat_o          ),
-  .i_m_adr          (w_wbm_adr            ),
-  .o_m_int          (w_wbm_int            ),
+  .i_m_we     (w_wbm_we             ),
+  .i_m_cyc    (w_wbm_cyc            ),
+  .i_m_stb    (w_wbm_stb            ),
+  .o_m_ack    (w_wbm_ack            ),
+  .i_m_dat    (w_wbm_dat_i          ),
+  .o_m_dat    (w_wbm_dat_o          ),
+  .i_m_adr    (w_wbm_adr            ),
+  .o_m_int    (w_wbm_int            ),
 
-  .o_s0_we          (w_wbs0_we            ),
-  .o_s0_cyc         (w_wbs0_cyc           ),
-  .o_s0_stb         (w_wbs0_stb           ),
-  .i_s0_ack         (w_wbs0_ack           ),
-  .o_s0_dat         (w_wbs0_dat_i         ),
-  .i_s0_dat         (w_wbs0_dat_o         ),
-  .o_s0_adr         (w_wbs0_adr           ),
-  .i_s0_int         (w_wbs0_int           ),
+  .o_s0_we    (w_wbs0_we            ),
+  .o_s0_cyc   (w_wbs0_cyc           ),
+  .o_s0_stb   (w_wbs0_stb           ),
+  .i_s0_ack   (w_wbs0_ack           ),
+  .o_s0_dat   (w_wbs0_dat_i         ),
+  .i_s0_dat   (w_wbs0_dat_o         ),
+  .o_s0_adr   (w_wbs0_adr           ),
+  .i_s0_int   (w_wbs0_int           ),
 
-  .o_s1_we          (w_wbs1_we            ),
-  .o_s1_cyc         (w_wbs1_cyc           ),
-  .o_s1_stb         (w_wbs1_stb           ),
-  .i_s1_ack         (w_wbs1_ack           ),
-  .o_s1_dat         (w_wbs1_dat_i         ),
-  .i_s1_dat         (w_wbs1_dat_o         ),
-  .o_s1_adr         (w_wbs1_adr           ),
-  .i_s1_int         (w_wbs1_int           )
-);
-
-uart_v3  u_test (
-  .clk              (clk                  ),
-  .rst              (rst                  ),
-  .rx               (la_uart_tx           ),
-  .tx               (la_uart_rx           ),
-  .transmit         (test_transmit        ),
-  .tx_byte          (test_tx_byte         ),
-  .received         (test_received        ),
-  .rx_byte          (test_rx_byte         ),
-  .is_receiving     (test_is_receiving    ),
-  .is_transmitting  (test_is_transmitting ),
-  .rx_error         (test_rx_error        )
+  .o_s1_we    (w_wbs1_we            ),
+  .o_s1_cyc   (w_wbs1_cyc           ),
+  .o_s1_stb   (w_wbs1_stb           ),
+  .i_s1_ack   (w_wbs1_ack           ),
+  .o_s1_dat   (w_wbs1_dat_i         ),
+  .i_s1_dat   (w_wbs1_dat_o         ),
+  .o_s1_adr   (w_wbs1_adr           ),
+  .i_s1_int   (w_wbs1_int           )
 );
 
 
 
 
 
+assign  w_wbs0_ack              = 0;
+assign  w_wbs0_dat_o            = 0;
+assign  start                   = 1;
 
-
-always #`CLK_HALF_PERIOD      clk = ~clk;
-always #5 la_clk = ~la_clk;
+always #`CLK_HALF_PERIOD        clk = ~clk;
 
 initial begin
-  fd_out                      = 0;
-  read_count                  = 0;
-  data_count                  = 0;
-  timeout_count               = 0;
-  request_more_data_ack       <=  0;
-  execute_command             <=  0;
+  fd_out                        = 0;
+  read_count                    = 0;
+  data_count                    = 0;
+  timeout_count                 = 0;
+  request_more_data_ack         <=  0;
+  execute_command               <=  0;
 
   $dumpfile ("design.vcd");
   $dumpvars (0, wishbone_master_tb);
-  fd_in                       = $fopen(`INPUT_FILE, "r");
-  fd_out                      = $fopen(`OUTPUT_FILE, "w");
+  fd_in                         = $fopen(`INPUT_FILE, "r");
+  fd_out                        = $fopen(`OUTPUT_FILE, "w");
   `SLEEP_HALF_CLK;
 
-  rst                         <= 0;
-  `SLEEP_CLK(2);
-  rst                         <= 1;
+  rst                           <= 0;
+  `SLEEP_CLK(100);
+  rst                           <= 1;
 
   //clear the handler signals
   r_in_ready                    <= 0;
@@ -331,10 +291,10 @@ initial begin
             while (ch != "\n") begin
               ch = $fgetc(fd_in);
             end
-            $display ("");
+            `ifdef VERBOSE $display (""); `endif
           end
           else begin
-            $display ("Error unrecognized line: %h" % ch);
+            `ifdef VERBOSE $display ("Error unrecognized line: %h" % ch); `endif
             //Eat the line
             while (ch != "\n") begin
               ch = $fgetc(fd_in);
@@ -342,22 +302,25 @@ initial begin
           end
         end
         else if (read_count == 1) begin
-          $display ("Sleep for %h Clock cycles", r_in_data_count);
+          `ifdef VERBOSE $display ("Sleep for %h Clock cycles", r_in_data_count); `endif
           `SLEEP_CLK(r_in_data_count);
-          $display ("");
+          `ifdef VERBOSE $display ("Sleep Finished"); `endif
         end
         else begin
-          $display ("Error: read_count = %h != 4", read_count);
-          $display ("Character: %h", ch);
+          `ifdef VERBOSE $display ("Error: read_count = %h != 4", read_count); `endif
+          `ifdef VERBOSE $display ("Character: %h", ch); `endif
         end
       end
       else begin
+        `ifdef VERBOSE
         case (r_in_command)
           0: $display ("TB: Executing PING commad");
           1: $display ("TB: Executing WRITE command");
           2: $display ("TB: Executing READ command");
           3: $display ("TB: Executing RESET command");
         endcase
+        `endif
+        `ifdef VERBOSE $display ("Execute Command"); `endif
         execute_command                 <= 1;
         `SLEEP_CLK(1);
         while (~command_finished) begin
@@ -366,7 +329,7 @@ initial begin
           if ((r_in_command & 32'h0000FFFF) == 1) begin
             if (request_more_data && ~request_more_data_ack) begin
               read_count      = $fscanf(fd_in, "%h\n", r_in_data);
-              $display ("TB: reading a new double word: %h", r_in_data);
+              `ifdef VERBOSE $display ("TB: reading a new double word: %h", r_in_data); `endif
               request_more_data_ack     <= 1;
             end
           end
@@ -375,27 +338,24 @@ initial begin
           `SLEEP_CLK(1);
           //this doesn't need to be here, but there is a weird behavior in iverilog
           //that wont allow me to put a delay in right before an 'end' statement
-          execute_command <= 1;
+          //execute_command <= 1;
         end //while command is not finished
+        execute_command <= 0;
+
         while (command_finished) begin
+          `ifdef VERBOSE $display ("Command Finished"); `endif
           `SLEEP_CLK(1);
           execute_command <= 0;
         end
         `SLEEP_CLK(50);
-        $display ("TB: finished command");
+        `ifdef VERBOSE $display ("TB: finished command"); `endif
       end //end read_count == 4
     end //end while ! eof
   end //end not reset
-
-
-  while (!uart_finished) begin
-    #100;
-  end
-  #10000
+  `SLEEP_CLK(50);
   $fclose (fd_in);
   $fclose (fd_out);
   $finish();
-
 end
 //initial begin
 //    $monitor("%t, state: %h", $time, state);
@@ -404,17 +364,24 @@ end
 //initial begin
 //    $monitor("%t, data: %h, state: %h, execute command: %h", $time, w_wbm_dat_o, state, execute_command);
 //end
+//initial begin
+    //$monitor("%t, state: %h, execute: %h, cmd_fin: %h", $time, state, execute_command, command_finished);
+    //$monitor("%t, state: %h, write_size: %d, write_count: %d, execute: %h", $time, state, r_in_data_count, data_write_count, execute_command);
+//end
 
 
 
 always @ (posedge clk) begin
   if (rst) begin
-    state                     <= IDLE;
+    state                     <= WAIT_FOR_SDRAM;
     request_more_data         <= 0;
     timeout_count             <= 0;
     prev_int                  <= 0;
     r_ih_reset                <= 0;
     data_write_count          <= 0;
+    data_read_count           <= 1;
+
+    command_finished          <= 0;
   end
   else begin
     r_ih_reset                <= 0;
@@ -423,311 +390,180 @@ always @ (posedge clk) begin
     command_finished          <= 0;
 
     //Countdown the NACK timeout
-    if (execute_command && timeout_count > 0) begin
-      timeout_count           <= timeout_count - 1;
+    if (execute_command && timeout_count < `TIMEOUT_COUNT) begin
+      timeout_count           <= timeout_count + 1;
     end
 
-    if (execute_command && timeout_count == 0) begin
+    if (execute_command && timeout_count >= `TIMEOUT_COUNT) begin
+      `ifdef VERBOSE
       case (r_in_command)
         0: $display ("TB: Master timed out while executing PING commad");
         1: $display ("TB: Master timed out while executing WRITE command");
         2: $display ("TB: Master timed out while executing READ command");
         3: $display ("TB: Master timed out while executing RESET command");
       endcase
+      `endif
 
-      state                   <= IDLE;
       command_finished        <= 1;
-      timeout_count           <= `TIMEOUT_COUNT;
-      data_write_count        <= 1;
+      state                   <= IDLE;
+      timeout_count           <= 0;
     end //end reached the end of a timeout
 
     case (state)
-      IDLE: begin
-        if (execute_command & ~command_finished) begin
-          $display ("TB: #:C:A:D = %h:%h:%h:%h", r_in_data_count, r_in_command, r_in_address, r_in_data);
-          timeout_count       <= `TIMEOUT_COUNT;
-          state               <= EXECUTE;
+      WAIT_FOR_SDRAM: begin
+        timeout_count         <= 0;
+        r_in_ready            <= 0;
+        //Uncomment 'start' conditional to wait for SDRAM  to finish starting
+        //up
+        if (start) begin
+          `ifdef VERBOSE $display            ("TB: sdram is ready"); `endif
+          state                 <=  IDLE;
         end
       end
-      EXECUTE: begin
+      IDLE: begin
+        timeout_count         <= 0;
+        command_finished      <= 0;
+        data_write_count      <= 1;
+        if (execute_command && !command_finished) begin
+          state               <=  SEND_COMMAND;
+        end
+        data_read_count       <= 1;
+      end
+      SEND_COMMAND: begin
+        timeout_count         <= 0;
         if (w_master_ready) begin
-          //send the command over
-          r_in_ready            <= 1;
+          r_in_ready          <=  1;
+          state               <=  MASTER_READ_COMMAND;
+        end
+      end
+      MASTER_READ_COMMAND: begin
+        r_in_ready            <=  1;
+        if (!w_master_ready) begin
+          r_in_ready          <=  0;
           case (r_in_command & 32'h0000FFFF)
             0: begin
-              //ping
-              state           <=  PING_RESPONSE;
+              state             <=  PING_RESPONSE;
             end
             1: begin
-              //write
               if (r_in_data_count > 1) begin
-                $display ("TB: \tWrote double word %d: %h", data_write_count, r_in_data);
-                state                   <=  WRITE_DATA;
-                timeout_count           <= `TIMEOUT_COUNT;
-                data_write_count        <=  data_write_count + 1;
+                `ifdef VERBOSE $display ("TB:\tWrote Double Word %d: %h", data_write_count, r_in_data); `endif
+                if (data_write_count < r_in_data_count) begin
+                  state           <=  WRITE_DATA;
+                  timeout_count   <=  0;
+                  data_write_count<=  data_write_count + 1;
+                end
+                else begin
+                  `ifdef VERBOSE $display ("TB: Finished Writing: %d 32bit words of %d size", r_in_data_count, data_write_count); `endif
+                  state           <=  WRITE_RESPONSE;
+                end
               end
               else begin
-                if (data_write_count > 1) begin
-                  $display ("TB: \tWrote double word %d: %h", data_write_count, r_in_data);
-                end
-                state                   <=  WRITE_RESPONSE;
+                `ifdef VERBOSE $display ("TB:\tWrote Double Word %d: %h", data_write_count, r_in_data); `endif
+                `ifdef VERBOSE $display ("TB: Finished Writing: %d 32bit words of %d size", r_in_data_count, data_write_count); `endif
+                state           <=  WRITE_RESPONSE;
               end
             end
             2: begin
-              //read
-              state           <=  READ_RESPONSE;
+              state             <=  READ_RESPONSE;
             end
             3: begin
-              //reset
-              state           <=  RESET;
+              state             <=  RESET;
             end
           endcase
         end
       end
       RESET: begin
-        //reset the system
-        r_ih_reset                    <=  1;
-        command_finished            <=  1;
-        state                       <=  IDLE;
+        r_ih_reset            <=  1;
+        state                 <=  RESET;
       end
       PING_RESPONSE: begin
         if (w_out_en) begin
-          if (w_out_status == (~(32'h00000000))) begin
-            $display ("TB: Read a successful ping reponse");
+          if (w_out_status[7:0] == 8'hFF) begin
+            `ifdef VERBOSE $display ("TB: Ping Response Good"); `endif
           end
           else begin
-            $display ("TB: Ping response is incorrect!");
+            `ifdef VERBOSE $display ("TB: Ping Response Bad (Malformed response: %h)", w_out_status); `endif
           end
-          $display ("TB: \tS:A:D = %h:%h:%h\n", w_out_status, w_out_address, w_out_data);
-          command_finished  <= 1;
-          state                     <=  IDLE;
+          `ifdef VERBOSE $display ("TB: \tS:A:D = %h:%h:%h\n", w_out_status, w_out_address, w_out_data); `endif
+          state               <=  FINISHED;
         end
       end
       WRITE_DATA: begin
         if (!r_in_ready && w_master_ready) begin
-          state                     <=  GET_WRITE_DATA;
-          request_more_data         <=  1;
+          state               <=  GET_WRITE_DATA;
+          request_more_data   <=  1;
         end
       end
       WRITE_RESPONSE: begin
+        `ifdef VERBOSE $display ("In Write Response"); `endif
         if (w_out_en) begin
-         if (w_out_status == (~(32'h00000001))) begin
-            $display ("TB: Read a successful write reponse");
+          if (w_out_status[7:0] == (~(8'h01))) begin
+            `ifdef VERBOSE $display ("TB: Write Response Good"); `endif
           end
           else begin
-            $display ("TB: Write response is incorrect!");
+            `ifdef VERBOSE $display ("TB: Write Response Bad (Malformed response: %h)", w_out_status); `endif
           end
-          $display ("TB: \tS:A:D = %h:%h:%h\n", w_out_status, w_out_address, w_out_data);
-          state                   <=  IDLE;
-          command_finished  <= 1;
+          `ifdef VERBOSE $display ("TB: \tS:A:D = %h:%h:%h\n", w_out_status, w_out_address, w_out_data); `endif
+          state               <=  FINISHED;
         end
       end
       GET_WRITE_DATA: begin
         if (request_more_data_ack) begin
-//XXX: should request more data be a strobe?
           request_more_data   <=  0;
-          r_in_ready            <=  1;
-          r_in_data_count       <=  r_in_data_count -1;
-          state               <=  EXECUTE;
+          r_in_ready          <=  1;
+          state               <=  SEND_COMMAND;
         end
       end
       READ_RESPONSE: begin
         if (w_out_en) begin
-          if (w_out_status == (~(32'h00000002))) begin
-            $display ("TB: Read a successful read response");
+          if (w_out_status[7:0] == (~(8'h02))) begin
+            `ifdef VERBOSE $display ("TB: Read Response Good"); `endif
             if (w_out_data_count > 0) begin
-              state             <=  READ_MORE_DATA;
-              //reset the NACK timeout
-              timeout_count     <=  `TIMEOUT_COUNT;
-            end
-            else begin
-              state             <=  IDLE;
-              command_finished  <= 1;
+              if (data_read_count < w_out_data_count) begin
+                state           <=  READ_MORE_DATA;
+                timeout_count   <=  0;
+                data_read_count <=  data_read_count + 1;
+              end
+              else begin
+                state           <=  FINISHED;
+              end
             end
           end
           else begin
-            $display ("TB: Read response is incorrect");
-            command_finished  <= 1;
+            `ifdef VERBOSE $display ("TB: Read Response Bad (Malformed response: %h)", w_out_status); `endif
+            state               <=  FINISHED;
           end
-          $display ("TB: \tS:A:D = %h:%h:%h\n", w_out_status, w_out_address, w_out_data);
+          `ifdef VERBOSE $display ("TB: \tS:A:D = %h:%h:%h\n", w_out_status, w_out_address, w_out_data); `endif
         end
       end
       READ_MORE_DATA: begin
         if (w_out_en) begin
-          r_out_ready             <=  0;
-          if (w_out_status == (~(32'h00000002))) begin
-            $display ("TB: Read a 32bit data packet");
-            $display ("Tb: \tRead Data: %h", w_out_data);
-          end
-          else begin
-            $display ("TB: Read reponse is incorrect");
-          end
-
-          //read the output data count to determine if there is more data
-          if (w_out_data_count == 0) begin
-            state             <=  IDLE;
-            command_finished  <=  1;
-          end
+          timeout_count         <=  0;
+          r_out_ready           <=  0;
+          `ifdef VERBOSE $display ("TB: Read a 32bit data packet"); `endif
+          `ifdef VERBOSE $display ("TB: \tRead Data: %h", w_out_data); `endif
+          data_read_count       <=  data_read_count + 1;
+        end
+        if (data_read_count >= r_in_data_count) begin
+          state                 <=  FINISHED;
         end
       end
-      default: begin
-        $display ("TB: state is wrong");
-        state <= IDLE;
-      end //somethine wrong here
-    endcase //state machine
+      FINISHED: begin
+        command_finished        <=  1;
+        if (!execute_command) begin
+          `ifdef VERBOSE $display ("Execute Command is low"); `endif
+          command_finished      <=  0;
+          state                 <=  IDLE;
+        end
+      end
+    endcase
     if (w_out_en && w_out_status == `PERIPH_INTERRUPT) begin
-      $display("TB: Output Handler Recieved interrupt");
-      $display("TB:\tcommand: %h", w_out_status);
-      $display("TB:\taddress: %h", w_out_address);
-      $display("TB:\tdata: %h", w_out_data);
+      `ifdef VERBOSE $display("TB: Output Handler Recieved interrupt"); `endif
+      `ifdef VERBOSE $display("TB:\tcommand: %h", w_out_status); `endif
+      `ifdef VERBOSE $display("TB:\taddress: %h", w_out_address); `endif
+      `ifdef VERBOSE $display("TB:\tdata: %h", w_out_data); `endif
     end
   end//not reset
 end
-
-always @ (posedge la_clk) begin
-  if (rst) begin
-    la_data         <=  0;
-    la_ext_trigger  <=  0;
-  end
-  else begin
-    la_data         <=  la_data + 1;
-  end
-end
-
-reg [7:0] rbyte;
-initial begin
-//Ping
-rbyte = 0;
-#20;
-
-uart_finished   <=  0;
-/*
-write_byte(`START_ID);
-write_byte(`LA_PING);
-write_byte(`LINE_FEED);
-
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-
-$display ("Writing Trigger After");
-write_byte(`START_ID);
-write_byte(`LA_WRITE_TRIGGER_AFTER);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(1);
-write_byte(`LINE_FEED);
-
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-
-
-$display ("Writing Trigger");
-write_byte(`START_ID);
-write_byte(`LA_WRITE_TRIGGER);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(1);
-write_byte(0);
-write_byte(0);
-write_byte(`LINE_FEED);
-
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-
-$display ("Writing Mask");
-write_byte(`START_ID);
-write_byte(`LA_WRITE_MASK);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(0);
-write_byte(1);
-write_byte(0);
-write_byte(0);
-write_byte(`LINE_FEED);
-
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-
-write_byte(`START_ID);
-write_byte(`LA_SET_ENABLE);
-write_byte(1 + `HEX_0);
-write_byte(`LINE_FEED);
-
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %c", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-
-
-$display ("Waiting for a trigger");
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %h", test_rx_byte);
-read_byte(); $display ("Reading: %c", test_rx_byte);
-
-
-  #10000;
-*/
-  uart_finished   <=  1;
-
-end
-
-task write_byte;
-  input [7:0] in_byte;
-  begin
-    $display (".");
-    test_transmit       <=  0;
-    //initiate a write
-    test_tx_byte        <=  in_byte;
-    #1000;
-
-    test_transmit       <=  1;
-    #20;
-    test_transmit       <=  0;
-    #20;
-    while (test_is_transmitting) begin
-    #20;
-    end
-    #20;
- 
-  end
-endtask
-
-task read_byte;
-  begin
-    while (!test_received) begin
-    #20;
-    end
-    #20;
-  end
-endtask
-
 
 endmodule

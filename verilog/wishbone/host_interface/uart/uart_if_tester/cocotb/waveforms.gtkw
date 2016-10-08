@@ -1,0 +1,106 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Fri Jun 24 13:05:30 2016
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/uart/uart_if_tester/cocotb/design.vcd"
+[dumpfile_mtime] "Fri Jun 24 05:11:55 2016"
+[dumpfile_size] 6070523
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/uart/uart_if_tester/cocotb/waveforms.gtkw"
+[timestart] 135600
+[size] 1918 1059
+[pos] -1 18
+*-14.712349 191690 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_cocotb.
+[sst_width] 213
+[signals_width] 206
+[sst_expanded] 1
+[sst_vpaned_height] 313
+@28
+tb_cocotb.s1.clk
+tb_cocotb.s1.rst
+@200
+-
+@22
+tb_cocotb.uart_rd_data[7:0]
+@820
+tb_cocotb.uart_rd_data[7:0]
+@23
+tb_cocotb.uart.rx_bit_count[3:0]
+@200
+-
+@28
+tb_cocotb.uart_rd_stb
+tb_cocotb.uart_wr_busy
+@22
+tb_cocotb.uart_wr_data[7:0]
+@820
+tb_cocotb.uart_wr_data[7:0]
+@28
+tb_cocotb.uart_wr_stb
+@200
+-
+@28
+tb_cocotb.w_phy_rx
+tb_cocotb.w_phy_tx
+tb_cocotb.uih.uart_in_busy
+@200
+-
+@800200
+-Host Interface
+@2022
+[color] 5
+^1 /home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/uart/uart_if_tester/cocotb/../../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/uart/uart_if_tester/cocotb/../../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/uart/uart_if_tester/cocotb/sm_uih_ih.txt
+tb_cocotb.uih.in_state[3:0]
+[color] 5
+^2 /home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/uart/uart_if_tester/cocotb/../../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/uart/uart_if_tester/cocotb/../../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/wishbone/host_interface/uart/uart_if_tester/cocotb/sm_uih_oh.txt
+tb_cocotb.uih.out_state[3:0]
+@200
+-
+@28
+tb_cocotb.uih.in_byte_available
+@22
+tb_cocotb.uih.in_byte[7:0]
+@200
+-
+@22
+tb_cocotb.uih.o_in_data_count[27:0]
+tb_cocotb.uih.o_in_command[31:0]
+tb_cocotb.uih.o_in_address[31:0]
+tb_cocotb.uih.o_in_data[31:0]
+@28
+tb_cocotb.uih.i_master_ready
+tb_cocotb.uih.o_ih_ready
+@200
+-
+@28
+tb_cocotb.uih.o_oh_ready
+tb_cocotb.uih.i_oh_en
+@200
+-
+@22
+tb_cocotb.uih.i_out_status[31:0]
+@28
+tb_cocotb.uih.uart_out_busy
+tb_cocotb.uih.uart_wr_stb
+@22
+tb_cocotb.uih.out_byte[7:0]
+@820
+tb_cocotb.uih.out_byte[7:0]
+@200
+-
+@22
+tb_cocotb.uih.out_data_pos[27:0]
+tb_cocotb.uih.out_data_count[27:0]
+@200
+-
+@22
+tb_cocotb.uih.out_byte[7:0]
+tb_cocotb.uih.out_nibble_count[3:0]
+@200
+-
+@1000200
+-Host Interface
+@22
+tb_cocotb.s1.i_wbs_dat[31:0]
+[pattern_trace] 1
+[pattern_trace] 0
