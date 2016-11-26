@@ -57,7 +57,8 @@ module axi_master #(
   parameter           INTERRUPT_WIDTH       = 32,
   parameter           ENABLE_WRITE_RESP     = 0, //Don't send a response when writing (Faster)
   parameter           ENABLE_NACK           = 0, //Enable timeout
-  parameter           DEFAULT_TIMEOUT       = 32'd100000000  //1 Second at 100MHz
+  parameter           DEFAULT_TIMEOUT       = 32'd100000000,  //1 Second at 100MHz
+  parameter           SDB_ADDRESS           = 64'h0000000000000000
 
 )(
   input                             clk,
@@ -83,21 +84,21 @@ module axi_master #(
   output                            o_aclk,
   output reg                        o_areset_n,
 
-  //peripheral bus write addr path
+  //bus write addr path
   output  reg [3:0]                 o_awid,         //Write ID
-  output  reg [ADDR_WIDTH - 1:0]    o_awaddr,       //Write Addr Path Address
+  output      [ADDR_WIDTH - 1:0]    o_awaddr,       //Write Addr Path Address
   output  reg [3:0]                 o_awlen,        //Write Addr Path Burst Length
   output  reg [2:0]                 o_awsize,       //Write Addr Path Burst Size
-  output  reg [1:0]                 o_awburst,      //Write Addr Path Burst Type
+  output      [1:0]                 o_awburst,      //Write Addr Path Burst Type
                                                         //  0 = Fixed
                                                         //  1 = Incrementing
                                                         //  2 = wrap
-  output  reg [1:0]                 o_awlock,       //Write Addr Path Lock (atomic) information
+  output      [1:0]                 o_awlock,       //Write Addr Path Lock (atomic) information
                                                         //  0 = Normal
                                                         //  1 = Exclusive
                                                         //  2 = Locked
-  output  reg [3:0]                 o_awcache,      //Write Addr Path Cache Type
-  output  reg [2:0]                 o_awprot,       //Write Addr Path Protection Type
+  output      [3:0]                 o_awcache,      //Write Addr Path Cache Type
+  output      [2:0]                 o_awprot,       //Write Addr Path Protection Type
   output  reg                       o_awvalid,      //Write Addr Path Address Valid
   input                             i_awready,      //Write Addr Path Slave Ready
                                                         //  1 = Slave Ready
@@ -126,13 +127,13 @@ module axi_master #(
 
     //bus read addr path
   output  reg  [3:0]                o_arid,         //Read ID
-  output  reg  [ADDR_WIDTH - 1:0]   o_araddr,       //Read Addr Path Address
+  output       [ADDR_WIDTH - 1:0]   o_araddr,       //Read Addr Path Address
   output  reg  [3:0]                o_arlen,        //Read Addr Path Burst Length
   output  reg  [2:0]                o_arsize,       //Read Addr Path Burst Size
-  output  reg  [1:0]                o_arburst,      //Read Addr Path Burst Type
-  output  reg  [1:0]                o_arlock,       //Read Addr Path Lock (atomic) information
-  output  reg  [3:0]                o_arcache,      //Read Addr Path Cache Type
-  output  reg  [2:0]                o_arprot,       //Read Addr Path Protection Type
+  output       [1:0]                o_arburst,      //Read Addr Path Burst Type
+  output       [1:0]                o_arlock,       //Read Addr Path Lock (atomic) information
+  output       [3:0]                o_arcache,      //Read Addr Path Cache Type
+  output       [2:0]                o_arprot,       //Read Addr Path Protection Type
   output  reg                       o_arvalid,      //Read Addr Path Address Valid
   input                             i_arready,      //Read Addr Path Slave Ready
                                                         //  1 = Slave Ready
@@ -152,10 +153,14 @@ module axi_master #(
 );
 
 //local parameters
+localparam        DATA_WORD_SIZE        = (DATA_WORD >> 3);
+localparam        DATA_WORD_ALL_EN      = (DATA_WORD_SIZE - 1);
+
+//States
 localparam        IDLE                  = 4'h0;
 localparam        READ_INGRESS_FIFO     = 4'h1;
 localparam        PARSE_COMMAND         = 4'h2;
-localparam        PING                  = 4'h3;
+//localparam        PING                  = 4'h3;
 localparam        WRITE_CMD             = 4'h4; //Write Command and Address to Slave
 localparam        WRITE_DATA            = 4'h5; //Write Data to Slave
 localparam        WRITE_RESP            = 4'h6; //Receive Response from device
@@ -165,7 +170,7 @@ localparam        MASTER_CFG_WRITE      = 4'h9;
 localparam        MASTER_CFG_READ       = 4'hA;
 localparam        SEND_RESPONSE         = 4'hB;
 localparam        SEND_INTERRUPT        = 5'hC;
-localparam        FLUSH                 = 4'hD;
+//localparam        FLUSH                 = 4'hD;
 
 //registes/wires
 reg     [3:0]       state = IDLE;
@@ -175,6 +180,7 @@ wire                        w_ingress_rdy;
 reg                         r_ingress_act;
 wire  [HI_ADDR_WIDTH - 1:0] w_ingress_size;
 wire  [HI_DATA_WIDTH - 1:0] w_ingress_data;
+wire                        w_ingress_stb;
 reg                         r_ingress_stb;
 
 wire  [1:0]                 w_egress_rdy;
@@ -187,11 +193,10 @@ reg   [HI_DATA_WIDTH - 1:0] r_egress_data;
 wire  [15:0]                w_command;
 wire  [15:0]                w_flags;
 wire  [31:0]                w_data_size;
-wire  [ADDR_WIDTH:0]        w_address;
-reg   [ADDR_WIDTH:0]        r_address;
+wire  [ADDR_WIDTH - 1:0]    w_address;
+reg   [ADDR_WIDTH - 1:0]    r_address;
 
 wire  [31:0]                w_status;
-wire                        w_auto_inc_addr;
 wire                        w_master_config_space;
 wire  [31:0]                w_master_flags;
 reg                         r_en_nack;
@@ -206,7 +211,19 @@ reg   [31:0]                r_interrupts;
 
 reg   [31:0]                r_header  [0:(`HEADER_SIZE - 1)];
 
+wire  [63:0]                w_sdb_address = SDB_ADDRESS;
 
+wire                        w_writing_data;
+reg   [1:0]                 r_bus_status;
+
+//Some Features are not supported at this time
+
+assign  o_awlock            = 0;
+assign  o_awprot            = 0;
+assign  o_arprot            = 0;
+assign  o_arlock            = 0;
+assign  o_awcache           = 0;
+assign  o_arcache           = 0;
 
 
 
@@ -228,7 +245,7 @@ ppfifo #(
 
   //read side
   .read_clock      (clk                   ),
-  .read_strobe     (r_ingress_stb         ),
+  .read_strobe     (w_ingress_stb         ),
   .read_ready      (w_ingress_rdy         ),
   .read_activate   (r_ingress_act         ),
   .read_count      (w_ingress_size        ),
@@ -284,6 +301,7 @@ assign  w_status[`STATUS_BIT_READ]              = (w_command == `COMMAND_READ  &
 assign  w_status[`STATUS_BIT_RESET]             = (w_command == `COMMAND_RESET);
 assign  w_status[`STATUS_BIT_MSTR_CFG_WR]       = (w_command == `COMMAND_WRITE &  w_master_config_space);
 assign  w_status[`STATUS_BIT_MSTR_CFG_RD]       = (w_command == `COMMAND_READ  &  w_master_config_space);
+assign  w_status[`STATUS_RANGE_BUS_STATUS]      = r_bus_status;
 
 assign  w_status[`STATUS_BIT_UNREC_CMD]         = r_unrec_cmd;
 assign  w_status[`STATUS_BIT_UNUSED]            = 0;
@@ -293,14 +311,16 @@ assign  w_flags                                 = r_header[`COMMAND_POS][`FLAG_R
 assign  w_data_size                             = r_header[`DATA_COUNT_POS];
 assign  w_address                               = r_header[`ADDRESS_POS];
 
-assign  w_mem_bus_select                        =  ((w_flags & `FLAG_MEM_BUS            ) >  0);
-assign  w_auto_inc_addr                         = !((w_flags | `FLAG_DISABLE_AUTO_INC   ) == 0);
-assign  w_master_config_space                   =  ((w_flags & `FLAG_MASTER_ADDR_SPACE  ) >  0);
+assign  w_master_config_space                   =  w_flags[`FLAG_MASTER_ADDR_SPACE];
+assign  o_awburst                               =  w_flags[`FLAG_BURST_MODE];
+assign  o_arburst                               =  w_flags[`FLAG_BURST_MODE];
 
+assign  o_awaddr                                = r_address;
+assign  o_araddr                                = r_address;
 
-
-
-
+assign  w_writing_data                          = (state == WRITE_DATA);
+assign  o_w_valid                               = w_writing_data && r_ingress_act;
+assign  w_ingress_stb                           = w_writing_data ? i_wready : r_ingress_stb;
 
 //synchronous logic
 always @ (posedge clk) begin
@@ -309,9 +329,21 @@ always @ (posedge clk) begin
   r_egress_stb        <= 0;
   r_sync_rst          <= 0;
 
+  //AXI Strobes
+  o_awvalid           <= 0;
+
+  o_wvalid            <= 0;
+  o_wlast             <= 0;
+  o_wstrobe           <= 0;
+
+  o_bready            <= 0;
+
+  o_arvalid           <= 0;
+
+  o_rready            <= 0;
 
   if (rst) begin
-    r_address         <= 32'h0;
+    r_address         <= 0;
     r_ingress_count   <= 24'h0;
     r_hdr_count       <= 4'h0;
     r_data_count      <= 32'h0;
@@ -330,7 +362,25 @@ always @ (posedge clk) begin
     for (i = 0; i < `HEADER_SIZE; i = i + 1)
       r_header[i]     <=  0;
 
-    r_address         <=  32'h0;
+    //AXI
+
+    //Write Address Path
+    o_awid            <=  0;
+    o_awlen           <=  0;
+    o_awsize          <=  0;
+
+    //Write Data Path
+    o_wid             <=  0;
+    o_wdata           <=  0;
+
+    //Read Address Path
+    o_arid            <=  0;
+    o_araddr          <=  0;
+    o_arlen           <=  0;
+    o_arsize          <=  0;
+    o_arlock          <=  0;
+
+    r_bus_status      <=  0;
 
   end
   else begin
@@ -348,35 +398,196 @@ always @ (posedge clk) begin
         r_egress_act[1]       <=  1'h1;
     end
 
-
     case (state)
       IDLE: begin
+        r_address             <=  32'h0;
+        r_ingress_count       <=  24'h0;
+        r_egress_count        <=  24'h0;
+        r_data_count          <=  32'h0;
+        r_hdr_count           <=  4'h0;
+        r_unrec_cmd           <=  0;
+
+        if (r_ingress_act) begin
+          //Something new from host
+          state               <=  READ_INGRESS_FIFO;
+        end
+        else if (!r_prev_int && i_per_int) begin
+          //Something new from interrupts
+          state               <=  SEND_INTERRUPT;
+          r_interrupts        <=  w_wb_dat;
+        end
       end
       READ_INGRESS_FIFO: begin
+        r_ingress_stb         <=  1;
+        r_ingress_count       <=  r_ingress_count + 1;
+        r_header[r_hdr_count] <=  w_ingress_data;
+
+        state                 <=  PARSE_COMMAND;
       end
       PARSE_COMMAND: begin
-      end
-      PING: begin
+        r_data_count          <=  0;
+        if (r_ingress_act) begin
+          if (r_ingress_count < `HEADER_SIZE) begin
+            r_ingress_count       <=  r_ingress_count + 1;
+            r_ingress_stb         <=  1;
+          end
+          else if (r_ingress_count >= w_ingress_size) begin
+            r_ingress_act         <=  0;
+          end
+        end
+        if (r_hdr_count < `HEADER_SIZE) begin
+          //Still more data within the header to read
+          if (r_ingress_stb) begin
+            r_hdr_count           <=  r_hdr_count + 1;
+            r_header[r_hdr_count] <=  w_ingress_data;
+          end
+        end
+        else begin
+          r_address               <=  w_address;
+          case (w_command)
+            `COMMAND_PING: begin
+              state               <=  SEND_RESPONSE;
+            end
+            `COMMAND_WRITE: begin
+              if (w_master_config_space)
+                state             <=  MASTER_CFG_WRITE;
+              else begin
+                o_awvalid         <=  1;
+                state             <=  WRITE_CMD;
+              end
+            end
+            `COMMAND_READ: begin
+              if (w_master_config_space)
+                state             <=  MASTER_CFG_READ;
+              else
+                state             <=  READ_CMD;
+            end
+            `COMMAND_RESET: begin
+              sync_rst            <=  1;
+              state               <=  FLUSH;
+            end
+            default: begin
+              r_unrec_cmd         <=  1;
+              state               <=  SEND_RESPONE;
+            end
+          endcase
+        end
       end
       WRITE_CMD: begin
+        //Wait for the slave to acknowledge my request to write data
+        o_awid                    <=  0;
+        o_awvalid                 <=  1;
+        if (i_awready && oawvalid) begin
+          o_awvalid               <=  0;
+          state                   <=  WRITE_DATA;
+        end
       end
       WRITE_DATA: begin
+        //By Default assert all the byte enable signals
+        o_wstrobe                 <= `DATA_WORD_ALL_EN;
+        if (r_data_count < w_data_size) begin
+          if (w_ingress_stb) begin
+            r_data_count          <=  r_data_count + 1;
+            r_ingress_count       <=  r_ingress_count + 1;
+            if ((r_ingress_count + 1) >= w_ingress_size) begin
+              r_ingress_act       <=  0;
+            end
+          end
+        end
+        else begin
+          state                   <=  WRITE_RESP;
+          r_ingress_act           <=  0;
+        end
       end
       WRITE_RESP: begin
+        if ((o_awid == i_bid) && i_bvalid)begin
+          //Incomming ID matches the one we sent out
+          r_bus_status            <=  i_bresp;
+          o_bready                <=  1;
+          if (r_en_wr_resp) begin
+            state                 <=  SEND_RESPONSE;
+          end
+          else begin
+            state                 <=  IDLE;
+          end
+        end
       end
       READ_CMD: begin
+        o_arid                    <=  0;
+        o_arvalid                 <=  1;
+        if (i_arready && o_arvalid) begin
+          o_arvalid               <=  0;
+          state                   <=  READ_DATA;
+        end
       end
       READ_DATA: begin
+        if (i_rid == o_arid) begin
+          //Need to pull data in
+          //  Ready should be tied to activate
+          //  Valid should be tied to strobe  (strobe = (valid & activate))
+          //  Increment Address when I get a strobe
+        end
       end
       MASTER_CFG_WRITE: begin
+        if (r_ingress_act) begin
+          if (r_ingress_count < w_ingress_size) begin
+            r_data_count        <=  r_data_count + 1;
+            r_ingress_count     <=  r_ingress_count + 1;
+            r_ingress_stb       <=  1;
+            if (r_data_count < w_data_size) begin
+              case (r_address)
+                `MADDR_CTR_FLAGS: begin
+                  r_en_nack     <=  w_ingress_data[`MASTER_FLAG_EN_NACK];
+                  r_en_wr_resp  <=  w_ingress_data[`MASTER_FLAG_EN_WR_RESP];
+                end
+                `MADDR_NACK_TIMEOUT: begin
+                  r_nack_timeout<=  w_ingress_data;
+                end
+                default: begin
+                end
+              endcase
+              r_address         <=  r_address + 1;
+            end
+          end
+          else begin
+            r_ingress_act       <=  0;
+          end
+        end
+        if (r_data_count >= w_data_size) begin
+          if (r_en_wr_resp) begin
+            state                 <=  SEND_RESPONSE;
+          end
+          else begin
+            state                 <=  IDLE;
+          end
+        end
       end
       MASTER_CFG_READ: begin
+        if (r_egress_act > 0) begin
+          if (r_egress_count == 0) begin
+            r_egress_data         <=  w_status;
+            r_egress_count        <=  r_egress_count + 1;
+          end
+          else if (r_data_count < w_data_size) begin
+            if (r_address < `MASTER_CFG_COUNT) begin
+              r_egress_data         <=  w_master_config[r_address];
+              r_egress_stb          <=  1;
+            end
+            else begin
+              r_egress_data         <=  32'h0;
+            end
+            r_address               <=  r_address + 1;
+            r_data_count            <=  r_data_count + 1;
+          end
+          else begin
+            r_egress_act            <=  0;
+            state                   <=  IDLE;
+          end
+        end
       end
       SEND_RESPONSE: begin
       end
       SEND_INTERRUPT: begin
-      end
-      FLUSH: begin
       end
       default: begin
       end

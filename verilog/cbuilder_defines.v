@@ -69,7 +69,8 @@ SOFTWARE.
 `define STATUS_BIT_MSTR_CFG_RD    5
 `define STATUS_BIT_UNREC_CMD      6
 `define STATUS_BIT_RESET          7
-`define STATUS_BIT_UNUSED         31:8
+`define STATUS_RANGE_BUS_STATUS   9:8
+`define STATUS_BIT_UNUSED         31:10
 
 //master address space
 `define MADDR_CTR_FLAGS         32'h00000000
@@ -80,9 +81,8 @@ SOFTWARE.
 `define NACK_TIMEOUT            32'h00000002
 
 //flags
-`define FLAG_MEM_BUS            16'h0001
-`define FLAG_DISABLE_AUTO_INC   16'h0002
-`define FLAG_MASTER_ADDR_SPACE  16'h0004
+`define FLAG_BURST_MODE         5:4
+`define FLAG_MASTER_ADDR_SPACE  2
 
 //master control flags bit field location
 `define MASTER_FLAG_UNUSED      31:2
