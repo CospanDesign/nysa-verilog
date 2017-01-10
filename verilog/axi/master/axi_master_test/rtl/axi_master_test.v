@@ -48,7 +48,7 @@ SOFTWARE.
   SDB_MODULE_URL:http://www.example.com
 
   Set the date of module YYYY/MM/DD
-  SDB_DATE:2016/10/02
+  SDB_DATE:2016/11/26
 
   Device is executable (True/False)
   SDB_EXECUTABLE:True
