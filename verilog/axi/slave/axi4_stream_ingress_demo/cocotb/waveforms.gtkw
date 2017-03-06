@@ -1,0 +1,54 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Sun Mar  5 23:00:29 2017
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi4_lite_demo/cocotb/design.vcd"
+[dumpfile_mtime] "Sun Mar  5 22:58:42 2017"
+[dumpfile_size] 1721
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi4_lite_demo/cocotb/waveforms.gtkw"
+[timestart] 0
+[size] 1918 1059
+[pos] -1 -460
+*-0.815493 2 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 213
+[signals_width] 174
+[sst_expanded] 1
+[sst_vpaned_height] 313
+@28
+tb_cocotb.clk
+tb_cocotb.rst
+@200
+-
+@800201
+-AXI4 Master Lite
+@23
+tb_cocotb.AXIML_ARADDR[31:0]
+@29
+tb_cocotb.AXIML_ARREADY
+tb_cocotb.AXIML_ARVALID
+@23
+tb_cocotb.AXIML_AWADDR[31:0]
+@29
+tb_cocotb.AXIML_AWREADY
+tb_cocotb.AXIML_AWVALID
+tb_cocotb.AXIML_BREADY
+tb_cocotb.AXIML_BRESP[1:0]
+tb_cocotb.AXIML_BVALID
+@23
+tb_cocotb.AXIML_RDATA[31:0]
+@29
+tb_cocotb.AXIML_RREADY
+tb_cocotb.AXIML_RRESP[1:0]
+tb_cocotb.AXIML_RVALID
+@23
+tb_cocotb.AXIML_WDATA[31:0]
+@29
+tb_cocotb.AXIML_WREADY
+@23
+tb_cocotb.AXIML_WSTRB[3:0]
+@29
+tb_cocotb.AXIML_WVALID
+@1000201
+-AXI4 Master Lite
+[pattern_trace] 1
+[pattern_trace] 0
