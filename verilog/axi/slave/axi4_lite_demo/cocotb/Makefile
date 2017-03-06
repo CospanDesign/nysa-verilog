@@ -8,20 +8,12 @@ PYTHONPATH := ./model:$(PYTHONPATH)
 export PYTHONPATH
 export PYTHONHOME=$(shell python -c "from distutils.sysconfig import get_config_var; print(get_config_var('prefix'))")
 
-EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/
+EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/ -I${NYSA_SATA}/rtl/ -I$(TOPDIR)/../wb_dma/rtl/
 
-#Dependencies
-VERILOG_SOURCES = $(NYSA)/verilog/wishbone/master/wishbone_master.v
-
-VERILOG_SOURCES += ${NYSA}/verilog/generic/bram.v
-VERILOG_SOURCES += ${NYSA}/verilog/wishbone/slave/wb_bram/rtl/wb_bram.v
-VERILOG_SOURCES += $(NYSA)/verilog/sim/wishbone/interconnect/example_2port_interconnect/wishbone_interconnect.v
-VERILOG_SOURCES += ${TOPDIR}/sim/arbiter_2_masters.v
-VERILOG_SOURCES += ${TOPDIR}/sim/wishbone_mem_interconnect.v
-
-#Simulation Devices
-VERILOG_SOURCES += ${TOPDIR}/rtl/axi4_sdb.v
 #DUT
+VERILOG_SOURCES += $(TOPDIR)/rtl/axi4_lite_demo.v
+#VERILOG_SOURCES =  $(NYSA)/verilog/generic/blk_mem.v
+
 #Test Benches
 VERILOG_SOURCES += $(TOPDIR)/cocotb/tb_cocotb.v
 

@@ -80,6 +80,8 @@ module axi_master #(
   output      [HI_DATA_WIDTH - 1:0] o_egress_data,
   output      [HI_ADDR_WIDTH - 1:0] o_egress_size,
 
+
+
   //AXI Bus
   output                            o_aclk,
   output reg                        o_areset_n,
@@ -484,7 +486,7 @@ always @ (posedge clk) begin
       end
       WRITE_DATA: begin
         //By Default assert all the byte enable signals
-        o_wstrobe                 <= `DATA_WORD_ALL_EN;
+        o_wstrobe                 <= DATA_WORD_ALL_EN;
         if (r_data_count < w_data_size) begin
           if (w_ingress_stb) begin
             r_data_count          <=  r_data_count + 1;
