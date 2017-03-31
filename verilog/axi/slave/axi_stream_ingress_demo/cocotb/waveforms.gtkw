@@ -1,0 +1,37 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Tue Mar  7 18:08:51 2017
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_stream_ingress_demo/cocotb/design.vcd"
+[dumpfile_mtime] "Mon Mar  6 21:42:12 2017"
+[dumpfile_size] 3197
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_stream_ingress_demo/cocotb/waveforms.gtkw"
+[timestart] 126
+[size] 1918 1059
+[pos] -1 -1
+*-4.376376 210 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_cocotb.
+[sst_width] 213
+[signals_width] 174
+[sst_expanded] 1
+[sst_vpaned_height] 313
+@28
+tb_cocotb.clk
+tb_cocotb.rst
+@200
+-
+@22
+tb_cocotb.dut.i_tdata[31:0]
+tb_cocotb.dut.i_tdest[31:0]
+tb_cocotb.dut.i_tid[3:0]
+tb_cocotb.dut.i_tkeep[3:0]
+tb_cocotb.dut.i_tstrb[3:0]
+tb_cocotb.dut.i_tuser[3:0]
+@28
+tb_cocotb.dut.i_tvalid
+@29
+tb_cocotb.dut.o_tready
+@28
+tb_cocotb.dut.i_tlast
+[pattern_trace] 1
+[pattern_trace] 0
