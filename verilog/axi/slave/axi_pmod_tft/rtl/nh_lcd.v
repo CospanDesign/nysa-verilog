@@ -27,6 +27,8 @@ module nh_lcd #(
   input       [31:0]              i_num_pixels,
 
   //FIFO Signals
+  input                           i_fifo_clk,
+  input                           i_fifo_rst,
   output      [1:0]               o_fifo_rdy,
   input       [1:0]               i_fifo_act,
   input                           i_fifo_stb,
@@ -103,6 +105,8 @@ nh_lcd_data_writer #(
   .i_enable_tearing     (i_enable_tearing     ),
   .i_num_pixels         (i_num_pixels         ),
 
+  .i_fifo_clk           (i_fifo_clk           ),
+  .i_fifo_rst           (i_fifo_rst           ),
   .o_fifo_rdy           (o_fifo_rdy           ),
   .i_fifo_act           (i_fifo_act           ),
   .i_fifo_stb           (i_fifo_stb           ),

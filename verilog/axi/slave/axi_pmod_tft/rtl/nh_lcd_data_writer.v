@@ -16,6 +16,8 @@ module nh_lcd_data_writer#(
   input                           i_unpack_pixels,
 
   //FIFO Signals
+  input                           i_fifo_clk,
+  input                           i_fifo_rst,
   output      [1:0]               o_fifo_rdy,
   input       [1:0]               i_fifo_act,
   input                           i_fifo_stb,
@@ -75,10 +77,10 @@ ppfifo #(
   .ADDRESS_WIDTH    (BUFFER_SIZE      )
 )ping_pong (
 
-  .reset           (rst               ),
+  .reset           (rst || i_fifo_rst ),
 
   //write
-  .write_clock     (clk               ),
+  .write_clock     (i_fifo_clk        ),
   .write_ready     (o_fifo_rdy        ),
   .write_activate  (i_fifo_act        ),
   .write_fifo_size (o_fifo_size       ),

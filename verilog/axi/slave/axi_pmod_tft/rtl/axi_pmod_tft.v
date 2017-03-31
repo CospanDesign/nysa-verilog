@@ -98,10 +98,12 @@ module axi_pmod_tft #(
 
 
   //RGB Video interface
-  input       [DATAS_WIDTH - 1:0]     i_rgb,
-  input                               i_h_sync,
-  input                               i_v_sync,
-  input                               i_data_en
+  input                               i_video_clk,
+  input                               i_video_rst,
+  input       [DATAS_WIDTH - 1:0]     i_video_rgb,
+  input                               i_video_h_sync,
+  input                               i_video_v_sync,
+  input                               i_video_data_en
 
 );
 
@@ -140,6 +142,7 @@ reg         [31:0]          r_num_pixels;
 
 //status
 
+wire                        wfifo_clk;
 wire        [23:0]          wfifo_size;
 wire        [1:0]           wfifo_ready;
 wire        [1:0]           wfifo_activate;
@@ -208,16 +211,16 @@ axi_lite_slave #(
 adapter_rgb_2_ppfifo #(
   .DATA_WIDTH         (DATAS_WIDTH          )
 ) ar2p (
-  .rst                (rst                  ),
-  .clk                (clk                  ),
+  .rst                (i_video_rst          ),
+  .clk                (i_video_clk          ),
 
-  .i_rgb              (i_rgb                ),
-  .i_h_sync           (i_h_sync             ),
-  .i_v_sync           (i_v_sync             ),
-  .i_data_en          (i_data_en            ),
+  .i_rgb              (i_video_rgb          ),
+  .i_h_sync           (i_video_h_sync       ),
+  .i_v_sync           (i_video_v_sync       ),
+  .i_data_en          (i_video_data_en      ),
 
   //Ping Pong FIFO Interface
-  .o_ppfifo_clk       (                     ),
+  .o_ppfifo_clk       (wfifo_clk            ),
   .i_ppfifo_rdy       (wfifo_ready          ),
   .o_ppfifo_act       (wfifo_activate       ),
   .i_ppfifo_size      (wfifo_size           ),
@@ -251,6 +254,8 @@ nh_lcd #(
   .i_chip_select       (w_chip_select       ),
   .i_num_pixels        (r_num_pixels        ),
 
+  .i_fifo_clk          (wfifo_clk           ),
+  .i_fifo_rst          (i_video_rst         ),
   .o_fifo_rdy          (wfifo_ready         ),
   .i_fifo_act          (wfifo_activate      ),
   .i_fifo_stb          (wfifo_strobe        ),

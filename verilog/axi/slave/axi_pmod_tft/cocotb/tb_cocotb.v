@@ -118,10 +118,12 @@ axi_pmod_tft #(
   .o_rdata          (AXIML_RDATA      ),
 
   //AXI Stream
-  .i_rgb            (VIDEO_RGB        ),
-  .i_h_sync         (VIDEO_HSYNC      ),
-  .i_v_sync         (VIDEO_VSYNC      ),
-  .i_data_en        (VIDEO_DATA_EN    ),
+  .i_video_clk      (clk              ),
+  .i_video_rst      (r_rst            ),
+  .i_video_rgb      (VIDEO_RGB        ),
+  .i_video_h_sync   (VIDEO_HSYNC      ),
+  .i_video_v_sync   (VIDEO_VSYNC      ),
+  .i_video_data_en  (VIDEO_DATA_EN    ),
 
   //Physical Signals
 
