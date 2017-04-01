@@ -4,7 +4,7 @@
 module tb_cocotb #(
   parameter ADDR_WIDTH          = 32,
   parameter DATA_WIDTH          = 32,
-  parameter DATAS_WIDTH         = 24,
+  parameter RGB_WIDTH           = 24,
   parameter STROBE_WIDTH        = (DATA_WIDTH / 8)
 )(
 
@@ -40,7 +40,7 @@ output      [DATA_WIDTH - 1: 0]     AXIML_RDATA,
 
 
 //RGB Video interface
-input       [DATAS_WIDTH - 1:0]     VIDEO_RGB,
+input       [RGB_WIDTH - 1:0]       VIDEO_RGB,
 input                               VIDEO_HSYNC,
 input                               VIDEO_VSYNC,
 input                               VIDEO_DATA_EN,
@@ -81,49 +81,51 @@ reg   [15:0]      r_write_parameter;
 //submodules
 
 axi_pmod_tft #(
-  .ADDR_WIDTH       (ADDR_WIDTH       ),
-  .DATA_WIDTH       (DATA_WIDTH       ),
-  .DATAS_WIDTH      (DATAS_WIDTH      ),
-  .BUFFER_SIZE      (9                )
+  .ADDR_WIDTH         (ADDR_WIDTH       ),
+  .DATA_WIDTH         (DATA_WIDTH       ),
+  .RGB_WIDTH          (RGB_WIDTH        ),
+  .INVERT_AXI_RESET   (0                ),
+  .INVERT_VIDEO_RESET (0                ),
+  .BUFFER_SIZE        (9                )
 ) dut (
-  .clk              (clk              ),
-  .rst              (r_rst            ),
+  .clk                (clk              ),
+  .rst                (r_rst            ),
 
 
   //AXI Lite Interface
-  .i_awvalid        (AXIML_AWVALID    ),
-  .i_awaddr         (AXIML_AWADDR     ),
-  .o_awready        (AXIML_AWREADY    ),
+  .i_awvalid          (AXIML_AWVALID    ),
+  .i_awaddr           (AXIML_AWADDR     ),
+  .o_awready          (AXIML_AWREADY    ),
 
 
-  .i_wvalid         (AXIML_WVALID     ),
-  .o_wready         (AXIML_WREADY     ),
-  .i_wstrb          (AXIML_WSTRB      ),
-  .i_wdata          (AXIML_WDATA      ),
+  .i_wvalid           (AXIML_WVALID     ),
+  .o_wready           (AXIML_WREADY     ),
+  .i_wstrb            (AXIML_WSTRB      ),
+  .i_wdata            (AXIML_WDATA      ),
 
 
-  .o_bvalid         (AXIML_BVALID     ),
-  .i_bready         (AXIML_BREADY     ),
-  .o_bresp          (AXIML_BRESP      ),
+  .o_bvalid           (AXIML_BVALID     ),
+  .i_bready           (AXIML_BREADY     ),
+  .o_bresp            (AXIML_BRESP      ),
 
 
-  .i_arvalid        (AXIML_ARVALID    ),
-  .o_arready        (AXIML_ARREADY    ),
-  .i_araddr         (AXIML_ARADDR     ),
+  .i_arvalid          (AXIML_ARVALID    ),
+  .o_arready          (AXIML_ARREADY    ),
+  .i_araddr           (AXIML_ARADDR     ),
 
 
-  .o_rvalid         (AXIML_RVALID     ),
-  .i_rready         (AXIML_RREADY     ),
-  .o_rresp          (AXIML_RRESP      ),
-  .o_rdata          (AXIML_RDATA      ),
+  .o_rvalid           (AXIML_RVALID     ),
+  .i_rready           (AXIML_RREADY     ),
+  .o_rresp            (AXIML_RRESP      ),
+  .o_rdata            (AXIML_RDATA      ),
 
   //AXI Stream
-  .i_video_clk      (clk              ),
-  .i_video_rst      (r_rst            ),
-  .i_video_rgb      (VIDEO_RGB        ),
-  .i_video_h_sync   (VIDEO_HSYNC      ),
-  .i_video_v_sync   (VIDEO_VSYNC      ),
-  .i_video_data_en  (VIDEO_DATA_EN    ),
+  .i_video_clk        (clk              ),
+  .i_video_rst        (r_rst            ),
+  .i_video_rgb        (VIDEO_RGB        ),
+  .i_video_h_sync     (VIDEO_HSYNC      ),
+  .i_video_v_sync     (VIDEO_VSYNC      ),
+  .i_video_data_en    (VIDEO_DATA_EN    ),
 
   //Physical Signals
 

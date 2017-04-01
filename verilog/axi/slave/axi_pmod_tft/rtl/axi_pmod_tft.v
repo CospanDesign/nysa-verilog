@@ -45,10 +45,11 @@ SOFTWARE.
 module axi_pmod_tft #(
   parameter           ADDR_WIDTH          = 5,
   parameter           DATA_WIDTH          = 32,
-  parameter           DATAS_WIDTH         = 24,
+  parameter           RGB_WIDTH           = 24,
   parameter           STROBE_WIDTH        = (DATA_WIDTH / 8),
-
-  parameter           BUFFER_SIZE         = 12
+  parameter           INVERT_AXI_RESET    = 1,
+  parameter           INVERT_VIDEO_RESET  = 1,
+  parameter           BUFFER_SIZE         = 9
 )(
   input                               clk,
   input                               rst,
@@ -100,7 +101,7 @@ module axi_pmod_tft #(
   //RGB Video interface
   input                               i_video_clk,
   input                               i_video_rst,
-  input       [DATAS_WIDTH - 1:0]     i_video_rgb,
+  input       [RGB_WIDTH - 1:0]       i_video_rgb,
   input                               i_video_h_sync,
   input                               i_video_v_sync,
   input                               i_video_data_en
@@ -161,6 +162,12 @@ wire                        w_reg_out_req;
 reg                         r_reg_out_rdy_stb;
 reg [DATA_WIDTH - 1: 0]     r_reg_out_data;
 
+//Handle Inversion
+wire                        w_axi_rst;
+wire                        w_video_rst;
+
+
+
 //Submodules
 //Convert AXI Slave signals to a simple register/address strobe
 axi_lite_slave #(
@@ -209,7 +216,7 @@ axi_lite_slave #(
 
 //Take in an AXI video stream and output the data into a PPFIFO
 adapter_rgb_2_ppfifo #(
-  .DATA_WIDTH         (DATAS_WIDTH          )
+  .DATA_WIDTH         (RGB_WIDTH            )
 ) ar2p (
   .rst                (i_video_rst          ),
   .clk                (i_video_clk          ),
@@ -288,6 +295,9 @@ assign        w_chip_select           = control[`CONTROL_CHIP_SELECT];
 assign        w_enable_tearing        = control[`CONTROL_ENABLE_TEARING];
 
 assign        status[31:0]            = 0;
+
+assign        w_axi_rst               = (INVERT_AXI_RESET)   ? ~rst         : rst;
+assign        w_video_rst             = (INVERT_VIDEO_RESET) ? ~i_video_rst : i_video_rst;
 
 //blocks
 always @ (posedge clk) begin
