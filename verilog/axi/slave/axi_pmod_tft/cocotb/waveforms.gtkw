@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Sat Mar 25 16:23:21 2017
+[*] Sun Apr  2 14:44:34 2017
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_pmod_tft/cocotb/design.vcd"
-[dumpfile_mtime] "Sat Mar 25 00:20:29 2017"
-[dumpfile_size] 287903
+[dumpfile_mtime] "Sun Apr  2 14:40:55 2017"
+[dumpfile_size] 289417
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_pmod_tft/cocotb/waveforms.gtkw"
 [timestart] 0
-[size] 1920 1080
+[size] 958 1059
 [pos] -1 -1
-*-11.106380 2961 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-10.106380 1482 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.dut.
 [treeopen] tb_cocotb.dut.lcd.
@@ -70,7 +70,7 @@ tb_cocotb.AXIML_WVALID
 -AXI4 Master Lite
 @200
 -
-@c00200
+@800200
 -PMOD TFT
 @28
 tb_cocotb.dut.w_enable
@@ -80,9 +80,6 @@ tb_cocotb.dut.w_enable
 tb_cocotb.dut.w_enable_interrupt
 @200
 -
-@28
-tb_cocotb.dut.w_backlight_enable
-@200
 -
 @28
 tb_cocotb.dut.w_chip_select
@@ -95,7 +92,7 @@ tb_cocotb.dut.w_cmd_read_stb
 tb_cocotb.dut.w_cmd_write_stb
 tb_cocotb.dut.w_command_mode
 tb_cocotb.dut.w_enable_tearing
-@1401200
+@1000200
 -PMOD TFT
 @200
 -
@@ -140,65 +137,19 @@ tb_cocotb.dut.ar2p.i_v_sync
 -Output Signals
 @28
 tb_cocotb.dut.i_tearing_effect
-@22
-tb_cocotb.dut.io_data[7:0]
-@28
 tb_cocotb.dut.o_cs_n
-tb_cocotb.dut.o_display_on
 tb_cocotb.dut.o_read_n
 tb_cocotb.dut.o_register_data_sel
 tb_cocotb.dut.o_reset_n
 tb_cocotb.dut.o_write_n
 @1401200
 -Output Signals
-@28
-tb_cocotb.w_cs_n
-tb_cocotb.w_register_data_sel
-tb_cocotb.w_write_n
-@29
-tb_cocotb.w_read_n
-@22
-tb_cocotb.w_data[7:0]
-tb_cocotb.r_write_parameter[15:0]
-@200
--
-@28
-tb_cocotb.dut.lcd.lcd_data_writer.pr.rst
-@22
-tb_cocotb.dut.lcd.lcd_data_writer.pr.i_read_data[23:0]
-@28
-tb_cocotb.dut.lcd.lcd_data_writer.pr.i_read_rdy
-tb_cocotb.dut.lcd.lcd_data_writer.pr.o_read_act
-tb_cocotb.dut.lcd.lcd_data_writer.pr.o_read_stb
-@22
-tb_cocotb.dut.lcd.lcd_data_writer.pr.i_read_size[23:0]
 @200
 -
 @22
-tb_cocotb.dut.lcd.lcd_data_writer.pr.o_red[7:0]
-tb_cocotb.dut.lcd.lcd_data_writer.pr.o_green[7:0]
-tb_cocotb.dut.lcd.lcd_data_writer.pr.o_blue[7:0]
-@200
--
-@28
-tb_cocotb.dut.lcd.lcd_data_writer.pr.o_pixel_rdy
-tb_cocotb.dut.lcd.lcd_data_writer.pr.i_pixel_stb
-@200
--
-@28
-tb_cocotb.dut.ar2p.i_ppfifo_rdy[1:0]
-@22
-tb_cocotb.dut.ar2p.i_ppfifo_size[23:0]
-@28
-tb_cocotb.dut.ar2p.o_ppfifo_act[1:0]
-tb_cocotb.dut.ar2p.o_ppfifo_clk
-@22
-tb_cocotb.dut.ar2p.o_ppfifo_data[23:0]
-@28
-tb_cocotb.dut.ar2p.o_ppfifo_stb
-@200
--
-@22
-tb_cocotb.r_write_parameter[15:0]
+tb_cocotb.dut.o_tft_data[7:0]
+tb_cocotb.dut.t_tft_data[7:0]
+@23
+tb_cocotb.dut.i_tft_data[7:0]
 [pattern_trace] 1
 [pattern_trace] 0

@@ -26,12 +26,16 @@ SOFTWARE.
 
 `define DEFAULT_MEMORY_TIMEOUT  300
 
+`define MAJOR_VERSION             1
+`define MINOR_VERSION             0
+`define REVISION                  0
+
 `include "nh_lcd_defines.v"
 
 `define CONTROL_ENABLE            0
 `define CONTROL_ENABLE_INTERRUPT  1
 `define CONTROL_COMMAND_MODE      2
-`define CONTROL_BACKLIGHT_ENABLE  3
+
 `define CONTROL_RESET_DISPLAY     4
 `define CONTROL_COMMAND_WRITE     5
 `define CONTROL_COMMAND_READ      6
@@ -40,7 +44,34 @@ SOFTWARE.
 `define CONTROL_CHIP_SELECT       9
 `define CONTROL_ENABLE_TEARING    10
 
+`define MAJOR_RANGE               31:28
+`define MINOR_RANGE               27:20
+`define REVISION_RANGE            19:16
+
+
 //status bit definition
+
+/*
+ * Rev A Notes:
+ *  Pinmap
+ *
+ *  CS_N:       PMOD 1
+ *  DATA_REG:   PMOD 2
+ *  READ_N:     PMOD 3
+ *  WRITE_N:    PMOD 4
+ *  RESET_N:    PMOD 7
+ *  TEAR_EF:    PMOD 10
+ *
+ *  DATA0:      PMOD 3
+ *  DATA1:      PMOD 8
+ *  DATA2:      PMOD 2
+ *  DATA3:      PMOD 1
+ *  DATA4:      PMOD 7
+ *  DATA5:      PMOD 9
+ *  DATA6:      PMOD 4
+ *  DATA7:      PMOD 10
+ */
+
 
 module axi_pmod_tft #(
   parameter           ADDR_WIDTH          = 5,
@@ -49,24 +80,48 @@ module axi_pmod_tft #(
   parameter           STROBE_WIDTH        = (DATA_WIDTH / 8),
   parameter           INVERT_AXI_RESET    = 1,
   parameter           INVERT_VIDEO_RESET  = 1,
+  parameter           IMAGE_WIDTH         = 480,
+  parameter           IMAGE_HEIGHT        = 272,
   parameter           BUFFER_SIZE         = 9
 )(
   input                               clk,
   input                               rst,
 
-  output      [31:0]                  debug,
-
-
-  output                              o_backlight_enable,
   output                              o_register_data_sel,
   output                              o_write_n,
   output                              o_read_n,
-  inout       [7:0]                   io_data,
+//  inout       [7:0]                   io_data,
   output                              o_cs_n,
   output                              o_reset_n,
   input                               i_tearing_effect,
-  output                              o_display_on,
 
+  //PMOD Data
+  output                              o_pmod_out_tft_data1,
+  output                              o_pmod_out_tft_data2,
+  output                              o_pmod_out_tft_data3,
+  output                              o_pmod_out_tft_data4,
+  output                              o_pmod_out_tft_data7,
+  output                              o_pmod_out_tft_data8,
+  output                              o_pmod_out_tft_data9,
+  output                              o_pmod_out_tft_data10,
+
+  output                              o_pmod_tri_tft_data1,
+  output                              o_pmod_tri_tft_data2,
+  output                              o_pmod_tri_tft_data3,
+  output                              o_pmod_tri_tft_data4,
+  output                              o_pmod_tri_tft_data7,
+  output                              o_pmod_tri_tft_data8,
+  output                              o_pmod_tri_tft_data9,
+  output                              o_pmod_tri_tft_data10,
+
+  input                               i_pmod_in_tft_data1,
+  input                               i_pmod_in_tft_data2,
+  input                               i_pmod_in_tft_data3,
+  input                               i_pmod_in_tft_data4,
+  input                               i_pmod_in_tft_data7,
+  input                               i_pmod_in_tft_data8,
+  input                               i_pmod_in_tft_data9,
+  input                               i_pmod_in_tft_data10,
 
   //AXI Lite Interface
 
@@ -115,6 +170,7 @@ localparam                  REG_CONTROL        = 0;
 localparam                  REG_STATUS         = 1;
 localparam                  REG_COMMAND_DATA   = 2;
 localparam                  REG_PIXEL_COUNT    = 3;
+localparam                  REG_VERSION        = 4;
 
 //Reg/Wire
 
@@ -127,7 +183,6 @@ wire                        w_enable;
 wire                        w_enable_interrupt;
 wire                        w_reset_display;
 wire                        w_command_mode;
-wire                        w_backlight_enable;
 wire                        w_cmd_write_stb;
 wire                        w_cmd_read_stb;
 wire                        w_cmd_parameter;
@@ -165,7 +220,11 @@ reg [DATA_WIDTH - 1: 0]     r_reg_out_data;
 //Handle Inversion
 wire                        w_axi_rst;
 wire                        w_video_rst;
+wire  [31:0]                w_debug;
 
+
+wire  [7:0]                 w_tft_data_out;
+wire  [7:0]                 w_tft_data_in;
 
 
 //Submodules
@@ -176,7 +235,7 @@ axi_lite_slave #(
 
 ) axi_lite_reg_interface (
   .clk                (clk                  ),
-  .rst                (rst                  ),
+  .rst                (w_axi_rst            ),
 
 
   .i_awvalid          (i_awvalid            ),
@@ -218,7 +277,7 @@ axi_lite_slave #(
 adapter_rgb_2_ppfifo #(
   .DATA_WIDTH         (RGB_WIDTH            )
 ) ar2p (
-  .rst                (i_video_rst          ),
+  .rst                (w_video_rst          ),
   .clk                (i_video_clk          ),
 
   .i_rgb              (i_video_rgb          ),
@@ -240,10 +299,10 @@ adapter_rgb_2_ppfifo #(
 nh_lcd #(
   .BUFFER_SIZE         (BUFFER_SIZE         )
 ) lcd (
-  .rst                 (rst                 ),
+  .rst                 (w_axi_rst           ),
   .clk                 (clk                 ),
 
-  .debug               (debug               ),
+  .debug               (w_debug             ),
 
 
   .i_enable            (w_enable            ),
@@ -256,7 +315,6 @@ nh_lcd #(
   .i_cmd_data          (r_cmd_data_out      ),
   .o_cmd_data          (w_cmd_data_in       ),
   .o_cmd_finished      (w_cmd_finished      ),
-  .i_backlight_enable  (w_backlight_enable  ),
   .i_write_override    (w_write_override    ),
   .i_chip_select       (w_chip_select       ),
   .i_num_pixels        (r_num_pixels        ),
@@ -270,22 +328,21 @@ nh_lcd #(
   .i_fifo_data         (wfifo_data          ),
 
 
-  .o_backlight_enable  (o_backlight_enable  ),
   .o_register_data_sel (o_register_data_sel ),
   .o_write_n           (o_write_n           ),
   .o_read_n            (o_read_n            ),
-  .io_data             (io_data             ),
+  //.io_data             (w_tft_data          ),
+  .o_data              (w_tft_data_out      ),
+  .i_data              (w_tft_data_in       ),
   .o_cs_n              (o_cs_n              ),
   .o_reset_n           (o_reset_n           ),
-  .i_tearing_effect    (i_tearing_effect    ),
-  .o_display_on        (o_display_on        )
+  .i_tearing_effect    (i_tearing_effect    )
 );
 
 //Asynchronous Logic
 assign        w_enable                = control[`CONTROL_ENABLE];
 assign        w_enable_interrupt      = control[`CONTROL_ENABLE_INTERRUPT];
 assign        w_command_mode          = control[`CONTROL_COMMAND_MODE];
-assign        w_backlight_enable      = control[`CONTROL_BACKLIGHT_ENABLE];
 assign        w_reset_display         = control[`CONTROL_RESET_DISPLAY];
 assign        w_cmd_write_stb         = control[`CONTROL_COMMAND_WRITE];
 assign        w_cmd_read_stb          = control[`CONTROL_COMMAND_READ];
@@ -299,6 +356,34 @@ assign        status[31:0]            = 0;
 assign        w_axi_rst               = (INVERT_AXI_RESET)   ? ~rst         : rst;
 assign        w_video_rst             = (INVERT_VIDEO_RESET) ? ~i_video_rst : i_video_rst;
 
+//Attach the PMODs (All the line scrambling happens here
+assign        o_pmod_out_tft_data3    = w_tft_data_out[0];
+assign        o_pmod_out_tft_data8    = w_tft_data_out[1];
+assign        o_pmod_out_tft_data2    = w_tft_data_out[2];
+assign        o_pmod_out_tft_data1    = w_tft_data_out[3];
+assign        o_pmod_out_tft_data7    = w_tft_data_out[4];
+assign        o_pmod_out_tft_data9    = w_tft_data_out[5];
+assign        o_pmod_out_tft_data4    = w_tft_data_out[6];
+assign        o_pmod_out_tft_data10   = w_tft_data_out[7];
+
+assign        o_pmod_tri_tft_data1    = !o_read_n;
+assign        o_pmod_tri_tft_data2    = !o_read_n;
+assign        o_pmod_tri_tft_data3    = !o_read_n;
+assign        o_pmod_tri_tft_data4    = !o_read_n;
+assign        o_pmod_tri_tft_data7    = !o_read_n;
+assign        o_pmod_tri_tft_data8    = !o_read_n;
+assign        o_pmod_tri_tft_data9    = !o_read_n;
+assign        o_pmod_tri_tft_data10   = !o_read_n;
+
+assign        w_tft_data_in[0]        =  i_pmod_in_tft_data3;
+assign        w_tft_data_in[1]        =  i_pmod_in_tft_data8;
+assign        w_tft_data_in[2]        =  i_pmod_in_tft_data2;
+assign        w_tft_data_in[3]        =  i_pmod_in_tft_data1;
+assign        w_tft_data_in[4]        =  i_pmod_in_tft_data7;
+assign        w_tft_data_in[5]        =  i_pmod_in_tft_data9;
+assign        w_tft_data_in[6]        =  i_pmod_in_tft_data4;
+assign        w_tft_data_in[7]        =  i_pmod_in_tft_data10;
+
 //blocks
 always @ (posedge clk) begin
   //De-assert Strobes
@@ -306,10 +391,11 @@ always @ (posedge clk) begin
   r_reg_out_rdy_stb                       <=  0;
   r_reg_invalid_addr                      <=  0;
 
-  if (rst) begin
+  if (w_axi_rst) begin
     control                               <=  0;
     r_reg_out_data                        <=  0;
     r_cmd_data_out                        <=  0;
+    r_num_pixels                          <=  IMAGE_WIDTH * IMAGE_HEIGHT;
   end
   else begin
 
@@ -336,7 +422,7 @@ always @ (posedge clk) begin
         default: begin
         end
       endcase
-      if (w_reg_address > REG_PIXEL_COUNT) begin
+      if (w_reg_address > REG_VERSION) begin
         r_reg_invalid_addr                <= 1;
       end
       r_reg_in_ack_stb                    <= 1;
@@ -356,11 +442,16 @@ always @ (posedge clk) begin
         REG_PIXEL_COUNT: begin
           r_reg_out_data                  <= r_num_pixels;
         end
+        REG_VERSION: begin
+          r_reg_out_data[`MAJOR_RANGE]    <= `MAJOR_VERSION;
+          r_reg_out_data[`MINOR_RANGE]    <= `MINOR_VERSION;
+          r_reg_out_data[`REVISION_RANGE] <= `REVISION;
+        end
         default: begin
           r_reg_out_data                  <= 32'h00;
         end
       endcase
-      if (w_reg_address > REG_PIXEL_COUNT) begin
+      if (w_reg_address > REG_VERSION) begin
         r_reg_invalid_addr                <= 1;
       end
       r_reg_out_rdy_stb                   <= 1;

@@ -21,7 +21,6 @@ module nh_lcd #(
   input       [7:0]               i_cmd_data,
   output      [7:0]               o_cmd_data,
   output                          o_cmd_finished,
-  input                           i_backlight_enable,
   input                           i_write_override,
   input                           i_chip_select,
   input       [31:0]              i_num_pixels,
@@ -36,21 +35,20 @@ module nh_lcd #(
   input       [DATAS_WIDTH - 1:0] i_fifo_data,
 
   //Physical Signals
-  output                          o_backlight_enable,
   output                          o_register_data_sel,
   output                          o_write_n,
   output                          o_read_n,
-  inout       [7:0]               io_data,
+  //inout       [7:0]               io_data,
+  input       [7:0]               i_data,
+  output      [7:0]               o_data,
   output                          o_cs_n,
   output                          o_reset_n,
-  input                           i_tearing_effect,
-  output                          o_display_on
+  input                           i_tearing_effect
 );
 
 //Local Parameters
 //Registers/Wires
 wire  [7:0]           w_data_out;
-wire  [7:0]           w_data_in;
 
 wire                  w_cmd_write;
 wire                  w_cmd_read;
@@ -89,7 +87,7 @@ nh_lcd_command lcd_commander (
   .o_write              (w_cmd_write          ),
   .o_read               (w_cmd_read           ),
   .o_data_out           (w_cmd_data           ),
-  .i_data_in            (w_data_in            )
+  .i_data_in            (i_data               )
 );
 
 nh_lcd_data_writer #(
@@ -115,7 +113,7 @@ nh_lcd_data_writer #(
 
   .o_cmd_mode           (w_data_cmd_mode      ),
   .o_data_out           (w_data_data          ),
-  .i_data_in            (w_data_in            ),
+  .i_data_in            (i_data               ),
   .o_write              (w_data_write         ),
   .o_read               (w_data_read          ),
   .o_data_out_en        (w_data_data_out_en   ),
@@ -123,19 +121,17 @@ nh_lcd_data_writer #(
 );
 
 //Asynchronous Logic
-assign  o_backlight_enable  = i_backlight_enable;
-assign  o_display_on        = i_enable;
 assign  o_reset_n           = ~i_reset_display;
 assign  o_cs_n              = ~i_chip_select;
-assign  w_data_in           = io_data;
 
 //Select control between the Command controller and the Data Controller
 assign  o_register_data_sel = (i_data_command_mode) ? w_data_cmd_mode : w_cmd_cmd_mode;
 assign  o_write_n           = (i_data_command_mode) ? ~w_data_write : ~w_cmd_write;
 assign  o_read_n            = (i_data_command_mode) ? ~w_data_read : ~w_cmd_read;
 assign  w_data_dir          = (i_data_command_mode) ? w_data_data_out_en : w_cmd_data_out_en;
-assign  io_data             = (w_data_dir) ? (i_data_command_mode) ?
-                                w_data_data : w_cmd_data :
-                              8'hZZ;
+//assign  io_data             = (w_data_dir) ? (i_data_command_mode) ?
+//                                w_data_data : w_cmd_data :
+//                              8'hZZ;
+assign  o_data              = (i_data_command_mode) ? w_data_data : w_cmd_data;
 //Synchronous Logic
 endmodule

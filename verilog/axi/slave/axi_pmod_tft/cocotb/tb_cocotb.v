@@ -1,6 +1,5 @@
 `timescale 1ns/1ps
 
-
 module tb_cocotb #(
   parameter ADDR_WIDTH          = 32,
   parameter DATA_WIDTH          = 32,
@@ -60,15 +59,18 @@ reg   [3:0]       test_id         = 0;
 reg   [31:0]      r_tear_count;
 reg   [7:0]       r_tear_status;
 
-wire              w_backlight_enable;
 wire              w_register_data_sel;
 reg               r_tearing_effect;
 wire              w_write_n;
 wire              w_read_n;
+
+
 wire  [7:0]       w_data;
+wire  [7:0]       w_out_data;
+wire  [7:0]       w_tri_data;
+
 wire              w_cs_n;
 wire              w_reset_n;
-wire              w_display_on;
 
 
 reg   [7:0]       r_read_data;
@@ -129,20 +131,45 @@ axi_pmod_tft #(
 
   //Physical Signals
 
-  .o_backlight_enable  (w_backlight_enable  ),
-  .i_tearing_effect    (r_tearing_effect    ),
-  .o_register_data_sel (w_register_data_sel ),
-  .o_write_n           (w_write_n           ),
-  .o_read_n            (w_read_n            ),
-  .io_data             (w_data              ),
-  .o_cs_n              (w_cs_n              ),
-  .o_reset_n           (w_reset_n           ),
-  .o_display_on        (w_display_on        )
+  .i_tearing_effect      (r_tearing_effect    ),
+  .o_register_data_sel   (w_register_data_sel ),
+  .o_write_n             (w_write_n           ),
+  .o_read_n              (w_read_n            ),
+  .o_cs_n                (w_cs_n              ),
+  .o_reset_n             (w_reset_n           ),
+
+
+  .o_pmod_out_tft_data3  (w_out_data[0]       ),
+  .o_pmod_out_tft_data8  (w_out_data[1]       ),
+  .o_pmod_out_tft_data2  (w_out_data[2]       ),
+  .o_pmod_out_tft_data1  (w_out_data[3]       ),
+  .o_pmod_out_tft_data7  (w_out_data[4]       ),
+  .o_pmod_out_tft_data9  (w_out_data[5]       ),
+  .o_pmod_out_tft_data4  (w_out_data[6]       ),
+  .o_pmod_out_tft_data10 (w_out_data[7]       ),
+
+  .o_pmod_tri_tft_data3  (w_tri_data[0]       ),
+  .o_pmod_tri_tft_data8  (w_tri_data[1]       ),
+  .o_pmod_tri_tft_data2  (w_tri_data[2]       ),
+  .o_pmod_tri_tft_data1  (w_tri_data[3]       ),
+  .o_pmod_tri_tft_data7  (w_tri_data[4]       ),
+  .o_pmod_tri_tft_data9  (w_tri_data[5]       ),
+  .o_pmod_tri_tft_data4  (w_tri_data[6]       ),
+  .o_pmod_tri_tft_data10 (w_tri_data[7]       ),
+
+  .i_pmod_in_tft_data3   (r_read_data[0]      ),
+  .i_pmod_in_tft_data8   (r_read_data[1]      ),
+  .i_pmod_in_tft_data2   (r_read_data[2]      ),
+  .i_pmod_in_tft_data1   (r_read_data[3]      ),
+  .i_pmod_in_tft_data7   (r_read_data[4]      ),
+  .i_pmod_in_tft_data9   (r_read_data[5]      ),
+  .i_pmod_in_tft_data4   (r_read_data[6]      ),
+  .i_pmod_in_tft_data10  (r_read_data[7]      )
+
 
 );
 
 //asynchronus logic
-assign  w_data  = (!w_read_n) ? r_read_data: 8'hZZ;
 //synchronous logic
 
 initial begin
@@ -181,10 +208,10 @@ always @ (posedge clk) begin
   end
   else begin
     if (!w_write_n && w_register_data_sel) begin
-      r_write_parameter     <=  {r_write_parameter[7:0], w_data};
+      r_write_parameter     <=  {r_write_parameter[7:0], w_out_data};
     end
     if (!w_register_data_sel & !w_cs_n) begin
-      case (w_data)
+      case (w_out_data)
         0: begin
           r_read_data       <=  8'h01;
         end
