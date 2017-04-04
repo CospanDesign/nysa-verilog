@@ -15,6 +15,8 @@ module nh_lcd_data_writer#(
   input                           i_enable_tearing,
   input                           i_unpack_pixels,
 
+  input                           i_v_blank,
+
   //FIFO Signals
   input                           i_fifo_clk,
   input                           i_fifo_rst,
@@ -213,6 +215,14 @@ always @ (posedge clk) begin
         end
       end
     endcase
+
+    //XXX: This should be debugged!
+    if (i_v_blank && (o_fifo_rdy == 0)) begin
+      //There is a possiblity that data comes in at the wrong time or out of sync with everythig, this should
+      //reset everything back to the start of the frame, there should be no way that the FIFO RDY can be
+      //zero before the vblank should go off.
+      r_pixel_cnt           <= 0;
+    end
   end
 end
 endmodule

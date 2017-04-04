@@ -1,21 +1,21 @@
 
 module nh_lcd #(
-  parameter           DATAS_WIDTH = 24,
-  parameter           BUFFER_SIZE = 12
+  parameter                       DATAS_WIDTH = 24,
+  parameter                       BUFFER_SIZE = 12
 )(
   input                           rst,
   input                           clk,
 
   output      [31:0]              debug,
 
+  input                           i_v_blank,
+
   //Control Signals
   input                           i_enable,
   input                           i_reset_display,
-  input                           i_data_command_mode,
+  input                           i_cmd_mode,
   input                           i_enable_tearing,
-
   input                           i_cmd_parameter,
-
   input                           i_cmd_write_stb,
   input                           i_cmd_read_stb,
   input       [7:0]               i_cmd_data,
@@ -35,10 +35,10 @@ module nh_lcd #(
   input       [DATAS_WIDTH - 1:0] i_fifo_data,
 
   //Physical Signals
+  output                          o_read_en,
   output                          o_register_data_sel,
   output                          o_write_n,
   output                          o_read_n,
-  //inout       [7:0]               io_data,
   input       [7:0]               i_data,
   output      [7:0]               o_data,
   output                          o_cs_n,
@@ -57,7 +57,6 @@ wire                  w_cmd_cmd_mode;
 
 wire                  w_cmd_data_out_en;
 
-wire                  w_data_dir;
 
 wire                  w_data_cmd_mode;
 wire  [7:0]           w_data_data;
@@ -103,6 +102,8 @@ nh_lcd_data_writer #(
   .i_enable_tearing     (i_enable_tearing     ),
   .i_num_pixels         (i_num_pixels         ),
 
+  .i_v_blank            (i_v_blank            ),
+
   .i_fifo_clk           (i_fifo_clk           ),
   .i_fifo_rst           (i_fifo_rst           ),
   .o_fifo_rdy           (o_fifo_rdy           ),
@@ -125,13 +126,11 @@ assign  o_reset_n           = ~i_reset_display;
 assign  o_cs_n              = ~i_chip_select;
 
 //Select control between the Command controller and the Data Controller
-assign  o_register_data_sel = (i_data_command_mode) ? w_data_cmd_mode : w_cmd_cmd_mode;
-assign  o_write_n           = (i_data_command_mode) ? ~w_data_write : ~w_cmd_write;
-assign  o_read_n            = (i_data_command_mode) ? ~w_data_read : ~w_cmd_read;
-assign  w_data_dir          = (i_data_command_mode) ? w_data_data_out_en : w_cmd_data_out_en;
-//assign  io_data             = (w_data_dir) ? (i_data_command_mode) ?
-//                                w_data_data : w_cmd_data :
-//                              8'hZZ;
-assign  o_data              = (i_data_command_mode) ? w_data_data : w_cmd_data;
+assign  o_register_data_sel = (i_cmd_mode) ? w_cmd_cmd_mode     : w_data_cmd_mode;
+assign  o_write_n           = (i_cmd_mode) ? ~w_cmd_write       : ~w_data_write;
+assign  o_read_n            = (i_cmd_mode) ? ~w_cmd_read        : ~w_data_read;
+assign  o_read_en           = (i_cmd_mode) ? w_cmd_data_out_en  : w_data_data_out_en;
+assign  o_data              = (i_cmd_mode) ? w_cmd_data         : w_data_data;
+
 //Synchronous Logic
 endmodule

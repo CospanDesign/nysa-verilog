@@ -126,7 +126,9 @@ axi_pmod_tft #(
   .i_video_rst        (r_rst            ),
   .i_video_rgb        (VIDEO_RGB        ),
   .i_video_h_sync     (VIDEO_HSYNC      ),
+  .i_video_h_blank    (VIDEO_HBLANK     ),
   .i_video_v_sync     (VIDEO_VSYNC      ),
+  .i_video_v_blank    (VIDEO_VBLANK     ),
   .i_video_data_en    (VIDEO_DATA_EN    ),
 
   //Physical Signals

@@ -24,7 +24,8 @@ module nh_lcd_command (
 
 //Local Parameters
 localparam  IDLE      = 4'h0;
-localparam  FINISHED  = 4'h1;
+localparam  READ_WAIT = 4'h1;
+localparam  FINISHED  = 4'h2;
 
 //Registers/Wires
 reg           [3:0]   state;
@@ -54,10 +55,10 @@ always @ (posedge clk) begin
         o_write             <=  0;
         o_read              <=  0;
 
-        o_data_out_en      <=  0;
+        o_data_out_en       <=  0;
         if (i_cmd_write_stb) begin
           //Change the bus to an output
-          o_data_out_en    <=  1;
+          o_data_out_en     <=  1;
           //Put the data on the bus
           o_data_out        <=  i_cmd_data;
           o_write           <=  1;
@@ -65,10 +66,13 @@ always @ (posedge clk) begin
         end
         else if (i_cmd_read_stb) begin
           //Change the bus to an input
-          o_data_out_en    <=  0;
+          o_data_out_en     <=  0;
           o_read            <=  1;
-          state             <=  FINISHED;
+          state             <=  READ_WAIT;
         end
+      end
+      READ_WAIT: begin
+        state               <=  FINISHED;
       end
       FINISHED: begin
         o_write             <=  0;

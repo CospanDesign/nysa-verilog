@@ -40,7 +40,9 @@ module adapter_rgb_2_ppfifo #(
 
   input         [23:0]              i_rgb,
   input                             i_h_sync,
+  input                             i_h_blank,
   input                             i_v_sync,
+  input                             i_v_blank,
   input                             i_data_en,
 
   //Ping Pong FIFO Write Controller
@@ -91,7 +93,7 @@ always @ (posedge clk) begin
       end
       READY: begin
         if (r_count < i_ppfifo_size) begin
-          if (i_h_sync) begin
+          if (!i_h_blank) begin
             o_ppfifo_stb    <=  1;
             o_ppfifo_data   <=  i_rgb;
 
@@ -102,7 +104,7 @@ always @ (posedge clk) begin
         else begin
           state             <=  RELEASE;
         end
-        if (r_count > 0 && !i_h_sync) begin
+        if (r_count > 0 && i_h_blank) begin
           state             <=  RELEASE;
         end
       end
