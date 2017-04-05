@@ -9,7 +9,7 @@ from array import array as Array
 from cocotb.triggers import Timer, FallingEdge
 
 from cocotb.drivers.amba import AXI4LiteMaster
-from video_out_bus import VideoOutBus
+from cocotb.drivers.amba import AXI4StreamMaster
 
 CLK_PERIOD = 10
 
@@ -34,6 +34,9 @@ BIT_CONTROL_COMMAND_PARAMETER = 7
 BIT_CONTROL_WRITE_OVERRIDE    = 8
 BIT_CONTROL_CHIP_SELECT       = 9
 BIT_CONTROL_ENABLE_TEARING    = 10
+BIT_CONTROL_TP_RED            = 12
+BIT_CONTROL_TP_GREEN          = 13
+BIT_CONTROL_TP_BLUE           = 14
 
 
 MEM_ADR_RESET               = 0x01
@@ -60,7 +63,7 @@ PIXEL_COUNT          = WIDTH * HEIGHT
 def setup_dut(dut):
     cocotb.fork(Clock(dut.clk, CLK_PERIOD).start())
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def write_to_controller(dut):
     """
     Description:
@@ -77,12 +80,7 @@ def write_to_controller(dut):
     dut.rst <= 1
     dut.test_id <= 0
     axim = AXI4LiteMaster(dut, "AXIML", dut.clk)
-    video_out = VideoOutBus(dut, "VIDEO",
-                            dut.clk,
-                            width = WIDTH,
-                            height = HEIGHT,
-                            hblank = H_BLANK,
-                            vblank = V_BLANK)
+    video_out = AXI4StreamMaster(dut, "AXIMS", dut.clk, width=24)
 
     setup_dut(dut)
     yield Timer(CLK_PERIOD * 10)
@@ -93,13 +91,6 @@ def write_to_controller(dut):
 
 
     dut.rst <= 1
-    axim = AXI4LiteMaster(dut, "AXIML", dut.clk)
-    video_out = VideoOutBus(dut, "VIDEO",
-                            dut.clk,
-                            width = WIDTH,
-                            height = HEIGHT,
-                            hblank = H_BLANK,
-                            vblank = V_BLANK)
 
     setup_dut(dut)
     yield Timer(CLK_PERIOD * 10)
@@ -196,7 +187,7 @@ def write_to_controller(dut):
 
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def read_from_controller(dut):
     """
     Description:
@@ -211,12 +202,7 @@ def read_from_controller(dut):
     dut.rst <= 1
     dut.test_id <= 1
     axim = AXI4LiteMaster(dut, "AXIML", dut.clk)
-    video_out = VideoOutBus(dut, "VIDEO",
-                            dut.clk,
-                            width = WIDTH,
-                            height = HEIGHT,
-                            hblank = H_BLANK,
-                            vblank = V_BLANK)
+    video_out = AXI4StreamMaster(dut, "AXIMS", dut.clk, width=24)
 
     setup_dut(dut)
     yield Timer(CLK_PERIOD * 10)
@@ -298,7 +284,7 @@ def read_from_controller(dut):
 
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def write_single_frame(dut):
     """
     Description:
@@ -321,28 +307,18 @@ def write_single_frame(dut):
     dut.rst <= 1
     dut.test_id <= 2
     axim = AXI4LiteMaster(dut, "AXIML", dut.clk)
-    video_out = VideoOutBus(dut, "VIDEO",
-                            dut.clk,
-                            width = WIDTH,
-                            height = HEIGHT,
-                            hblank = H_BLANK,
-                            vblank = V_BLANK)
+
+    video_out = AXI4StreamMaster(dut, "AXIMS", dut.clk, width=24)
 
 
     NUM_FRAMES           = 1
 
     video = []
-    for f in range (NUM_FRAMES):
-        frame = []
-        for v in range (HEIGHT):
-            line = []
-            for h in range(WIDTH):
-                value  = h << 16
-                value |= h << 8
-                value |= h
-                line.append(value)
-            frame.append(line)
-        video.append(frame)
+    for v in range (HEIGHT * WIDTH):
+       value  = v << 16
+       value |= v << 8
+       value |= v
+       video.append(value)
 
 
     setup_dut(dut)
@@ -385,10 +361,10 @@ def write_single_frame(dut):
     #Write Video to the video controller
     yield video_out.write(video)
 
-    yield Timer(CLK_PERIOD * 100)
+    yield Timer(CLK_PERIOD * 400)
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def write_multiple_frames(dut):
     """
     Description:
@@ -407,29 +383,16 @@ def write_multiple_frames(dut):
     NUM_FRAMES           = 4
 
     video = []
-    for f in range (NUM_FRAMES):
-        frame = []
-        for v in range (HEIGHT):
-            line = []
-            for h in range(WIDTH):
-                value  = h << 16
-                value |= h << 8
-                value |= h
-                line.append(value)
-            frame.append(line)
-        video.append(frame)
-
+    for v in range (HEIGHT * WIDTH):
+       value  = v << 16
+       value |= v << 8
+       value |= v
+       video.append(value)
 
     dut.rst <= 1
     dut.test_id <= 3
     axim = AXI4LiteMaster(dut, "AXIML", dut.clk)
-    video_out = VideoOutBus(dut, "VIDEO",
-                            dut.clk,
-                            width = WIDTH,
-                            height = HEIGHT,
-                            hblank = H_BLANK,
-                            vblank = V_BLANK)
-
+    video_out = AXI4StreamMaster(dut, "AXIMS", dut.clk, width=24)
 
     setup_dut(dut)
     yield Timer(CLK_PERIOD * 10)
@@ -470,9 +433,9 @@ def write_multiple_frames(dut):
 
     #Write Video to the video controller
     yield video_out.write(video)
-
-    yield Timer(CLK_PERIOD * 100)
-
+    yield Timer(CLK_PERIOD * 400)
+    yield video_out.write(video)
+    yield Timer(CLK_PERIOD * 400)
 
 
 
@@ -497,30 +460,19 @@ def first_test(dut):
 
     NUM_FRAMES           = 2
 
-    video = []
-    for f in range (NUM_FRAMES):
-        frame = []
-        for v in range (HEIGHT):
-            line = []
-            for h in range(WIDTH):
-                value  = h << 16
-                value |= h << 8
-                value |= h
-                line.append(value)
-            frame.append(line)
-        video.append(frame)
 
+    video = []
+    for v in range (HEIGHT):
+        for h in range(WIDTH):
+            value  = h << 16
+            value |= h << 8
+            value |= h
+            video.append(value)
 
 
     dut.rst <= 1
     axim = AXI4LiteMaster(dut, "AXIML", dut.clk)
-    video_out = VideoOutBus(dut, "VIDEO",
-                            dut.clk,
-                            width = WIDTH,
-                            height = HEIGHT,
-                            hblank = H_BLANK,
-                            vblank = V_BLANK)
-
+    video_out = AXI4StreamMaster(dut, "AXIMS", dut.clk, width=24)
     setup_dut(dut)
     yield Timer(CLK_PERIOD * 10)
     dut.rst <= 0
@@ -665,9 +617,93 @@ def first_test(dut):
     #Stream the RGB Video (32 pixels), 4 rows of 8)
     #Write Video to the memodry controller
     yield video_out.write(video)
+    yield Timer(CLK_PERIOD * 1000)
+
+    yield video_out.write(video)
 
     yield Timer(CLK_PERIOD * 100)
     dut.log.info("Done")
 
+
+@cocotb.test(skip = False)
+def write_test_frame(dut):
+    """
+    Description:
+        Send a single image to the controller
+        The signal format should be
+        Command: Set Memory Address
+        SEND Red, Blue, Green bytes
+        Repeat until full image is sent
+
+        It's important that the timing of the
+        sync strobes are good so that the FIFO doesn't
+        overfill
+
+    Test ID: 2
+
+    Expected Results:
+        Should read images out of the controller
+        *** NEED SOMETHING TO VERIFY THE IMAGES ARE CORRECT!!!***
+    """
+    dut.rst <= 1
+    dut.test_id <= 2
+    axim = AXI4LiteMaster(dut, "AXIML", dut.clk)
+
+    video_out = AXI4StreamMaster(dut, "AXIMS", dut.clk, width=24)
+
+
+    NUM_FRAMES           = 1
+
+    video = []
+    for v in range (HEIGHT * WIDTH):
+       value  = v << 16
+       value |= v << 8
+       value |= v
+       video.append(value)
+
+
+    setup_dut(dut)
+    yield Timer(CLK_PERIOD * 10)
+    dut.rst <= 0
+
+    dut.log.info("Ready")
+    yield Timer(CLK_PERIOD * 10)
+
+    control = 0x00
+    control |= 1 << BIT_CONTROL_CHIP_SELECT
+    control |= 1 << BIT_CONTROL_RESET_DISPLAY
+    control |= 1 << BIT_CONTROL_ENABLE
+    control |= 1 << BIT_CONTROL_BACKLIGHT_ENABLE
+    control |= 1 << BIT_CONTROL_WRITE_OVERRIDE
+
+    #Reset the LCD
+    yield axim.write(REG_CONTROL, control)
+    yield Timer(CLK_PERIOD * 10)
+
+
+    control &= ~(1 << BIT_CONTROL_RESET_DISPLAY)
+    control &= ~(1 << BIT_CONTROL_WRITE_OVERRIDE)
+
+    yield axim.write(REG_CONTROL, control)
+    yield Timer(CLK_PERIOD * 10)
+
+    #Set the pixel count
+    yield axim.write(REG_PIXEL_COUNT, PIXEL_COUNT)
+    yield Timer(CLK_PERIOD * 10)
+
+    #Enable image write
+    control = 0x00
+    control |= 1 << BIT_CONTROL_ENABLE
+    control |= 1 << BIT_CONTROL_BACKLIGHT_ENABLE
+    yield axim.write(REG_CONTROL, control)
+    yield Timer(CLK_PERIOD * 10)
+
+
+    control |= (1 << BIT_CONTROL_TP_GREEN);
+    yield axim.write(REG_CONTROL, control)
+    #Write Video to the video controller
+    #yield video_out.write(video)
+
+    yield Timer(CLK_PERIOD * 400)
 
 

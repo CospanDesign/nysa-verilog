@@ -3,8 +3,10 @@
 module tb_cocotb #(
   parameter ADDR_WIDTH          = 32,
   parameter DATA_WIDTH          = 32,
-  parameter RGB_WIDTH           = 24,
-  parameter STROBE_WIDTH        = (DATA_WIDTH / 8)
+  parameter STROBE_WIDTH        = (DATA_WIDTH / 8),
+  parameter AXIS_WIDTH          = 24,
+  parameter AXIS_STROBE_WIDTH   = (AXIS_WIDTH / 8),
+  parameter BUFFER_SIZE         = 3
 )(
 
 input                               clk,
@@ -38,13 +40,15 @@ output      [1:0]                   AXIML_RRESP,
 output      [DATA_WIDTH - 1: 0]     AXIML_RDATA,
 
 
-//RGB Video interface
-input       [RGB_WIDTH - 1:0]       VIDEO_RGB,
-input                               VIDEO_HSYNC,
-input                               VIDEO_VSYNC,
-input                               VIDEO_DATA_EN,
-input                               VIDEO_HBLANK,
-input                               VIDEO_VBLANK
+input       [AXIS_WIDTH - 1:0]      AXIMS_TDATA,
+input                               AXIMS_TREADY,
+input                               AXIMS_TVALID,
+input                               AXIMS_TLAST,
+input       [AXIS_STROBE_WIDTH - 1: 0]   AXIMS_TKEEP,
+input       [AXIS_STROBE_WIDTH - 1: 0]   AXIMS_TSTRB,
+input       [3:0]                   AXIMS_TID,
+input       [31:0]                  AXIMS_TDEST,
+input       [3:0]                   AXIMS_TUSER
 
 );
 
@@ -85,10 +89,10 @@ reg   [15:0]      r_write_parameter;
 axi_pmod_tft #(
   .ADDR_WIDTH         (ADDR_WIDTH       ),
   .DATA_WIDTH         (DATA_WIDTH       ),
-  .RGB_WIDTH          (RGB_WIDTH        ),
+  .AXIS_WIDTH         (AXIS_WIDTH       ),
   .INVERT_AXI_RESET   (0                ),
-  .INVERT_VIDEO_RESET (0                ),
-  .BUFFER_SIZE        (9                )
+  .INVERT_AXIS_RESET  (0                ),
+  .BUFFER_SIZE        (BUFFER_SIZE      )
 ) dut (
   .clk                (clk              ),
   .rst                (r_rst            ),
@@ -122,17 +126,15 @@ axi_pmod_tft #(
   .o_rdata            (AXIML_RDATA      ),
 
   //AXI Stream
-  .i_video_clk        (clk              ),
-  .i_video_rst        (r_rst            ),
-  .i_video_rgb        (VIDEO_RGB        ),
-  .i_video_h_sync     (VIDEO_HSYNC      ),
-  .i_video_h_blank    (VIDEO_HBLANK     ),
-  .i_video_v_sync     (VIDEO_VSYNC      ),
-  .i_video_v_blank    (VIDEO_VBLANK     ),
-  .i_video_data_en    (VIDEO_DATA_EN    ),
+  .i_axis_clk         (clk              ),
+  .i_axis_rst         (r_rst            ),
+  .o_axis_ready       (AXIMS_TREADY      ),
+  .i_axis_data        (AXIMS_TDATA       ),
+  .i_axis_last        (AXIMS_TLAST       ),
+  .i_axis_valid       (AXIMS_TVALID      ),
+
 
   //Physical Signals
-
   .i_tearing_effect      (r_tearing_effect    ),
   .o_register_data_sel   (w_register_data_sel ),
   .o_write_n             (w_write_n           ),

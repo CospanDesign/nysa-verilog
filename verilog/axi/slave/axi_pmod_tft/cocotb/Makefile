@@ -11,8 +11,8 @@ export PYTHONHOME=$(shell python -c "from distutils.sysconfig import get_config_
 EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/axi/
 
 VERILOG_SOURCES =  $(NYSA)/verilog/generic/ppfifo.v
+VERILOG_SOURCES += $(NYSA)/verilog/generic/adapter_axi_stream_2_ppfifo.v
 VERILOG_SOURCES += $(NYSA)/verilog/generic/axi_lite_slave.v
-VERILOG_SOURCES += $(TOPDIR)/rtl/adapter_rgb_2_ppfifo.v
 VERILOG_SOURCES += $(TOPDIR)/rtl/pixel_reader.v
 VERILOG_SOURCES += $(TOPDIR)/rtl/nh_lcd.v
 VERILOG_SOURCES += $(TOPDIR)/rtl/nh_lcd_command.v

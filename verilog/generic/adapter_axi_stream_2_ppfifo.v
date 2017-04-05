@@ -36,7 +36,8 @@ SOFTWARE.
 
 module adapter_axi_stream_2_ppfifo #(
   parameter                 DATA_WIDTH = 32,
-  parameter                 STROBE_WIDTH = DATA_WIDTH / 8
+  parameter                 STROBE_WIDTH = DATA_WIDTH / 8,
+  parameter                 USE_KEEP = 0
 )(
   input                     rst,
 

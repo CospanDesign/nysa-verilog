@@ -15,8 +15,6 @@ module nh_lcd_data_writer#(
   input                           i_enable_tearing,
   input                           i_unpack_pixels,
 
-  input                           i_v_blank,
-
   //FIFO Signals
   input                           i_fifo_clk,
   input                           i_fifo_rst,
@@ -28,12 +26,16 @@ module nh_lcd_data_writer#(
 
   //Physical Signals
   output                          o_cmd_mode,
-  output      [7:0]               o_data_out,
+  output  reg [7:0]               o_data_out,
   input       [7:0]               i_data_in,
   output                          o_write,
   output                          o_read,
   output                          o_data_out_en,
-  input                           i_tearing_effect
+  input                           i_tearing_effect,
+
+  input                           i_tp_red,
+  input                           i_tp_green,
+  input                           i_tp_blue
 );
 
 //Local Parameters
@@ -67,7 +69,6 @@ wire                  w_pixel_rdy;
 //Tear Mode select
 reg                   r_write;
 reg                   r_cmd_mode;
-reg           [7:0]   r_data_out;
 
 //Tear control
 
@@ -116,12 +117,18 @@ pixel_reader pr(
 
   //Pixel state machine interface, when 'rdy' is high, pixel is ready
   .o_pixel_rdy      (w_pixel_rdy      ),
-  .i_pixel_stb      (r_pixel_stb      )
+  .i_pixel_stb      (r_pixel_stb      ),
+
+  //Test Generator
+  .i_tp_red         (i_tp_red         ),
+  .i_tp_blue        (i_tp_blue        ),
+  .i_tp_green       (i_tp_green       ),
+  .i_num_pixels     (i_num_pixels     )
+
 );
 
 //Asynchronous Logic
 assign  o_cmd_mode      = r_cmd_mode;
-assign  o_data_out      = r_data_out;
 assign  o_write         = r_write;
 assign  o_read          = 0;
 assign  o_data_out_en   = 1;
@@ -130,10 +137,47 @@ assign  debug[0]        = i_enable;
 assign  debug[1]        = o_cmd_mode;
 assign  debug[2]        = o_write;
 assign  debug[3]        = o_read;
-assign  debug[11:4]     = o_data_out_en ? o_data_out : i_data_in;
+//assign  debug[11:4]     = o_data_out_en ? o_data_out : i_data_in;
 assign  debug[16:13]    = state;
 assign  debug[21]       = o_data_out_en;
 assign  debug[31:22]    = 10'b0;
+
+always @ (*) begin
+  if (rst) begin
+    o_data_out  = 8'h0;
+  end
+  else begin
+    case (state)
+      IDLE: begin
+        o_data_out = `CMD_START_MEM_WRITE;
+      end
+      WRITE_ADDRESS: begin
+        o_data_out = `CMD_START_MEM_WRITE;
+      end
+      WRITE_RED_START: begin
+        o_data_out = w_red;
+      end
+      WRITE_RED: begin
+        o_data_out = w_red;
+      end
+      WRITE_GREEN_START: begin
+        o_data_out = w_green;
+      end
+      WRITE_GREEN: begin
+        o_data_out = w_green;
+      end
+      WRITE_BLUE_START: begin
+        o_data_out = w_blue;
+      end
+      WRITE_BLUE: begin
+        o_data_out = w_blue;
+      end
+      default: begin
+        o_data_out = 8'h0;
+      end
+    endcase
+  end
+end
 
 //Synchronous Logic
 always @ (posedge clk) begin
@@ -145,7 +189,6 @@ always @ (posedge clk) begin
     state               <=  IDLE;
 
     //Control of Physical lines
-    r_data_out          <=  0;
     r_pixel_cnt         <=  0;
   end
   else begin
@@ -167,7 +210,6 @@ always @ (posedge clk) begin
                 //first address
                 r_cmd_mode      <=  0;
                 r_write         <=  1;
-                r_data_out      <=  `CMD_START_MEM_WRITE;
                 state           <=  WRITE_ADDRESS;
               end
             end
@@ -185,7 +227,6 @@ always @ (posedge clk) begin
       end
       WRITE_RED_START: begin
         r_write             <=  1;
-        r_data_out          <=  w_red[7:0];
         state               <=  WRITE_RED;
       end
       WRITE_RED: begin
@@ -193,7 +234,6 @@ always @ (posedge clk) begin
       end
       WRITE_GREEN_START: begin
         r_write             <=  1;
-        r_data_out          <=  w_green[7:0];
         state               <=  WRITE_GREEN;
       end
       WRITE_GREEN: begin
@@ -201,28 +241,19 @@ always @ (posedge clk) begin
       end
       WRITE_BLUE_START: begin
         r_write             <=  1;
-        r_data_out          <=  w_blue[7:0];
-        state               <=  WRITE_BLUE;
-      end
-      WRITE_BLUE: begin
-        r_pixel_cnt         <=  r_pixel_cnt + 1;
         if (w_pixel_rdy) begin
-          state             <=  WRITE_RED_START;
+          r_pixel_cnt       <=  r_pixel_cnt + 1;
           r_pixel_stb       <=  1;
+          state             <=  WRITE_BLUE;
         end
         else begin
           state             <=  IDLE;
         end
       end
+      WRITE_BLUE: begin
+          state             <=  WRITE_RED_START;
+      end
     endcase
-
-    //XXX: This should be debugged!
-    if (i_v_blank && (o_fifo_rdy == 0)) begin
-      //There is a possiblity that data comes in at the wrong time or out of sync with everythig, this should
-      //reset everything back to the start of the frame, there should be no way that the FIFO RDY can be
-      //zero before the vblank should go off.
-      r_pixel_cnt           <= 0;
-    end
   end
 end
 endmodule

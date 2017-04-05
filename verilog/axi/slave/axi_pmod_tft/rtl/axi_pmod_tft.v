@@ -42,6 +42,9 @@ SOFTWARE.
 `define CONTROL_WRITE_OVERRIDE    8
 `define CONTROL_CHIP_SELECT       9
 `define CONTROL_ENABLE_TEARING    10
+`define CONTROL_TP_RED            12
+`define CONTROL_TP_GREEN          13
+`define CONTROL_TP_BLUE           14
 
 `define MAJOR_RANGE               31:28
 `define MINOR_RANGE               27:20
@@ -75,13 +78,13 @@ SOFTWARE.
 module axi_pmod_tft #(
   parameter           ADDR_WIDTH          = 5,
   parameter           DATA_WIDTH          = 32,
-  parameter           RGB_WIDTH           = 24,
   parameter           STROBE_WIDTH        = (DATA_WIDTH / 8),
+  parameter           AXIS_WIDTH           = 24,
   parameter           INVERT_AXI_RESET    = 1,
-  parameter           INVERT_VIDEO_RESET  = 1,
+  parameter           INVERT_AXIS_RESET   = 1,
   parameter           IMAGE_WIDTH         = 480,
   parameter           IMAGE_HEIGHT        = 272,
-  parameter           BUFFER_SIZE         = 9
+  parameter           BUFFER_SIZE         = 10
 )(
   input                               clk,
   input                               rst,
@@ -152,16 +155,13 @@ module axi_pmod_tft #(
   output      [DATA_WIDTH - 1: 0]     o_rdata,
 
 
-  //RGB Video interface
-  input                               i_video_clk,
-  input                               i_video_rst,
-  input       [RGB_WIDTH - 1:0]       i_video_rgb,
-  input                               i_video_h_sync,
-  input                               i_video_h_blank,
-  input                               i_video_v_sync,
-  input                               i_video_v_blank,
-  input                               i_video_data_en
-
+  //AXI Stream Input
+  input                               i_axis_clk,
+  input                               i_axis_rst,
+  input       [AXIS_WIDTH - 1:0]      i_axis_data,
+  output                              o_axis_ready,
+  input                               i_axis_last,
+  input                               i_axis_valid
 );
 
 //Local Parameters
@@ -220,13 +220,17 @@ reg [DATA_WIDTH - 1: 0]     r_reg_out_data;
 
 //Handle Inversion
 wire                        w_axi_rst;
-wire                        w_video_rst;
+wire                        w_axis_rst;
 wire  [31:0]                w_debug;
 
 
 wire  [7:0]                 w_tft_data_out;
 wire  [7:0]                 w_tft_data_in;
 wire                        w_read_en;
+
+wire                        w_tp_red;
+wire                        w_tp_blue;
+wire                        w_tp_green;
 
 
 //Submodules
@@ -276,29 +280,26 @@ axi_lite_slave #(
 );
 
 //Take in an AXI video stream and output the data into a PPFIFO
-adapter_rgb_2_ppfifo #(
-  .DATA_WIDTH         (RGB_WIDTH            )
-) ar2p (
-  .rst                (w_video_rst          ),
-  .clk                (i_video_clk          ),
+adapter_axi_stream_2_ppfifo #(
+  .DATA_WIDTH         (AXIS_WIDTH           )
+) as2p (
+  .rst                (w_axis_rst           ),
 
-  .i_rgb              (i_video_rgb          ),
-  .i_h_sync           (i_video_h_sync       ),
-  .i_h_blank          (i_video_h_blank      ),
-  .i_v_sync           (i_video_v_sync       ),
-  .i_v_blank          (i_video_v_blank      ),
-  .i_data_en          (i_video_data_en      ),
+  //AXI Stream Input
+  .i_axi_clk          (i_axis_clk           ),
+  .o_axi_ready        (o_axis_ready         ),
+  .i_axi_data         (i_axis_data          ),
+  .i_axi_last         (i_axis_last          ),
+  .i_axi_valid        (i_axis_valid         ),
 
-  //Ping Pong FIFO Interface
+  //Ping Pong FIFO Write Controller
   .o_ppfifo_clk       (wfifo_clk            ),
   .i_ppfifo_rdy       (wfifo_ready          ),
   .o_ppfifo_act       (wfifo_activate       ),
   .i_ppfifo_size      (wfifo_size           ),
   .o_ppfifo_stb       (wfifo_strobe         ),
   .o_ppfifo_data      (wfifo_data           )
-
 );
-
 
 nh_lcd #(
   .BUFFER_SIZE         (BUFFER_SIZE         )
@@ -307,9 +308,6 @@ nh_lcd #(
   .clk                 (clk                 ),
 
   .debug               (w_debug             ),
-
-  .i_v_blank           (i_video_v_blank     ),
-
 
   .i_enable            (w_enable            ),
   .i_enable_tearing    (w_enable_tearing    ),
@@ -326,7 +324,7 @@ nh_lcd #(
   .i_num_pixels        (r_num_pixels        ),
 
   .i_fifo_clk          (wfifo_clk           ),
-  .i_fifo_rst          (i_video_rst         ),
+  .i_fifo_rst          (w_axis_rst          ),
   .o_fifo_rdy          (wfifo_ready         ),
   .i_fifo_act          (wfifo_activate      ),
   .i_fifo_stb          (wfifo_strobe        ),
@@ -343,7 +341,13 @@ nh_lcd #(
   .i_data              (w_tft_data_in       ),
   .o_cs_n              (o_cs_n              ),
   .o_reset_n           (o_reset_n           ),
-  .i_tearing_effect    (i_tearing_effect    )
+  .i_tearing_effect    (i_tearing_effect    ),
+
+  //Test Pattern Interface
+  .i_tp_red            (w_tp_red            ),
+  .i_tp_blue           (w_tp_blue           ),
+  .i_tp_green          (w_tp_green          )
+
 );
 
 //Asynchronous Logic
@@ -357,11 +361,15 @@ assign        w_cmd_parameter         = control[`CONTROL_COMMAND_PARAMETER];
 assign        w_write_override        = control[`CONTROL_WRITE_OVERRIDE];
 assign        w_chip_select           = control[`CONTROL_CHIP_SELECT];
 assign        w_enable_tearing        = control[`CONTROL_ENABLE_TEARING];
+assign        w_tp_red                = control[`CONTROL_TP_RED];
+assign        w_tp_green              = control[`CONTROL_TP_GREEN];
+assign        w_tp_blue               = control[`CONTROL_TP_BLUE];
+
 
 assign        status[31:0]            = 0;
 
 assign        w_axi_rst               = (INVERT_AXI_RESET)   ? ~rst         : rst;
-assign        w_video_rst             = (INVERT_VIDEO_RESET) ? ~i_video_rst : i_video_rst;
+assign        w_axis_rst              = (INVERT_AXIS_RESET)  ? ~i_axis_rst  : i_axis_rst;
 
 //Attach the PMODs (All the line scrambling happens here
 assign        o_pmod_out_tft_data3    = w_tft_data_out[0];
@@ -413,6 +421,18 @@ always @ (posedge clk) begin
     if (w_cmd_read_stb) begin
       control[`CONTROL_COMMAND_READ]      <=  0;
     end
+    if (w_tp_red) begin
+      control[`CONTROL_TP_RED]            <=  0;
+    end
+    if (w_tp_green) begin
+      control[`CONTROL_TP_GREEN]          <=  0;
+    end
+    if (w_tp_blue) begin
+      control[`CONTROL_TP_BLUE]           <=  0;
+    end
+
+
+
 
     if (w_reg_in_rdy) begin
       //From master
