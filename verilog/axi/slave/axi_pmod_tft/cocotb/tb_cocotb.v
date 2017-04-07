@@ -53,7 +53,7 @@ input       [3:0]                   AXIMS_TUSER
 );
 
 
-//Parameters
+//Local Parameters
 //Registers
 
 reg               r_rst;
