@@ -25,7 +25,8 @@ SOFTWARE.
  * Author:
  * Description:
  *
- * Changes:
+ * Changes:     Who?    What?
+ *  XX/XX/XXXX  XXX     XXXX
  */
 
 `timescale 1ps / 1ps
