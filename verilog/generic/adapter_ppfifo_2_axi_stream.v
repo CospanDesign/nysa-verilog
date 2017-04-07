@@ -22,31 +22,43 @@ SOFTWARE.
 */
 
 /*
- * Author:
+ * Author: Dave McCoy (dave.mccoy@cospandesign.com)
  * Description:
+ *  Tranlates data from a Ping Pong FIFO to an AXI Stream
  *
- * Changes:
+ * Changes:     Who?  What?
+ *  04/06/2017: DFM   Initial check in.
+ *  04/06/2017: DFM   Added count so that the 'last' will not be strobed until
+*                    all is sent.
  */
 
-module adapter_ppfifo_2_axi_stream (
-  input                     rst,
+module adapter_ppfifo_2_axi_stream #(
+  parameter                       DATA_WIDTH = 32,
+  parameter                       STROBE_WIDTH = DATA_WIDTH / 8,
+  parameter                       USE_KEEP = 0
+
+)(
+  input                           rst,
 
   //Ping Poing FIFO Read Interface
-  input                     i_ppfifo_clk,
-  input                     i_ppfifo_rdy,
-  output  reg               o_ppfifo_act,
-  input       [23:0]        i_ppfifo_size,
-  input       [31:0]        i_ppfifo_data,
-  output  reg               o_ppfifo_stb,
+  input                           i_ppfifo_clk,
+  input                           i_ppfifo_rdy,
+  output  reg                     o_ppfifo_act,
+  input       [23:0]              i_ppfifo_size,
+  input       [DATA_WIDTH - 1:0]  i_ppfifo_data,
+  //output  reg                     o_ppfifo_stb,
+  output                          o_ppfifo_stb,
 
   //AXI Stream Output
-  output                    o_axi_clk,
-  input                     i_axi_ready,
-  //output  reg [31:0]        o_axi_data,
-  output      [31:0]        o_axi_data,
-  output      [3:0]         o_axi_keep,
-  output  reg               o_axi_last,
-  output  reg               o_axi_valid
+  input       [23:0]              i_total_out_size,
+  output                          o_axi_clk,
+  input                           i_axi_ready,
+  //output  reg [31:0]              o_axi_data,
+  output      [DATA_WIDTH - 1:0]  o_axi_data,
+  output      [STROBE_WIDTH - 1:0]o_axi_keep,
+  //output  reg                     o_axi_last,
+  output                          o_axi_last,
+  output  reg                     o_axi_valid
 );
 
 //local parameters
@@ -58,24 +70,30 @@ localparam      RELEASE     = 2;
 wire                      clk;
 reg     [23:0]            r_count;
 reg     [3:0]             state;
+reg     [23:0]            r_total_count;
 //submodules
 //asynchronous logic
 assign  o_axi_clk       = i_ppfifo_clk;
 assign  clk             = i_ppfifo_clk;
-assign  o_axi_keep      = 4'b1111;
+assign  o_axi_keep      = ((1 << STROBE_WIDTH) - 1);
 assign  o_axi_data      = i_ppfifo_data;
+assign  o_ppfifo_stb    = (i_axi_ready & o_axi_valid);
+assign  o_axi_last      = ((r_total_count + 1) == i_total_out_size) &&
+                          i_axi_ready &&
+                          o_axi_valid;
 //synchronous logic
 
 always @ (posedge clk) begin
-  o_ppfifo_stb          <=  0;
+  //o_ppfifo_stb          <=  0;
   o_axi_valid           <=  0;
-  o_axi_last            <=  0;
+  //o_axi_last            <=  0;
 
   if (rst) begin
     state               <=  IDLE;
     //o_axi_data          <=  0;
     o_ppfifo_act        <=  0;
     r_count             <=  0;
+    r_total_count       <=  0;
   end
   else begin
     case (state)
@@ -88,30 +106,32 @@ always @ (posedge clk) begin
         end
       end
       READY: begin
-        //Wait for the AXI Stream output to be ready
-        if (i_axi_ready) begin
-          //Axi Bus is ready, PPFIFO is ready, send data
-          o_axi_valid     <=  1;
-          //o_axi_data      <=  i_ppfifo_data;
-
-          if (r_count >= (i_ppfifo_size - 1)) begin
-            //No more data within the PPFIFO
-            o_axi_last    <=  1;
-            state         <=  RELEASE;
+        if (r_count < i_ppfifo_size) begin
+          o_axi_valid         <=  1;
+          if (i_axi_ready && o_axi_valid) begin
+            r_count         <= r_count + 1;
+            if ((r_count + 1) >= i_ppfifo_size) begin
+              o_axi_valid     <=  0;
+            end
           end
-          else begin
-            //get the next piece of data
-            o_ppfifo_stb  <=  1;
-          end
+        end
+        else begin
+          o_ppfifo_act      <=  0;
+          state             <=  RELEASE;
         end
       end
       RELEASE: begin
-        o_ppfifo_act      <=  0;
-        state             <=  IDLE;
+        state               <=  IDLE;
       end
       default: begin
       end
     endcase
+    if (o_axi_valid && i_axi_ready) begin
+      r_total_count         <=  r_total_count + 1;
+    end
+    if (o_axi_last) begin
+      r_total_count         <=  0;
+    end
   end
 end
 
