@@ -25,21 +25,21 @@ SOFTWARE.
  * Author: Dave McCoy (dave.mccoy@cospandesign.com)
  * Description:
  *  Translates data from an AXI stream interface to a Ping Pong FIFO
- *  It is assumed that both the Ping Poing FIFO and the estimaged block size
- *  of the AXI stream are the same size
- *    (Example: PPFIFO Size = 256 words, AXI Block Size = 256 Words)
  *
  *
- * Changes:
- *  12/26/2015: Initial Checkin
+ * Changes      Who?  What?
+ *  12/26/2015: DFM   Initial Checkin
+ *  04/06/2017: DFM   Modified documentation, there is no need for the
+ *                    data of either the PPFIFO or AXI Stream to be the same
+ *                    size
  */
 
 module adapter_axi_stream_2_ppfifo #(
-  parameter                 DATA_WIDTH = 32,
-  parameter                 STROBE_WIDTH = DATA_WIDTH / 8,
-  parameter                 USE_KEEP = 0
+  parameter                         DATA_WIDTH = 32,
+  parameter                         STROBE_WIDTH = DATA_WIDTH / 8,
+  parameter                         USE_KEEP = 0
 )(
-  input                     rst,
+  input                             rst,
 
   //AXI Stream Input
   input                             i_axi_clk,
