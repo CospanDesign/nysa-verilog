@@ -209,7 +209,7 @@ wb_logic_analyzer #(
   .o_phy_tx             (w_phy_tx             )
 );
 
-uart_v3 #(
+uart #(
   .DEFAULT_BAUDRATE   (`BAUDRATE      )
 ) uart (
   .clk               (clk             ),

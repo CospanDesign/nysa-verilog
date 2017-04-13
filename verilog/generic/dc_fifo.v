@@ -41,40 +41,26 @@
 
 `timescale 1ns/1ps
 
-module dc_fifo(
-  rst,
-  clear,
+module dc_fifo #(
+  parameter                   DATA_WIDTH    = 32,
+  parameter                   ADDRESS_WIDTH = 8
+)(
+  input                       read_clk,
+  input                       write_clk,
 
-  write_clk,
-  data_in,
-  write,
-  full,
+  input                       rst,
+  input                       clear,
 
-  read_clk,
-  data_out,
-  read,
-  ready,
-  empty
+  input [DATA_WIDTH - 1:0]    data_in,
+  input                       write,
+  output                      full,
+
+  output  [DATA_WIDTH - 1: 0] data_out,
+  input                       read,
+  output                      empty,
+
+  output                      ready
 );
-
-parameter                   DATA_WIDTH = 32;
-parameter                   ADDRESS_WIDTH = 8;
-
-input                       read_clk;
-input                       write_clk;
-
-input                       rst;
-input                       clear;
-
-input [DATA_WIDTH - 1:0]    data_in;
-input                       write;
-output                      full;
-
-output  [DATA_WIDTH - 1: 0] data_out;
-input                       read;
-output                      empty;
-
-output                      ready;
 
 
 //Reset Logic
@@ -132,24 +118,22 @@ reg [ADDRESS_WIDTH:0]       wp_gray;
 reg [ADDRESS_WIDTH:0]       rp_bin;
 reg [ADDRESS_WIDTH:0]       rp_gray;
 
-generic_dpram #(
-  .aw     (ADDRESS_WIDTH                ),
-  .dw     (DATA_WIDTH                   )
-)mem(
-  .rclk   (read_clk                     ),
-  .rrst   (read_rst                     ),
-  .rce    (1'b1                         ),
-  .oe     (1'b1                         ),
-  .raddr  (rp_bin[ADDRESS_WIDTH - 1: 0] ),
-  .do     (data_out                     ),
 
-  .wclk   (write_clk                    ),
-  .wrst   (write_rst                    ),
-  .wce    (1'b1                         ),
-  .we     (write                        ),
-  .waddr  (wp_bin[ADDRESS_WIDTH - 1: 0] ),
-  .di     (data_in                      )
-);
+//Shared Memory
+reg     [DATA_WIDTH - 1: 0]       mem [(1 << ADDRESS_WIDTH) - 1: 0];
+
+//Port A
+always @ (posedge write_clk) begin
+  if (write) begin
+    mem[addra]   <=  data_in;
+  end
+end
+
+//Port B
+always @ (posedge read_clk) begin
+  doutb          <=  mem[rp_bin[ADDRESS_WIDTH - 1: 0]];
+end
+
 
 //Read/Write Pointer Logic
 reg                         full;
@@ -222,7 +206,7 @@ always @ (posedge read_clk) begin
   end
   else if ((empty == 1) && (wp_sync != rp_gray))begin
     //this goes low only on a clock edge
-    empty <=  0; 
+    empty <=  0;
   end
 end
 

@@ -155,7 +155,7 @@ uart_fifo uf_rx (
 );
 
 //Low Level UART
-uart_v3 #(
+uart #(
   .DEFAULT_BAUDRATE   (DEFAULT_BAUDRATE     )
 ) u(
   .clk                (clk                  ),

@@ -360,7 +360,7 @@ uart_io_handler #(
 );
 
 
-uart_v3 #(
+uart #(
   .DEFAULT_BAUDRATE  (`BAUDRATE       )
 ) uart (
   .clk               (clk             ),

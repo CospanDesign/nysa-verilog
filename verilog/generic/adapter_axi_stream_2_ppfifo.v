@@ -76,19 +76,18 @@ assign  o_axi_ready     = (o_ppfifo_act > 0) && (r_count < i_ppfifo_size);
 //synchronous logic
 
 always @ (posedge clk) begin
-  o_ppfifo_stb          <=  0;
+  o_ppfifo_stb              <=  0;
 
   if (rst) begin
-    r_count             <=  0;
-    o_ppfifo_act        <=  0;
-    o_ppfifo_data       <=  0;
-
-    state               <=  IDLE;
+    r_count                 <=  0;
+    o_ppfifo_act            <=  0;
+    o_ppfifo_data           <=  0;
+    state                   <=  IDLE;
   end
   else begin
     case (state)
       IDLE: begin
-        o_ppfifo_act    <=  0;
+        o_ppfifo_act        <=  0;
         if ((i_ppfifo_rdy > 0) && (o_ppfifo_act == 0)) begin
           r_count           <=  0;
           if (i_ppfifo_rdy[0]) begin

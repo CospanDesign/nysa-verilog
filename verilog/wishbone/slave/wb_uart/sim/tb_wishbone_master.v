@@ -248,7 +248,7 @@ wire              test_is_transmitting;
 wire              test_rx_error;
 
 
-uart_v3  u_test (
+uart  u_test (
   .clk             (clk                  ),
   .rst             (rst                  ),
   .rx              (tx                   ),

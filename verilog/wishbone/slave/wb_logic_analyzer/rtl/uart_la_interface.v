@@ -106,7 +106,7 @@ reg   [31:0]                r_value;
 wire                        w_uart_wr_busy;
 
 //submodules
-uart_v3 #(
+uart #(
   .DEFAULT_BAUDRATE   (DEFAULT_BAUDRATE )
 ) uart (
   .clk               (clk               ),

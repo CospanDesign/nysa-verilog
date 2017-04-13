@@ -13,7 +13,7 @@ EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/ -I$(TOPDIR)/sim/
 #Dependencies
 VERILOG_SOURCES = $(NYSA)/verilog/wishbone/master/wishbone_master.v
 
-VERILOG_SOURCES += ${NYSA}/verilog/generic/uart_v3.v
+VERILOG_SOURCES += ${NYSA}/verilog/generic/uart.v
 VERILOG_SOURCES += ${NYSA}/verilog/wishbone/host_interface/uart/uart_io_handler.v
 VERILOG_SOURCES += ${NYSA}/verilog/generic/bram.v
 VERILOG_SOURCES += ${NYSA}/verilog/wishbone/slave/wb_bram/rtl/wb_bram.v

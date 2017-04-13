@@ -30,43 +30,28 @@ SOFTWARE.
 
 
 module bram #(
-  parameter DATA_WIDTH = 32,
-  parameter ADDR_WIDTH = 10,
-  parameter MEM_FILE  = "NOTHING",
-  parameter MEM_FILE_LENGTH = 0
+parameter DATA_WIDTH        = 32,
+parameter ADDR_WIDTH        = 10,
+parameter MEM_FILE          = "NOTHING",
+parameter MEM_FILE_LENGTH   = 0
 
 )(
-	clk,
-	rst,
+input                             clk;
+input                             rst;
 
-	en,
-	we,
-	write_address,
-	read_address,
-	data_in,
-	data_out
+input                             en;
+input                             we;
+input       [(ADDR_WIDTH - 1):0]  write_address;
+input       [(ADDR_WIDTH - 1):0]  read_address;
+input       [(DATA_WIDTH - 1):0]  data_in;
+output reg  [(DATA_WIDTH - 1):0]  data_out;
 );
 
-input clk;
-input rst;
-
-input en;
-input we;
-input [(ADDR_WIDTH - 1):0] write_address;
-input [(ADDR_WIDTH - 1):0] read_address;
-input [(DATA_WIDTH - 1):0] data_in;
-output reg [(DATA_WIDTH - 1):0] data_out;
 
 //synthesis attribute ram_style of mem is block
 reg [(DATA_WIDTH - 1):0] mem [0:((1 << ADDR_WIDTH) - 1)]; //pragma attribute mem ram_block TRUE
 reg [(ADDR_WIDTH - 1):0] read_address_reg;
 
-
-/*
-initial begin
-	$monitor ("%t: wa: %h, ra: %h, di: %h, do: %h", $time, write_address, read_address, data_in, data_out);
-end
-*/
 initial begin
   if (MEM_FILE != "NOTHING") begin
     $readmemh(MEM_FILE, mem, 0, MEM_FILE_LENGTH - 1);

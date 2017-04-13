@@ -130,7 +130,7 @@ wire    [7:0]       gen_addr;
 wire    [7:0]       gen_data;
 
 //Submodules
-uart_v3 #(
+uart #(
   .DEFAULT_BAUDRATE   (BAUDRATE           )
 )uart(
   .clk                (clk                ),
