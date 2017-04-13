@@ -12,6 +12,8 @@ module tb_cocotb #(
 input                               clk,
 input                               rst,
 
+input                               i_fsync,
+
 //Write Address Channel
 input                               AXIML_AWVALID,
 input       [ADDR_WIDTH - 1: 0]     AXIML_AWADDR,
@@ -97,6 +99,7 @@ axi_pmod_tft #(
   .clk                (clk              ),
   .rst                (r_rst            ),
 
+  .i_fsync            (i_fsync          ),
 
   //AXI Lite Interface
   .i_awvalid          (AXIML_AWVALID    ),
@@ -188,7 +191,7 @@ always @ (posedge clk) begin
     r_tearing_effect        <=  0;
   end
   else begin
-    if (r_tear_count < 100) begin
+    if (r_tear_count < 400) begin
       r_tear_count          <=  r_tear_count + 1;
     end
     else begin

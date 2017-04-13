@@ -1,21 +1,20 @@
 [*]
 [*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Sun Apr  2 14:44:34 2017
+[*] Sun Apr  9 17:13:05 2017
 [*]
-[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_pmod_tft/cocotb/design.vcd"
-[dumpfile_mtime] "Sun Apr  2 14:40:55 2017"
-[dumpfile_size] 289417
-[savefile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_pmod_tft/cocotb/waveforms.gtkw"
-[timestart] 0
-[size] 958 1059
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_video_resizer/cocotb/design.vcd"
+[dumpfile_mtime] "Fri Apr  7 14:57:42 2017"
+[dumpfile_size] 201239
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_video_resizer/cocotb/waveforms.gtkw"
+[timestart] 12481
+[size] 1918 1059
 [pos] -1 -1
-*-10.106380 1482 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-5.114763 12602 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.dut.
-[treeopen] tb_cocotb.dut.lcd.
-[treeopen] tb_cocotb.dut.lcd.lcd_data_writer.
+[treeopen] tb_cocotb.dut.vr.
 [sst_width] 213
-[signals_width] 230
+[signals_width] 246
 [sst_expanded] 1
 [sst_vpaned_height] 320
 @28
@@ -25,131 +24,156 @@ tb_cocotb.rst
 tb_cocotb.test_id[3:0]
 @200
 -
--
-@28
-tb_cocotb.VIDEO_DATA_EN
-tb_cocotb.VIDEO_VSYNC
-tb_cocotb.VIDEO_HSYNC
+@c00200
+-Register Values
 @22
-tb_cocotb.VIDEO_RGB[23:0]
-@28
-tb_cocotb.VIDEO_VBLANK
-tb_cocotb.VIDEO_HBLANK
+tb_cocotb.dut.r_video_in_width[31:0]
+tb_cocotb.dut.r_video_in_height[31:0]
+tb_cocotb.dut.r_video_in_size[31:0]
 @200
 -
-@c00200
--AXI4 Master Lite
 @22
-tb_cocotb.AXIML_ARADDR[31:0]
-@28
-tb_cocotb.AXIML_ARREADY
-tb_cocotb.AXIML_ARVALID
+tb_cocotb.dut.r_video_in_start_x[31:0]
+tb_cocotb.dut.r_video_in_start_y[31:0]
+@200
+-
 @22
-tb_cocotb.AXIML_AWADDR[31:0]
-@28
-tb_cocotb.AXIML_AWREADY
-tb_cocotb.AXIML_AWVALID
-tb_cocotb.AXIML_BREADY
-tb_cocotb.AXIML_BRESP[1:0]
-tb_cocotb.AXIML_BVALID
+tb_cocotb.dut.r_video_out_width[31:0]
+tb_cocotb.dut.r_video_out_height[31:0]
+tb_cocotb.dut.r_video_out_size[31:0]
+@200
+-
 @22
-tb_cocotb.AXIML_RDATA[31:0]
-@28
-tb_cocotb.AXIML_RREADY
-tb_cocotb.AXIML_RRESP[1:0]
-tb_cocotb.AXIML_RVALID
-@22
-tb_cocotb.AXIML_WDATA[31:0]
-@28
-tb_cocotb.AXIML_WREADY
-@22
-tb_cocotb.AXIML_WSTRB[3:0]
-@28
-tb_cocotb.AXIML_WVALID
+tb_cocotb.dut.r_fill_pixel_value[23:0]
 @1401200
--AXI4 Master Lite
+-Register Values
+@200
+-
+@28
+tb_cocotb.dut.r_enable
+tb_cocotb.dut.r_reset
 @200
 -
 @800200
--PMOD TFT
-@28
-tb_cocotb.dut.w_enable
-@200
--
-@28
-tb_cocotb.dut.w_enable_interrupt
-@200
--
--
-@28
-tb_cocotb.dut.w_chip_select
+-AXIS Stream to PPFIFO
 @22
-tb_cocotb.dut.w_cmd_data_in[7:0]
+[color] 5
+tb_cocotb.dut.as2p.state[3:0]
+@200
+-
+@22
+tb_cocotb.dut.as2p.i_axi_data[23:0]
 @28
-tb_cocotb.dut.w_cmd_finished
-tb_cocotb.dut.w_cmd_parameter
-tb_cocotb.dut.w_cmd_read_stb
-tb_cocotb.dut.w_cmd_write_stb
-tb_cocotb.dut.w_command_mode
-tb_cocotb.dut.w_enable_tearing
+tb_cocotb.dut.as2p.i_axi_last
+tb_cocotb.dut.as2p.i_axi_valid
+tb_cocotb.dut.as2p.i_ppfifo_rdy[1:0]
+@22
+tb_cocotb.dut.as2p.i_ppfifo_size[23:0]
+@28
+tb_cocotb.dut.as2p.o_axi_ready
+tb_cocotb.dut.as2p.o_ppfifo_act[1:0]
+tb_cocotb.dut.as2p.o_ppfifo_clk
+@22
+tb_cocotb.dut.as2p.o_ppfifo_data[23:0]
+@28
+tb_cocotb.dut.as2p.o_ppfifo_stb
+@22
+tb_cocotb.dut.as2p.r_count[23:0]
 @1000200
--PMOD TFT
+-AXIS Stream to PPFIFO
 @200
 -
 @c00200
--AXI Lite Reg Interface
-@28
-tb_cocotb.dut.axi_lite_reg_interface.rst
+-Video Resizer
 @22
-tb_cocotb.dut.axi_lite_reg_interface.state[3:0]
+[color] 5
+tb_cocotb.dut.vr.state[3:0]
 @200
 -
 @28
-tb_cocotb.dut.axi_lite_reg_interface.i_bready
-tb_cocotb.dut.axi_lite_reg_interface.o_bvalid
-tb_cocotb.dut.axi_lite_reg_interface.o_bresp[1:0]
+tb_cocotb.dut.vr.w_trans_valid
 @200
 -
 @28
-tb_cocotb.dut.axi_lite_reg_interface.i_rready
-tb_cocotb.dut.axi_lite_reg_interface.o_rvalid
-tb_cocotb.dut.axi_lite_reg_interface.o_rresp[1:0]
+tb_cocotb.dut.vr.w_read_rdy
+tb_cocotb.dut.vr.r_read_act
 @22
-tb_cocotb.dut.axi_lite_reg_interface.o_rdata[31:0]
+tb_cocotb.dut.vr.w_read_size[23:0]
+tb_cocotb.dut.vr.r_read_count[23:0]
+tb_cocotb.dut.vr.w_read_data[23:0]
+@28
+tb_cocotb.dut.vr.r_read_stb
+tb_cocotb.dut.vr.r_write_stb
+@200
+-
+@22
+tb_cocotb.dut.vr.i_video_in_size[31:0]
+tb_cocotb.dut.vr.r_pixel_in_count[31:0]
+@200
+-
+@22
+tb_cocotb.dut.vr.i_video_out_size[31:0]
+tb_cocotb.dut.vr.r_pixel_out_count[31:0]
+@200
+-
+@22
+tb_cocotb.dut.vr.r_write_count[23:0]
+@c00028
+tb_cocotb.dut.vr.r_write_act[1:0]
+@28
+(0)tb_cocotb.dut.vr.r_write_act[1:0]
+(1)tb_cocotb.dut.vr.r_write_act[1:0]
 @1401200
--AXI Lite Reg Interface
-@200
--
-@c00200
--RGB Data
+-group_end
 @28
-tb_cocotb.dut.ar2p.i_data_en
-tb_cocotb.dut.ar2p.i_h_sync
-@22
-tb_cocotb.dut.ar2p.i_rgb[23:0]
-@28
-tb_cocotb.dut.ar2p.i_v_sync
-@1401200
--RGB Data
-@200
--
-@c00200
--Output Signals
-@28
-tb_cocotb.dut.i_tearing_effect
-tb_cocotb.dut.o_cs_n
-tb_cocotb.dut.o_read_n
-tb_cocotb.dut.o_register_data_sel
-tb_cocotb.dut.o_reset_n
-tb_cocotb.dut.o_write_n
-@1401200
--Output Signals
+tb_cocotb.dut.vr.w_write_rdy[1:0]
 @200
 -
 @22
-tb_cocotb.dut.o_tft_data[7:0]
-tb_cocotb.dut.t_tft_data[7:0]
-@23
-tb_cocotb.dut.i_tft_data[7:0]
+tb_cocotb.dut.vr.r_read_height_pos[31:0]
+tb_cocotb.dut.vr.r_read_width_pos[31:0]
+tb_cocotb.dut.vr.w_write_size[23:0]
+@200
+-
+@1401200
+-Video Resizer
+@200
+-
+@800200
+-PPFIFO to AXIS Stream
+@22
+[color] 5
+tb_cocotb.dut.p2as.state[3:0]
+@200
+-
+@22
+tb_cocotb.dut.p2as.i_total_out_size[23:0]
+tb_cocotb.dut.p2as.r_total_count[23:0]
+@200
+-
+@28
+tb_cocotb.dut.p2as.i_ppfifo_clk
+@22
+tb_cocotb.dut.p2as.i_ppfifo_data[23:0]
+@28
+tb_cocotb.dut.p2as.i_ppfifo_rdy
+@200
+-
+@22
+tb_cocotb.dut.p2as.i_ppfifo_size[23:0]
+tb_cocotb.dut.p2as.r_count[23:0]
+@28
+tb_cocotb.dut.p2as.o_ppfifo_act
+@200
+-
+@28
+tb_cocotb.dut.p2as.o_axi_last
+tb_cocotb.dut.p2as.o_ppfifo_stb
+tb_cocotb.dut.p2as.o_axi_valid
+tb_cocotb.dut.p2as.i_axi_ready
+@22
+tb_cocotb.dut.p2as.o_axi_data[23:0]
+@1000200
+-PPFIFO to AXIS Stream
 [pattern_trace] 1
 [pattern_trace] 0

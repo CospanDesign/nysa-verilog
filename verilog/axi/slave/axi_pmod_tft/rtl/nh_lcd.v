@@ -21,7 +21,8 @@ module nh_lcd #(
   output                          o_cmd_finished,
   input                           i_write_override,
   input                           i_chip_select,
-  input       [31:0]              i_num_pixels,
+  input       [31:0]              i_image_width,
+  input       [31:0]              i_image_height,
 
   //FIFO Signals
   input                           i_fifo_clk,
@@ -30,7 +31,7 @@ module nh_lcd #(
   input       [1:0]               i_fifo_act,
   input                           i_fifo_stb,
   output      [23:0]              o_fifo_size,
-  input       [DATAS_WIDTH - 1:0] i_fifo_data,
+  input       [DATAS_WIDTH:0]     i_fifo_data,
 
   //Physical Signals
   output                          o_read_en,
@@ -102,7 +103,8 @@ nh_lcd_data_writer #(
 
   .i_enable             (i_enable             ),
   .i_enable_tearing     (i_enable_tearing     ),
-  .i_num_pixels         (i_num_pixels         ),
+  .i_image_width        (i_image_width        ),
+  .i_image_height       (i_image_height       ),
 
   .i_fifo_clk           (i_fifo_clk           ),
   .i_fifo_rst           (i_fifo_rst           ),

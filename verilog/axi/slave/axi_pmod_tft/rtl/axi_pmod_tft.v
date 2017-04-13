@@ -89,10 +89,12 @@ module axi_pmod_tft #(
   input                               clk,
   input                               rst,
 
+  output                              o_fsync,
+  input                               i_fsync,
+
   output                              o_register_data_sel,
   output                              o_write_n,
   output                              o_read_n,
-//  inout       [7:0]                   io_data,
   output                              o_cs_n,
   output                              o_reset_n,
   input                               i_tearing_effect,
@@ -170,8 +172,10 @@ module axi_pmod_tft #(
 localparam                  REG_CONTROL        = 0;
 localparam                  REG_STATUS         = 1;
 localparam                  REG_COMMAND_DATA   = 2;
-localparam                  REG_PIXEL_COUNT    = 3;
-localparam                  REG_VERSION        = 4;
+localparam                  REG_IMAGE_WIDTH    = 3;
+localparam                  REG_IMAGE_HEIGHT   = 4;
+localparam                  REG_IMAGE_SIZE     = 5;
+localparam                  REG_VERSION        = 6;
 
 //Reg/Wire
 
@@ -195,7 +199,9 @@ wire                        w_cmd_finished;
 reg         [7:0]           r_cmd_data_out;
 wire        [7:0]           w_cmd_data_in;
 
-reg         [31:0]          r_num_pixels;
+reg         [31:0]          r_image_width;
+reg         [31:0]          r_image_height;
+reg         [31:0]          r_image_size;
 
 //status
 
@@ -204,7 +210,7 @@ wire        [23:0]          wfifo_size;
 wire        [1:0]           wfifo_ready;
 wire        [1:0]           wfifo_activate;
 wire                        wfifo_strobe;
-wire        [23:0]          wfifo_data;
+wire        [AXIS_WIDTH:0]  wfifo_data;
 
 //Simple User Interface
 wire [ADDR_WIDTH - 1: 0]    w_reg_address;
@@ -280,10 +286,14 @@ axi_lite_slave #(
 );
 
 //Take in an AXI video stream and output the data into a PPFIFO
-adapter_axi_stream_2_ppfifo #(
+adapter_axi_stream_2_ppfifo_wl #(
   .DATA_WIDTH         (AXIS_WIDTH           )
 ) as2p (
-  .rst                (w_axis_rst           ),
+  .rst                (w_axis_rst || ~w_enable ),
+
+  .i_tear_effect      (i_tearing_effect     ),
+  .i_fsync            (i_fsync              ),
+  .i_pixel_count      (r_image_size         ),
 
   //AXI Stream Input
   .i_axi_clk          (i_axis_clk           ),
@@ -302,9 +312,10 @@ adapter_axi_stream_2_ppfifo #(
 );
 
 nh_lcd #(
-  .BUFFER_SIZE         (BUFFER_SIZE         )
+  .BUFFER_SIZE         (BUFFER_SIZE         ),
+  .DATAS_WIDTH         (AXIS_WIDTH          )
 ) lcd (
-  .rst                 (w_axi_rst           ),
+  .rst                 (w_axi_rst || ~w_enable ),
   .clk                 (clk                 ),
 
   .debug               (w_debug             ),
@@ -321,7 +332,8 @@ nh_lcd #(
   .o_cmd_finished      (w_cmd_finished      ),
   .i_write_override    (w_write_override    ),
   .i_chip_select       (w_chip_select       ),
-  .i_num_pixels        (r_num_pixels        ),
+  .i_image_width       (r_image_width       ),
+  .i_image_height      (r_image_height      ),
 
   .i_fifo_clk          (wfifo_clk           ),
   .i_fifo_rst          (w_axis_rst          ),
@@ -365,7 +377,6 @@ assign        w_tp_red                = control[`CONTROL_TP_RED];
 assign        w_tp_green              = control[`CONTROL_TP_GREEN];
 assign        w_tp_blue               = control[`CONTROL_TP_BLUE];
 
-
 assign        status[31:0]            = 0;
 
 assign        w_axi_rst               = (INVERT_AXI_RESET)   ? ~rst         : rst;
@@ -399,6 +410,8 @@ assign        w_tft_data_in[5]        =  i_pmod_in_tft_data9;
 assign        w_tft_data_in[6]        =  i_pmod_in_tft_data4;
 assign        w_tft_data_in[7]        =  i_pmod_in_tft_data10;
 
+assign        o_fsync                 = ~i_tearing_effect;
+
 //blocks
 always @ (posedge clk) begin
   //De-assert Strobes
@@ -410,7 +423,9 @@ always @ (posedge clk) begin
     control                               <=  0;
     r_reg_out_data                        <=  0;
     r_cmd_data_out                        <=  0;
-    r_num_pixels                          <=  IMAGE_WIDTH * IMAGE_HEIGHT;
+    r_image_width                         <=  IMAGE_WIDTH;
+    r_image_height                        <=  IMAGE_HEIGHT;
+    r_image_size                          <=  (IMAGE_WIDTH * IMAGE_HEIGHT);
   end
   else begin
 
@@ -443,8 +458,14 @@ always @ (posedge clk) begin
         REG_COMMAND_DATA: begin
           r_cmd_data_out                  <= w_reg_in_data[7:0];
         end
-        REG_PIXEL_COUNT: begin
-          r_num_pixels                    <= w_reg_in_data;
+        REG_IMAGE_WIDTH: begin
+          r_image_width                   <= w_reg_in_data;
+        end
+        REG_IMAGE_HEIGHT: begin
+          r_image_height                  <= w_reg_in_data;
+        end
+        REG_IMAGE_SIZE: begin
+          r_image_size                    <= w_reg_in_data;
         end
         default: begin
         end
@@ -466,8 +487,14 @@ always @ (posedge clk) begin
         REG_COMMAND_DATA: begin
           r_reg_out_data                  <= w_cmd_data_in;
         end
-        REG_PIXEL_COUNT: begin
-          r_reg_out_data                  <= r_num_pixels;
+        REG_IMAGE_WIDTH: begin
+          r_reg_out_data                  <= r_image_width;
+        end
+        REG_IMAGE_HEIGHT: begin
+          r_reg_out_data                  <= r_image_height;
+        end
+        REG_IMAGE_SIZE: begin
+          r_reg_out_data                  <= r_image_size;
         end
         REG_VERSION: begin
           r_reg_out_data                  <= 32'h00;

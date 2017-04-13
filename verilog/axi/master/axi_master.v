@@ -57,8 +57,7 @@ module axi_master #(
   parameter           INTERRUPT_WIDTH       = 32,
   parameter           ENABLE_WRITE_RESP     = 0, //Don't send a response when writing (Faster)
   parameter           ENABLE_NACK           = 0, //Enable timeout
-  parameter           DEFAULT_TIMEOUT       = 32'd100000000,  //1 Second at 100MHz
-  parameter           SDB_ADDRESS           = 64'h0000000000000000
+  parameter           DEFAULT_TIMEOUT       = 32'd100000000  //1 Second at 100MHz
 
 )(
   input                             clk,
