@@ -33,18 +33,18 @@ module bram #(
 parameter DATA_WIDTH        = 32,
 parameter ADDR_WIDTH        = 10,
 parameter MEM_FILE          = "NOTHING",
-parameter MEM_FILE_LENGTH   = 0
+parameter MEM_FILE_LENGTH   = -1
 
 )(
-input                             clk;
-input                             rst;
+input                             clk,
+input                             rst,
 
-input                             en;
-input                             we;
-input       [(ADDR_WIDTH - 1):0]  write_address;
-input       [(ADDR_WIDTH - 1):0]  read_address;
-input       [(DATA_WIDTH - 1):0]  data_in;
-output reg  [(DATA_WIDTH - 1):0]  data_out;
+input                             en,
+input                             we,
+input       [(ADDR_WIDTH - 1):0]  write_address,
+input       [(ADDR_WIDTH - 1):0]  read_address,
+input       [(DATA_WIDTH - 1):0]  data_in,
+output reg  [(DATA_WIDTH - 1):0]  data_out
 );
 
 

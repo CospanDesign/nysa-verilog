@@ -33,32 +33,31 @@ SOFTWARE.
  */
 
 module adapter_ppfifo_2_axi_stream #(
-  parameter                       DATA_WIDTH = 32,
-  parameter                       STROBE_WIDTH = DATA_WIDTH / 8,
-  parameter                       USE_KEEP = 0
-
+  parameter                                     DATA_WIDTH          = 32,
+  parameter                                     STROBE_WIDTH        = DATA_WIDTH / 8,
+  parameter                                     USE_KEEP            = 0,
+  parameter                                     MAP_PPFIFO_TO_USER  = 1,
+  parameter                                     USER_COUNT          = 1
 )(
-  input                           rst,
+  input                                         rst,
 
   //Ping Poing FIFO Read Interface
-  input                           i_ppfifo_clk,
-  input                           i_ppfifo_rdy,
-  output  reg                     o_ppfifo_act,
-  input       [23:0]              i_ppfifo_size,
-  input       [DATA_WIDTH - 1:0]  i_ppfifo_data,
-  //output  reg                     o_ppfifo_stb,
-  output                          o_ppfifo_stb,
+  input                                         i_ppfifo_rdy,
+  output  reg                                   o_ppfifo_act,
+  input       [23:0]                            i_ppfifo_size,
+  input       [(DATA_WIDTH + USER_COUNT) - 1:0] i_ppfifo_data,
+  output                                        o_ppfifo_stb,
 
   //AXI Stream Output
-  input       [23:0]              i_total_out_size,
-  output                          o_axi_clk,
-  input                           i_axi_ready,
-  //output  reg [31:0]              o_axi_data,
-  output      [DATA_WIDTH - 1:0]  o_axi_data,
-  output      [STROBE_WIDTH - 1:0]o_axi_keep,
-  //output  reg                     o_axi_last,
-  output                          o_axi_last,
-  output  reg                     o_axi_valid
+  input       [23:0]                            i_total_out_size,
+
+  input                                         i_axi_clk,
+  output      [USER_COUNT - 1: 0]               o_axi_user,
+  input                                         i_axi_ready,
+  output      [DATA_WIDTH - 1:0]                o_axi_data,
+  output      [STROBE_WIDTH - 1:0]              o_axi_keep,
+  output                                        o_axi_last,
+  output  reg                                   o_axi_valid
 );
 
 //local parameters
@@ -67,20 +66,29 @@ localparam      READY       = 1;
 localparam      RELEASE     = 2;
 
 //registes/wires
-wire                      clk;
-reg     [23:0]            r_count;
-reg     [3:0]             state;
-reg     [23:0]            r_total_count;
+wire                        clk;
+reg     [3:0]               state;
+reg     [23:0]              r_count;
+reg     [23:0]              r_total_count;
+
+wire    [USER_COUNT - 1: 0] w_axi_user_zero = 0;
+wire    [23:0]              w_total_out_size;
+
 //submodules
 //asynchronous logic
-assign  o_axi_clk       = i_ppfifo_clk;
-assign  clk             = i_ppfifo_clk;
+assign  clk             = i_axi_clk;
 assign  o_axi_keep      = ((1 << STROBE_WIDTH) - 1);
 assign  o_axi_data      = i_ppfifo_data;
 assign  o_ppfifo_stb    = (i_axi_ready & o_axi_valid);
-assign  o_axi_last      = ((r_total_count + 1) == i_total_out_size) &&
-                          i_axi_ready &&
-                          o_axi_valid;
+assign  w_total_out_size  = i_ppfifo_size;
+
+generate
+  if (MAP_PPFIFO_TO_USER) begin
+    assign  o_axi_user[USER_COUNT - 1: 0] = (r_count < i_ppfifo_size) ? i_ppfifo_data[(DATA_WIDTH + USER_COUNT): DATA_WIDTH] : w_axi_user_zero;
+  end
+endgenerate
+
+assign  o_axi_last      = ((r_total_count + 1) >= w_total_out_size) & o_ppfifo_act  & o_axi_valid;
 //synchronous logic
 
 always @ (posedge clk) begin
