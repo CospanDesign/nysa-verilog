@@ -62,7 +62,10 @@ output      [3:0]                        AXISS_TUSER
 //Registers
 
 reg               r_rst;
+reg               r_axiss_tready;
+
 always @ (*)      r_rst           = rst;
+always @ (*)      r_axiss_tready  = AXISS_TREADY;
 reg   [3:0]       test_id         = 0;
 
 
@@ -116,7 +119,7 @@ axi_on_screen_display #(
   .i_axis_clk         (clk              ),
   .i_axis_rst         (r_rst            ),
   .o_axis_user        (AXISS_TUSER      ),
-  .i_axis_ready       (AXISS_TREADY     ),
+  .i_axis_ready       (r_axiss_tready   ),
   .o_axis_data        (AXISS_TDATA      ),
   .o_axis_last        (AXISS_TLAST      ),
   .o_axis_valid       (AXISS_TVALID     )

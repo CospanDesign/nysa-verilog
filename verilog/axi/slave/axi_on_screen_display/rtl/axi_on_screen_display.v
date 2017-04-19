@@ -283,7 +283,6 @@ console_osd #(
 //Take in an AXI video stream and output the data into a PPFIFO
 adapter_ppfifo_2_axi_stream #(
   .DATA_WIDTH           (AXIS_WIDTH         ),
-  .TOTAL_SIZE_IS_PPFIFO (1                  ),
   .MAP_PPFIFO_TO_USER   (1                  ),
   .USER_COUNT           (1                  )
 ) as2p (
