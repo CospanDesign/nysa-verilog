@@ -90,7 +90,9 @@ module console_osd #(
   input                           i_ppfifo_act,
   output    [23:0]                o_ppfifo_size,
   output    [PIXEL_WIDTH: 0]      o_ppfifo_data,  //Add an extra bit to communicate start of frame
-  input                           i_ppfifo_stb
+  input                           i_ppfifo_stb,
+  output    [3:0]                 o_state,
+  output    [15:0]                o_pixel_count
 
 );
 //local parameters
@@ -124,7 +126,6 @@ reg                                   r_start_frame;
 reg         [PIXEL_WIDTH - 1: 0]      r_pixel_data;
 
 reg         [31:0]                    r_pixel_count;
-reg         [23:0]                    r_ppfifo_count;
 reg         [23:0]                    r_pixel_width_count;
 reg         [23:0]                    r_pixel_height_count;
 
@@ -162,6 +163,7 @@ assign  w_valid_char_pixel  = (r_pixel_width_count  >= i_x_start)  && (r_pixel_w
 
 assign  w_vertical_padding  = (r_pixel_height_count < i_y_start) || (r_pixel_height_count > i_y_end);
 assign  w_horizontal_padding= (r_pixel_width_count  < i_x_start) || (r_pixel_width_count  > i_x_end);
+assign  o_state             = state;
 
 //Font
 
@@ -254,64 +256,6 @@ for (y = 0; y < FONT_HEIGHT_ADJ; y = y + 1) begin: FOR_HEIGHT
 end
 endgenerate
 
-/*
-assign  w_char_data_map[0][0] = w_font_data[0];
-assign  w_char_data_map[0][1] = w_font_data[8];
-assign  w_char_data_map[0][2] = w_font_data[16];
-assign  w_char_data_map[0][3] = w_font_data[24];
-assign  w_char_data_map[0][4] = w_font_data[32];
-assign  w_char_data_map[0][5] = 1'b0;
-
-assign  w_char_data_map[1][0] = w_font_data[1];
-assign  w_char_data_map[1][1] = w_font_data[9];
-assign  w_char_data_map[1][2] = w_font_data[17];
-assign  w_char_data_map[1][3] = w_font_data[25];
-assign  w_char_data_map[1][4] = w_font_data[33];
-assign  w_char_data_map[1][5] = 1'b0;
-
-assign  w_char_data_map[2][0] = w_font_data[2];
-assign  w_char_data_map[2][1] = w_font_data[10];
-assign  w_char_data_map[2][2] = w_font_data[18];
-assign  w_char_data_map[2][3] = w_font_data[26];
-assign  w_char_data_map[2][4] = w_font_data[34];
-assign  w_char_data_map[2][5] = 1'b0;
-
-assign  w_char_data_map[3][0] = w_font_data[3];
-assign  w_char_data_map[3][1] = w_font_data[11];
-assign  w_char_data_map[3][2] = w_font_data[19];
-assign  w_char_data_map[3][3] = w_font_data[27];
-assign  w_char_data_map[3][4] = w_font_data[35];
-assign  w_char_data_map[3][5] = 1'b0;
-
-assign  w_char_data_map[4][0] = w_font_data[4];
-assign  w_char_data_map[4][1] = w_font_data[12];
-assign  w_char_data_map[4][2] = w_font_data[20];
-assign  w_char_data_map[4][3] = w_font_data[28];
-assign  w_char_data_map[4][4] = w_font_data[36];
-assign  w_char_data_map[4][5] = 1'b0;
-
-assign  w_char_data_map[5][0] = w_font_data[5];
-assign  w_char_data_map[5][1] = w_font_data[13];
-assign  w_char_data_map[5][2] = w_font_data[21];
-assign  w_char_data_map[5][3] = w_font_data[29];
-assign  w_char_data_map[5][4] = w_font_data[37];
-assign  w_char_data_map[5][5] = 1'b0;
-
-assign  w_char_data_map[6][0] = w_font_data[6];
-assign  w_char_data_map[6][1] = w_font_data[14];
-assign  w_char_data_map[6][2] = w_font_data[22];
-assign  w_char_data_map[6][3] = w_font_data[30];
-assign  w_char_data_map[6][4] = w_font_data[38];
-assign  w_char_data_map[6][5] = 1'b0;
-
-assign  w_char_data_map[7][0] = w_font_data[7];
-assign  w_char_data_map[7][1] = w_font_data[15];
-assign  w_char_data_map[7][2] = w_font_data[23];
-assign  w_char_data_map[7][3] = w_font_data[31];
-assign  w_char_data_map[7][4] = w_font_data[39];
-assign  w_char_data_map[7][5] = 1'b0;
-*/
-
 assign  w_pixel               = (!w_valid_char_pixel) ? i_bg_color:
                                   (w_char_data_map[r_font_height_count][r_font_width_count]) ?
                                     i_fg_color :
@@ -329,7 +273,6 @@ always @ (posedge clk) begin
     r_start_frame   <=  0;
     r_pixel_data    <=  0;
     r_pixel_count   <=  0;
-    r_ppfifo_count  <=  0;
 
     r_font_width_count  <=  0;
     r_font_height_count <=  0;
@@ -341,8 +284,7 @@ always @ (posedge clk) begin
   end
   else begin
     //Grab a FIFO
-    if ((w_write_rdy > 0) && (r_write_act == 0)) begin
-      r_ppfifo_count      <=  0;
+    if (i_enable && (w_write_rdy > 0) && (r_write_act == 0)) begin
       if (w_write_rdy[0]) begin
         r_write_act[0]    <=  1;
       end
@@ -357,9 +299,8 @@ always @ (posedge clk) begin
         r_font_width_count    <=  0;
         r_font_height_count   <=  0;
         //set the frame strobe signal to high
-        if (r_write_act && i_enable) begin
+        if (r_write_act) begin
           r_read_frame_stb    <=  1;
-          r_pixel_width_count <=  0;
           r_pixel_height_count<=  0;
           r_char_width_count  <=  0;
           r_start_frame       <= 1;
@@ -368,6 +309,7 @@ always @ (posedge clk) begin
       end
       WRITE_LINE: begin
         r_char_width_count    <=  0;
+        r_pixel_width_count   <=  0;
         if (r_write_act) begin
           if (w_vertical_padding) begin
             state             <=  WRITE_VERTICAL_PADDING;
@@ -380,14 +322,12 @@ always @ (posedge clk) begin
       WRITE_VERTICAL_PADDING: begin
         if (r_pixel_width_count < IMAGE_WIDTH) begin
           r_pixel_count       <=  r_pixel_count + 1;
-          r_ppfifo_count      <=  r_ppfifo_count + 1;
           r_pixel_width_count <=  r_pixel_width_count + 1;
           r_pixel_data        <=  w_pixel;
           r_write_stb         <=  1;
         end
         else begin
           r_pixel_height_count<=  r_pixel_height_count + 1;
-          r_pixel_width_count <=  0;
           r_write_act         <=  0;
           state               <=  WRITE_LINE;
         end
@@ -395,7 +335,6 @@ always @ (posedge clk) begin
       WRITE_HORIZONTAL_PADDING: begin
         if (w_horizontal_padding) begin
           r_pixel_count       <=  r_pixel_count + 1;
-          r_ppfifo_count      <=  r_ppfifo_count + 1;
           r_pixel_width_count <=  r_pixel_width_count + 1;
           r_pixel_data        <=  w_pixel;
           r_write_stb         <=  1;
@@ -414,7 +353,6 @@ always @ (posedge clk) begin
         end
       end
       PROCESS_CHAR_START: begin
-        r_ppfifo_count        <=  r_ppfifo_count + 1;
         r_pixel_count         <=  r_pixel_count + 1;
         r_pixel_width_count   <=  r_pixel_width_count + 1;
         r_pixel_data          <=  w_pixel;
@@ -426,7 +364,6 @@ always @ (posedge clk) begin
         if (r_font_width_count < (FONT_WIDTH_ADJ - 1)) begin
           r_write_stb         <=  1;
           r_pixel_data        <=  w_pixel;
-          r_ppfifo_count      <=  r_ppfifo_count + 1;
           r_pixel_count       <=  r_pixel_count + 1;
           r_font_width_count  <=  r_font_width_count + 1;
           r_pixel_width_count <=  r_pixel_width_count + 1;

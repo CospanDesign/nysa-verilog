@@ -55,10 +55,9 @@ module adapter_ppfifo_2_axi_stream #(
   input       [23:0]                            i_total_out_size,
 
   input                                         i_axi_clk,
-  output      [3: 0]                            o_axi_user,
+  output      [3:0]                             o_axi_user,
   input                                         i_axi_ready,
   output      [DATA_WIDTH - 1:0]                o_axi_data,
-  output      [STROBE_WIDTH - 1:0]              o_axi_keep,
   output                                        o_axi_last,
   output  reg                                   o_axi_valid
 );
@@ -78,17 +77,14 @@ wire    [23:0]              w_total_out_size;
 
 //submodules
 //asynchronous logic
-assign  o_axi_keep      = ((1 << STROBE_WIDTH) - 1);
 assign  o_axi_data      = i_ppfifo_data;
 assign  o_ppfifo_stb    = (i_axi_ready & o_axi_valid);
 assign  w_total_out_size  = i_ppfifo_size;
 
 generate
   if (MAP_PPFIFO_TO_USER) begin
-    assign  o_axi_user[USER_COUNT - 1: 0] = (r_count < i_ppfifo_size) ? i_ppfifo_data[((DATA_WIDTH + USER_COUNT) - 1): DATA_WIDTH] : w_axi_user_zero;
-    if (USER_COUNT < 4) begin
-      assign  o_axi_user[3:USER_COUNT]    = 0;
-    end
+    assign  o_axi_user[0] = (r_count < i_ppfifo_size) ? i_ppfifo_data[((DATA_WIDTH + USER_COUNT) - 1): DATA_WIDTH] : w_axi_user_zero;
+    assign  o_axi_user[3:1] = 3'h0;
   end
 endgenerate
 

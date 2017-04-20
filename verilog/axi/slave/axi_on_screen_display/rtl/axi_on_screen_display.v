@@ -45,6 +45,18 @@ SOFTWARE.
 `define TAB_COUNT_RANGE           2:0
 
 
+`define BIT_AXIS_RST              0
+`define BIT_RANGE_COSD_STATE      7:4
+`define BIT_PPFIFO_STB            8
+`define BIT_PPFIFO_RDY            9
+`define BIT_PPFIFO_ACT            10
+`define BIT_AXIS_RDY              12
+`define BIT_AXIS_VLD              13
+`define BIT_AXIS_USR              14
+`define BIT_AXIS_LST              15
+`define BIT_RANGE_PCOUNT          31:16
+
+
 //status bit definition
 
 module axi_on_screen_display #(
@@ -182,6 +194,8 @@ reg   [2:0]                     r_tab_count;
 
 reg                             r_cmd_stb;
 reg                             r_char_stb;
+wire  [3:0]                     w_cosd_state;
+wire  [15:0]                    w_pcount;
 
 reg   [31:0]                    r_x_start;
 reg   [31:0]                    r_x_end;
@@ -244,7 +258,7 @@ console_osd #(
   .FONT_HEIGHT        (FONT_HEIGHT          )
 )cosd(
   .clk                (clk                  ),
-  .rst                (rst                  ),
+  .rst                (w_axi_rst            ),
   .i_enable           (r_enable             ),
 
   .i_fg_color         (r_fg_color           ),
@@ -275,8 +289,11 @@ console_osd #(
   .i_ppfifo_act       (wfifo_act            ),
   .o_ppfifo_size      (wfifo_size           ),
   .o_ppfifo_data      (wfifo_data           ),
-  .i_ppfifo_stb       (wfifo_stb            )
+  .i_ppfifo_stb       (wfifo_stb            ),
 
+  //Debug Signals
+  .o_state            (w_cosd_state         ),
+  .o_pixel_count      (w_pcount             )
 );
 
 
@@ -308,10 +325,6 @@ adapter_ppfifo_2_axi_stream #(
 
 
 //Asynchronous Logic
-//assign        r_enable                = control[`BIT_CTRL_EN];
-
-assign        status[31:0]            = 0;
-
 assign        w_axi_rst               = (INVERT_AXI_RESET)   ? ~rst         : rst;
 assign        w_axis_rst              = (INVERT_AXIS_RESET)  ? ~i_axis_rst  : i_axis_rst;
 
@@ -329,6 +342,8 @@ always @ (posedge clk) begin
   r_scroll_down_stb                       <=  0;
 
   if (w_axi_rst) begin
+    r_enable                              <=  0;
+    r_scroll_en                           <=  0;
     r_reg_out_data                        <=  0;
     r_image_width                         <=  IMAGE_WIDTH;
     r_image_height                        <=  IMAGE_HEIGHT;
@@ -337,8 +352,6 @@ always @ (posedge clk) begin
     r_x_end                               <=  DEFAULT_X_END;
     r_y_start                             <=  DEFAULT_Y_START;
     r_y_end                               <=  DEFAULT_Y_END;
-    r_enable                              <=  0;
-    r_scroll_en                           <=  0;
     r_fg_color                            <=  FOREGROUND_COLOR;
     r_bg_color                            <=  BACKGROUND_COLOR;
     r_tab_count                           <=  DEFAULT_TAB_COUNT;
@@ -415,7 +428,17 @@ always @ (posedge clk) begin
           r_reg_out_data[`BIT_CTRL_SCROLL_EN] <= r_scroll_en;
         end
         REG_STATUS: begin
-          r_reg_out_data                  <= status;
+          r_reg_out_data                      <=  0;
+          r_reg_out_data[`BIT_AXIS_RST]       <= w_axis_rst;
+          r_reg_out_data[`BIT_RANGE_COSD_STATE]<= w_cosd_state;
+          r_reg_out_data[`BIT_PPFIFO_STB]     <= wfifo_stb;
+          r_reg_out_data[`BIT_PPFIFO_RDY]     <= wfifo_rdy;
+          r_reg_out_data[`BIT_PPFIFO_ACT]     <= wfifo_act;
+          r_reg_out_data[`BIT_AXIS_RDY]       <= i_axis_ready;
+          r_reg_out_data[`BIT_AXIS_VLD]       <= o_axis_valid;
+          r_reg_out_data[`BIT_AXIS_USR]       <= o_axis_user;
+          r_reg_out_data[`BIT_AXIS_LST]       <= o_axis_last;
+          r_reg_out_data[`BIT_RANGE_PCOUNT]   <= w_pcount;
         end
         REG_IMAGE_WIDTH: begin
           r_reg_out_data                  <= r_image_width;
