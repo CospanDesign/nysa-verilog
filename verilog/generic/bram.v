@@ -28,6 +28,7 @@ SOFTWARE.
  *
  */
 
+`timescale 1ps / 1ps
 
 module bram #(
 parameter DATA_WIDTH        = 32,

@@ -53,11 +53,8 @@ module character_buffer #(
   input       [2:0]         i_tab_count,
   input                     i_char_stb,
   input       [7:0]         i_char,
-  output                    o_busy,
 
   input                     i_read_frame_stb,
-  input                     i_read_char_req_stb,
-
   input                     i_char_req_en,
   output  reg               o_char_rdy,
   output      [7:0]         o_char,
@@ -134,7 +131,6 @@ bram #(
 );
 
 //asynchronous logic
-assign  o_busy        = w_in_busy && w_out_busy;
 assign  w_in_busy     = (in_state != IDLE);
 assign  w_out_busy    = (out_state != IDLE);
 assign  w_buf_full    = (r_write_addr_pos == r_write_addr_end);

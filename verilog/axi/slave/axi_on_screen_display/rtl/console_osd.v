@@ -77,17 +77,11 @@ module console_osd #(
   input                           i_scroll_en,
   input                           i_scroll_up_stb,
   input                           i_scroll_down_stb,
-  input       [31:0]              i_char_x_start,
-  input       [31:0]              i_char_x_end,
-
-  input       [31:0]              i_char_y_start,
-  input       [31:0]              i_char_y_end,
 
   input       [31:0]              i_x_start,
   input       [31:0]              i_x_end,
   input       [31:0]              i_y_start,
   input       [31:0]              i_y_end,
-
 
   //PPFIFO Output
   input                           i_ppfifo_clk,
@@ -213,11 +207,8 @@ character_buffer#(
   .i_tab_count          (i_tab_count          ),
   .i_char_stb           (i_char_stb           ),
   .i_char               (i_char               ),
-  .o_busy               (o_busy               ),
 
   .i_read_frame_stb     (r_read_frame_stb     ),
-  .i_read_char_req_stb  (i_read_char_req_stb  ),
-
   .i_char_req_en        (r_char_req_en        ),
   .o_char_rdy           (w_char_rdy           ),
   .o_char               (w_char               ),

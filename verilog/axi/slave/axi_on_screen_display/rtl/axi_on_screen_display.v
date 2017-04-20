@@ -296,6 +296,7 @@ adapter_ppfifo_2_axi_stream #(
   .o_axi_data         (o_axis_data          ),
   .o_axi_last         (o_axis_last          ),
   .o_axi_valid        (o_axis_valid         ),
+  .o_axi_user         (o_axis_user          ),
 
   //Ping Pong FIFO Write Controller
   .i_ppfifo_rdy       (wfifo_rdy            ),
