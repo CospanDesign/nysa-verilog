@@ -38,9 +38,7 @@ SOFTWARE.
 module adapter_ppfifo_2_axi_stream #(
   parameter                                     DATA_WIDTH          = 32,
   parameter                                     STROBE_WIDTH        = DATA_WIDTH / 8,
-  parameter                                     USE_KEEP            = 0,
-  parameter                                     MAP_PPFIFO_TO_USER  = 1,
-  parameter                                     USER_COUNT          = 1
+  parameter                                     USE_KEEP            = 0
 )(
   input                                         rst,
 
@@ -48,18 +46,19 @@ module adapter_ppfifo_2_axi_stream #(
   input                                         i_ppfifo_rdy,
   output  reg                                   o_ppfifo_act,
   input       [23:0]                            i_ppfifo_size,
-  input       [(DATA_WIDTH + USER_COUNT) - 1:0] i_ppfifo_data,
+  input       [(DATA_WIDTH + 1) - 1:0]          i_ppfifo_data,
   output                                        o_ppfifo_stb,
 
   //AXI Stream Output
-  input       [23:0]                            i_total_out_size,
 
   input                                         i_axi_clk,
   output      [3:0]                             o_axi_user,
   input                                         i_axi_ready,
   output      [DATA_WIDTH - 1:0]                o_axi_data,
   output                                        o_axi_last,
-  output  reg                                   o_axi_valid
+  output  reg                                   o_axi_valid,
+
+  output      [31:0]                            o_debug
 );
 
 //local parameters
@@ -70,38 +69,36 @@ localparam      RELEASE     = 2;
 //registes/wires
 reg     [3:0]               state;
 reg     [23:0]              r_count;
-reg     [23:0]              r_total_count;
-
-wire    [USER_COUNT - 1: 0] w_axi_user_zero = 0;
-wire    [23:0]              w_total_out_size;
 
 //submodules
 //asynchronous logic
-assign  o_axi_data      = i_ppfifo_data;
+assign  o_axi_data      = i_ppfifo_data[DATA_WIDTH - 1: 0];
 assign  o_ppfifo_stb    = (i_axi_ready & o_axi_valid);
-assign  w_total_out_size  = i_ppfifo_size;
 
-generate
-  if (MAP_PPFIFO_TO_USER) begin
-    assign  o_axi_user[0] = (r_count < i_ppfifo_size) ? i_ppfifo_data[((DATA_WIDTH + USER_COUNT) - 1): DATA_WIDTH] : w_axi_user_zero;
-    assign  o_axi_user[3:1] = 3'h0;
-  end
-endgenerate
+assign  o_axi_user[0]   = (r_count < i_ppfifo_size) ? i_ppfifo_data[DATA_WIDTH] : 1'b0;
+assign  o_axi_user[3:1] = 3'h0;
 
-assign  o_axi_last      = ((r_total_count + 1) >= w_total_out_size) & o_ppfifo_act  & o_axi_valid;
+assign  o_axi_last      = ((r_count + 1) >= i_ppfifo_size) & o_ppfifo_act  & o_axi_valid;
 //synchronous logic
 
+assign  o_debug[3:0]    = state;
+assign  o_debug[4]      = (r_count < i_ppfifo_size) ? i_ppfifo_data[DATA_WIDTH]: 1'b0;
+assign  o_debug[5]      = o_ppfifo_act;
+assign  o_debug[6]      = i_ppfifo_rdy;
+assign  o_debug[7]      = (r_count > 0);
+assign  o_debug[8]      = (i_ppfifo_size > 0);
+assign  o_debug[9]      = (r_count == i_ppfifo_size);
+assign  o_debug[15:10]  = 0;
+assign  o_debug[23:16]  = r_count[7:0];
+assign  o_debug[31:24]  = 0;
+
 always @ (posedge i_axi_clk) begin
-  //o_ppfifo_stb          <=  0;
   o_axi_valid           <=  0;
-  //o_axi_last            <=  0;
 
   if (rst) begin
     state               <=  IDLE;
-    //o_axi_data          <=  0;
     o_ppfifo_act        <=  0;
     r_count             <=  0;
-    r_total_count       <=  0;
   end
   else begin
     case (state)
@@ -134,12 +131,6 @@ always @ (posedge i_axi_clk) begin
       default: begin
       end
     endcase
-    if (o_axi_valid && i_axi_ready) begin
-      r_total_count         <=  r_total_count + 1;
-    end
-    if (o_axi_last) begin
-      r_total_count         <=  0;
-    end
   end
 end
 

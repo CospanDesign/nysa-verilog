@@ -122,7 +122,9 @@ reg         [7:0]                     r_char;
 reg                                   r_char_req_en;
 wire        [PIXEL_WIDTH:0]           w_write_data;
 
+
 reg                                   r_start_frame;
+wire                                  w_start_frame;
 reg         [PIXEL_WIDTH - 1: 0]      r_pixel_data;
 
 reg         [31:0]                    r_pixel_count;
@@ -158,6 +160,7 @@ wire        [31: 0]  w_dbg_font_height_adj = FONT_HEIGHT_ADJ;
 
 //****************************************************************************
 
+assign  o_pixel_count       = r_pixel_count[15:0];
 assign  w_valid_char_pixel  = (r_pixel_width_count  >= i_x_start)  && (r_pixel_width_count  <= i_x_end) &&
                               (r_pixel_height_count >= i_y_start)  && (r_pixel_height_count <= i_y_end);
 
@@ -239,6 +242,7 @@ bram #(
 //asynchronous logic
 
 assign  w_write_data = {r_start_frame, r_pixel_data};
+assign  w_start_frame = (r_pixel_count == 0);
 
 generate
 genvar y;
@@ -265,14 +269,14 @@ assign  w_pixel               = (!w_valid_char_pixel) ? i_bg_color:
 
 //Construct a frame one line at a time.
 always @ (posedge clk) begin
-  r_write_stb       <=  0;
-  r_read_frame_stb  <=  0;
+  r_write_stb           <=  0;
+  r_read_frame_stb      <=  0;
   if (rst) begin
-    state           <=  IDLE;
-    r_write_act     <=  2'b00;
-    r_start_frame   <=  0;
-    r_pixel_data    <=  0;
-    r_pixel_count   <=  0;
+    state               <=  IDLE;
+    r_write_act         <=  2'b00;
+    r_start_frame       <=  0;
+    r_pixel_data        <=  0;
+    r_pixel_count       <=  0;
 
     r_font_width_count  <=  0;
     r_font_height_count <=  0;
@@ -303,7 +307,7 @@ always @ (posedge clk) begin
           r_read_frame_stb    <=  1;
           r_pixel_height_count<=  0;
           r_char_width_count  <=  0;
-          r_start_frame       <= 1;
+          //r_start_frame       <=  1;
           state               <=  WRITE_LINE;
         end
       end
@@ -317,6 +321,9 @@ always @ (posedge clk) begin
           else begin
             state             <=  WRITE_HORIZONTAL_PADDING;
           end
+        end
+        else if (!i_enable) begin
+          state               <=  IDLE;
         end
       end
       WRITE_VERTICAL_PADDING: begin
@@ -392,9 +399,10 @@ always @ (posedge clk) begin
         end
       end
     endcase
-    if (r_write_stb && r_start_frame) begin
-      r_start_frame       <=  0;
-    end
+    r_start_frame               <=  w_start_frame;
+//    if ((r_pixel_count > 0) && r_start_frame) begin
+//      r_start_frame       <=  0;
+//    end
   end
 end
 

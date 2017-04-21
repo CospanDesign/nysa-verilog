@@ -14,46 +14,46 @@ module tb_cocotb #(
   parameter PIXEL_WIDTH         = 24
 )(
 
-input                                    clk,
-input                                    rst,
-                                         
-//Write Address Channel                  
-input                                    AXIML_AWVALID,
-input       [ADDR_WIDTH - 1: 0]          AXIML_AWADDR,
-output                                   AXIML_AWREADY,
-                                         
-//Write Data Channel                     
-input                                    AXIML_WVALID,
-output                                   AXIML_WREADY,
-input       [STROBE_WIDTH - 1:0]         AXIML_WSTRB,
-input       [DATA_WIDTH - 1: 0]          AXIML_WDATA,
-                                         
-//Write Response Channel                 
-output                                   AXIML_BVALID,
-input                                    AXIML_BREADY,
-output      [1:0]                        AXIML_BRESP,
-                                         
-//Read Address Channel                   
-input                                    AXIML_ARVALID,
-output                                   AXIML_ARREADY,
-input       [ADDR_WIDTH - 1: 0]          AXIML_ARADDR,
-                                         
-//Read Data Channel                      
-output                                   AXIML_RVALID,
-input                                    AXIML_RREADY,
-output      [1:0]                        AXIML_RRESP,
-output      [DATA_WIDTH - 1: 0]          AXIML_RDATA,
-                                         
-                                         
-output      [AXIS_WIDTH - 1:0]           AXISS_TDATA,
-input                                    AXISS_TREADY,
-output                                   AXISS_TVALID,
-output                                   AXISS_TLAST,
-output      [AXIS_STROBE_WIDTH - 1: 0]   AXISS_TKEEP,
-output      [AXIS_STROBE_WIDTH - 1: 0]   AXISS_TSTRB,
-output      [3:0]                        AXISS_TID,
-output      [31:0]                       AXISS_TDEST,
-output      [3:0]                        AXISS_TUSER
+input                                   clk,
+input                                   rst,
+
+//Write Address Channel
+input                                   AXIML_AWVALID,
+input       [ADDR_WIDTH - 1: 0]         AXIML_AWADDR,
+output                                  AXIML_AWREADY,
+
+//Write Data Channel
+input                                   AXIML_WVALID,
+output                                  AXIML_WREADY,
+input       [STROBE_WIDTH - 1:0]        AXIML_WSTRB,
+input       [DATA_WIDTH - 1: 0]         AXIML_WDATA,
+
+//Write Response Channel
+output                                  AXIML_BVALID,
+input                                   AXIML_BREADY,
+output      [1:0]                       AXIML_BRESP,
+
+//Read Address Channel
+input                                   AXIML_ARVALID,
+output                                  AXIML_ARREADY,
+input       [ADDR_WIDTH - 1: 0]         AXIML_ARADDR,
+
+//Read Data Channel
+output                                  AXIML_RVALID,
+input                                   AXIML_RREADY,
+output      [1:0]                       AXIML_RRESP,
+output      [DATA_WIDTH - 1: 0]         AXIML_RDATA,
+
+
+output      [AXIS_WIDTH - 1:0]          AXISS_TDATA,
+input                                   AXISS_TREADY,
+output                                  AXISS_TVALID,
+output                                  AXISS_TLAST,
+output      [AXIS_STROBE_WIDTH - 1: 0]  AXISS_TKEEP,
+output      [AXIS_STROBE_WIDTH - 1: 0]  AXISS_TSTRB,
+output      [3:0]                       AXISS_TID,
+output      [31:0]                      AXISS_TDEST,
+output      [3:0]                       AXISS_TUSER
 
 );
 

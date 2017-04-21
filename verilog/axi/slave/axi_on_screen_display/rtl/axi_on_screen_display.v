@@ -25,7 +25,7 @@ SOFTWARE.
 `timescale 1ps / 1ps
 
 `define MAJOR_VERSION             1
-`define MINOR_VERSION             0
+`define MINOR_VERSION             1
 `define REVISION                  0
 
 `define BIT_CTRL_EN               0
@@ -143,7 +143,8 @@ localparam                  REG_X_START         = 10;
 localparam                  REG_X_END           = 11;
 localparam                  REG_Y_START         = 12;
 localparam                  REG_Y_END           = 13;
-localparam                  REG_VERSION         = 14;
+localparam                  REG_ADAPTER_DEBUG   = 14;
+localparam                  REG_VERSION         = 15;
 
 //Reg/Wire
 
@@ -170,6 +171,7 @@ wire                            wfifo_rdy;
 wire                            wfifo_act;
 wire                            wfifo_stb;
 wire        [AXIS_WIDTH:0]      wfifo_data;
+wire        [31:0]              w_adapter_debug;
 
 //Simple User Interface
 wire [ADDR_WIDTH - 1: 0]        w_reg_address;
@@ -299,13 +301,9 @@ console_osd #(
 
 //Take in an AXI video stream and output the data into a PPFIFO
 adapter_ppfifo_2_axi_stream #(
-  .DATA_WIDTH           (AXIS_WIDTH         ),
-  .MAP_PPFIFO_TO_USER   (1                  ),
-  .USER_COUNT           (1                  )
+  .DATA_WIDTH         (AXIS_WIDTH           )
 ) as2p (
-  .rst                (w_axis_rst           ),
-
-  .i_total_out_size   (24'h0                ),
+  .rst                (w_axis_rst || !r_enable  ),
 
   //AXI Stream Input
   .i_axi_clk          (i_axis_clk           ),
@@ -320,7 +318,9 @@ adapter_ppfifo_2_axi_stream #(
   .o_ppfifo_act       (wfifo_act            ),
   .i_ppfifo_size      (wfifo_size           ),
   .o_ppfifo_stb       (wfifo_stb            ),
-  .i_ppfifo_data      (wfifo_data           )
+  .i_ppfifo_data      (wfifo_data           ),
+
+  .o_debug            (w_adapter_debug      )
 );
 
 
@@ -436,7 +436,7 @@ always @ (posedge clk) begin
           r_reg_out_data[`BIT_PPFIFO_ACT]     <= wfifo_act;
           r_reg_out_data[`BIT_AXIS_RDY]       <= i_axis_ready;
           r_reg_out_data[`BIT_AXIS_VLD]       <= o_axis_valid;
-          r_reg_out_data[`BIT_AXIS_USR]       <= o_axis_user;
+          r_reg_out_data[`BIT_AXIS_USR]       <= o_axis_user[0];
           r_reg_out_data[`BIT_AXIS_LST]       <= o_axis_last;
           r_reg_out_data[`BIT_RANGE_PCOUNT]   <= w_pcount;
         end
@@ -473,14 +473,17 @@ always @ (posedge clk) begin
         REG_Y_END: begin
           r_reg_out_data                  <= r_y_end;
         end
+        REG_TAB_COUNT: begin
+          r_reg_out_data[`TAB_COUNT_RANGE]<= r_tab_count;
+        end
+        REG_ADAPTER_DEBUG: begin
+          r_reg_out_data                  <=  w_adapter_debug;
+        end
         REG_VERSION: begin
           r_reg_out_data                  <= 32'h00;
           r_reg_out_data[`MAJOR_RANGE]    <= `MAJOR_VERSION;
           r_reg_out_data[`MINOR_RANGE]    <= `MINOR_VERSION;
           r_reg_out_data[`REVISION_RANGE] <= `REVISION;
-        end
-        REG_TAB_COUNT: begin
-          r_reg_out_data[`TAB_COUNT_RANGE]<= r_tab_count;
         end
         default: begin
           r_reg_out_data                  <= 32'h00;

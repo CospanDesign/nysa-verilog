@@ -82,6 +82,9 @@ wire              w_reset_n;
 reg   [7:0]       r_read_data;
 
 reg   [15:0]      r_write_parameter;
+wire  [3:0]       w_axis_user;
+
+assign  w_axis_user = {3'h0, i_fsync};
 
 
 
@@ -99,7 +102,6 @@ axi_pmod_tft #(
   .clk                (clk              ),
   .rst                (r_rst            ),
 
-  .i_fsync            (i_fsync          ),
 
   //AXI Lite Interface
   .i_awvalid          (AXIML_AWVALID    ),
@@ -131,10 +133,13 @@ axi_pmod_tft #(
   //AXI Stream
   .i_axis_clk         (clk              ),
   .i_axis_rst         (r_rst            ),
-  .o_axis_ready       (AXIMS_TREADY      ),
-  .i_axis_data        (AXIMS_TDATA       ),
-  .i_axis_last        (AXIMS_TLAST       ),
-  .i_axis_valid       (AXIMS_TVALID      ),
+  .o_axis_ready       (AXIMS_TREADY     ),
+  .i_axis_data        (AXIMS_TDATA      ),
+  .i_axis_last        (AXIMS_TLAST      ),
+  .i_axis_valid       (AXIMS_TVALID     ),
+  //.i_fsync            (i_fsync          ),
+  .i_axis_user        (w_axis_user      ),
+
 
 
   //Physical Signals
