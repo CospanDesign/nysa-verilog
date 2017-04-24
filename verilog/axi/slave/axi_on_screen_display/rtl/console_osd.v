@@ -77,20 +77,21 @@ module console_osd #(
   input                           i_scroll_en,
   input                           i_scroll_up_stb,
   input                           i_scroll_down_stb,
-
+  
   input       [31:0]              i_x_start,
   input       [31:0]              i_x_end,
   input       [31:0]              i_y_start,
   input       [31:0]              i_y_end,
+  input       [31:0]              i_vblank_count,
 
   //PPFIFO Output
   input                           i_ppfifo_clk,
   input                           i_ppfifo_rst,
-  output                          o_ppfifo_rdy,
-  input                           i_ppfifo_act,
-  output    [23:0]                o_ppfifo_size,
-  output    [PIXEL_WIDTH: 0]      o_ppfifo_data,  //Add an extra bit to communicate start of frame
-  input                           i_ppfifo_stb,
+  (* KEEP *) output                          o_ppfifo_rdy,
+  (* KEEP *) input                           i_ppfifo_act,
+  (* KEEP *) output    [23:0]                o_ppfifo_size,
+  (* KEEP *) output    [PIXEL_WIDTH: 0]      o_ppfifo_data,  //Add an extra bit to communicate start of frame
+  (* KEEP *) input                           i_ppfifo_stb,
   output    [3:0]                 o_state,
   output    [15:0]                o_pixel_count
 
@@ -103,31 +104,32 @@ localparam    WRITE_HORIZONTAL_PADDING= 3;
 localparam    GET_CHAR                = 4;
 localparam    PROCESS_CHAR_START      = 5;
 localparam    PROCESS_CHAR            = 6;
+localparam    VBLANK                  = 7;
 
 localparam    FONT_WIDTH_ADJ          = FONT_WIDTH + 1;
 localparam    FONT_HEIGHT_ADJ         = FONT_HEIGHT + 1;
 localparam    FONT_SIZE               = FONT_WIDTH * FONT_HEIGHT_ADJ;
-localparam    CHAR_IMAGE_SIZE         = CHAR_IMAGE_WIDTH * CHAR_IMAGE_HEIGHT;
 localparam    CHAR_IMAGE_WIDTH        = IMAGE_WIDTH / FONT_WIDTH_ADJ;
 localparam    CHAR_IMAGE_HEIGHT       = IMAGE_HEIGHT / FONT_HEIGHT_ADJ;
+localparam    CHAR_IMAGE_SIZE         = CHAR_IMAGE_WIDTH * CHAR_IMAGE_HEIGHT;
 
 //registes/wires
-reg         [3:0]                     state;
+(* KEEP *) reg         [3:0]                     state;
 
-wire        [1:0]                     w_write_rdy;
-reg         [1:0]                     r_write_act;
-wire        [23:0]                    w_write_size;
-reg                                   r_write_stb;
+(* KEEP *) wire        [1:0]                     w_write_rdy;
+(* KEEP *) reg         [1:0]                     r_write_act;
+(* KEEP *) wire        [23:0]                    w_write_size;
+(* KEEP *) reg                                   r_write_stb;
 reg         [7:0]                     r_char;
 reg                                   r_char_req_en;
-wire        [PIXEL_WIDTH:0]           w_write_data;
+(* KEEP *) wire        [PIXEL_WIDTH:0]           w_write_data;
 
 
-reg                                   r_start_frame;
+(* KEEP *) reg                                   r_start_frame;
 wire                                  w_start_frame;
 reg         [PIXEL_WIDTH - 1: 0]      r_pixel_data;
 
-reg         [31:0]                    r_pixel_count;
+(* KEEP *) reg         [31:0]                    r_pixel_count;
 reg         [23:0]                    r_pixel_width_count;
 reg         [23:0]                    r_pixel_height_count;
 
@@ -148,7 +150,8 @@ reg                                   r_read_frame_stb;
 
 //XXX Need to figure this out
 wire                                  w_valid_char_pixel;
-
+//wire                                  w_inactive;
+wire                                  w_starved;
 
 
 //*************** DEBUG ******************************************************
@@ -185,6 +188,7 @@ ppfifo #(
   .write_fifo_size      (w_write_size         ),
   .write_strobe         (r_write_stb          ),
   .write_data           (w_write_data         ),
+  .starved              (w_starved            ),
 
   //read
   .read_clock           (i_ppfifo_clk         ),
@@ -193,6 +197,8 @@ ppfifo #(
   .read_activate        (i_ppfifo_act         ),
   .read_count           (o_ppfifo_size        ),
   .read_data            (o_ppfifo_data        )
+  
+//  .inactive             (w_inactive           )
 );
 
 character_buffer#(
@@ -241,8 +247,11 @@ bram #(
 
 //asynchronous logic
 
-assign  w_write_data = {r_start_frame, r_pixel_data};
-assign  w_start_frame = (r_pixel_count == 0);
+//assign  w_write_data = {r_start_frame, r_pixel_data};
+//assign  w_start_frame = (r_pixel_count == 0);
+assign  w_write_data[23:0] = r_pixel_data;
+assign  w_write_data[24] = r_start_frame;
+
 
 generate
 genvar y;
@@ -287,6 +296,7 @@ always @ (posedge clk) begin
     r_pixel_height_count<=  0;
   end
   else begin
+
     //Grab a FIFO
     if (i_enable && (w_write_rdy > 0) && (r_write_act == 0)) begin
       if (w_write_rdy[0]) begin
@@ -302,12 +312,14 @@ always @ (posedge clk) begin
         r_pixel_count         <=  0;
         r_font_width_count    <=  0;
         r_font_height_count   <=  0;
+        r_start_frame         <=  0;
         //set the frame strobe signal to high
-        if (r_write_act) begin
+//        if (r_write_act && w_inactive) begin
+        if (r_write_act && w_starved) begin          
           r_read_frame_stb    <=  1;
           r_pixel_height_count<=  0;
           r_char_width_count  <=  0;
-          //r_start_frame       <=  1;
+          r_start_frame       <=  1;
           state               <=  WRITE_LINE;
         end
       end
@@ -332,6 +344,12 @@ always @ (posedge clk) begin
           r_pixel_width_count <=  r_pixel_width_count + 1;
           r_pixel_data        <=  w_pixel;
           r_write_stb         <=  1;
+        end
+        else if (r_pixel_count >= IMAGE_SIZE) begin
+          //Finished sending image
+          r_write_act         <=  0;     
+          r_pixel_count       <=  0;     
+          state               <=  VBLANK;
         end
         else begin
           r_pixel_height_count<=  r_pixel_height_count + 1;
@@ -384,11 +402,8 @@ always @ (posedge clk) begin
             r_font_height_count <= 0;
           end
 
-          if (r_pixel_count >= IMAGE_SIZE) begin
-            //Finished sending image
-            state               <=  IDLE;
-          end
-          else if (r_char_width_count >= (CHAR_IMAGE_WIDTH - 1)) begin
+
+          if (r_char_width_count >= (CHAR_IMAGE_WIDTH - 1)) begin
             state               <=  WRITE_VERTICAL_PADDING;
           end
           else begin
@@ -398,11 +413,20 @@ always @ (posedge clk) begin
           end
         end
       end
+      VBLANK: begin
+        if (r_pixel_count < i_vblank_count) begin
+            r_pixel_count <= r_pixel_count + 1;
+        end
+        else begin
+            state           <=  IDLE;
+        end
+      end
     endcase
-    r_start_frame               <=  w_start_frame;
-//    if ((r_pixel_count > 0) && r_start_frame) begin
-//      r_start_frame       <=  0;
-//    end
+    
+
+    if ((r_write_stb == 1) && r_start_frame) begin
+      r_start_frame       <=  0;
+    end
   end
 end
 

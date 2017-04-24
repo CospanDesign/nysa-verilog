@@ -67,12 +67,14 @@ localparam      WAIT_FOR_FRAME        = 1;
 localparam      READ_FRAME            = 2;
 localparam      WAIT_FOR_END_TEAR     = 3;
 
+localparam      TEAR_WINDOW_COUNT     = 100;
+
 //registes/wires
 wire                        clk;  //Convenience Signal
 reg           [3:0]         state;
 reg           [23:0]        r_count;
 reg                         r_last;
-reg           [31:0]        r_pixel_count;
+(* KEEP *) reg           [31:0]        r_pixel_count;
 reg                         r_prev_tear;
 reg                         r_pos_edge_tear;
 //submodules
@@ -115,6 +117,7 @@ always @ (posedge clk) begin
       WAIT_FOR_TEAR_EFFECT: begin
         if (r_pos_edge_tear) begin
           r_pos_edge_tear                     <=  0;
+          r_pixel_count                       <=  0;
           state                               <=  WAIT_FOR_FRAME;
         end
       end
@@ -122,6 +125,13 @@ always @ (posedge clk) begin
         r_pixel_count                         <=  0;
         if (i_fsync) begin
           state                               <= READ_FRAME;
+          r_pixel_count                       <= 0;
+        end
+        else if (r_pixel_count < TEAR_WINDOW_COUNT) begin
+          r_pixel_count                       <= r_pixel_count + 1;
+        end
+        else begin
+          state                               <= WAIT_FOR_TEAR_EFFECT;  
         end
       end
       READ_FRAME: begin

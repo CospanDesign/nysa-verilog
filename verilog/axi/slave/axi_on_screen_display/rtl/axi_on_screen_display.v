@@ -69,7 +69,7 @@ module axi_on_screen_display #(
   parameter                           INVERT_AXIS_RESET   = 1,
   parameter                           IMAGE_WIDTH         = 480,
   parameter                           IMAGE_HEIGHT        = 272,
-  parameter                           BUFFER_DEPTH        = 8,
+  parameter                           BUFFER_DEPTH        = 9,
   parameter                           PIXEL_WIDTH         = 24,
   parameter                           FOREGROUND_COLOR    = 24'hFFFFFF,
   parameter                           BACKGROUND_COLOR    = 24'h000000,
@@ -79,7 +79,8 @@ module axi_on_screen_display #(
   parameter                           DEFAULT_X_START     = 0,
   parameter                           DEFAULT_X_END       = IMAGE_WIDTH,
   parameter                           DEFAULT_Y_START     = 0,
-  parameter                           DEFAULT_Y_END       = IMAGE_HEIGHT
+  parameter                           DEFAULT_Y_END       = IMAGE_HEIGHT,
+  parameter                           DEFAULT_VBLANK_COUNT= 200
 )(
   input                               clk,
   input                               rst,
@@ -144,7 +145,8 @@ localparam                  REG_X_END           = 11;
 localparam                  REG_Y_START         = 12;
 localparam                  REG_Y_END           = 13;
 localparam                  REG_ADAPTER_DEBUG   = 14;
-localparam                  REG_VERSION         = 15;
+localparam                  REG_VBLANK_COUNTER  = 15;
+localparam                  REG_VERSION         = 16;
 
 //Reg/Wire
 
@@ -163,6 +165,7 @@ reg         [31:0]              r_image_height;
 reg         [31:0]              r_image_size;
 reg         [31:0]              r_console_command;
 reg         [7:0]               r_char_data;
+reg         [31:0]              r_vblank_count;
 
 //status
 
@@ -292,6 +295,8 @@ console_osd #(
   .o_ppfifo_size      (wfifo_size           ),
   .o_ppfifo_data      (wfifo_data           ),
   .i_ppfifo_stb       (wfifo_stb            ),
+  
+  .i_vblank_count     (r_vblank_count       ),
 
   //Debug Signals
   .o_state            (w_cosd_state         ),
@@ -303,7 +308,7 @@ console_osd #(
 adapter_ppfifo_2_axi_stream #(
   .DATA_WIDTH         (AXIS_WIDTH           )
 ) as2p (
-  .rst                (w_axis_rst || !r_enable  ),
+  .rst                (w_axis_rst           ),
 
   //AXI Stream Input
   .i_axi_clk          (i_axis_clk           ),
@@ -355,6 +360,7 @@ always @ (posedge clk) begin
     r_fg_color                            <=  FOREGROUND_COLOR;
     r_bg_color                            <=  BACKGROUND_COLOR;
     r_tab_count                           <=  DEFAULT_TAB_COUNT;
+    r_vblank_count                        <=  DEFAULT_VBLANK_COUNT;
     r_char_data                           <=  0;
     r_console_command                     <=  0;
   end
@@ -406,10 +412,13 @@ always @ (posedge clk) begin
           r_y_start                       <= w_reg_in_data;
         end
         REG_Y_END: begin
-          r_y_end                        <= w_reg_in_data;
+          r_y_end                         <= w_reg_in_data;
         end
         REG_TAB_COUNT: begin
           r_tab_count                     <= w_reg_in_data[`TAB_COUNT_RANGE];
+        end
+        REG_VBLANK_COUNTER: begin
+          r_vblank_count                  <= w_reg_in_data;
         end
         default: begin
         end
@@ -479,6 +488,9 @@ always @ (posedge clk) begin
         REG_ADAPTER_DEBUG: begin
           r_reg_out_data                  <=  w_adapter_debug;
         end
+        REG_VBLANK_COUNTER: begin
+          r_reg_out_data                  <=  r_vblank_count;
+        end        
         REG_VERSION: begin
           r_reg_out_data                  <= 32'h00;
           r_reg_out_data[`MAJOR_RANGE]    <= `MAJOR_VERSION;
