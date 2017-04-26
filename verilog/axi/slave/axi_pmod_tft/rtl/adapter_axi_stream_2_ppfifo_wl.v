@@ -74,7 +74,7 @@ wire                        clk;  //Convenience Signal
 reg           [3:0]         state;
 reg           [23:0]        r_count;
 reg                         r_last;
-(* KEEP *) reg           [31:0]        r_pixel_count;
+reg           [31:0]        r_pixel_count;
 reg                         r_prev_tear;
 reg                         r_pos_edge_tear;
 //submodules

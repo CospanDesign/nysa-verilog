@@ -77,21 +77,20 @@ module console_osd #(
   input                           i_scroll_en,
   input                           i_scroll_up_stb,
   input                           i_scroll_down_stb,
-  
+
   input       [31:0]              i_x_start,
   input       [31:0]              i_x_end,
   input       [31:0]              i_y_start,
   input       [31:0]              i_y_end,
-  input       [31:0]              i_vblank_count,
 
   //PPFIFO Output
   input                           i_ppfifo_clk,
   input                           i_ppfifo_rst,
-  (* KEEP *) output                          o_ppfifo_rdy,
-  (* KEEP *) input                           i_ppfifo_act,
-  (* KEEP *) output    [23:0]                o_ppfifo_size,
-  (* KEEP *) output    [PIXEL_WIDTH: 0]      o_ppfifo_data,  //Add an extra bit to communicate start of frame
-  (* KEEP *) input                           i_ppfifo_stb,
+  output                          o_ppfifo_rdy,
+  input                           i_ppfifo_act,
+  output    [23:0]                o_ppfifo_size,
+  output    [PIXEL_WIDTH: 0]      o_ppfifo_data,  //Add an extra bit to communicate start of frame
+  input                           i_ppfifo_stb,
   output    [3:0]                 o_state,
   output    [15:0]                o_pixel_count
 
@@ -102,9 +101,9 @@ localparam    WRITE_LINE              = 1;
 localparam    WRITE_VERTICAL_PADDING  = 2;
 localparam    WRITE_HORIZONTAL_PADDING= 3;
 localparam    GET_CHAR                = 4;
-localparam    PROCESS_CHAR_START      = 5;
-localparam    PROCESS_CHAR            = 6;
-localparam    VBLANK                  = 7;
+localparam    FONT_MEM_READ_DELAY     = 5;
+localparam    PROCESS_CHAR_START      = 6;
+localparam    PROCESS_CHAR            = 7;
 
 localparam    FONT_WIDTH_ADJ          = FONT_WIDTH + 1;
 localparam    FONT_HEIGHT_ADJ         = FONT_HEIGHT + 1;
@@ -114,22 +113,22 @@ localparam    CHAR_IMAGE_HEIGHT       = IMAGE_HEIGHT / FONT_HEIGHT_ADJ;
 localparam    CHAR_IMAGE_SIZE         = CHAR_IMAGE_WIDTH * CHAR_IMAGE_HEIGHT;
 
 //registes/wires
-(* KEEP *) reg         [3:0]                     state;
+reg         [3:0]                     state;
 
-(* KEEP *) wire        [1:0]                     w_write_rdy;
-(* KEEP *) reg         [1:0]                     r_write_act;
-(* KEEP *) wire        [23:0]                    w_write_size;
-(* KEEP *) reg                                   r_write_stb;
+wire        [1:0]                     w_write_rdy;
+reg         [1:0]                     r_write_act;
+wire        [23:0]                    w_write_size;
+reg                                   r_write_stb;
 reg         [7:0]                     r_char;
 reg                                   r_char_req_en;
-(* KEEP *) wire        [PIXEL_WIDTH:0]           w_write_data;
+wire        [PIXEL_WIDTH:0]           w_write_data;
 
 
-(* KEEP *) reg                                   r_start_frame;
+reg                                   r_start_frame;
 wire                                  w_start_frame;
 reg         [PIXEL_WIDTH - 1: 0]      r_pixel_data;
 
-(* KEEP *) reg         [31:0]                    r_pixel_count;
+reg         [31:0]                    r_pixel_count;
 reg         [23:0]                    r_pixel_width_count;
 reg         [23:0]                    r_pixel_height_count;
 
@@ -139,6 +138,10 @@ wire                                  w_horizontal_padding;
 wire        [23:0]                    w_pixel;
 
 wire        [(FONT_WIDTH_ADJ - 1):0]  w_char_data_map[0: ((1 << FONT_HEIGHT_ADJ) - 1)];
+
+
+
+
 wire                                  w_char_rdy;
 wire        [7:0]                     w_char;
 
@@ -160,6 +163,17 @@ wire        [31: 0]  w_dbg_font_width      = FONT_WIDTH;
 wire        [31: 0]  w_dbg_font_width_adj  = FONT_WIDTH_ADJ;
 wire        [31: 0]  w_dbg_font_height     = FONT_HEIGHT;
 wire        [31: 0]  w_dbg_font_height_adj = FONT_HEIGHT_ADJ;
+wire        [31: 0]  w_dbg_image_size      = IMAGE_SIZE;
+
+wire        [5:0]    w_data_line0;
+wire        [5:0]    w_data_line1;
+wire        [5:0]    w_data_line2;
+wire        [5:0]    w_data_line3;
+wire        [5:0]    w_data_line4;
+wire        [5:0]    w_data_line5;
+wire        [5:0]    w_data_line6;
+wire        [5:0]    w_data_line7;
+
 
 //****************************************************************************
 
@@ -197,7 +211,7 @@ ppfifo #(
   .read_activate        (i_ppfifo_act         ),
   .read_count           (o_ppfifo_size        ),
   .read_data            (o_ppfifo_data        )
-  
+
 //  .inactive             (w_inactive           )
 );
 
@@ -260,7 +274,7 @@ genvar x;
 for (y = 0; y < FONT_HEIGHT_ADJ; y = y + 1) begin: FOR_HEIGHT
   for (x = 0; x < (FONT_WIDTH_ADJ); x = x + 1) begin: FOR_WIDTH
     if (x < (FONT_WIDTH)) begin
-      assign  w_char_data_map[y][x] = w_font_data[(x * 8) + y];
+      assign  w_char_data_map[y][(FONT_WIDTH - 1) - x] = w_font_data[(x * 8) + y];
     end
     else begin
       assign  w_char_data_map[y][x] = 0;
@@ -273,6 +287,17 @@ assign  w_pixel               = (!w_valid_char_pixel) ? i_bg_color:
                                   (w_char_data_map[r_font_height_count][r_font_width_count]) ?
                                     i_fg_color :
                                     i_bg_color;
+
+
+//assign  w_dbg_char_data_line0 = w_char_data_mem[0][(FONT_WIDTH_ADJ - 1): 0];
+assign  w_data_line0 = w_char_data_map[0];
+assign  w_data_line1 = w_char_data_map[1];
+assign  w_data_line2 = w_char_data_map[2];
+assign  w_data_line3 = w_char_data_map[3];
+assign  w_data_line4 = w_char_data_map[4];
+assign  w_data_line5 = w_char_data_map[5];
+assign  w_data_line6 = w_char_data_map[6];
+assign  w_data_line7 = w_char_data_map[7];
 
 //synchronous logic
 
@@ -298,7 +323,7 @@ always @ (posedge clk) begin
   else begin
 
     //Grab a FIFO
-    if (i_enable && (w_write_rdy > 0) && (r_write_act == 0)) begin
+    if ((w_write_rdy > 0) && (r_write_act == 0)) begin
       if (w_write_rdy[0]) begin
         r_write_act[0]    <=  1;
       end
@@ -314,8 +339,7 @@ always @ (posedge clk) begin
         r_font_height_count   <=  0;
         r_start_frame         <=  0;
         //set the frame strobe signal to high
-//        if (r_write_act && w_inactive) begin
-        if (r_write_act && w_starved) begin          
+        if (i_enable && r_write_act && w_starved) begin
           r_read_frame_stb    <=  1;
           r_pixel_height_count<=  0;
           r_char_width_count  <=  0;
@@ -327,42 +351,49 @@ always @ (posedge clk) begin
         r_char_width_count    <=  0;
         r_pixel_width_count   <=  0;
         if (r_write_act) begin
-          if (w_vertical_padding) begin
+          if (w_vertical_padding || (r_pixel_count >= IMAGE_SIZE)) begin
             state             <=  WRITE_VERTICAL_PADDING;
           end
           else begin
             state             <=  WRITE_HORIZONTAL_PADDING;
           end
         end
-        else if (!i_enable) begin
-          state               <=  IDLE;
-        end
       end
       WRITE_VERTICAL_PADDING: begin
-        if (r_pixel_width_count < IMAGE_WIDTH) begin
-          r_pixel_count       <=  r_pixel_count + 1;
-          r_pixel_width_count <=  r_pixel_width_count + 1;
-          r_pixel_data        <=  w_pixel;
-          r_write_stb         <=  1;
-        end
-        else if (r_pixel_count >= IMAGE_SIZE) begin
+        if (r_pixel_count >= IMAGE_SIZE) begin
           //Finished sending image
-          r_write_act         <=  0;     
-          r_pixel_count       <=  0;     
-          state               <=  VBLANK;
+          r_write_act         <=  0;
+          r_pixel_count       <=  0;
+          state               <=  IDLE;
         end
-        else begin
+        else if (r_pixel_width_count >= IMAGE_WIDTH) begin
           r_pixel_height_count<=  r_pixel_height_count + 1;
           r_write_act         <=  0;
           state               <=  WRITE_LINE;
         end
-      end
-      WRITE_HORIZONTAL_PADDING: begin
-        if (w_horizontal_padding) begin
+        else begin
           r_pixel_count       <=  r_pixel_count + 1;
           r_pixel_width_count <=  r_pixel_width_count + 1;
           r_pixel_data        <=  w_pixel;
           r_write_stb         <=  1;
+        end
+      end
+      WRITE_HORIZONTAL_PADDING: begin
+        if ((r_pixel_width_count < IMAGE_WIDTH) &&  !w_valid_char_pixel && w_horizontal_padding)begin
+          r_pixel_count       <=  r_pixel_count + 1;
+          r_pixel_width_count <=  r_pixel_width_count + 1;
+          r_pixel_data        <=  w_pixel;
+          r_write_stb         <=  1;
+        end
+        else if (r_pixel_width_count >= IMAGE_WIDTH) begin
+          //Release the FIFO, we reached the end of the line
+          if (r_font_height_count < (FONT_HEIGHT_ADJ - 1)) begin
+            r_font_height_count <= r_font_height_count + 1;
+          end
+          else begin
+            r_font_height_count <= 0;
+          end
+          state               <=  WRITE_LINE;
         end
         else begin
           state               <=  GET_CHAR;
@@ -374,8 +405,12 @@ always @ (posedge clk) begin
         if (w_char_rdy) begin
           r_char_req_en       <=  0;
           r_char              <=  w_char; //Store the character locally
-          state               <=  PROCESS_CHAR_START;
+          //state               <=  PROCESS_CHAR_START;
+          state               <=  FONT_MEM_READ_DELAY;
         end
+      end
+      FONT_MEM_READ_DELAY: begin
+        state                 <=  PROCESS_CHAR_START;
       end
       PROCESS_CHAR_START: begin
         r_pixel_count         <=  r_pixel_count + 1;
@@ -385,8 +420,9 @@ always @ (posedge clk) begin
         state                 <=  PROCESS_CHAR;
       end
       PROCESS_CHAR: begin
-        //Need to read the
+          //Check if we are at the end of a line
         if (r_font_width_count < (FONT_WIDTH_ADJ - 1)) begin
+          //Check if we are at the end of a chcaracter
           r_write_stb         <=  1;
           r_pixel_data        <=  w_pixel;
           r_pixel_count       <=  r_pixel_count + 1;
@@ -394,17 +430,8 @@ always @ (posedge clk) begin
           r_pixel_width_count <=  r_pixel_width_count + 1;
         end
         else begin
-          //Release the FIFO, we reached the end of the line
-          if (r_font_height_count < (FONT_HEIGHT_ADJ - 1)) begin
-            r_font_height_count <= r_font_height_count + 1;
-          end
-          else begin
-            r_font_height_count <= 0;
-          end
-
-
           if (r_char_width_count >= (CHAR_IMAGE_WIDTH - 1)) begin
-            state               <=  WRITE_VERTICAL_PADDING;
+            state               <= WRITE_HORIZONTAL_PADDING;
           end
           else begin
             r_char_width_count  <=  r_char_width_count  + 1;
@@ -412,18 +439,9 @@ always @ (posedge clk) begin
             state               <=  GET_CHAR;
           end
         end
-      end
-      VBLANK: begin
-        if (r_pixel_count < i_vblank_count) begin
-            r_pixel_count <= r_pixel_count + 1;
-        end
-        else begin
-            state           <=  IDLE;
-        end
+
       end
     endcase
-    
-
     if ((r_write_stb == 1) && r_start_frame) begin
       r_start_frame       <=  0;
     end

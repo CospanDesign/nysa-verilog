@@ -287,20 +287,24 @@ def write_char_test(dut):
     dut.log.info("Ready")
     yield Timer(CLK_PERIOD * 300)
 
-    control = 0x00
-    control |= 1 << BIT_CTRL_EN
-    yield axim.write(REG_CONTROL, control)
-    yield Timer(CLK_PERIOD * 5)
-
-    #Write a characer down
-    char_val = 0x0D
-    yield axim.write(REG_CONSOLE_CHAR, char_val)
-    yield Timer(CLK_PERIOD * 5)
-
     #Write a characer down
     char_val = 0x41
     yield axim.write(REG_CONSOLE_CHAR, char_val)
-    yield Timer(CLK_PERIOD * 100)
+    yield Timer(CLK_PERIOD * 5)
+
+    #Write a characer down
+    char_val = 0x45
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 5)
+
+    control = 0x00
+    control |= 1 << BIT_CTRL_EN
+    yield axim.write(REG_CONTROL, control)
+    yield Timer(CLK_PERIOD * 10)
+    control = 0x00
+    control &= ~(1 << BIT_CTRL_EN)
+    yield axim.write(REG_CONTROL, control)
+
     yield video_in.read()
     yield Timer(CLK_PERIOD * 400)
 
