@@ -293,20 +293,110 @@ def write_char_test(dut):
     yield Timer(CLK_PERIOD * 5)
 
     #Write a characer down
-    char_val = 0x45
+    char_val = 0x102
     yield axim.write(REG_CONSOLE_CHAR, char_val)
     yield Timer(CLK_PERIOD * 5)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 5)
+
+
 
     control = 0x00
     control |= 1 << BIT_CTRL_EN
     yield axim.write(REG_CONTROL, control)
     yield Timer(CLK_PERIOD * 10)
-    control = 0x00
-    control &= ~(1 << BIT_CTRL_EN)
-    yield axim.write(REG_CONTROL, control)
+    #control = 0x00
+    #control &= ~(1 << BIT_CTRL_EN)
+    #yield axim.write(REG_CONTROL, control)
 
     yield video_in.read()
-    yield Timer(CLK_PERIOD * 400)
+    yield Timer(CLK_PERIOD * 2000)
+    control |= (1 << BIT_CTRL_CLEAR_SCREEN_STB)
+    yield axim.write(REG_CONTROL, control)
+
+    yield Timer(CLK_PERIOD * 4000)
+
+    #Write a characer down
+    char_val = 0x41
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+    #Write a characer down
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x41
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x41
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x41
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x41
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+ 
+    char_val = 0x41
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+ 
+    char_val = 0x41
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+ 
+    char_val = 0x41
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+ 
+    char_val = 0x41
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+
+
+
+    yield Timer(CLK_PERIOD * 6000)
 
 
 

@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Wed Apr 26 15:45:17 2017
+[*] Mon May  1 22:19:51 2017
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/design.vcd"
-[dumpfile_mtime] "Wed Apr 26 15:43:39 2017"
-[dumpfile_size] 105239
+[dumpfile_mtime] "Mon May  1 15:07:18 2017"
+[dumpfile_size] 2023725
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/waveforms.gtkw"
-[timestart] 0
+[timestart] 65250
 [size] 1918 1059
 [pos] -1 -1
-*-11.268544 5410 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-5.000000 65360 65360 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.dut.
 [treeopen] tb_cocotb.dut.cosd.
@@ -59,6 +59,10 @@ tb_cocotb.AXIML_WVALID
 -AXI4 Master Lite
 @200
 -
+@28
+tb_cocotb.dut.w_wr_char_rdy
+tb_cocotb.dut.r_char_stb
+tb_cocotb.dut.r_reg_in_ack_stb
 @c00200
 -AXI4 Slave Stream
 @22
@@ -92,13 +96,11 @@ tb_cocotb.dut.as2p.state[3:0]
 tb_cocotb.dut.w_adapter_debug[31:0]
 @1401200
 -AXI4 Slave Stream
-@200
--
-@800200
+@c00200
 -OSD
 @c02022
 [color] 5
-^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/console_osd.txt
+^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/console_osd.txt
 tb_cocotb.dut.cosd.state[3:0]
 @28
 [color] 5
@@ -113,6 +115,11 @@ tb_cocotb.dut.cosd.state[3:0]
 -group_end
 @200
 -
+@28
+tb_cocotb.dut.cosd.r_write_act[1:0]
+@22
+tb_cocotb.dut.cosd.r_pixel_count[31:0]
+@200
 -
 -
 @22
@@ -122,6 +129,7 @@ tb_cocotb.dut.cosd.w_dbg_font_width[31:0]
 tb_cocotb.dut.cosd.w_dbg_font_width_adj[31:0]
 tb_cocotb.dut.cosd.w_dbg_image_size[31:0]
 @200
+-
 -
 -
 @22
@@ -140,7 +148,6 @@ tb_cocotb.dut.cosd.w_valid_char_pixel
 @22
 [color] 2
 tb_cocotb.dut.cosd.r_font_height_count[7:0]
-@23
 [color] 2
 tb_cocotb.dut.cosd.r_font_width_count[5:0]
 @200
@@ -148,10 +155,12 @@ tb_cocotb.dut.cosd.r_font_width_count[5:0]
 @22
 [color] 6
 tb_cocotb.dut.cosd.w_pixel[23:0]
+tb_cocotb.dut.cosd.w_write_data[24:0]
 @200
 -
 -
 -Characters
+-
 @a8
 [color] 3
 tb_cocotb.dut.cosd.w_data_line0[5:0]
@@ -169,41 +178,49 @@ tb_cocotb.dut.cosd.w_data_line5[5:0]
 tb_cocotb.dut.cosd.w_data_line6[5:0]
 [color] 3
 tb_cocotb.dut.cosd.w_data_line7[5:0]
-@1000200
+@200
+-
+@1401200
 -OSD
 @200
 -
-@c00200
+@800200
 -Character Buffer
 -INGRESS
+@28
+tb_cocotb.dut.cosd.cb.w_buf_full
 @2022
 [color] 5
-^2 /tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/cb_in_state.txt
+^2 /tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/cb_in_state.txt
 tb_cocotb.dut.cosd.cb.in_state[3:0]
+@28
+tb_cocotb.dut.cosd.i_alt_func_en
+@22
+tb_cocotb.dut.cosd.i_char[7:0]
+tb_cocotb.dut.cosd.cb.r_char[7:0]
+@28
+tb_cocotb.dut.cosd.cb.r_char_stb
 @200
 -
-@28
-tb_cocotb.dut.cosd.cb.i_char_stb
 @22
-tb_cocotb.dut.cosd.cb.i_char[7:0]
+tb_cocotb.dut.cosd.cb.r_write_addr_pos[4:0]
+@201
+-
+@22
+tb_cocotb.dut.cosd.cb.r_prev_line_addr[4:0]
+tb_cocotb.dut.cosd.cb.r_curr_line_addr[4:0]
+tb_cocotb.dut.cosd.cb.r_next_line_addr[4:0]
 @200
 -
-@28
-tb_cocotb.dut.cosd.cb.i_alt_func_en
-@22
-tb_cocotb.dut.cosd.cb.i_char[7:0]
-@28
-tb_cocotb.dut.cosd.cb.i_char_req_en
-tb_cocotb.dut.cosd.cb.i_clear_screen_stb
-@1401200
+@1000200
 -INGRESS
 @200
 -
-@c00200
+@800200
 -EGRESS
 @c02022
 [color] 5
-^3 /tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/cb_out_state.txt
+^3 /tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_on_screen_display/cocotb/cb_out_state.txt
 tb_cocotb.dut.cosd.cb.out_state[3:0]
 @28
 (0)tb_cocotb.dut.cosd.cb.out_state[3:0]
@@ -212,15 +229,19 @@ tb_cocotb.dut.cosd.cb.out_state[3:0]
 (3)tb_cocotb.dut.cosd.cb.out_state[3:0]
 @1401200
 -group_end
-@22
-tb_cocotb.dut.cosd.cb.r_read_char_count[7:0]
 @28
 tb_cocotb.dut.cosd.cb.i_char_req_en
 @200
 -
-@22
-tb_cocotb.dut.cosd.cb.r_read_addr[7:0]
-@1401200
+-
+-
+@28
+tb_cocotb.dut.cosd.cb.i_read_frame_stb
+tb_cocotb.dut.cosd.r_write_act[1:0]
+tb_cocotb.dut.cosd.w_starved
+tb_cocotb.dut.cosd.i_enable
+tb_cocotb.dut.cosd.r_start_frame
+@1000200
 -EGRESS
 -Character Buffer
 [pattern_trace] 1

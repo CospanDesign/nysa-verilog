@@ -52,7 +52,7 @@ module console_osd #(
   parameter                       IMAGE_WIDTH       = 480,
   parameter                       IMAGE_HEIGHT      = 272,
   parameter                       IMAGE_SIZE        = IMAGE_WIDTH * IMAGE_HEIGHT,
-  parameter                       BUFFER_DEPTH      = `CLOG2(IMAGE_WIDTH),
+  parameter                       BUFFER_DEPTH      = (`CLOG2(IMAGE_WIDTH) + 1),
   parameter                       PIXEL_WIDTH       = 24,
   parameter                       FONT_WIDTH        = 5,
   parameter                       FONT_HEIGHT       = 7
@@ -69,6 +69,7 @@ module console_osd #(
 
   input                           i_char_stb,
   input     [7:0]                 i_char,
+  output                          o_wr_char_rdy,
 
   input                           i_clear_screen_stb,
   input                           i_alt_func_en,
@@ -113,18 +114,18 @@ localparam    CHAR_IMAGE_HEIGHT       = IMAGE_HEIGHT / FONT_HEIGHT_ADJ;
 localparam    CHAR_IMAGE_SIZE         = CHAR_IMAGE_WIDTH * CHAR_IMAGE_HEIGHT;
 
 //registes/wires
-reg         [3:0]                     state;
+(* KEEP *) reg         [3:0]                     state;
 
-wire        [1:0]                     w_write_rdy;
-reg         [1:0]                     r_write_act;
+(* KEEP *) wire        [1:0]                     w_write_rdy;
+(* KEEP *) reg         [1:0]                     r_write_act;
 wire        [23:0]                    w_write_size;
-reg                                   r_write_stb;
+(* KEEP *) reg                                   r_write_stb;
 reg         [7:0]                     r_char;
 reg                                   r_char_req_en;
-wire        [PIXEL_WIDTH:0]           w_write_data;
+(* KEEP *) wire        [PIXEL_WIDTH:0]           w_write_data;
 
 
-reg                                   r_start_frame;
+(* KEEP *) reg                                   r_start_frame;
 wire                                  w_start_frame;
 reg         [PIXEL_WIDTH - 1: 0]      r_pixel_data;
 
@@ -232,6 +233,7 @@ character_buffer#(
   .i_tab_count          (i_tab_count          ),
   .i_char_stb           (i_char_stb           ),
   .i_char               (i_char               ),
+  .o_wr_char_rdy        (o_wr_char_rdy        ),
 
   .i_read_frame_stb     (r_read_frame_stb     ),
   .i_char_req_en        (r_char_req_en        ),
@@ -261,10 +263,10 @@ bram #(
 
 //asynchronous logic
 
-//assign  w_write_data = {r_start_frame, r_pixel_data};
-//assign  w_start_frame = (r_pixel_count == 0);
-assign  w_write_data[23:0] = r_pixel_data;
+//assign  w_write_data[23:0] = r_pixel_data;
+assign  w_write_data[23:0] = w_pixel;
 assign  w_write_data[24] = r_start_frame;
+//assign  w_write_data[24] = 1;
 
 
 generate
@@ -272,14 +274,15 @@ genvar y;
 genvar x;
 
 for (y = 0; y < FONT_HEIGHT_ADJ; y = y + 1) begin: FOR_HEIGHT
-  for (x = 0; x < (FONT_WIDTH_ADJ); x = x + 1) begin: FOR_WIDTH
-    if (x < (FONT_WIDTH)) begin
-      assign  w_char_data_map[y][(FONT_WIDTH - 1) - x] = w_font_data[(x * 8) + y];
+  for (x = 0; x < FONT_WIDTH_ADJ; x = x + 1) begin: FOR_WIDTH
+    if (x < FONT_WIDTH) begin
+      assign  w_char_data_map[y][x] = w_font_data[(((FONT_WIDTH - 1) - x) * 8) + y];
     end
     else begin
       assign  w_char_data_map[y][x] = 0;
     end
   end
+  //assign w_char_data_map[y][FONT_WIDTH_ADJ - 1] = 0;
 end
 endgenerate
 
@@ -362,7 +365,9 @@ always @ (posedge clk) begin
       WRITE_VERTICAL_PADDING: begin
         if (r_pixel_count >= IMAGE_SIZE) begin
           //Finished sending image
-          r_write_act         <=  0;
+          if (r_pixel_width_count > 0) begin
+            r_write_act       <=  0;
+          end
           r_pixel_count       <=  0;
           state               <=  IDLE;
         end
@@ -385,7 +390,7 @@ always @ (posedge clk) begin
           r_pixel_data        <=  w_pixel;
           r_write_stb         <=  1;
         end
-        else if (r_pixel_width_count >= IMAGE_WIDTH) begin
+        else if (r_pixel_width_count >= (IMAGE_WIDTH - 1)) begin
           //Release the FIFO, we reached the end of the line
           if (r_font_height_count < (FONT_HEIGHT_ADJ - 1)) begin
             r_font_height_count <= r_font_height_count + 1;
@@ -394,6 +399,8 @@ always @ (posedge clk) begin
             r_font_height_count <= 0;
           end
           state               <=  WRITE_LINE;
+		  r_write_act         <=  0;
+		  r_pixel_height_count<=  r_pixel_height_count + 1;
         end
         else begin
           state               <=  GET_CHAR;

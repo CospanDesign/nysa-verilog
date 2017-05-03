@@ -2,15 +2,15 @@
 
 module tb_cocotb #(
   //parameter CONSOLE_DEPTH       = 12,
-  parameter CONSOLE_DEPTH       = 8,
+  parameter CONSOLE_DEPTH       = 5,
   parameter ADDR_WIDTH          = 32,
   parameter DATA_WIDTH          = 32,
   parameter STROBE_WIDTH        = (DATA_WIDTH / 8),
   parameter AXIS_WIDTH          = 24,
   parameter AXIS_STROBE_WIDTH   = (AXIS_WIDTH / 8),
   parameter BUFFER_DEPTH        = 8,
-  parameter IMAGE_WIDTH         = 12,
-  parameter IMAGE_HEIGHT        = 16,
+  parameter IMAGE_WIDTH         = 30,
+  parameter IMAGE_HEIGHT        = 24,
   parameter PIXEL_WIDTH         = 24
 )(
 
