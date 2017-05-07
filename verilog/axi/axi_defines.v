@@ -59,7 +59,7 @@
 `define AXI_PROT_INST           1'b1
 
 //----Unused:
-`define AXI_PROT_UNUSED         {`AXI_PROT_NORMAL, `AXI_PROT_NON_SECURE, `AXI_PROT_DATA}
+`define AXI_PROT_UNUSED         {`AXI_PROT_NORMAL, `AXI_PROT_SECURE, `AXI_PROT_DATA}
 
 //--Low Power Mode
 `define AXI_POWER_LOW           1'b0

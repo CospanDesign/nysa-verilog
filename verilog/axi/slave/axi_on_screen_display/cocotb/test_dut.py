@@ -264,8 +264,8 @@ def test_backspace(dut):
 
 
 
-@cocotb.test(skip = False)
-def write_char_test(dut):
+@cocotb.test(skip = True)
+def write_full_page_char_test(dut):
     """
     Description:
 
@@ -359,27 +359,6 @@ def write_char_test(dut):
     yield axim.write(REG_CONSOLE_CHAR, char_val)
     yield Timer(CLK_PERIOD * 1)
 
- 
-    char_val = 0x41
-    yield axim.write(REG_CONSOLE_CHAR, char_val)
-    yield Timer(CLK_PERIOD * 1)
-
-
-    char_val = 0x0A
-    yield axim.write(REG_CONSOLE_CHAR, char_val)
-    yield Timer(CLK_PERIOD * 1)
-
- 
-    char_val = 0x41
-    yield axim.write(REG_CONSOLE_CHAR, char_val)
-    yield Timer(CLK_PERIOD * 1)
-
-
-    char_val = 0x0A
-    yield axim.write(REG_CONSOLE_CHAR, char_val)
-    yield Timer(CLK_PERIOD * 1)
-
- 
     char_val = 0x41
     yield axim.write(REG_CONSOLE_CHAR, char_val)
     yield Timer(CLK_PERIOD * 1)
@@ -388,17 +367,262 @@ def write_char_test(dut):
     yield axim.write(REG_CONSOLE_CHAR, char_val)
     yield Timer(CLK_PERIOD * 1)
 
- 
     char_val = 0x41
     yield axim.write(REG_CONSOLE_CHAR, char_val)
     yield Timer(CLK_PERIOD * 1)
 
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
 
+    char_val = 0x41
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
 
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x41
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
 
     yield Timer(CLK_PERIOD * 6000)
 
 
+@cocotb.test(skip = True)
+def write_full_page_char_backspace_test(dut):
+    """
+    Description:
+        Test backspaces
+
+    Test ID: 6
+
+    Expected Results:
+        **
+    """
+    #load_font_mem(dut.dut.cosd.font_buffer.mem, "../rtl/fontdata.mem")
+    dut.rst <= 1
+    dut.test_id <= 6
+    axim = AXI4LiteMaster(dut, "AXIML", dut.clk)
+    video_in = AXI4StreamSlave(dut, "AXISS", dut.clk, width=24)
+
+    setup_dut(dut)
+    yield Timer(CLK_PERIOD * 10)
+    dut.rst <= 0
+    yield Timer(CLK_PERIOD * 10)
+    dut.log.info("Ready")
+    yield Timer(CLK_PERIOD * 300)
+
+    #Write a characer down
+    char_val = 0x41
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 5)
+
+    #Write a characer down
+    char_val = 0x102
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 5)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 5)
 
 
+
+    control = 0x00
+    control |= 1 << BIT_CTRL_EN
+    yield axim.write(REG_CONTROL, control)
+    yield Timer(CLK_PERIOD * 10)
+    #control = 0x00
+    #control &= ~(1 << BIT_CTRL_EN)
+    #yield axim.write(REG_CONTROL, control)
+
+    yield video_in.read()
+    yield Timer(CLK_PERIOD * 100)
+
+    #Write a characer down
+    char_val = 0x41
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+    #Write a characer down
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x42
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x43
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x44
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+ 
+    char_val = 0x45
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x46
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x47
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x48
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x49
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x4A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+
+
+    '''
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x4B
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x4C
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x0A
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+
+    char_val = 0x4D
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 1)
+    '''
+
+
+
+    yield Timer(CLK_PERIOD * 100)
+
+    #Insert a backspace
+    char_val = 0x08
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 50)
+
+    char_val = 0x08
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 100)
+
+    char_val = 0x08
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 100)
+
+    char_val = 0x08
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 100)
+
+    char_val = 0x08
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 100)
+
+    '''
+    char_val = 0x08
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 100)
+
+    char_val = 0x08
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 100)
+
+    '''
+
+
+
+    yield Timer(CLK_PERIOD * 4000)
+
+@cocotb.test(skip = False)
+def write_char_test(dut):
+    """
+    Description:
+
+    Test ID: 7
+
+    Expected Results:
+        **
+    """
+    dut.rst <= 1
+    dut.test_id <= 7
+    axim = AXI4LiteMaster(dut, "AXIML", dut.clk)
+    video_in = AXI4StreamSlave(dut, "AXISS", dut.clk, width=24)
+
+    setup_dut(dut)
+    yield Timer(CLK_PERIOD * 10)
+    dut.rst <= 0
+    yield Timer(CLK_PERIOD * 10)
+    dut.log.info("Ready")
+    yield Timer(CLK_PERIOD * 300)
+
+    control = 0x00
+    control |= 1 << BIT_CTRL_EN
+    yield axim.write(REG_CONTROL, control)
+    yield Timer(CLK_PERIOD * 10)
+
+    #Write a characer down
+    char_val = 0x0101
+    yield axim.write(REG_CONSOLE_CHAR, char_val)
+    yield Timer(CLK_PERIOD * 10)
 
