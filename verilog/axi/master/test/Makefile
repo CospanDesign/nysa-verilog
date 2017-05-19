@@ -8,18 +8,13 @@ PYTHONPATH := ./model:$(PYTHONPATH)
 export PYTHONPATH
 export PYTHONHOME=$(shell python -c "from distutils.sysconfig import get_config_var; print(get_config_var('prefix'))")
 
-EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/ -I$(NYSA)/verilog/axi
+EXTRA_ARGS+= -Wall -I$(NYSA)/verilog/axi
 
-#Dependencies
-VERILOG_SOURCES = $(NYSA)/verilog/axi/master/axi_master.v
+VERILOG_SOURCES =   $(NYSA)/verilog/generic/ppfifo.v
+VERILOG_SOURCES +=  ../axi_master.v
 
-VERILOG_SOURCES += ${NYSA}/verilog/generic/ppfifo.v
-
-#Simulation Devices
-VERILOG_SOURCES += ${TOPDIR}/rtl/axi_master_test.v
-#DUT
 #Test Benches
-VERILOG_SOURCES += $(TOPDIR)/cocotb/tb_cocotb.v
+VERILOG_SOURCES += tb_cocotb.v
 
 TOPLEVEL = tb_cocotb
 

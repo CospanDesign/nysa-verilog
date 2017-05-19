@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Tue May  9 20:54:43 2017
+[*] Wed May 10 16:19:14 2017
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/generic/test/ppfifo/design.vcd"
-[dumpfile_mtime] "Tue May  9 20:53:45 2017"
-[dumpfile_size] 434176
+[dumpfile_mtime] "Wed May 10 14:36:51 2017"
+[dumpfile_size] 11233
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/generic/test/ppfifo/waveforms.gtkw"
 [timestart] 0
 [size] 1918 1059
 [pos] -1 -1
-*-14.448330 7300 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-11.466199 11640 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [sst_width] 210
 [signals_width] 222
@@ -19,41 +19,41 @@
 tb_cocotb.rst
 @22
 tb_cocotb.test_id[31:0]
-@201
+@200
 -
-@c00200
+@800200
 -Write Path
 @28
-tb_cocotb.WR_ACT[1:0]
 tb_cocotb.WR_CLK
-@22
-tb_cocotb.WR_DATA[31:0]
-@28
+tb_cocotb.WR_ACT[1:0]
 tb_cocotb.WR_RDY[1:0]
+@200
+-
 @22
 tb_cocotb.WR_SIZE[23:0]
+tb_cocotb.WR_DATA[31:0]
 @28
 tb_cocotb.WR_STARVED
 tb_cocotb.WR_STB
-@1401200
+@1000200
 -Write Path
 @200
 -
-@c00200
+@800200
 -Read Path
-@28
+@29
 tb_cocotb.RD_ACT
 tb_cocotb.RD_CLK
-@22
+@23
 tb_cocotb.RD_DATA[31:0]
-@28
+@29
 tb_cocotb.RD_INACTIVE
 tb_cocotb.RD_RDY
-@22
+@23
 tb_cocotb.RD_SIZE[23:0]
-@28
+@29
 tb_cocotb.RD_STB
-@1401200
+@1000200
 -Read Path
 @200
 -
