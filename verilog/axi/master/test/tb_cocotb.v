@@ -16,7 +16,7 @@
    -1
 
 module tb_cocotb #(
-  parameter DATA_WIDTH          = 32,
+  parameter DATA_WIDTH          = 32, //This is the output bus
   parameter ADDR_WIDTH          = 32,
   parameter MAX_PACKET_SIZE     = 4096,
   parameter MAX_PACKET_WIDTH    = `CLOG2(MAX_PACKET_SIZE),

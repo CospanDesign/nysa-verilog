@@ -57,15 +57,15 @@ SOFTWARE.
 
 module axi_master #(
   //Parameters
-  parameter           INVERT_AXI_RESET      = 1,
-  parameter           MAX_PACKET_SIZE       = 4096,
-  parameter           MAX_PACKET_WIDTH      = `CLOG2(MAX_PACKET_SIZE),
-  parameter           DATA_WIDTH            = 32,
-  parameter           FIFO_DEPTH            = 8,  //256 (This works well with Xilinx tools)
-  parameter           ADDR_WIDTH            = 32,
-  parameter           INTERRUPT_WIDTH       = 32,
-  parameter           ENABLE_NACK           = 0, //Enable timeout
-  parameter           DEFAULT_TIMEOUT       = 32'd100000000  //1 Second at 100MHz
+  parameter           INVERT_AXI_RESET        = 1,
+  parameter           MAX_PACKET_SIZE         = 4096,
+  parameter           MAX_PACKET_WIDTH        = `CLOG2(MAX_PACKET_SIZE),
+  parameter           DATA_WIDTH              = 32,
+  parameter           FIFO_DEPTH              = 8,  //256 (This works well with Xilinx tools)
+  parameter           ADDR_WIDTH              = 32,
+  parameter           INTERRUPT_WIDTH         = 32,
+  parameter           ENABLE_NACK             = 0, //Enable timeout
+  parameter           DEFAULT_TIMEOUT         = 32'd100000000  //1 Second at 100MHz
 //  parameter           USE_IDS               = 0;
 
 )(
@@ -254,7 +254,7 @@ reg   [1:0]                     r_egress_act;
 //reg                             r_egress_stb;
 wire                            w_egress_stb;
 wire  [23:0]                    w_egress_size;
-reg   [DATA_WIDTH - 1:0]        r_egress_data;
+wire  [DATA_WIDTH - 1:0]        w_egress_data;
 
 
 //Some Features are not supported at this time
@@ -324,7 +324,7 @@ ppfifo #(
 
   //write side
   .write_clock     (clk                   ),
-  .write_data      (r_egress_data         ),
+  .write_data      (w_egress_data         ),
   .write_ready     (w_egress_rdy          ),
   .write_activate  (r_egress_act          ),
   .write_fifo_size (w_egress_size         ),
@@ -359,6 +359,7 @@ assign  o_awaddr          = r_address;
 assign  o_araddr          = r_address;
 assign  o_wlast           = ((state == WRITE_DATA) && r_data_count == o_awlen);
 assign  w_egress_stb      = (i_rvalid & o_rready);
+assign  w_egress_data     = i_rdata;
 
 //synchronous logic
 always @ (posedge clk) begin
@@ -410,7 +411,6 @@ always @ (posedge clk) begin
     o_wstrobe               <= 0;
 
     r_egress_act            <= 2'b0;
-    r_egress_data           <= 32'h0;
     r_egress_count          <= 0;
 
   end
