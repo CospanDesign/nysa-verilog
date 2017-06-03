@@ -76,68 +76,68 @@ output      [DATA_WIDTH - 1: 0]     RD_DATA,
 //***************** AXI Bus ************************************************
 
 //bus write addr path
-output      [3:0]                   AXIS_AWID,         //Write ID
-output      [ADDR_WIDTH - 1:0]      AXIS_AWADDR,       //Write Addr Path Address
-output      [7:0]                   AXIS_AWLEN,        //Write Addr Path Burst Length
-output      [2:0]                   AXIS_AWSIZE,       //Write Addr Path Burst Size (Byte with (00 = 8 bits wide, 01 = 16 bits wide)
-output      [1:0]                   AXIS_AWBURST,      //Write Addr Path Burst Type
-                                                        //  0 = Fixed
-                                                        //  1 = Incrementing
-                                                        //  2 = wrap
-output      [1:0]                   AXIS_AWLOCK,       //Write Addr Path Lock (atomic) information
-                                                        //  0 = Normal
-                                                        //  1 = Exclusive
-                                                        //  2 = Locked
-output      [3:0]                   AXIS_AWCACHE,      //Write Addr Path Cache Type
-output      [2:0]                   AXIS_AWPROT,       //Write Addr Path Protection Type
-output                              AXIS_AWVALID,      //Write Addr Path Address Valid
-input                               AXIS_AWREADY,      //Write Addr Path Slave Ready
-                                                        //  1 = Slave Ready
-                                                        //  0 = Slave Not Ready
+output      [3:0]                     AXIS_AWID,         //Write ID
+output      [ADDR_WIDTH - 1:0]        AXIS_AWADDR,       //Write Addr Path Address
+output      [7:0]                     AXIS_AWLEN,        //Write Addr Path Burst Length
+output      [2:0]                     AXIS_AWSIZE,       //Write Addr Path Burst Size (Byte with (00 = 8 bits wide, 01 = 16 bits wide)
+output      [1:0]                     AXIS_AWBURST,      //Write Addr Path Burst Type
+                                                          //  0 = Fixed
+                                                          //  1 = Incrementing
+                                                          //  2 = wrap
+output      [1:0]                     AXIS_AWLOCK,       //Write Addr Path Lock (atomic) information
+                                                          //  0 = Normal
+                                                          //  1 = Exclusive
+                                                          //  2 = Locked
+output      [3:0]                     AXIS_AWCACHE,      //Write Addr Path Cache Type
+output      [2:0]                     AXIS_AWPROT,       //Write Addr Path Protection Type
+output                                AXIS_AWVALID,      //Write Addr Path Address Valid
+input                                 AXIS_AWREADY,      //Write Addr Path Slave Ready
+                                                          //  1 = Slave Ready
+                                                          //  0 = Slave Not Ready
 
 //bus write data
-output      [3:0]                   AXIS_WID,          //Write ID
-output      [DATA_WIDTH - 1: 0]     AXIS_WDATA,        //Write Data (this size is set with the DATA_WIDTH Parameter
+output      [3:0]                     AXIS_WID,          //Write ID
+output      [DATA_WIDTH - 1: 0]       AXIS_WDATA,        //Write Data (this size is set with the DATA_WIDTH Parameter
                                                       //Valid values are: 8, 16, 32, 64, 128, 256, 512, 1024
-output      [DATA_WIDTH >> 3:0]     AXIS_WSTRB,      //Write Strobe (a 1 in the write is associated with the byte to write)
-output                              AXIS_WLAST,        //Write Last transfer in a write burst
-output                              AXIS_WVALID,       //Data through this bus is valid
-input                               AXIS_WREADY,       //Slave is ready for data
+output      [(DATA_WIDTH >> 3) - 1:0] AXIS_WSTRB,      //Write Strobe (a 1 in the write is associated with the byte to write)
+output                                AXIS_WLAST,        //Write Last transfer in a write burst
+output                                AXIS_WVALID,       //Data through this bus is valid
+input                                 AXIS_WREADY,       //Slave is ready for data
 
 //Write Response Channel
-input       [3:0]                   AXIS_BID,          //Response ID (this must match awid)
-input       [1:0]                   AXIS_BRESP,        //Write Response
-                                                        //  0 = OKAY
-                                                        //  1 = EXOKAY
-                                                        //  2 = SLVERR
-                                                        //  3 = DECERR
-input                               AXIS_BVALID,       //Write Response is:
-                                                        //  1 = Available
-                                                        //  0 = Not Available
-output                              AXIS_BREADY,       //WBM Ready
+input       [3:0]                     AXIS_BID,          //Response ID (this must match awid)
+input       [1:0]                     AXIS_BRESP,        //Write Response
+                                                          //  0 = OKAY
+                                                          //  1 = EXOKAY
+                                                          //  2 = SLVERR
+                                                          //  3 = DECERR
+input                                 AXIS_BVALID,       //Write Response is:
+                                                          //  1 = Available
+                                                          //  0 = Not Available
+output                                AXIS_BREADY,       //WBM Ready
 
 //bus read addr path
-output       [3:0]                  AXIS_ARID,         //Read ID
-output       [ADDR_WIDTH - 1:0]     AXIS_ARADDR,       //Read Addr Path Address
-output       [7:0]                  AXIS_ARLEN,        //Read Addr Path Burst Length
-output       [2:0]                  AXIS_ARSIZE,       //Read Addr Path Burst Size (Byte with (00 = 8 bits wide, 01 = 16 bits wide)
-output       [1:0]                  AXIS_ARBURST,      //Read Addr Path Burst Type
-output       [1:0]                  AXIS_ARLOCK,       //Read Addr Path Lock (atomic) information
-output       [3:0]                  AXIS_ARCACHE,      //Read Addr Path Cache Type
-output       [2:0]                  AXIS_ARPROT,       //Read Addr Path Protection Type
-output                              AXIS_ARVALID,      //Read Addr Path Address Valid
-input                               AXIS_ARREADY,      //Read Addr Path Slave Ready
+output       [3:0]                    AXIS_ARID,         //Read ID
+output       [ADDR_WIDTH - 1:0]       AXIS_ARADDR,       //Read Addr Path Address
+output       [7:0]                    AXIS_ARLEN,        //Read Addr Path Burst Length
+output       [2:0]                    AXIS_ARSIZE,       //Read Addr Path Burst Size (Byte with (00 = 8 bits wide, 01 = 16 bits wide)
+output       [1:0]                    AXIS_ARBURST,      //Read Addr Path Burst Type
+output       [1:0]                    AXIS_ARLOCK,       //Read Addr Path Lock (atomic) information
+output       [3:0]                    AXIS_ARCACHE,      //Read Addr Path Cache Type
+output       [2:0]                    AXIS_ARPROT,       //Read Addr Path Protection Type
+output                                AXIS_ARVALID,      //Read Addr Path Address Valid
+input                                 AXIS_ARREADY,      //Read Addr Path Slave Ready
                                                         //  1 = Slave Ready
                                                         //  0 = Slave Not Ready
 //bus read data
-input       [3:0]                   AXIS_RID,          //Write ID
-input       [DATA_WIDTH - 1: 0]     AXIS_RDATA,        //Write Data (this size is set with the DATA_WIDTH Parameter
+input       [3:0]                     AXIS_RID,          //Write ID
+input       [DATA_WIDTH - 1: 0]       AXIS_RDATA,        //Write Data (this size is set with the DATA_WIDTH Parameter
                                                           //Valid values are: 8, 16, 32, 64, 128, 256, 512, 1024
-input       [1:0]                   AXIS_RRESP,
-input       [DATA_WIDTH >> 3:0]     AXIS_RSTRB,      //Write Strobe (a 1 in the write is associated with the byte to write)
-input                               AXIS_RLAST,        //Write Last transfer in a write burst
-input                               AXIS_RVALID,       //Data through this bus is valid
-output                              AXIS_RREADY,       //WBM is ready for data
+input       [1:0]                     AXIS_RRESP,
+input       [(DATA_WIDTH >> 3) - 1:0] AXIS_RSTRB,      //Write Strobe (a 1 in the write is associated with the byte to write)
+input                                 AXIS_RLAST,        //Write Last transfer in a write burst
+input                                 AXIS_RVALID,       //Data through this bus is valid
+output                                AXIS_RREADY,       //WBM is ready for data
                                                         //  1 = WBM Ready
                                                         //  0 = Slave Ready
 

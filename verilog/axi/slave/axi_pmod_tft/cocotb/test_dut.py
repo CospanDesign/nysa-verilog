@@ -18,13 +18,13 @@ MODULE_PATH = os.path.abspath(MODULE_PATH)
 
 
 
-REG_CONTROL                   = 0
-REG_STATUS                    = 1
-REG_COMMAND_DATA              = 2
-REG_IMAGE_WIDTH               = 3
-REG_IMAGE_HEIGHT              = 4
-REG_IMAGE_SIZE                = 5
-REG_VERSION                   = 6
+REG_CONTROL                   = 0 << 2
+REG_STATUS                    = 1 << 2
+REG_COMMAND_DATA              = 2 << 2
+REG_IMAGE_WIDTH               = 3 << 2
+REG_IMAGE_HEIGHT              = 4 << 2
+REG_IMAGE_SIZE                = 5 << 2
+REG_VERSION                   = 6 << 2
 
 BIT_CONTROL_ENABLE            = 0
 BIT_CONTROL_ENABLE_INTERRUPT  = 1
@@ -397,7 +397,7 @@ def write_single_frame(dut):
     yield Timer(CLK_PERIOD * 400)
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def write_multiple_frames(dut):
     """
     Description:

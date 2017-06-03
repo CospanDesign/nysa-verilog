@@ -1,0 +1,102 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Fri Jun  2 22:39:21 2017
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/axi/master/test/axi_lite_master/design.vcd"
+[dumpfile_mtime] "Fri Jun  2 22:30:42 2017"
+[dumpfile_size] 23584
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/axi/master/test/axi_lite_master/waveforms.gtkw"
+[timestart] 508
+[size] 1918 1059
+[pos] -1 -1
+*-5.110686 542 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_cocotb.
+[treeopen] tb_cocotb.am.
+[sst_width] 213
+[signals_width] 222
+[sst_expanded] 1
+[sst_vpaned_height] 313
+@28
+tb_cocotb.clk
+tb_cocotb.rst
+@22
+tb_cocotb.test_id[31:0]
+@200
+-
+@800200
+-Command Interface
+@200
+-
+@28
+tb_cocotb.am.i_cmd_en
+tb_cocotb.am.o_cmd_ack
+@200
+-
+@22
+tb_cocotb.am.i_cmd_addr[31:0]
+tb_cocotb.am.i_cmd_byte_en[3:0]
+tb_cocotb.am.i_cmd_data[31:0]
+@28
+tb_cocotb.am.i_cmd_wr_rd
+@22
+tb_cocotb.am.o_cmd_data[31:0]
+@28
+tb_cocotb.am.o_cmd_error
+tb_cocotb.am.o_cmd_interrupt
+@22
+tb_cocotb.am.o_cmd_status[31:0]
+@200
+-
+@1000200
+-Command Interface
+@2022
+[color] 5
+^1 /home/cospan/Projects/nysa-verilog/verilog/axi/master/test/axi_lite_master/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/master/test/axi_lite_master/am_state.txt
+tb_cocotb.am.state[3:0]
+@200
+-
+@28
+tb_cocotb.am.i_arready
+tb_cocotb.am.i_awready
+@200
+-
+@28
+tb_cocotb.am.o_awvalid
+tb_cocotb.am.i_awready
+@22
+tb_cocotb.am.o_awaddr[31:0]
+tb_cocotb.am.o_awid[3:0]
+@28
+tb_cocotb.am.o_awsize[2:0]
+@200
+-
+-
+@22
+tb_cocotb.am.o_wdata[31:0]
+@23
+tb_cocotb.am.o_wstrobe[3:0]
+@28
+tb_cocotb.am.o_wvalid
+tb_cocotb.am.i_wready
+tb_cocotb.am.o_wlast
+@200
+-
+@22
+tb_cocotb.am.i_bid[3:0]
+@28
+tb_cocotb.am.i_bresp[1:0]
+tb_cocotb.am.i_bvalid
+@200
+-
+@22
+tb_cocotb.am.i_rdata[31:0]
+tb_cocotb.am.i_rid[3:0]
+@28
+tb_cocotb.am.i_rlast
+tb_cocotb.am.i_rresp[1:0]
+@22
+tb_cocotb.am.i_rstrobe[3:0]
+@28
+tb_cocotb.am.i_rvalid
+[pattern_trace] 1
+[pattern_trace] 0

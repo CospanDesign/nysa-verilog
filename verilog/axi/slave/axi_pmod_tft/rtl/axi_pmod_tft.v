@@ -212,7 +212,8 @@ wire                        wfifo_strobe;
 wire        [AXIS_WIDTH:0]  wfifo_data;
 
 //Simple User Interface
-wire [ADDR_WIDTH - 1: 0]    w_reg_address;
+wire [ADDR_WIDTH - 1: 0]        w_reg_address;
+wire [((ADDR_WIDTH - 1) - 2): 0]w_reg_32bit_address;
 reg                         r_reg_invalid_addr;
 
 wire                        w_reg_in_rdy;
@@ -410,6 +411,7 @@ assign        w_tft_data_in[6]        =  i_pmod_in_tft_data4;
 assign        w_tft_data_in[7]        =  i_pmod_in_tft_data10;
 
 assign        o_fsync                 = ~i_tearing_effect;
+assign        w_reg_32bit_address     = w_reg_address[(ADDR_WIDTH - 1): 2];
 
 //blocks
 always @ (posedge clk) begin
@@ -450,7 +452,7 @@ always @ (posedge clk) begin
 
     if (w_reg_in_rdy) begin
       //From master
-      case (w_reg_address)
+      case (w_reg_32bit_address)
         REG_CONTROL: begin
           control                         <= w_reg_in_data;
         end
@@ -469,14 +471,14 @@ always @ (posedge clk) begin
         default: begin
         end
       endcase
-      if (w_reg_address > REG_VERSION) begin
+      if (w_reg_32bit_address > REG_VERSION) begin
         r_reg_invalid_addr                <= 1;
       end
       r_reg_in_ack_stb                    <= 1;
     end
     else if (w_reg_out_req) begin
       //To master
-      case (w_reg_address)
+      case (w_reg_32bit_address)
         REG_CONTROL: begin
           r_reg_out_data                  <= control;
         end
@@ -505,7 +507,7 @@ always @ (posedge clk) begin
           r_reg_out_data                  <= 32'h00;
         end
       endcase
-      if (w_reg_address > REG_VERSION) begin
+      if (w_reg_32bit_address > REG_VERSION) begin
         r_reg_invalid_addr                <= 1;
       end
       r_reg_out_rdy_stb                   <= 1;

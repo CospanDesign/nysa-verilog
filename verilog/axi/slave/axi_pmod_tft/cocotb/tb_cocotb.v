@@ -92,7 +92,7 @@ assign  w_axis_user = {3'h0, i_fsync};
 //submodules
 
 axi_pmod_tft #(
-  .ADDR_WIDTH         (ADDR_WIDTH       ),
+//  .ADDR_WIDTH         (ADDR_WIDTH       ),
   .DATA_WIDTH         (DATA_WIDTH       ),
   .AXIS_WIDTH         (AXIS_WIDTH       ),
   .INVERT_AXI_RESET   (0                ),

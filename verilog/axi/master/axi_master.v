@@ -543,6 +543,7 @@ always @ (posedge clk) begin
           end
           else begin
             r_egress_act  <=  0;
+            state                 <=  COMMAND_FINISHED;
           end
         end
       end
