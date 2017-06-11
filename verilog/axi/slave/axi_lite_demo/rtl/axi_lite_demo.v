@@ -30,185 +30,189 @@ SOFTWARE.
 
 `timescale 1ps / 1ps
 
-`define AXI_RESP_OKAY   2'b00 /* Everything is good */
-`define AXI_RESP_EXOKAY 2'b01 /* Everything is good (Exclusive Access) */
-`define AXI_RESP_SLVERR 2'b10 /* Slave Error */
-`define AXI_RESP_DECERR 2'b11 /* Decode Error Slave doesn't exist at that address (for interconnects) */
+`define MAJOR_VERSION             1
+`define MINOR_VERSION             0
+`define REVISION                  0
+
+`define MAJOR_RANGE               31:28
+`define MINOR_RANGE               27:20
+`define REVISION_RANGE            19:16
 
 module axi_lite_demo #(
-  parameter ADDR_WIDTH          = 32,
+  parameter ADDR_WIDTH          = 8,
   parameter DATA_WIDTH          = 32,
-  parameter STROBE_WIDTH        = (DATA_WIDTH / 8)
+  parameter STROBE_WIDTH        = (DATA_WIDTH / 8),
+  parameter INVERT_AXI_RESET    = 1
+
 )(
   input                               clk,
   input                               rst,
 
+  //AXI Lite Interface
+
   //Write Address Channel
   input                               i_awvalid,
   input       [ADDR_WIDTH - 1: 0]     i_awaddr,
-  output  reg                         o_awready,
+  output                              o_awready,
 
   //Write Data Channel
   input                               i_wvalid,
-  output  reg                         o_wready,
+  output                              o_wready,
   input       [STROBE_WIDTH - 1:0]    i_wstrb,
   input       [DATA_WIDTH - 1: 0]     i_wdata,
 
   //Write Response Channel
-  output  reg                         o_bvalid,
+  output                              o_bvalid,
   input                               i_bready,
-  output  reg [1:0]                   o_bresp,
+  output      [1:0]                   o_bresp,
 
   //Read Address Channel
   input                               i_arvalid,
-  output  reg                         o_arready,
+  output                              o_arready,
   input       [ADDR_WIDTH - 1: 0]     i_araddr,
 
   //Read Data Channel
-  output  reg                         o_rvalid,
+  output                              o_rvalid,
   input                               i_rready,
-  output  reg [1:0]                   o_rresp,
-  output  reg [DATA_WIDTH - 1: 0]     o_rdata
-
-
-  //output  reg   [7:0]               o_reg_example
-  //input         [7:0]               i_reg_example
-
+  output      [1:0]                   o_rresp,
+  output      [DATA_WIDTH - 1: 0]     o_rdata
 );
 //local parameters
 
-
-localparam      IDLE                = 4'h0;
-localparam      RECEIVE_WRITE_DATA  = 4'h1;
-localparam      SEND_WRITE_RESP     = 4'h2;
-localparam      SEND_READ_DATA      = 4'h3;
-
-
 //Address Map
-localparam  ADDR_CONTROL  = 0;
-localparam  ADDR_STATUS   = 1;
-
-//registes/wires
-reg   [3:0]                     state;
-reg   [ADDR_WIDTH - 1: 0]       address;
-
-reg   [DATA_WIDTH - 1: 0]       control;
-reg   [DATA_WIDTH - 1: 0]       status;
-
-wire  [STROBE_WIDTH - 1: 0]     w_data_in_bytes [7: 0];
+localparam                  REG_CONTROL         = 0;
+localparam                  REG_STATUS          = 1;
+localparam                  REG_VERSION         = 2;
 
 
-//submodules
-//asynchronous logic
+//Register/Wire
 
-//synchronous logic
+//AXI Signals
+reg         [31:0]              control;
+wire        [31:0]              status;
 
+//Simple User Interface
+wire  [ADDR_WIDTH - 1: 0]           w_reg_address;
+wire   [((ADDR_WIDTH - 1) - 2): 0]  w_reg_32bit_address;
+reg                                 r_reg_invalid_addr;
+
+wire                                w_reg_in_rdy;
+reg                                 r_reg_in_ack_stb;
+wire  [DATA_WIDTH - 1: 0]           w_reg_in_data;
+
+wire                                w_reg_out_req;
+reg                                 r_reg_out_rdy_stb;
+reg   [DATA_WIDTH - 1: 0]           r_reg_out_data;
+
+wire                                w_axi_rst;
+
+
+//Submodules
+//Convert AXI Slave signals to a simple register/address strobe
+axi_lite_slave #(
+  .ADDR_WIDTH         (ADDR_WIDTH           ),
+  .DATA_WIDTH         (DATA_WIDTH           )
+
+) axi_lite_reg_interface (
+  .clk                (clk                  ),
+  .rst                (w_axi_rst            ),
+
+
+  .i_awvalid          (i_awvalid            ),
+  .i_awaddr           (i_awaddr             ),
+  .o_awready          (o_awready            ),
+
+  .i_wvalid           (i_wvalid             ),
+  .o_wready           (o_wready             ),
+  .i_wstrb            (i_wstrb              ),
+  .i_wdata            (i_wdata              ),
+
+  .o_bvalid           (o_bvalid             ),
+  .i_bready           (i_bready             ),
+  .o_bresp            (o_bresp              ),
+
+  .i_arvalid          (i_arvalid            ),
+  .o_arready          (o_arready            ),
+  .i_araddr           (i_araddr             ),
+
+  .o_rvalid           (o_rvalid             ),
+  .i_rready           (i_rready             ),
+  .o_rresp            (o_rresp              ),
+  .o_rdata            (o_rdata              ),
+
+
+  .o_reg_address      (w_reg_address        ),
+  .i_reg_invalid_addr (r_reg_invalid_addr   ),
+
+  .o_reg_in_rdy       (w_reg_in_rdy         ),
+  .i_reg_in_ack_stb   (r_reg_in_ack_stb     ),
+  .o_reg_in_data      (w_reg_in_data        ),
+
+  .o_reg_out_req      (w_reg_out_req        ),
+  .i_reg_out_rdy_stb  (r_reg_out_rdy_stb    ),
+  .i_reg_out_data     (r_reg_out_data       )
+);
+
+//Asynchronous Logic
+assign        w_axi_rst               = (INVERT_AXI_RESET)   ? ~rst         : rst;
+
+assign        w_reg_32bit_address     = w_reg_address[(ADDR_WIDTH - 1): 2];
+
+//blocks
 always @ (posedge clk) begin
-  //Deassert Strobes
-  o_bvalid              <=  0;
-  o_rvalid              <=  0;
+  //De-assert Strobes
+  r_reg_in_ack_stb                        <=  0;
+  r_reg_out_rdy_stb                       <=  0;
+  r_reg_invalid_addr                      <=  0;
 
-  if (rst) begin
-    address             <=  0;
-    o_arready           <=  0;
-    o_awready           <=  0;
-    o_wready            <=  0;
-
-    o_rvalid            <=  0;
-    o_bresp             <=  0;
-    o_rresp             <=  0;
-    o_bvalid            <=  0;
-
-
-    //Demo values
-    control             <=  0;
-    status              <=  0;
-    state               <= IDLE;
+  if (w_axi_rst) begin
+    control                               <=  0;
+    r_reg_out_data                        <=  0;
   end
   else begin
-    case (state)
-      IDLE: begin
-        address         <=  0;
-        o_awready       <=  1;
-        o_arready       <=  1;
-        o_rvalid        <=  0;
-        o_bresp         <=  0;
-        o_rresp         <=  0;
-        o_bvalid        <=  0;
-
-        //Only handle read or write at one time, not both
-        if (i_awvalid && o_awready) begin
-          address       <=  i_awaddr;
-          //XXX: If need be a delay canbe added before asserting the o_wready (ready to read data) but this must be in another state
-          o_wready      <=  1;
-          o_arready     <=  0;
-          state         <=  RECEIVE_WRITE_DATA;
+    if (w_reg_in_rdy && !r_reg_in_ack_stb) begin
+      //From master
+      case (w_reg_32bit_address)
+        REG_CONTROL: begin
+          control                         <= w_reg_in_data;
         end
-        else if (i_arvalid && o_arready) begin
-          address       <=  i_araddr;
-          o_awready     <=  0;
-          state         <=  SEND_READ_DATA;
+        default: begin
         end
+      endcase
+      if (w_reg_32bit_address > REG_VERSION) begin
+        r_reg_invalid_addr                <= 1;
       end
-      RECEIVE_WRITE_DATA: begin
-        o_awready       <=  0;
-
-        if (i_wvalid) begin
-          //Assume everything is okay unless the address is wrong,
-          //We don't want to clutter our states with this statement over and over again
-          o_bresp       <=  `AXI_RESP_OKAY;
-          o_bvalid      <=  1;
-          case (address)
-            ADDR_CONTROL: begin
-              control   <= i_wdata;
-              //$display("Wrote to address: %h with a value of %h", address, i_wdata);
-            end
-            default: begin
-              //Can't write to status, any other address is invalid
-              $display("%h is not writable!", address);
-              o_bresp   <=  `AXI_RESP_DECERR;
-            end
-          endcase
-          state         <=  SEND_WRITE_RESP;
+      r_reg_in_ack_stb                    <= 1;
+    end
+    else if (w_reg_out_req && !r_reg_out_rdy_stb) begin
+      //To master
+      case (w_reg_32bit_address)
+        REG_CONTROL: begin
+          r_reg_out_data                  <= control;
         end
-      end
-      SEND_WRITE_RESP: begin
-        if (i_bready) begin
-          o_bvalid      <=  0;
-          state         <=  IDLE;
+        REG_STATUS: begin
+          r_reg_out_data                  <= status;
         end
-      end
-
-      //Read Path
-      SEND_READ_DATA: begin
-        o_arready       <=  0;
-        o_rresp         <=  `AXI_RESP_OKAY;
-        //If more time is needed for a response another state should be added here
-        o_rvalid        <=  1;
-        case (address)
-          ADDR_CONTROL: begin
-            //$display ("Reading from address %h, host should receive", address, control);
-            o_rdata     <=  control;
-          end
-          ADDR_STATUS: begin
-            o_rdata     <=  status;
-          end
-          default: begin
-            //Nothing here
-            o_rdata     <=  0;
-            o_rresp     <=  `AXI_RESP_DECERR;
-          end
-        endcase
-        if (i_rready && o_rvalid) begin
-          o_rvalid      <=  0;
-          state         <=  IDLE;
+        REG_VERSION: begin
+          r_reg_out_data                  <= 32'h00;
+          r_reg_out_data[`MAJOR_RANGE]    <= `MAJOR_VERSION;
+          r_reg_out_data[`MINOR_RANGE]    <= `MINOR_VERSION;
+          r_reg_out_data[`REVISION_RANGE] <= `REVISION;
         end
+        default: begin
+          r_reg_out_data                  <= 32'h00;
+        end
+      endcase
+      if (w_reg_32bit_address > REG_VERSION) begin
+        r_reg_invalid_addr                <= 1;
       end
-      default: begin
-        $display("Shouldn't have gotten here!");
-      end
-    endcase
+      r_reg_out_rdy_stb                   <= 1;
+    end
   end
 end
+
+
+
+
 
 endmodule

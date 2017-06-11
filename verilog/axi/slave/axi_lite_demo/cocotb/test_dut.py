@@ -21,7 +21,7 @@ def setup_dut(dut):
 
 
 @cocotb.test(skip = False)
-def first_test(dut):
+def write_test(dut):
     """
     Description:
         Very Basic Functionality
@@ -30,45 +30,45 @@ def first_test(dut):
     Test ID: 0
 
     Expected Results:
-        Write to all registers
+        Write to the control register
     """
 
     dut.rst <= 1
+    dut.test_id <= 0
     axim = AXI4LiteMaster(dut, "AXIML", dut.clk)
     setup_dut(dut)
     yield Timer(CLK_PERIOD * 10)
     dut.rst <= 0
-
-    dut.log.info("Ready")
-    dut.log.info("read from address 0x00")
-    yield Timer(CLK_PERIOD * 10)
-    data = yield axim.read(0x00);
-    dut.log.info("Data from Address 0x00: 0x%08X" % data)
     yield Timer(CLK_PERIOD * 10)
 
-
-    dut.log.info("write to address 0x00")
-    yield axim.write(0x00, 0x10)
-    yield Timer(CLK_PERIOD * 10)
-
-    dut.log.info("read from address 0x00")
-    yield Timer(CLK_PERIOD * 10)
-    data = yield axim.read(0x00);
-    dut.log.info("Data from Address 0x00: 0x%08X" % data)
-    yield Timer(CLK_PERIOD * 10)
-
-    dut.log.info("read from address 0x01")
-    yield Timer(CLK_PERIOD * 10)
-    data = yield axim.read(0x01);
-    dut.log.info("Data from Address 0x01: 0x%08X" % data)
-    yield Timer(CLK_PERIOD * 10)
-
-    '''
-    dut.log.info("This should fail!")
-    yield axim.write(0x01, 0x00);
-    '''
+    #data = yield axim.write(0 << 2);
+    data = yield axim.write(0x00 << 2, 0x01234567);
     yield Timer(CLK_PERIOD * 100)
     dut.log.info("Done")
 
+@cocotb.test(skip = False)
+def read_test(dut):
+    """
+    Description:
+        Very Basic Functionality
+            Startup Nysa
 
+    Test ID: 1
+
+    Expected Results:
+        Read from the version register
+    """
+
+    dut.rst <= 1
+    dut.test_id <= 1
+    axim = AXI4LiteMaster(dut, "AXIML", dut.clk)
+    setup_dut(dut)
+    yield Timer(CLK_PERIOD * 10)
+    dut.rst <= 0
+    yield Timer(CLK_PERIOD * 10)
+
+    #data = yield axim.write(0 << 2);
+    data = yield axim.read(0x02 << 2);
+    yield Timer(CLK_PERIOD * 100)
+    dut.log.info("Done")
 

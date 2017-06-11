@@ -45,42 +45,44 @@ output      [DATA_WIDTH - 1: 0]     AXIML_RDATA
 
 reg               r_rst;
 always @ (*)      r_rst           = rst;
+reg   [3:0]       test_id         = 0;
 
 //submodules
 
 axi_lite_demo #(
-  .ADDR_WIDTH   (ADDR_WIDTH ),
-  .DATA_WIDTH   (DATA_WIDTH )
+  .ADDR_WIDTH       (ADDR_WIDTH     ),
+  .DATA_WIDTH       (DATA_WIDTH     ),
+  .INVERT_AXI_RESET (0              )
 ) dut (
-  .clk          (clk        ),
-  .rst          (r_rst      ),
-                           
-                           
-  .i_awvalid    (AXIML_AWVALID  ),
-  .i_awaddr     (AXIML_AWADDR   ),
-  .o_awready    (AXIML_AWREADY  ),
-                           
-                           
-  .i_wvalid     (AXIML_WVALID   ),
-  .o_wready     (AXIML_WREADY   ),
-  .i_wstrb      (AXIML_WSTRB  ),
-  .i_wdata      (AXIML_WDATA    ),
-                           
-                           
-  .o_bvalid     (AXIML_BVALID   ),
-  .i_bready     (AXIML_BREADY   ),
-  .o_bresp      (AXIML_BRESP    ),
-                           
-                           
-  .i_arvalid    (AXIML_ARVALID  ),
-  .o_arready    (AXIML_ARREADY  ),
-  .i_araddr     (AXIML_ARADDR   ),
-                           
-                           
-  .o_rvalid     (AXIML_RVALID   ),
-  .i_rready     (AXIML_RREADY   ),
-  .o_rresp      (AXIML_RRESP    ),
-  .o_rdata      (AXIML_RDATA    )
+  .clk              (clk            ),
+  .rst              (r_rst          ),
+                               
+                               
+  .i_awvalid        (AXIML_AWVALID  ),
+  .i_awaddr         (AXIML_AWADDR   ),
+  .o_awready        (AXIML_AWREADY  ),
+                               
+                               
+  .i_wvalid         (AXIML_WVALID   ),
+  .o_wready         (AXIML_WREADY   ),
+  .i_wstrb          (AXIML_WSTRB    ),
+  .i_wdata          (AXIML_WDATA    ),
+                               
+                               
+  .o_bvalid         (AXIML_BVALID   ),
+  .i_bready         (AXIML_BREADY   ),
+  .o_bresp          (AXIML_BRESP    ),
+                               
+                               
+  .i_arvalid        (AXIML_ARVALID  ),
+  .o_arready        (AXIML_ARREADY  ),
+  .i_araddr         (AXIML_ARADDR   ),
+                               
+                               
+  .o_rvalid         (AXIML_RVALID   ),
+  .i_rready         (AXIML_RREADY   ),
+  .o_rresp          (AXIML_RRESP    ),
+  .o_rdata          (AXIML_RDATA    )
 
 );
 

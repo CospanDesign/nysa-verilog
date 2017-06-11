@@ -8,9 +8,11 @@ PYTHONPATH := ./model:$(PYTHONPATH)
 export PYTHONPATH
 export PYTHONHOME=$(shell python -c "from distutils.sysconfig import get_config_var; print(get_config_var('prefix'))")
 
-EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/ -I${NYSA_SATA}/rtl/ -I$(TOPDIR)/../wb_dma/rtl/
+EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/axi/
+
 
 #DUT
+VERILOG_SOURCES = $(NYSA)/verilog/generic/axi_lite_slave.v
 VERILOG_SOURCES += $(TOPDIR)/rtl/axi_lite_demo.v
 #VERILOG_SOURCES =  $(NYSA)/verilog/generic/blk_mem.v
 
