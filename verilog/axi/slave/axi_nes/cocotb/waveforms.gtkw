@@ -1,0 +1,138 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Sun Jun 11 13:49:21 2017
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_nes/cocotb/design.vcd"
+[dumpfile_mtime] "Sun Jun 11 13:49:16 2017"
+[dumpfile_size] 991731
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_nes/cocotb/waveforms.gtkw"
+[timestart] 28475
+[size] 1918 1059
+[pos] -1 -1
+*-10.416479 33430 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_cocotb.
+[treeopen] tb_cocotb.dut.
+[treeopen] tb_cocotb.dut.nes.
+[treeopen] tb_cocotb.dut.nes.vram_blk.
+[treeopen] tb_cocotb.dut.nes.wram_blk.
+[sst_width] 213
+[signals_width] 222
+[sst_expanded] 1
+[sst_vpaned_height] 313
+@28
+tb_cocotb.clk
+tb_cocotb.rst
+@200
+-
+@800200
+-AXI4 Master Lite
+@28
+tb_cocotb.AXIML_ARREADY
+tb_cocotb.AXIML_ARVALID
+tb_cocotb.AXIML_AWREADY
+tb_cocotb.AXIML_AWVALID
+tb_cocotb.AXIML_BREADY
+tb_cocotb.AXIML_BRESP[1:0]
+tb_cocotb.AXIML_BVALID
+@22
+tb_cocotb.AXIML_RDATA[31:0]
+@28
+tb_cocotb.AXIML_RREADY
+tb_cocotb.AXIML_RRESP[1:0]
+tb_cocotb.AXIML_RVALID
+@22
+tb_cocotb.AXIML_WDATA[31:0]
+@28
+tb_cocotb.AXIML_WREADY
+@22
+tb_cocotb.AXIML_WSTRB[3:0]
+@28
+tb_cocotb.AXIML_WVALID
+@1000200
+-AXI4 Master Lite
+@800200
+-HCI
+@28
+tb_cocotb.dut.nes.hci_blk.clk
+tb_cocotb.dut.nes.hci_blk.rst
+@200
+-
+@22
+[color] 5
+tb_cocotb.dut.nes.hci_blk.state[4:0]
+tb_cocotb.dut.nes.hci_blk.i_address[15:0]
+tb_cocotb.dut.nes.hci_blk.r_address[15:0]
+@200
+-
+@22
+tb_cocotb.dut.nes.hci_blk.i_count[31:0]
+@28
+tb_cocotb.dut.nes.hci_blk.i_cpu_break
+@22
+tb_cocotb.dut.nes.hci_blk.i_cpu_dbg_reg_din[7:0]
+tb_cocotb.dut.nes.hci_blk.i_cpu_din[7:0]
+tb_cocotb.dut.nes.hci_blk.i_data[7:0]
+@28
+tb_cocotb.dut.nes.hci_blk.i_data_strobe
+tb_cocotb.dut.nes.hci_blk.i_host_ready
+@22
+tb_cocotb.dut.nes.hci_blk.i_opcode[7:0]
+@28
+tb_cocotb.dut.nes.hci_blk.i_opcode_strobe
+@22
+tb_cocotb.dut.nes.hci_blk.i_ppu_vram_din[7:0]
+@28
+tb_cocotb.dut.nes.hci_blk.i_reset_sm
+@22
+tb_cocotb.dut.nes.hci_blk.o_cart_cfg[39:0]
+@28
+tb_cocotb.dut.nes.hci_blk.o_cart_cfg_update
+@22
+tb_cocotb.dut.nes.hci_blk.o_cpu_address[15:0]
+tb_cocotb.dut.nes.hci_blk.o_cpu_dbg_reg_dout[7:0]
+tb_cocotb.dut.nes.hci_blk.o_cpu_dbg_reg_sel[3:0]
+@28
+tb_cocotb.dut.nes.hci_blk.o_cpu_dbg_reg_wr
+@22
+tb_cocotb.dut.nes.hci_blk.o_cpu_dout[7:0]
+@28
+tb_cocotb.dut.nes.hci_blk.o_cpu_r_nw
+@22
+tb_cocotb.dut.nes.hci_blk.o_data[7:0]
+@28
+tb_cocotb.dut.nes.hci_blk.o_data_strobe
+tb_cocotb.dut.nes.hci_blk.o_dbg_active
+tb_cocotb.dut.nes.hci_blk.o_hci_ready
+tb_cocotb.dut.nes.hci_blk.o_opcode_ack
+@22
+tb_cocotb.dut.nes.hci_blk.o_opcode_status[15:0]
+tb_cocotb.dut.nes.hci_blk.o_ppu_vram_address[15:0]
+tb_cocotb.dut.nes.hci_blk.o_ppu_vram_dout[7:0]
+@28
+tb_cocotb.dut.nes.hci_blk.o_ppu_vram_wr
+@22
+tb_cocotb.dut.nes.hci_blk.r_execute_count[15:0]
+@28
+tb_cocotb.dut.nes.hci_blk.r_host_one_shot
+@1000200
+-HCI
+@200
+-
+@28
+tb_cocotb.dut.nes.wram_blk.wram_bram.clk
+@22
+tb_cocotb.dut.nes.wram_blk.wram_bram.addr_a[10:0]
+tb_cocotb.dut.nes.wram_blk.wram_bram.din_a[7:0]
+@200
+-
+@28
+tb_cocotb.dut.nes.hci_active
+@22
+tb_cocotb.dut.nes.rp2a03_a[15:0]
+tb_cocotb.dut.nes.cpumc_a[15:0]
+@23
+tb_cocotb.dut.nes.wram_blk.a_in[10:0]
+@200
+-
+[pattern_trace] 1
+[pattern_trace] 0
