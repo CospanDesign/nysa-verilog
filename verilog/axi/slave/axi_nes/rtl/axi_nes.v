@@ -193,7 +193,7 @@ wire                                w_rfifo_ready;
 image_to_ppfifo i2p (
   .clk                  (clk                      ),
   .axis_clk             (i_axis_clk               ),
-  .rst                  (rst                      ),
+  .rst                  (w_axi_rst                ),
   .i_enable             (w_enable_dma             ),
 
   .i_video_hsync        (w_video_act              ),
@@ -243,7 +243,7 @@ nes_top #(
   .BG_COLOR             (BG_COLOR           )
 )nes (
   .clk                  (clk                 ),
-  .rst                  (rst                 ),
+  .rst                  (w_axi_rst           ),
 
   .i_console_reset      (r_console_reset     ),
   .i_mute_control       (w_mute_control      ),
