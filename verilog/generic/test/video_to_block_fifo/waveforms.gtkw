@@ -1,0 +1,165 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Sun Jun 25 15:54:12 2017
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/generic/test/video_to_block_fifo/design.vcd"
+[dumpfile_mtime] "Sun Jun 25 15:54:12 2017"
+[dumpfile_size] 8425472
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/generic/test/video_to_block_fifo/waveforms.gtkw"
+[timestart] 0
+[size] 1918 1059
+[pos] -1 -1
+*-11.763190 3160 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_cocotb.
+[sst_width] 213
+[signals_width] 230
+[sst_expanded] 1
+[sst_vpaned_height] 313
+@28
+tb_cocotb.rst
+@22
+tb_cocotb.test_id[31:0]
+@200
+-
+@28
+tb_cocotb.rgbg.clk
+@22
+[color] 5
+tb_cocotb.rgbg.state[3:0]
+@200
+-
+@800200
+-RGB Generator
+@200
+-
+@28
+tb_cocotb.rgbg.w_valid
+tb_cocotb.rgbg.o_pix_pulse_out
+tb_cocotb.rgbg.r_valid
+@200
+-NES PPU Interface
+@22
+tb_cocotb.rgbg.o_nes_x_out[9:0]
+tb_cocotb.rgbg.o_nes_y_out[9:0]
+tb_cocotb.rgbg.o_nes_y_next_out[9:0]
+tb_cocotb.rgbg.i_sys_palette_idx_in[5:0]
+@200
+-
+@28
+tb_cocotb.rgbg.o_r_out[2:0]
+tb_cocotb.rgbg.o_g_out[2:0]
+tb_cocotb.rgbg.o_b_out[1:0]
+@200
+-
+@28
+tb_cocotb.rgbg.o_sof_stb
+tb_cocotb.rgbg.o_video_hsync
+tb_cocotb.rgbg.o_vblank
+@c00022
+tb_cocotb.rgbg.r_clk_div_count[7:0]
+@28
+(0)tb_cocotb.rgbg.r_clk_div_count[7:0]
+(1)tb_cocotb.rgbg.r_clk_div_count[7:0]
+(2)tb_cocotb.rgbg.r_clk_div_count[7:0]
+(3)tb_cocotb.rgbg.r_clk_div_count[7:0]
+(4)tb_cocotb.rgbg.r_clk_div_count[7:0]
+(5)tb_cocotb.rgbg.r_clk_div_count[7:0]
+(6)tb_cocotb.rgbg.r_clk_div_count[7:0]
+(7)tb_cocotb.rgbg.r_clk_div_count[7:0]
+@1401200
+-group_end
+@22
+tb_cocotb.rgbg.r_rgb[7:0]
+tb_cocotb.rgbg.r_x_pos[8:0]
+tb_cocotb.rgbg.r_y_pos[8:0]
+@28
+tb_cocotb.rgbg.rst
+@22
+tb_cocotb.rgbg.w_bg_color[7:0]
+tb_cocotb.rgbg.w_x_pos[8:0]
+tb_cocotb.rgbg.w_y_pos[8:0]
+tb_cocotb.rgbg.w_vblank_timeout[31:0]
+@1000200
+-RGB Generator
+@200
+-
+-
+-
+@800200
+-VIDEO to block FIFO
+@28
+tb_cocotb.v2bf.i_enable
+@200
+-
+-Video From PPU
+@28
+tb_cocotb.v2bf.i_video_sof_stb
+tb_cocotb.v2bf.i_video_hsync
+@200
+-
+@22
+tb_cocotb.v2bf.r_write_data[24:0]
+@200
+-
+@28
+tb_cocotb.v2bf.w_write_ready
+tb_cocotb.v2bf.r_write_activate
+@24
+tb_cocotb.v2bf.r_count[23:0]
+@28
+tb_cocotb.v2bf.r_used
+tb_cocotb.v2bf.r_write_stb
+@200
+-
+-Video Out
+@28
+tb_cocotb.v2bf.i_rfifo_activate
+tb_cocotb.v2bf.i_rfifo_clk
+tb_cocotb.v2bf.i_rfifo_rst
+tb_cocotb.v2bf.i_rfifo_strobe
+@22
+tb_cocotb.v2bf.o_rfifo_data[24:0]
+@28
+tb_cocotb.v2bf.o_rfifo_ready
+@24
+tb_cocotb.v2bf.o_rfifo_size[23:0]
+@1000200
+-VIDEO to block FIFO
+@800201
+-Video to AXIS
+@29
+tb_cocotb.ap2as.i_axi_clk
+tb_cocotb.ap2as.rst
+@201
+-
+@23
+[color] 5
+tb_cocotb.ap2as.state[3:0]
+@201
+-
+@23
+tb_cocotb.ap2as.i_ppfifo_data[24:0]
+tb_cocotb.ap2as.i_ppfifo_size[23:0]
+@29
+tb_cocotb.ap2as.i_ppfifo_rdy
+tb_cocotb.ap2as.o_ppfifo_act
+tb_cocotb.ap2as.o_ppfifo_stb
+@201
+-
+@23
+tb_cocotb.ap2as.o_axi_data[23:0]
+@29
+tb_cocotb.ap2as.o_axi_last
+@23
+tb_cocotb.ap2as.o_axi_user[3:0]
+@29
+tb_cocotb.ap2as.i_axi_ready
+tb_cocotb.ap2as.o_axi_valid
+@23
+tb_cocotb.ap2as.r_count[23:0]
+@1000201
+-Video to AXIS
+@200
+-
+[pattern_trace] 1
+[pattern_trace] 0

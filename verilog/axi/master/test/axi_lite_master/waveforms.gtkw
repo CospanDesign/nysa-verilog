@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Fri Jun  2 22:39:21 2017
+[*] Sat Jun  3 17:19:22 2017
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/axi/master/test/axi_lite_master/design.vcd"
-[dumpfile_mtime] "Fri Jun  2 22:30:42 2017"
-[dumpfile_size] 23584
+[dumpfile_mtime] "Sat Jun  3 16:53:03 2017"
+[dumpfile_size] 8719
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/axi/master/test/axi_lite_master/waveforms.gtkw"
-[timestart] 508
+[timestart] 0
 [size] 1918 1059
 [pos] -1 -1
-*-5.110686 542 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-10.351411 1267 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.am.
 [sst_width] 213
@@ -49,9 +49,11 @@ tb_cocotb.am.o_cmd_status[31:0]
 -
 @1000200
 -Command Interface
+@22
+tb_cocotb.AXIS_RDATA[31:0]
 @2022
 [color] 5
-^1 /home/cospan/Projects/nysa-verilog/verilog/axi/master/test/axi_lite_master/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/master/test/axi_lite_master/am_state.txt
+^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/master/test/axi_lite_master/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/master/test/axi_lite_master/am_state.txt
 tb_cocotb.am.state[3:0]
 @200
 -
@@ -73,7 +75,6 @@ tb_cocotb.am.o_awsize[2:0]
 -
 @22
 tb_cocotb.am.o_wdata[31:0]
-@23
 tb_cocotb.am.o_wstrobe[3:0]
 @28
 tb_cocotb.am.o_wvalid

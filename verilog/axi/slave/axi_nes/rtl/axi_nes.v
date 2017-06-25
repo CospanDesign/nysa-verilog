@@ -188,9 +188,15 @@ wire                                w_rfifo_activate;
 wire                                w_rfifo_strobe;
 wire                                w_rfifo_ready;
 
+wire  [7:0]                         w_video_red;
+wire  [7:0]                         w_video_green;
+wire  [7:0]                         w_video_blue;
+
+
 
 //Submodules
-image_to_ppfifo i2p (
+/*
+image_to_block_fifo i2bf (
   .clk                  (clk                      ),
   .axis_clk             (i_axis_clk               ),
   .rst                  (rst                      ),
@@ -207,6 +213,36 @@ image_to_ppfifo i2p (
   .i_rfifo_strobe       (w_rfifo_strobe           ),
   .o_rfifo_data         (w_rfifo_data             ),
   .o_rfifo_size         (w_rfifo_size             )
+);
+*/
+
+
+video_to_block_fifo #(
+  .BUFFER_SIZE        (AXIS_WIDTH           )
+)v2bf(
+  //universal input
+  .clk                  (clk                  ),
+  .rst                  (w_axi_rst            ),
+
+  //.i_enable             (w_enable_dma         ),
+  .i_enable             (1'b1                 ),
+
+  //Video In
+  .i_video_hsync        (w_video_act          ),
+  .i_video_sof_stb      (w_sof_stb            ),
+  .i_red                (w_video_red          ),
+  .i_green              (w_video_green        ),
+  .i_blue               (w_video_blue         ),
+
+  //Read Path
+  .i_rfifo_clk          (i_axis_clk           ),
+  .i_rfifo_rst          (w_axis_rst           ),
+  .o_rfifo_ready        (w_rfifo_ready        ),
+  .i_rfifo_activate     (w_rfifo_act          ),
+  .i_rfifo_strobe       (w_rfifo_stb          ),
+  .o_rfifo_data         (w_rfifo_data         ),
+  .o_rfifo_size         (w_rfifo_size         )
+
 );
 
 //Take in an PPFIFO incomming video data and output an AXI Stream
@@ -231,7 +267,7 @@ adapter_ppfifo_2_axi_stream #(
   .o_axi_user         (o_axis_user          )
 );
 
-nes_top #( 
+nes_top #(
   .CLOCK_RATE           (CLOCK_RATE         ),
   .FPS                  (FPS                ),
 
@@ -243,7 +279,7 @@ nes_top #(
   .BG_COLOR             (BG_COLOR           )
 )nes (
   .clk                  (clk                 ),
-  .rst                  (rst                 ),
+  .rst                  (w_axi_rst           ),
 
   .i_console_reset      (r_console_reset     ),
   .i_mute_control       (w_mute_control      ),
@@ -288,7 +324,7 @@ axi_lite_slave #(
 
 ) axi_lite_reg_interface (
   .clk                (clk                  ),
-  .rst                (w_axi_rst            ),
+  .rst                (w_axis_rst           ),
 
   .i_awvalid          (i_awvalid            ),
   .i_awaddr           (i_awaddr             ),
@@ -335,12 +371,15 @@ assign  status[15:3]                              = 0;
 
 assign  w_mute_control                            = 4'h0;
 
+assign  w_video_red                               = {w_red,     5'h0};
+assign  w_video_blue                              = {w_blue,    5'h0};
+assign  w_video_green                             = {w_green,   6'h0};
 
 
 //Asynchronous Logic
-assign        w_axi_rst                           = (INVERT_AXI_RESET)    ? ~rst         : rst;
-assign        w_axis_rst                          = (INVERT_AXIS_RESET)   ? ~i_axis_rst   : i_axis_rst;
-assign        w_reg_32bit_address                 = w_reg_address[(ADDR_WIDTH - 1): 2];
+assign  w_axi_rst                                 = (INVERT_AXI_RESET)    ? ~rst         : rst;
+assign  w_axis_rst                                = (INVERT_AXIS_RESET)   ? ~i_axis_rst   : i_axis_rst;
+assign  w_reg_32bit_address                       = w_reg_address[(ADDR_WIDTH - 1): 2];
 
 //blocks
 always @ (posedge clk) begin

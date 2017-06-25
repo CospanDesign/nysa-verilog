@@ -15,6 +15,7 @@ EXTRA_ARGS+=-I$(TOPDIR)/rtl/ -I$(NYSA)/verilog/axi/
 VERILOG_SOURCES =  $(NYSA)/verilog/generic/axi_lite_slave.v
 VERILOG_SOURCES += $(NYSA)/verilog/generic/block_fifo.v
 VERILOG_SOURCES += $(NYSA)/verilog/generic/adapter_ppfifo_2_axi_stream.v
+VERILOG_SOURCES += $(NYSA)/verilog/generic/video_to_block_fifo.v
 
 
 VERILOG_SOURCES += $(TOPDIR)/rtl/nes_hci.v
@@ -26,7 +27,6 @@ VERILOG_SOURCES += $(TOPDIR)/rtl/cmn/block_ram/single_port_ram_sync.v
 VERILOG_SOURCES += $(TOPDIR)/rtl/cmn/fifo/fifo.v
 VERILOG_SOURCES += $(TOPDIR)/rtl/cmn/vga_sync/vga_sync.v
 
-VERILOG_SOURCES += $(TOPDIR)/rtl/image_to_ppfifo.v
 VERILOG_SOURCES += $(TOPDIR)/rtl/cpu/apu/apu.v
 VERILOG_SOURCES += $(TOPDIR)/rtl/cpu/apu/apu_div.v
 VERILOG_SOURCES += $(TOPDIR)/rtl/cpu/apu/apu_envelope_generator.v

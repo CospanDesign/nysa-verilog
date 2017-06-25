@@ -110,6 +110,7 @@ def run_nestest(dut):
     #axim = AXI4LiteMaster(dut, "AXIML", dut.clk)
     nes = NESHCI(dut, "AXIML")
     video_in = AXI4StreamSlave(dut, "AXISS", dut.clk, width=24)
+    dut.log.info("Video in start...")
 
     setup_dut(dut)
     yield Timer(CLK_PERIOD * 10)
@@ -120,9 +121,14 @@ def run_nestest(dut):
     yield nes.reset_hci()
     yield nes.reset_console()
     yield Timer(CLK_PERIOD * 10)
+    dut.log.info("Start video in AXIS")
 
+    cocotb.fork(video_in.read())
+
+    dut.log.info("Load ROM")
     yield nes.load_rom("./nestest.nes")
 
+    dut.log.info("Waiting")
     yield Timer(CLK_PERIOD * 1000)
 
 

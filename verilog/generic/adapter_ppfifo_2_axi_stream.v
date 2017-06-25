@@ -36,7 +36,7 @@ SOFTWARE.
 `timescale 1ps / 1ps
 
 module adapter_ppfifo_2_axi_stream #(
-  parameter                                     DATA_WIDTH          = 32,
+  parameter                                     DATA_WIDTH          = 24,
   parameter                                     STROBE_WIDTH        = DATA_WIDTH / 8,
   parameter                                     USE_KEEP            = 0
 )(
