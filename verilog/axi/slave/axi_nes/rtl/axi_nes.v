@@ -199,7 +199,7 @@ wire  [7:0]                         w_video_blue;
 image_to_block_fifo i2bf (
   .clk                  (clk                      ),
   .axis_clk             (i_axis_clk               ),
-  .rst                  (rst                      ),
+  .rst                  (w_axi_rst                ),
   .i_enable             (w_enable_dma             ),
 
   .i_video_hsync        (w_video_act              ),
