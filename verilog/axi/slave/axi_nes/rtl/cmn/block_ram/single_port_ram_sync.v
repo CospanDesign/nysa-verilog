@@ -28,6 +28,9 @@
 // Dual port RAM with synchronous read.  Modified version of listing 12.4 in "FPGA Prototyping by
 // Verilog Examples," itself a modified version of XST 8.11 v_rams_11.
 // Single port RAM with synchronous read.
+
+`timescale 1ps / 1ps
+
 module single_port_ram_sync
 #(
   parameter ADDR_WIDTH = 6,

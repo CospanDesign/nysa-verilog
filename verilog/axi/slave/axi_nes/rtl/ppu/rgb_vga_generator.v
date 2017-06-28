@@ -1,4 +1,7 @@
+
 `include "project_defines.v"
+
+`timescale 1ps / 1ps
 module rgb_vga_generator #(
   parameter           CLOCK_RATE    = 100
 

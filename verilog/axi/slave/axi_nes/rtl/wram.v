@@ -24,6 +24,7 @@
 *
 *  Work RAM module; implements 2KB of on-board WRAM as fpga block RAM.
 ***************************************************************************************************/
+`timescale 1ps / 1ps
 
 module wram(
   input         clk_in,   // system clock

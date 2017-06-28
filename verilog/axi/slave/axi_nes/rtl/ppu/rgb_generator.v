@@ -39,10 +39,14 @@ module rgb_generator #(
 //local parameters
 localparam  IMAGE_WIDTH     = 256;
 localparam  IMAGE_HEIGHT    = 240;
-
-localparam VBLANK_TIMEOUT = ((((FRAME_WIDTH + HBLANK) * FRAME_HEIGHT) + VBLANK) > (CLOCK_RATE / FPS)) ?
+localparam  VBLANK_TIMEOUT = ((((FRAME_WIDTH + HBLANK) * FRAME_HEIGHT) + VBLANK) > (CLOCK_RATE / FPS)) ?
                                           10 :
                                           (CLOCK_RATE / FPS) - (((FRAME_WIDTH + HBLANK) * FRAME_HEIGHT) + VBLANK);
+
+//localparam VBLANK_TIMEOUT = 500;
+//localparam VBLANK_TIMEOUT = 148064;
+//localparam VBLANK_TIMEOUT = 150000;
+
 
 localparam  IDLE            = 0;
 localparam  VID             = 1;
@@ -55,7 +59,8 @@ reg   [7:0]       r_rgb;
 wire  [8:0]       w_x_pos;
 wire  [8:0]       w_y_pos;
 
-reg   [7:0]       r_clk_div_count;
+reg   [23:0]      r_clk_div_count;
+wire  [23:0]      w_vblank_debug = VBLANK_TIMEOUT;
 reg   [3:0]       state;
 
 wire  [7:0]       w_bg_color;

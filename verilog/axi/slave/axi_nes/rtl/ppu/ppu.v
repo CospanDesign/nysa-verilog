@@ -24,6 +24,7 @@
 *
 *  Picture processing unit block.
 ***************************************************************************************************/
+`timescale 1ps / 1ps
 
 module ppu #(
   parameter           CLOCK_RATE    = 100000000,

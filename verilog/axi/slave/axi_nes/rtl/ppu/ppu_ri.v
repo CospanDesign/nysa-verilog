@@ -24,6 +24,7 @@
 *
 *  External register interface PPU sub-block.
 ***************************************************************************************************/
+`timescale 1ps / 1ps
 
 module ppu_ri
 (

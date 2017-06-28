@@ -25,6 +25,8 @@
 *  Audio Processing Unit.
 ***************************************************************************************************/
 
+`timescale 1ps / 1ps
+
 module apu(
   input         clk_in,    // system clock signal
   input         rst_in,    // reset signal

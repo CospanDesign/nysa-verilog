@@ -184,14 +184,17 @@ reg   [7:0]                         r_hci_dout;
 
 wire  [23:0]                        w_rfifo_size;
 wire  [24:0]                        w_rfifo_data;
-wire                                w_rfifo_activate;
-wire                                w_rfifo_strobe;
-wire                                w_rfifo_ready;
+wire                                w_rfifo_act;
+wire                                w_rfifo_stb;
+wire                                w_rfifo_rdy;
 
 wire  [7:0]                         w_video_red;
 wire  [7:0]                         w_video_green;
 wire  [7:0]                         w_video_blue;
 
+wire                                w_audio;
+
+wire                                w_axis_rst;
 
 
 //Submodules
@@ -208,7 +211,7 @@ image_to_block_fifo i2bf (
   .i_green              (w_green                  ),
   .i_blue               (w_blue                   ),
 
-  .o_rfifo_ready        (w_rfifo_ready            ),
+  .o_rfifo_ready        (w_rfifo_rdy              ),
   .i_rfifo_activate     (w_rfifo_activate         ),
   .i_rfifo_strobe       (w_rfifo_strobe           ),
   .o_rfifo_data         (w_rfifo_data             ),
@@ -237,7 +240,7 @@ video_to_block_fifo #(
   //Read Path
   .i_rfifo_clk          (i_axis_clk           ),
   .i_rfifo_rst          (w_axis_rst           ),
-  .o_rfifo_ready        (w_rfifo_ready        ),
+  .o_rfifo_ready        (w_rfifo_rdy          ),
   .i_rfifo_activate     (w_rfifo_act          ),
   .i_rfifo_strobe       (w_rfifo_stb          ),
   .o_rfifo_data         (w_rfifo_data         ),
@@ -252,7 +255,7 @@ adapter_ppfifo_2_axi_stream #(
   .rst                (w_axis_rst           ),
 
   //Incomming PPFIFO
-  .i_ppfifo_rdy       (w_rfifo_ready        ),
+  .i_ppfifo_rdy       (w_rfifo_rdy          ),
   .o_ppfifo_act       (w_rfifo_act          ),
   .i_ppfifo_size      (w_rfifo_size         ),
   .o_ppfifo_stb       (w_rfifo_stb          ),

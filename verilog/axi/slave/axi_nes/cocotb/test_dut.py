@@ -129,6 +129,7 @@ def run_nestest(dut):
     yield nes.load_rom("./nestest.nes")
 
     dut.log.info("Waiting")
-    yield Timer(CLK_PERIOD * 1000)
+    #yield Timer(CLK_PERIOD * 50000)
+    yield Timer(CLK_PERIOD * 100000)
 
 

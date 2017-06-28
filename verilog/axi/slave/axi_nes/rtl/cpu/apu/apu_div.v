@@ -31,6 +31,8 @@
 *  apu_div_const is a variation on apu_div that has an immutable period.
 ***************************************************************************************************/
 
+`timescale 1ps / 1ps
+
 module apu_div
 #(
   parameter PERIOD_BITS = 16

@@ -1,23 +1,25 @@
 [*]
 [*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Sun Jun 25 15:11:02 2017
+[*] Wed Jun 28 16:54:21 2017
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_nes/cocotb/design.vcd"
-[dumpfile_mtime] "Sun Jun 25 15:10:03 2017"
-[dumpfile_size] 628196
+[dumpfile_mtime] "Wed Jun 28 16:46:56 2017"
+[dumpfile_size] 38751402
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_nes/cocotb/waveforms.gtkw"
-[timestart] 0
+[timestart] 1471329
 [size] 1918 1059
 [pos] -1 -1
-*-12.552142 33430 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-10.686073 1477270 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.dut.
+[treeopen] tb_cocotb.dut.nes.
+[treeopen] tb_cocotb.dut.nes.rp2a03_blk.
 [treeopen] tb_cocotb.dut.nes.vram_blk.
 [treeopen] tb_cocotb.dut.nes.wram_blk.
 [sst_width] 213
-[signals_width] 222
+[signals_width] 230
 [sst_expanded] 1
-[sst_vpaned_height] 313
+[sst_vpaned_height] 312
 @28
 tb_cocotb.clk
 tb_cocotb.rst
@@ -138,60 +140,110 @@ tb_cocotb.dut.nes.hci_blk.r_host_one_shot
 -HCI
 @200
 -
+@c00200
+-RGB
 @28
-tb_cocotb.dut.nes.wram_blk.wram_bram.clk
+tb_cocotb.dut.nes.ppu_blk.rgb.rst
+tb_cocotb.dut.nes.ppu_blk.rgb.clk
 @22
-tb_cocotb.dut.nes.wram_blk.wram_bram.addr_a[10:0]
-tb_cocotb.dut.nes.wram_blk.wram_bram.din_a[7:0]
+tb_cocotb.dut.nes.ppu_blk.rgb.i_sys_palette_idx_in[5:0]
+@28
+tb_cocotb.dut.nes.ppu_blk.rgb.o_b_out[1:0]
+tb_cocotb.dut.nes.ppu_blk.rgb.o_g_out[2:0]
+@22
+tb_cocotb.dut.nes.ppu_blk.rgb.o_nes_x_out[9:0]
+tb_cocotb.dut.nes.ppu_blk.rgb.o_nes_y_next_out[9:0]
+tb_cocotb.dut.nes.ppu_blk.rgb.o_nes_y_out[9:0]
+@28
+tb_cocotb.dut.nes.ppu_blk.rgb.o_pix_pulse_out
+tb_cocotb.dut.nes.ppu_blk.rgb.o_r_out[2:0]
+tb_cocotb.dut.nes.ppu_blk.rgb.o_sof_stb
+tb_cocotb.dut.nes.ppu_blk.rgb.o_vblank
+tb_cocotb.dut.nes.ppu_blk.rgb.o_video_hsync
+@c00022
+tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
+@28
+(0)tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
+(1)tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
+(2)tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
+(3)tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
+(4)tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
+(5)tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
+(6)tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
+(7)tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
+@1401200
+-group_end
+@22
+tb_cocotb.dut.nes.ppu_blk.rgb.r_nes_x_next[9:0]
+tb_cocotb.dut.nes.ppu_blk.rgb.r_rgb[7:0]
+@28
+tb_cocotb.dut.nes.ppu_blk.rgb.r_start_stb
+tb_cocotb.dut.nes.ppu_blk.rgb.r_valid
+@22
+tb_cocotb.dut.nes.ppu_blk.rgb.r_x_pos[8:0]
+tb_cocotb.dut.nes.ppu_blk.rgb.r_y_pos[8:0]
+@28
+tb_cocotb.dut.nes.ppu_blk.rgb.rst
+@22
+tb_cocotb.dut.nes.ppu_blk.rgb.state[3:0]
+tb_cocotb.dut.nes.ppu_blk.rgb.w_bg_color[7:0]
+@28
+tb_cocotb.dut.nes.ppu_blk.rgb.w_valid
+@22
+tb_cocotb.dut.nes.ppu_blk.rgb.w_vblank_timeout[31:0]
+tb_cocotb.dut.nes.ppu_blk.rgb.w_x_pos[8:0]
+tb_cocotb.dut.nes.ppu_blk.rgb.w_y_pos[8:0]
+@1401200
+-RGB
 @200
 -
-@28
-tb_cocotb.dut.nes.hci_active
 @22
-tb_cocotb.dut.nes.rp2a03_a[15:0]
-tb_cocotb.dut.nes.cpumc_a[15:0]
-tb_cocotb.dut.nes.wram_blk.a_in[10:0]
+tb_cocotb.dut.nes.rp2a03_blk.a_out[15:0]
+tb_cocotb.dut.nes.rp2a03_blk.audio_dout[7:0]
+@28
+tb_cocotb.dut.nes.rp2a03_blk.audio_out
+tb_cocotb.dut.nes.rp2a03_blk.brk_out
+tb_cocotb.dut.nes.rp2a03_blk.clk_in
+@22
+tb_cocotb.dut.nes.rp2a03_blk.cpu_a[15:0]
+tb_cocotb.dut.nes.rp2a03_blk.cpu_din[7:0]
+tb_cocotb.dut.nes.rp2a03_blk.cpu_dout[7:0]
+@28
+tb_cocotb.dut.nes.rp2a03_blk.cpu_nirq
+tb_cocotb.dut.nes.rp2a03_blk.cpu_r_nw
+tb_cocotb.dut.nes.rp2a03_blk.cpu_ready
+@22
+tb_cocotb.dut.nes.rp2a03_blk.d_in[7:0]
+tb_cocotb.dut.nes.rp2a03_blk.d_out[7:0]
+tb_cocotb.dut.nes.rp2a03_blk.dbgreg_d_in[7:0]
+tb_cocotb.dut.nes.rp2a03_blk.dbgreg_d_out[7:0]
+tb_cocotb.dut.nes.rp2a03_blk.dbgreg_sel_in[3:0]
+@28
+tb_cocotb.dut.nes.rp2a03_blk.dbgreg_wr_in
+@22
+tb_cocotb.dut.nes.rp2a03_blk.i_jp1_state[7:0]
+tb_cocotb.dut.nes.rp2a03_blk.i_jp2_state[7:0]
+tb_cocotb.dut.nes.rp2a03_blk.jp_dout[7:0]
+tb_cocotb.dut.nes.rp2a03_blk.mute_in[3:0]
+@28
+tb_cocotb.dut.nes.rp2a03_blk.nnmi_in
+tb_cocotb.dut.nes.rp2a03_blk.nres_in
+tb_cocotb.dut.nes.rp2a03_blk.r_nw_out
+tb_cocotb.dut.nes.rp2a03_blk.rdy_in
+tb_cocotb.dut.nes.rp2a03_blk.rst_in
+@22
+tb_cocotb.dut.nes.rp2a03_blk.sprdma_a[15:0]
+@28
+tb_cocotb.dut.nes.rp2a03_blk.sprdma_active
+@22
+tb_cocotb.dut.nes.rp2a03_blk.sprdma_dout[7:0]
+@28
+tb_cocotb.dut.nes.rp2a03_blk.sprdma_r_nw
 @200
 -
--
-@28
-tb_cocotb.dut.v2bf.clk
-tb_cocotb.dut.v2bf.i_enable
-@200
--
-@29
-tb_cocotb.dut.v2bf.i_video_sof_stb
-@28
-tb_cocotb.dut.v2bf.i_video_hsync
 @22
-tb_cocotb.dut.v2bf.i_blue[7:0]
-tb_cocotb.dut.v2bf.i_green[7:0]
-tb_cocotb.dut.v2bf.i_red[7:0]
-@200
--
-@28
-tb_cocotb.dut.v2bf.i_rfifo_activate
-tb_cocotb.dut.v2bf.i_rfifo_clk
-tb_cocotb.dut.v2bf.i_rfifo_rst
-tb_cocotb.dut.v2bf.i_rfifo_strobe
-@22
-tb_cocotb.dut.v2bf.o_rfifo_data[24:0]
-@28
-tb_cocotb.dut.v2bf.o_rfifo_ready
-@22
-tb_cocotb.dut.v2bf.o_rfifo_size[23:0]
-tb_cocotb.dut.v2bf.r_count[23:0]
-@28
-tb_cocotb.dut.v2bf.r_used
-tb_cocotb.dut.v2bf.r_write_activate
-@22
-tb_cocotb.dut.v2bf.r_write_data[24:0]
-@28
-tb_cocotb.dut.v2bf.r_write_stb
-tb_cocotb.dut.v2bf.rst
-@22
-tb_cocotb.dut.v2bf.w_write_fifo_size[23:0]
-@28
-tb_cocotb.dut.v2bf.w_write_ready
+tb_cocotb.dut.nes.rp2a03_blk.cpu_blk.q_pch[7:0]
+@23
+tb_cocotb.dut.nes.rp2a03_blk.cpu_blk.q_pcl[7:0]
 [pattern_trace] 1
 [pattern_trace] 0

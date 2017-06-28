@@ -25,6 +25,7 @@
 *  Host communication interface.  Accepts packets over a serial connection, interacts with the rest
 *  of the hw system as specified, and returns the specified data.
 ***************************************************************************************************/
+`timescale 1ps / 1ps
 
 module hci
 (

@@ -30,6 +30,8 @@
  *  resolution of the nes: 256x240 gets scaled up to 512x480, this uses more of the screen on a VGA
  */
 
+`timescale 1ps / 1ps
+
 module ppu_vga
 (
   input         clk_in,              // 100MHz system clock signal

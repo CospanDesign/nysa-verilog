@@ -29,6 +29,8 @@
 *        generation circuit must be aware of this, and should latch its output as well.
 ***************************************************************************************************/
 
+`timescale 1ps / 1ps
+
 module vga_sync
 (
   input  wire       clk,    // 100Mhz clock signal

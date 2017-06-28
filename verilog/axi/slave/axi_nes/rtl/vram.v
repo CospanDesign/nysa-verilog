@@ -24,6 +24,7 @@
 *
 *  Video RAM module; implements 2KB of on-board VRAM as fpga block RAM.
 ***************************************************************************************************/
+`timescale 1ps / 1ps
 
 module vram(
   input         clk_in,   // system clock

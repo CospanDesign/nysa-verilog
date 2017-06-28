@@ -24,6 +24,7 @@
 *
 *  6502 core implementation.
 ***************************************************************************************************/
+`timescale 1ps / 1ps
 
 module cpu (
   input  wire        clk_in,         // 100MHz system clock

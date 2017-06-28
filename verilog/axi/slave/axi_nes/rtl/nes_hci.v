@@ -1,3 +1,5 @@
+`timescale 1ps / 1ps
+
 module nes_hci (
   input               clk,
   input               rst,

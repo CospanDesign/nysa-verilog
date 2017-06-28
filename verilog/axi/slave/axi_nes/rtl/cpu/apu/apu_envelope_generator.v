@@ -26,6 +26,7 @@
 *  duration control for the NES APU waveform channels. Once loaded with a value, it can optionally
 *  count down and silence the channel when it reaches zero.
 ***************************************************************************************************/
+`timescale 1ps / 1ps
 
 module apu_envelope_generator
 (

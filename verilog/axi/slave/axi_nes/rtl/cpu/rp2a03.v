@@ -25,6 +25,7 @@
 *  Implementation of the RP2A03 chip for an fpga-based NES emulator.  Contains a MOS-6502 CPU
 *  core, APU, sprite DMA engine, and joypad control logic.
 ***************************************************************************************************/
+`timescale 1ps / 1ps
 
 module rp2a03
 (

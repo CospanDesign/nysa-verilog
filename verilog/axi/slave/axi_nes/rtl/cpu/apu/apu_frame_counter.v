@@ -24,6 +24,7 @@
 *
 *  APU frame counter sub-block.
 ***************************************************************************************************/
+`timescale 1ps / 1ps
 
 module apu_frame_counter
 (

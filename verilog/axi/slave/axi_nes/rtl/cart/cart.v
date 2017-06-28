@@ -28,6 +28,8 @@
 *  cartridge, where almost all of the work would pass through directly.
 ***************************************************************************************************/
 
+`timescale 1ps / 1ps
+
 module cart (
   input              clk_in,           // system clock signal
 

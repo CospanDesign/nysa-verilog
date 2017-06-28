@@ -7,7 +7,8 @@ from cocotb.drivers.amba import AXI4LiteMaster
 from cocotb.triggers import Timer
 from array import array as Array
 
-SIM = True
+#SIM = True
+SIM = False
 
 #Registers
 REG_CONTROL                   =  0
@@ -307,6 +308,7 @@ class NESHCI (object):
         #Update PC to point to the reset interrupt vector location
         pcl_val = data[16 + prg_rom_size - 4]
         pch_val = data[16 + prg_rom_size - 3]
+        print "PCH:PCL: %02X:%02X" % (pch_val, pcl_val)
 
         yield self.write_cpu_register(CPU_REG_PCL, pcl_val) 
         yield self.write_cpu_register(CPU_REG_PCH, pch_val)

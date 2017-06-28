@@ -24,6 +24,7 @@
 *
 *  Circular first in first out buffer implementation.
 ***************************************************************************************************/
+`timescale 1ps / 1ps
 
 module fifo
 #(

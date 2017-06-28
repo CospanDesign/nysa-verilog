@@ -24,6 +24,7 @@
 *
 *  Joypad controller block.
 ***************************************************************************************************/
+`timescale 1ps / 1ps
 
 module jp(
   input              clk,         // 100MHz system clock signal
