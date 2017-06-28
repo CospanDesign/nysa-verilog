@@ -167,6 +167,10 @@ always @ (posedge clk) begin
                 o_opcode_status         <=  OS_OK;
                 o_opcode_ack            <=  1;
               end
+              default: begin
+                o_opcode_status         <=  OS_UNKNOWN_OPCODE | OS_ERROR;
+                o_opcode_ack            <=  1;              
+              end
             endcase
           end
         end

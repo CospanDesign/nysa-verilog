@@ -163,6 +163,7 @@ always @ (*) begin
       6'h3d:  r_rgb = { 3'h0, 3'h0, 2'h0 };
       6'h3e:  r_rgb = { 3'h0, 3'h0, 2'h0 };
       6'h3f:  r_rgb = { 3'h0, 3'h0, 2'h0 };
+      default: r_rgb = {3'h0, 3'h0, 2'h0 };
     endcase
   end
 end
@@ -238,6 +239,8 @@ always @ (posedge clk) begin
         else begin
           state           <=  IDLE;
         end
+      end
+      default: begin
       end
     endcase
   end

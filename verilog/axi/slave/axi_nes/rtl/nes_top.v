@@ -241,6 +241,7 @@ ppu #(
   .ri_d_out             (ppu_ri_dout        ),
   .nvbl_out             (ppu_nvbl           ),
   .vram_a_out           (ppu_vram_a         ),
+  .vram_d_in            (ppu_vram_din       ),
   .vram_d_out           (ppu_vram_dout      ),
   .vram_wr_out          (ppu_vram_wr        )
 );

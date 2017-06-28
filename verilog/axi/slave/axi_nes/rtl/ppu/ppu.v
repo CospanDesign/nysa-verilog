@@ -60,6 +60,7 @@ module ppu #(
   output             vram_wr_out    // video memory read/write select
 );
 
+(* keep_hierarchy="yes" *)
 //
 // PPU_VGA: VGA output block.
 //
@@ -367,7 +368,7 @@ assign spr_foreground  = ~spr_priority;
 assign spr_trans       = ~|spr_palette_idx[1:0];
 assign bg_trans        = ~|bg_palette_idx[1:0];
 
-assign d_pri_obj_col = (vga_nes_y_next == 0)                    ? 1'b0 :
+assign d_pri_obj_col = (gen_nes_y_next == 0)                    ? 1'b0 :
                        (spr_primary && !spr_trans && !bg_trans) ? 1'b1 : q_pri_obj_col;
 
 assign sys_palette_idx =
