@@ -52,8 +52,8 @@ localparam  IDLE            = 0;
 localparam  VID             = 1;
 
 //Registers/Wires
-reg   [8:0]       r_x_pos;
-reg   [8:0]       r_y_pos;
+reg   [9:0]       r_x_pos;
+reg   [9:0]       r_y_pos;
 reg   [7:0]       r_rgb;
 
 wire  [8:0]       w_x_pos;
@@ -67,12 +67,9 @@ wire  [7:0]       w_bg_color;
 wire              w_valid;
 reg               r_valid;
 wire  [31:0]      w_vblank_timeout = VBLANK_TIMEOUT;
-reg   [9:0]       r_nes_x_next;
 reg               r_start_stb;
 
 
-
-//assign o_pix_pulse_out           = r_nes_x_next != o_nes_x_out;
 //synchronous logic
 
 //Generate a pulse when we are about to start capturing video
@@ -201,7 +198,6 @@ always @ (posedge clk) begin
   if (rst) begin
     r_x_pos               <=  0;
     r_y_pos               <=  0;
-    r_nes_x_next          <=  0;
     o_video_hsync         <=  0;
     state                 <=  IDLE;
   end
@@ -212,7 +208,6 @@ always @ (posedge clk) begin
           state           <=  VID;
           r_y_pos         <=  0;
           r_x_pos         <=  0;
-          r_nes_x_next    <=  1;
         end
       end
       VID: begin
@@ -220,7 +215,7 @@ always @ (posedge clk) begin
         if ((r_y_pos == 0) && (r_x_pos == 0)) begin
           o_sof_stb       <=  1;
         end
-        if (r_x_pos == 0) begin
+        if ((r_x_pos == 0) && (r_y_pos < FRAME_HEIGHT)) begin
           o_video_hsync   <=  1;
         end
         if (r_y_pos < (FRAME_HEIGHT + VBLANK)) begin
@@ -237,6 +232,7 @@ always @ (posedge clk) begin
             r_x_pos       <=  r_x_pos + 1;
           end
           else begin
+            //$display("Next Line!");
             r_x_pos       <=  0;
             r_y_pos       <=  r_y_pos + 1;
           end

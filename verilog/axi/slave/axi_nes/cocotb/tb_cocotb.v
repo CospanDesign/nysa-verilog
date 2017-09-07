@@ -6,9 +6,8 @@ module tb_cocotb #(
   parameter STROBE_WIDTH        = (DATA_WIDTH / 8),
   parameter AXIS_WIDTH          = 24,
   parameter AXIS_STROBE_WIDTH   = (AXIS_WIDTH / 8),
-  parameter FRAME_WIDTH         = 30,
-  parameter FRAME_HEIGHT        = 24,
-  parameter PIXEL_WIDTH         = 24
+  parameter FRAME_WIDTH         = 480,
+  parameter FRAME_HEIGHT        = 272
 )(
 
 input                                   clk,

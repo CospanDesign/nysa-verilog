@@ -130,6 +130,7 @@ def run_nestest(dut):
 
     dut.log.info("Waiting")
     #yield Timer(CLK_PERIOD * 50000)
-    yield Timer(CLK_PERIOD * 100000)
+    #yield Timer(CLK_PERIOD * 100000)
+    yield Timer(CLK_PERIOD * 200000)
 
 

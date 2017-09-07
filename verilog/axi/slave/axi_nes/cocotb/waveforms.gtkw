@@ -1,23 +1,24 @@
 [*]
 [*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Wed Jun 28 16:54:21 2017
+[*] Wed Jun 28 19:52:29 2017
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_nes/cocotb/design.vcd"
-[dumpfile_mtime] "Wed Jun 28 16:46:56 2017"
-[dumpfile_size] 38751402
+[dumpfile_mtime] "Wed Jun 28 19:49:32 2017"
+[dumpfile_size] 91274203
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_nes/cocotb/waveforms.gtkw"
-[timestart] 1471329
+[timestart] 2605200
 [size] 1918 1059
 [pos] -1 -1
-*-10.686073 1477270 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-17.079918 3132720 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.dut.
 [treeopen] tb_cocotb.dut.nes.
+[treeopen] tb_cocotb.dut.nes.ppu_blk.
 [treeopen] tb_cocotb.dut.nes.rp2a03_blk.
 [treeopen] tb_cocotb.dut.nes.vram_blk.
 [treeopen] tb_cocotb.dut.nes.wram_blk.
 [sst_width] 213
-[signals_width] 230
+[signals_width] 414
 [sst_expanded] 1
 [sst_vpaned_height] 312
 @28
@@ -140,52 +141,52 @@ tb_cocotb.dut.nes.hci_blk.r_host_one_shot
 -HCI
 @200
 -
-@c00200
+@800200
 -RGB
 @28
-tb_cocotb.dut.nes.ppu_blk.rgb.rst
 tb_cocotb.dut.nes.ppu_blk.rgb.clk
+tb_cocotb.dut.nes.ppu_blk.rgb.rst
+@200
+-
+@22
+[color] 5
+tb_cocotb.dut.nes.ppu_blk.rgb.state[3:0]
+@200
+-
+@24
+tb_cocotb.dut.nes.ppu_blk.rgb.r_x_pos[9:0]
+tb_cocotb.dut.nes.ppu_blk.rgb.r_y_pos[9:0]
+@200
+-
 @22
 tb_cocotb.dut.nes.ppu_blk.rgb.i_sys_palette_idx_in[5:0]
+@200
+-
 @28
+tb_cocotb.dut.nes.ppu_blk.rgb.o_r_out[2:0]
 tb_cocotb.dut.nes.ppu_blk.rgb.o_b_out[1:0]
 tb_cocotb.dut.nes.ppu_blk.rgb.o_g_out[2:0]
+@200
+-
 @22
 tb_cocotb.dut.nes.ppu_blk.rgb.o_nes_x_out[9:0]
 tb_cocotb.dut.nes.ppu_blk.rgb.o_nes_y_next_out[9:0]
 tb_cocotb.dut.nes.ppu_blk.rgb.o_nes_y_out[9:0]
 @28
 tb_cocotb.dut.nes.ppu_blk.rgb.o_pix_pulse_out
-tb_cocotb.dut.nes.ppu_blk.rgb.o_r_out[2:0]
 tb_cocotb.dut.nes.ppu_blk.rgb.o_sof_stb
 tb_cocotb.dut.nes.ppu_blk.rgb.o_vblank
+@29
 tb_cocotb.dut.nes.ppu_blk.rgb.o_video_hsync
-@c00022
-tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
-@28
-(0)tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
-(1)tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
-(2)tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
-(3)tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
-(4)tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
-(5)tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
-(6)tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
-(7)tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[7:0]
-@1401200
--group_end
 @22
-tb_cocotb.dut.nes.ppu_blk.rgb.r_nes_x_next[9:0]
 tb_cocotb.dut.nes.ppu_blk.rgb.r_rgb[7:0]
 @28
 tb_cocotb.dut.nes.ppu_blk.rgb.r_start_stb
 tb_cocotb.dut.nes.ppu_blk.rgb.r_valid
+@200
+-
+-
 @22
-tb_cocotb.dut.nes.ppu_blk.rgb.r_x_pos[8:0]
-tb_cocotb.dut.nes.ppu_blk.rgb.r_y_pos[8:0]
-@28
-tb_cocotb.dut.nes.ppu_blk.rgb.rst
-@22
-tb_cocotb.dut.nes.ppu_blk.rgb.state[3:0]
 tb_cocotb.dut.nes.ppu_blk.rgb.w_bg_color[7:0]
 @28
 tb_cocotb.dut.nes.ppu_blk.rgb.w_valid
@@ -193,7 +194,14 @@ tb_cocotb.dut.nes.ppu_blk.rgb.w_valid
 tb_cocotb.dut.nes.ppu_blk.rgb.w_vblank_timeout[31:0]
 tb_cocotb.dut.nes.ppu_blk.rgb.w_x_pos[8:0]
 tb_cocotb.dut.nes.ppu_blk.rgb.w_y_pos[8:0]
-@1401200
+@200
+-
+@22
+tb_cocotb.dut.nes.ppu_blk.rgb.r_clk_div_count[23:0]
+tb_cocotb.dut.nes.ppu_blk.rgb.w_vblank_debug[23:0]
+@200
+-
+@1000200
 -RGB
 @200
 -
@@ -243,7 +251,6 @@ tb_cocotb.dut.nes.rp2a03_blk.sprdma_r_nw
 -
 @22
 tb_cocotb.dut.nes.rp2a03_blk.cpu_blk.q_pch[7:0]
-@23
 tb_cocotb.dut.nes.rp2a03_blk.cpu_blk.q_pcl[7:0]
 [pattern_trace] 1
 [pattern_trace] 0
