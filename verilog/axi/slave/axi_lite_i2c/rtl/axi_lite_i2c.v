@@ -87,7 +87,7 @@ module axi_lite_i2c #(
 
   output                              o_sda_out,
   output                              o_sda_tri,
-  output                              i_sda_in,
+  input                               i_sda_in,
 
   output                              o_interrupt
 
@@ -108,6 +108,10 @@ localparam    REG_COMMAND         = 6;
 localparam    REG_TRANSMIT        = 7;
 localparam    REG_RECEIVE         = 8;
 localparam    REG_VERSION         = 9;
+
+localparam    INT_TRANSFER_FINISHED = 0;
+localparam    INT_ARBITRATION_LOST  = 1;
+localparam    INT_RXACK             = 2;
 
 //Register/Wire
 reg   [15:0]                        clock_divider;
@@ -295,15 +299,15 @@ always @ (posedge clk) begin
       command[0]                          <= 0;
     end
 
-    
-    if (prev_tip & !tip) begin
-      r_interrupt[0]                      <=  1;
+    //if (prev_tip & !tip) begin
+    if (done) begin
+      r_interrupt[INT_TRANSFER_FINISHED]  <=  1;
     end
     if (al) begin
-      r_interrupt[1]                      <=  1;
+      r_interrupt[INT_ARBITRATION_LOST]   <=  1;
     end
     if (irxack & !rxack) begin
-      r_interrupt[2]                      <=  1;
+      r_interrupt[INT_RXACK]              <=  1;
     end
 
     if (w_reg_in_rdy && !r_reg_in_ack_stb) begin
@@ -400,6 +404,9 @@ always @ (posedge clk) begin
       control[7]                          <=  0;
     end
 
+    if (done | i2c_al) begin
+      command[3:0]                        <=  4'h0;
+    end
 
     al                                    <=  i2c_al | (al & ~start);
     rxack                                 <=  irxack;

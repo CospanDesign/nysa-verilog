@@ -2,8 +2,10 @@
 TOPLEVEL_LANG ?= verilog
 PWD=$(shell pwd)
 TOPDIR=$(PWD)/..
-COCOTB 	:= $(shell $(python) nysa paths -c -s)
-NYSA 	:= $(shell $(python) nysa paths -s -v nysa-verilog)
+#COCOTB 	:= $(shell $(python) nysa paths -c -s)
+#NYSA 	:= $(shell $(python) nysa paths -s -v nysa-verilog)
+COCOTB := ~/Projects/cocotb
+NYSA := ../../../../../
 PYTHONPATH := ./model:$(PYTHONPATH)
 export PYTHONPATH
 export PYTHONHOME=$(shell python -c "from distutils.sysconfig import get_config_var; print(get_config_var('prefix'))")
