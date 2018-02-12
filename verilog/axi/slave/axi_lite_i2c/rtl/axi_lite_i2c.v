@@ -284,8 +284,8 @@ assign status[4:2]                    = 3'h0; // reserved
 assign status[1]                      = tip;
 assign status[0]                      = 1'b0;
 
-assign  io_scl                        = scl_oen ? 1'hZ : o_scl_out;
-assign  io_sda                        = sda_oen ? 1'hZ : o_sda_out;
+assign  io_scl                        = o_scl_tri ? 1'hZ : o_scl_out;
+assign  io_sda                        = o_sda_tri ? 1'hZ : o_sda_out;
 
 
 assign o_interrupt                    = ien & ((r_interrupt & r_interrupt_enable) > 0);
