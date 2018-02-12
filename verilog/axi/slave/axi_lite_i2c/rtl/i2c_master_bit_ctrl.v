@@ -155,7 +155,7 @@ module i2c_master_bit_ctrl (
     output reg        al,       // i2c bus arbitration lost
 
     input             din,
-    output reg        dout = 0,
+    output reg        dout,
 
     input             scl_i,    // i2c clock line input
     output            scl_o,    // i2c clock line output

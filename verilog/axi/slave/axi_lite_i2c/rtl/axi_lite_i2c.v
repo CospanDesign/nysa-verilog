@@ -81,6 +81,15 @@ module axi_lite_i2c #(
   output      [DATA_WIDTH - 1: 0]     o_rdata,
 
   //I2C Signals
+  inout                               io_scl,
+  inout                               io_sda,
+
+
+  output                              o_interrupt
+
+);
+
+/*
   output                              o_scl_out,
   output                              o_scl_tri,
   input                               i_scl_in,
@@ -88,10 +97,8 @@ module axi_lite_i2c #(
   output                              o_sda_out,
   output                              o_sda_tri,
   input                               i_sda_in,
+*/
 
-  output                              o_interrupt
-
-);
 
 //local parameters
 localparam CLK_DIVIDE_100KHZ      = (CLOCK_RATE/(5 * 100000) - 1);
@@ -124,6 +131,16 @@ reg   [7:0]                         r_interrupt_enable;
 reg   [7:0]                         r_interrupt;
 
 wire                                done;
+
+wire                                o_scl_tri;
+wire                                o_sda_tri;
+
+wire                                o_scl_out;
+wire                                o_sda_out;
+
+wire                                i_scl_in;
+wire                                i_sda_in;
+
 
 //core enable signal
 wire                                core_en;
@@ -230,10 +247,12 @@ i2c_master_byte_ctrl byte_controller (
   .dout               (receive              ),
   .i2c_busy           (i2c_busy             ),
   .i2c_al             (i2c_al               ),
-  .scl_i              (i_scl_in             ),
+  //.scl_i              (i_scl_in             ),
+  .scl_i              (io_scl               ),
   .scl_o              (o_scl_out            ),
   .scl_oen            (o_scl_tri            ),
-  .sda_i              (i_sda_in             ),
+  //.sda_i              (i_sda_in             ),
+  .sda_i              (io_sda               ),
   .sda_o              (o_sda_out            ),
   .sda_oen            (o_sda_tri            )
 );
@@ -265,8 +284,10 @@ assign status[4:2]                    = 3'h0; // reserved
 assign status[1]                      = tip;
 assign status[0]                      = 1'b0;
 
-//assign  scl                           = scl_oen ? 1'hZ : scl_out;
-//assign  sda                           = sda_oen ? 1'hZ : sda_out;
+assign  io_scl                        = scl_oen ? 1'hZ : o_scl_out;
+assign  io_sda                        = sda_oen ? 1'hZ : o_sda_out;
+
+
 assign o_interrupt                    = ien & ((r_interrupt & r_interrupt_enable) > 0);
 
 //blocks
