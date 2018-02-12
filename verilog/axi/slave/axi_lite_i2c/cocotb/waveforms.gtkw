@@ -1,0 +1,66 @@
+[*]
+[*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
+[*] Mon Feb 12 00:20:41 2018
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_lite_i2c/cocotb/design.vcd"
+[dumpfile_mtime] "Sun Feb 11 17:36:13 2018"
+[dumpfile_size] 17330
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_lite_i2c/cocotb/waveforms.gtkw"
+[timestart] 0
+[size] 1443 699
+[pos] 1823 -75
+*-8.944359 44 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_cocotb.
+[treeopen] tb_cocotb.dut.
+[sst_width] 213
+[signals_width] 174
+[sst_expanded] 1
+[sst_vpaned_height] 190
+@28
+tb_cocotb.clk
+tb_cocotb.rst
+@200
+-
+@800200
+-AXI4 Master Lite
+@22
+tb_cocotb.AXIML_ARADDR[31:0]
+@28
+tb_cocotb.AXIML_ARREADY
+tb_cocotb.AXIML_ARVALID
+@22
+tb_cocotb.AXIML_AWADDR[31:0]
+@28
+tb_cocotb.AXIML_AWREADY
+tb_cocotb.AXIML_AWVALID
+tb_cocotb.AXIML_BREADY
+tb_cocotb.AXIML_BRESP[1:0]
+tb_cocotb.AXIML_BVALID
+@22
+tb_cocotb.AXIML_RDATA[31:0]
+@28
+tb_cocotb.AXIML_RREADY
+tb_cocotb.AXIML_RRESP[1:0]
+tb_cocotb.AXIML_RVALID
+@22
+tb_cocotb.AXIML_WDATA[31:0]
+@28
+tb_cocotb.AXIML_WREADY
+@22
+tb_cocotb.AXIML_WSTRB[3:0]
+@28
+tb_cocotb.AXIML_WVALID
+@1000200
+-AXI4 Master Lite
+@200
+-
+@22
+tb_cocotb.dut.control[7:0]
+@28
+tb_cocotb.dut.o_interrupt
+@22
+tb_cocotb.dut.r_interrupt[7:0]
+@23
+tb_cocotb.dut.r_interrupt_enable[7:0]
+[pattern_trace] 1
+[pattern_trace] 0
