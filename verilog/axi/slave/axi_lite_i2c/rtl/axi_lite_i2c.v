@@ -155,7 +155,6 @@ wire                                stop;
 wire                                read;
 wire                                write;
 wire                                ack;
-reg                                 iack;
 wire                                core_reset;
 
 
@@ -297,7 +296,6 @@ always @ (posedge clk) begin
   r_reg_in_ack_stb                        <=  0;
   r_reg_out_rdy_stb                       <=  0;
   r_reg_invalid_addr                      <=  0;
-  iack                                    <=  0;
 
   if (w_axi_rst) begin
     control                               <=  0;
@@ -311,15 +309,16 @@ always @ (posedge clk) begin
     al                                    <=  0;
     rxack                                 <=  0;
     tip                                   <=  0;
-    iack                                  <=  0;
     
     r_interrupt_enable                    <=  0;
     r_interrupt                           <=  0;
   end
   else begin
-    if (o_bvalid) begin
+    /*
+    if (!w_reg_in_rdy && !r_reg_in_ack_stb) begin
       command[0]                          <= 0;
     end
+    */
 
     //if (prev_tip & !tip) begin
     if (done) begin

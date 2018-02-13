@@ -553,7 +553,10 @@ class I2C(Driver):
 
         #command = COMMAND_START | COMMAND_WRITE
         #send the command to the I2C command register to initiate a transfer
-        yield self.write_register(COMMAND, COMMAND_START | COMMAND_WRITE)
+        yield self.write_register(COMMAND, COMMAND_START)
+        #yield self.write_register(COMMAND, COMMAND_START | COMMAND_WRITE)
+
+        yield self.write_register(COMMAND, COMMAND_WRITE)
 
         #wait 1 second for interrupt
         if self.debug: print "Wait for interrupts..."
@@ -562,6 +565,7 @@ class I2C(Driver):
         if (d):
             self.dut.log.info("Interrupt Detected")
         yield self.acknowledge_interrupt(INT_TRANSFER_FINISHED)
+ 
         #XXX: if yield self.wait_for_interrupts(wait_time = 1):
         #XXX:     if self.debug:
         #XXX:         print "got interrupt for start"
@@ -695,7 +699,8 @@ class I2C(Driver):
         self.write_register(TRANSMIT, read_command)
 
 
-        command = COMMAND_START | COMMAND_WRITE
+        #command = COMMAND_START | COMMAND_WRITE
+        command = COMMAND_START
         if self.debug:
             self.print_command(command)
         #send the command to the I2C command register to initiate a transfer
@@ -716,6 +721,30 @@ class I2C(Driver):
             if self.debug:
                 self.print_status(self.get_status())
             raise I2CError("Timed out while waiting for interrupt durring a start")
+
+        command = COMMAND_WRITE
+        if self.debug:
+            self.print_command(command)
+        #send the command to the I2C command register to initiate a transfer
+        yield self.write_register(COMMAND, command)
+
+        #wait 1 second for interrupt
+        if self.wait_for_interrupts(wait_time = 1):
+            if self.debug:
+                print "got interrupt for start"
+            #if self.is_interrupt_for_slave():
+            status = yield self.get_status()
+            if self.debug:
+                self.print_status(status)
+            if (status & STATUS_READ_ACK_N) > 0:
+                raise I2CError("Did not recieve an ACK while writing I2C ID")
+
+        else:
+            if self.debug:
+                self.print_status(self.get_status())
+            raise I2CError("Timed out while waiting for interrupt durring a start")
+
+
 
         #send the data
         count = 0
