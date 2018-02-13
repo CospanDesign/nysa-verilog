@@ -50,29 +50,27 @@ reg   [3:0]       test_id         = 0;
 reg               prev_clk        = 0;
 reg   [7:0]       i2c_clock_count = 0;
 
+/*
 reg               sda_tri;
 
 wire              io_scl;
 wire              io_sda;
 
-/*
 pullup            (io_scl);
 pullup            (io_sda);
 */
-/*
 wire              O_SCL_OUT;
 wire              O_SCL_TRI;
 wire              I_SCL_IN;
 wire              O_SDA_OUT;
 wire              O_SDA_TRI;
 reg               I_SDA_IN;
-*/
 
 
 
 
-//assign I_SCL_IN = 1;
-assign            io_sda = (sda_tri) ? 1'hZ : 1'b0;
+assign I_SCL_IN = 1;
+//assign            io_sda = (sda_tri) ? 1'hZ : 1'b0;
 
 
 
@@ -114,7 +112,6 @@ axi_lite_i2c #(
   .o_rresp          (AXIML_RRESP    ),
   .o_rdata          (AXIML_RDATA    ),
 
-/*
   .o_scl_out        (O_SCL_OUT      ),
   .o_scl_tri        (O_SCL_TRI      ),
   .i_scl_in         (I_SCL_IN       ),
@@ -122,9 +119,10 @@ axi_lite_i2c #(
   .o_sda_out        (O_SDA_OUT      ),
   .o_sda_tri        (O_SDA_TRI      ),
   .i_sda_in         (I_SDA_IN       )
-*/
+/*
   io_scl            (io_scl         ),
   io_sda            (io_sda         )
+*/
 
 );
 
@@ -141,17 +139,17 @@ always @ (posedge clk) begin
   if (r_rst) begin
     i2c_clock_count <= 0;
     prev_clk <= 0;
-    sda_tri  <=  1;
+    I_SDA_IN  <=  1;
   end
   else begin
     if (prev_clk & !O_SCL_TRI) begin
       i2c_clock_count <= i2c_clock_count + 1;
     end
     if (i2c_clock_count == 9) begin
-      sda_tri  <=  0;
+      I_SDA_IN  <=  0;
     end
     else if (i2c_clock_count > 9) begin
-      sda_tri  <=  1;
+      I_SDA_IN  <=  1;
       i2c_clock_count <=  0;
     end
   end
