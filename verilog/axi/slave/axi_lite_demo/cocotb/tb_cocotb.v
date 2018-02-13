@@ -65,7 +65,6 @@ axi_lite_demo #(
                                
   .i_wvalid         (AXIML_WVALID   ),
   .o_wready         (AXIML_WREADY   ),
-  .i_wstrb          (AXIML_WSTRB    ),
   .i_wdata          (AXIML_WDATA    ),
                                
                                

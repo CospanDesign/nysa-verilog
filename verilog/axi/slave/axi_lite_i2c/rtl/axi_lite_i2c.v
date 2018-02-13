@@ -61,7 +61,6 @@ module axi_lite_i2c #(
   //Write Data Channel
   input                               i_wvalid,
   output                              o_wready,
-  input       [STROBE_WIDTH - 1:0]    i_wstrb,
   input       [DATA_WIDTH - 1: 0]     i_wdata,
 
   //Write Response Channel
@@ -133,6 +132,7 @@ reg   [7:0]                         r_interrupt;
 
 wire                                done;
 
+/*
 wire                                o_scl_tri;
 wire                                o_sda_tri;
 
@@ -141,6 +141,7 @@ wire                                o_sda_out;
 
 wire                                i_scl_in;
 wire                                i_sda_in;
+*/
 
 
 //core enable signal
@@ -201,7 +202,6 @@ axi_lite_slave #(
 
   .i_wvalid           (i_wvalid             ),
   .o_wready           (o_wready             ),
-  .i_wstrb            (i_wstrb              ),
   .i_wdata            (i_wdata              ),
 
   .o_bvalid           (o_bvalid             ),

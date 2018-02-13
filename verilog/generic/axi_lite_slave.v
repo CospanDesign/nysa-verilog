@@ -50,7 +50,6 @@ module axi_lite_slave #(
   //Write Data Channel
   input                               i_wvalid,
   output  reg                         o_wready,
-  input       [STROBE_WIDTH - 1:0]    i_wstrb,
   input       [DATA_WIDTH - 1: 0]     i_wdata,
 
   //Write Response Channel

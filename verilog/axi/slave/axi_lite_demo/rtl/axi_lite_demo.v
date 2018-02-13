@@ -58,7 +58,6 @@ module axi_lite_demo #(
   //Write Data Channel
   input                               i_wvalid,
   output                              o_wready,
-  input       [STROBE_WIDTH - 1:0]    i_wstrb,
   input       [DATA_WIDTH - 1: 0]     i_wdata,
 
   //Write Response Channel
@@ -124,7 +123,6 @@ axi_lite_slave #(
 
   .i_wvalid           (i_wvalid             ),
   .o_wready           (o_wready             ),
-  .i_wstrb            (i_wstrb              ),
   .i_wdata            (i_wdata              ),
 
   .o_bvalid           (o_bvalid             ),
