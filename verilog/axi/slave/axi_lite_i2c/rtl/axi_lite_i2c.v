@@ -166,7 +166,6 @@ reg                                 tip;        //Tranfer in progress
 wire                                i2c_busy;   //busy (start sigal detected)
 wire                                i2c_al;     //arbitration lost
 reg                                 al;         //arbitration lost
-reg                                 prev_tip;
 
 
 //Simple User Interface
@@ -320,7 +319,6 @@ always @ (posedge clk) begin
     end
     */
 
-    //if (prev_tip & !tip) begin
     if (done) begin
       r_interrupt[INT_TRANSFER_FINISHED]  <=  1;
     end
@@ -425,15 +423,19 @@ always @ (posedge clk) begin
       control[7]                          <=  0;
     end
 
-    if (done | i2c_al) begin
-      command[3:0]                        <=  4'h0;
-    end
+    //if (done | i2c_al) begin
+    //  command[3:0]                        <=  4'h0;
+    //end
 
+   
     al                                    <=  i2c_al | (al & ~start);
     rxack                                 <=  irxack;
-    prev_tip                              <=  tip;
     tip                                   <=  (read | write);
 
+    if (i2c_busy) begin
+      command[3:0]                        <=  4'h0;
+    end
+ 
   end
 end
 
