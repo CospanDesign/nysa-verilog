@@ -103,8 +103,8 @@ module axi_lite_i2c #(
 //local parameters
 localparam CLK_DIVIDE_100KHZ        = (CLOCK_RATE/(5 * 100000) - 1);
 localparam CLK_DIVIDE_400KHZ        = (CLOCK_RATE/(5 * 400000) - 1);
-                                    
-//Address Map                       
+
+//Address Map
 localparam    REG_CONTROL           = 0;
 localparam    REG_STATUS            = 1;
 localparam    REG_INTERRUPT         = 2;
@@ -163,8 +163,8 @@ reg                                 core_en;
 reg                                 ien;
 reg                                 set_100khz;
 reg                                 set_400khz;
-                                    
-//Control Register bits             
+
+//Control Register bits
 reg                                 start;
 reg                                 stop;
 reg                                 read;
@@ -310,7 +310,7 @@ always @ (posedge clk) begin
     al                                    <=  0;
     rxack                                 <=  0;
     tip                                   <=  0;
-    
+
     r_interrupt_enable                    <=  0;
     r_interrupt                           <=  0;
     core_en                               <=  1;
@@ -321,6 +321,7 @@ always @ (posedge clk) begin
     read                                  <=  0;
     write                                 <=  0;
     ack                                   <=  0;
+    core_reset                            <=  1;
   end
   else begin
     if (done) begin
@@ -433,18 +434,21 @@ always @ (posedge clk) begin
     if (set_400khz) begin
       clock_divider                       <= CLK_DIVIDE_400KHZ;
     end
-   
+
     al                                    <=  i2c_al | (al & ~start);
     rxack                                 <=  irxack;
-    tip                                   <=  (read | write);
-
-    if (i2c_busy) begin
-      start                               <=  0;
-      stop                                <=  0;
+    if (read | write) begin
+      tip                                 <=  1;
       read                                <=  0;
       write                               <=  0;
     end
- 
+    if (done) begin
+      tip                                 <=  0;
+      stop                                <=  0;
+      start                               <=  0;
+      ack                                 <=  0;
+    end
+
   end
 end
 

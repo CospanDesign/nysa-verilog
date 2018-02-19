@@ -48,6 +48,8 @@ always @ (*)      r_rst           = rst;
 reg   [3:0]       test_id         = 0;
 
 reg               prev_clk        = 0;
+reg               start           = 0;
+reg               prev_dat        = 0;
 reg   [7:0]       i2c_clock_count = 0;
 
 /*
@@ -69,7 +71,7 @@ reg               I_SDA_IN;
 
 
 
-assign I_SCL_IN = 1;
+assign I_SCL_IN = O_SCL_TRI;
 //assign            io_sda = (sda_tri) ? 1'hZ : 1'b0;
 
 
@@ -84,28 +86,28 @@ axi_lite_i2c #(
 ) dut (
   .clk              (clk            ),
   .rst              (r_rst          ),
-                               
-                               
+
+
   .i_awvalid        (AXIML_AWVALID  ),
   .i_awaddr         (AXIML_AWADDR   ),
   .o_awready        (AXIML_AWREADY  ),
-                               
-                               
+
+
   .i_wvalid         (AXIML_WVALID   ),
   .o_wready         (AXIML_WREADY   ),
   .i_wdata          (AXIML_WDATA    ),
-                               
-                               
+
+
   .o_bvalid         (AXIML_BVALID   ),
   .i_bready         (AXIML_BREADY   ),
   .o_bresp          (AXIML_BRESP    ),
-                               
-                               
+
+
   .i_arvalid        (AXIML_ARVALID  ),
   .o_arready        (AXIML_ARREADY  ),
   .i_araddr         (AXIML_ARADDR   ),
-                               
-                               
+
+
   .o_rvalid         (AXIML_RVALID   ),
   .i_rready         (AXIML_RREADY   ),
   .o_rresp          (AXIML_RRESP    ),
@@ -134,26 +136,61 @@ initial begin
   $dumpvars(0, tb_cocotb);
 end
 
+reg [3:0] count = 0;
 always @ (posedge clk) begin
   if (r_rst) begin
     i2c_clock_count <= 0;
-    prev_clk <= 0;
+    prev_clk <= O_SDA_TRI;
+    start    <= 0;
+    prev_dat <= 0;
+    count = 0;
     I_SDA_IN  <=  1;
   end
   else begin
-    if (prev_clk & !O_SCL_TRI) begin
-      i2c_clock_count <= i2c_clock_count + 1;
-    end
-    if (i2c_clock_count == 9) begin
-      I_SDA_IN  <=  0;
-    end
-    else if (i2c_clock_count > 9) begin
-      I_SDA_IN  <=  1;
-      i2c_clock_count <=  0;
-    end
-  end
 
-  prev_clk <= O_SCL_TRI;
+
+    if ((prev_dat != O_SDA_TRI) && (O_SCL_TRI))begin
+      start   <=  1;
+    end
+
+    if (prev_clk & !O_SCL_TRI ) begin
+      if (start) begin
+        start <= 0;
+      end
+      else begin
+
+        i2c_clock_count <= i2c_clock_count + 1;
+      end
+    end
+
+
+    if (i2c_clock_count == 8) begin
+      if (count > 2) begin
+        I_SDA_IN  <=  0;
+        count <= 0;
+      end
+      else begin
+        count <= count + 1;
+      end
+    end
+
+    else if (i2c_clock_count > 8) begin
+      if (count > 2) begin
+        I_SDA_IN  <=  1;
+        i2c_clock_count <=  0;
+        count <= 0;
+      end
+      else begin
+        count <= count + 1;
+      end
+    end
+    else begin
+      I_SDA_IN  <=  O_SDA_TRI;
+    end
+
+    prev_clk <= O_SCL_TRI;
+    prev_dat <= O_SDA_TRI;
+  end
 end
 
 

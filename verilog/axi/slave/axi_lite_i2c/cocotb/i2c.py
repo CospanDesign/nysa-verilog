@@ -520,10 +520,10 @@ class I2C(Driver):
 
         if self.debug:
             status = yield self.get_status()
-            self.print_status(status)
+            #self.print_status(status)
 
     @cocotb.coroutine
-    def write_to_i2c(self, i2c_id, i2c_data, repeat_start = False):
+    def write_to_i2c(self, i2c_id, i2c_data):
         """write_to_i2c_register
 
         write to a register in the I2C device
@@ -532,8 +532,6 @@ class I2C(Driver):
             i2c_id: Identification byte of the I2C (7-bit)
                 this value will be shifted left by 1
             i2c_data: data to write to that register Array of bytes
-            repeat_start: do not explicitely end a transaction, this is used for
-                a repeat start condition
 
         Returns:
             Nothing
@@ -550,13 +548,7 @@ class I2C(Driver):
 
         #send the write command / i2c identification
         yield self.write_register(TRANSMIT, write_command)
-
-        #command = COMMAND_START | COMMAND_WRITE
-        #send the command to the I2C command register to initiate a transfer
-        yield self.write_register(COMMAND, COMMAND_START)
-        #yield self.write_register(COMMAND, COMMAND_START | COMMAND_WRITE)
-
-        yield self.write_register(COMMAND, COMMAND_WRITE)
+        yield self.write_register(COMMAND, COMMAND_WRITE | COMMAND_START)
 
         #wait 1 second for interrupt
         if self.debug: print "Wait for interrupts..."
@@ -565,23 +557,6 @@ class I2C(Driver):
         if (d):
             self.dut.log.info("Interrupt Detected")
         yield self.acknowledge_interrupt(INT_TRANSFER_FINISHED)
- 
-        #XXX: if yield self.wait_for_interrupts(wait_time = 1):
-        #XXX:     if self.debug:
-        #XXX:         print "got interrupt for start"
-        #XXX:     #if self.is_interrupt_for_slave():
-        #XXX:     status = yield self.get_status()
-        #XXX:     if self.debug:
-        #XXX:         self.print_status(status)
-        #XXX:     if (status & STATUS_READ_ACK_N) > 0:
-        #XXX:         yield self.register_dump()
-        #XXX:         raise I2CError("Did not recieve an ACK while writing I2C ID: 0x%02X" % i2c_id)
-        #XXX: else:
-        #XXX:     if self.debug:
-        #XXX:         status = yield self.get_status()
-        #XXX:         self.print_status(status)
-        #XXX:         yield self.register_dump()
-        #XXX:     raise I2CError("Timed out while waiting for interrupt during a start: 0x%02X" % i2c_id)
 
         #send the data
         count = 0
@@ -601,19 +576,6 @@ class I2C(Driver):
                     self.dut.log.info("Interrupt Detected")
                 yield self.acknowledge_interrupt(INT_TRANSFER_FINISHED)
 
-
-                #XXX: if yield self.wait_for_interrupts(wait_time = 1):
-                #XXX:    if self.debug:
-                #XXX:        print "got interrupt for data"
-
-                #XXX: if self.is_interrupt_for_slave():
-                #XXX:     status = yield self.get_status()
-                #XXX:     #self.print_status(status)
-                #XXX:     if (status & STATUS_READ_ACK_N) > 0:
-                #XXX:         raise I2CError("Did not receive an ACK while writing data")
-                #XXX: else:
-                #XXX:     raise I2CError("Timed out while waiting for interrupt durring send data")
-
                 count = count + 1
 
         #send the last peice of data
@@ -623,40 +585,23 @@ class I2C(Driver):
             yield self.write_register(TRANSMIT, data)
             count += 1
 
-        if not repeat_start:
-            if count >= len(i2c_data):
-                #last peice of data to be written
-                yield self.write_register(COMMAND, COMMAND_WRITE | COMMAND_STOP)
-            else:
-                #There is just a start then stop command
-                yield self.write_register(COMMAND, COMMAND_STOP)
 
-            yield Timer(CLK_PERIOD * 1000)
-            d = self.is_interrupt_set(INT_TRANSFER_FINISHED)
-            if (d):
-                self.dut.log.info("Interrupt Detected")
-            yield self.acknowledge_interrupt(INT_TRANSFER_FINISHED)
+        yield self.write_register(TRANSMIT, data)
+        yield self.write_register(COMMAND, COMMAND_WRITE)
+
+        yield Timer(CLK_PERIOD * 1000)
+        d = self.is_interrupt_set(INT_TRANSFER_FINISHED)
+        if (d):
+            self.dut.log.info("Interrupt Detected")
+        yield self.acknowledge_interrupt(INT_TRANSFER_FINISHED)
 
 
-            #XXX: if yield self.wait_for_interrupts(wait_time = 1):
-            #XXX:     if self.debug:
-            #XXX:         print "got interrupt for the last byte"
-            #XXX:     #if self.is_interrupt_for_slave():
-            #XXX:     status = yield self.get_status()
-            #XXX:     if (status & STATUS_READ_ACK_N) > 0:
-            #XXX:         raise I2CError("Did not receive an ACK while writing data")
-            #XXX: else:
-            #XXX:     raise I2CError("Timed out while waiting for interrupt while sending the last byte")
-
-        else:
-            #XXX: This repeat start condition has not been tested out!
-            yield self.write_register(COMMAND, COMMAND_WRITE)
-
-
+        yield Timer(CLK_PERIOD * 1000)
         #self.debug = True
+        yield self.write_register(COMMAND, COMMAND_STOP)
 
     @cocotb.coroutine
-    def read_from_i2c(self, i2c_id, i2cwrite_register, read_length):
+    def read_from_i2c(self, i2c_id, read_length):
         """read_from_i2c_register
 
         read from a register in the I2C device
@@ -685,66 +630,24 @@ class I2C(Driver):
         if self.debug:
             print "\t\tGetting status before a read"
             status = yield self.read_register(STATUS)
-            self.print_status(status)
-
-        #setup the registers to read
-        if i2cwrite_register is not None:
-            if self.debug: print "Writing to I2C"
-            yield self.write_to_i2c(i2c_id, i2cwrite_register)
+            #self.print_status(status)
 
         #set up interrupts
         yield self.enable_interrupt(True)
 
         #send the write command / i2c identification
-        self.write_register(TRANSMIT, read_command)
+        yield self.write_register(TRANSMIT, (i2c_id << 1) | 0x01)
+        yield self.write_register(COMMAND, COMMAND_WRITE | COMMAND_START)
 
-
-        #command = COMMAND_START | COMMAND_WRITE
-        command = COMMAND_START
-        if self.debug:
-            self.print_command(command)
-        #send the command to the I2C command register to initiate a transfer
-        yield self.write_register(COMMAND, command)
 
         #wait 1 second for interrupt
-        if self.wait_for_interrupts(wait_time = 1):
-            if self.debug:
-                print "got interrupt for start"
-            #if self.is_interrupt_for_slave():
-            status = yield self.get_status()
-            if self.debug:
-                self.print_status(status)
-            if (status & STATUS_READ_ACK_N) > 0:
-                raise I2CError("Did not recieve an ACK while writing I2C ID")
-
-        else:
-            if self.debug:
-                self.print_status(self.get_status())
-            raise I2CError("Timed out while waiting for interrupt durring a start")
-
-        command = COMMAND_WRITE
-        if self.debug:
-            self.print_command(command)
-        #send the command to the I2C command register to initiate a transfer
-        yield self.write_register(COMMAND, command)
-
-        #wait 1 second for interrupt
-        if self.wait_for_interrupts(wait_time = 1):
-            if self.debug:
-                print "got interrupt for start"
-            #if self.is_interrupt_for_slave():
-            status = yield self.get_status()
-            if self.debug:
-                self.print_status(status)
-            if (status & STATUS_READ_ACK_N) > 0:
-                raise I2CError("Did not recieve an ACK while writing I2C ID")
-
-        else:
-            if self.debug:
-                self.print_status(self.get_status())
-            raise I2CError("Timed out while waiting for interrupt durring a start")
-
-
+        if self.debug: print "Wait for interrupts..."
+        yield Timer(CLK_PERIOD * 1000)
+        d = self.is_interrupt_set(INT_TRANSFER_FINISHED)
+        if (d):
+            self.dut.log.info("Interrupt Detected")
+        yield self.acknowledge_interrupt(INT_TRANSFER_FINISHED)
+ 
 
         #send the data
         count = 0
@@ -755,43 +658,26 @@ class I2C(Driver):
                     print "\tReading %d" % count
                 yield self.write_register(COMMAND, COMMAND_READ)
 
-                #XXX: if yield self.wait_for_interrupts(wait_time = 1):
-                #XXX:     if yield self.get_status() & 0x01:
-                #XXX:         #print "Status: 0x%08X" % self.get_status()
-                #XXX:         if self.debug:
-                #XXX:             print "got interrupt for data"
-                #XXX:         #if self.is_interrupt_for_slave(self.dev_id):
-                #XXX:         status = yield self.get_status()
-                #XXX:         #if (status & STATUS_READ_ACK_N) > 0:
-                #XXX:         #  raise I2CError("Did not receive an ACK while reading data")
-                #XXX:         value = yield self.read_register(RECEIVE)
-                #XXX:         if self.debug:
-                #XXX:             print "value: %s" % str(value)
-                #XXX:         read_data.append((value & 0xFF))
 
-
-                #XXX: else:
-                #XXX:     raise I2CError("Timed out while waiting for interrupt during read data")
-
+                #wait 1 second for interrupt
+                if self.debug: print "Wait for interrupts..."
+                yield Timer(CLK_PERIOD * 1000)
+                d = self.is_interrupt_set(INT_TRANSFER_FINISHED)
+                if (d):
+                    self.dut.log.info("Interrupt Detected")
+                yield self.acknowledge_interrupt(INT_TRANSFER_FINISHED)
                 count = count + 1
 
         #read the last peice of data
         yield self.write_register(COMMAND, COMMAND_READ | COMMAND_NACK | COMMAND_STOP)
-        #XXX: if yield self.wait_for_interrupts(wait_time = 1):
-        #XXX:     if self.debug:
-        #XXX:         print "got interrupt for the last byte"
-        #XXX:     if yield self.get_status() & 0x01:
-        #XXX:         #if self.is_interrupt_for_slave(self.dev_id):
-        #XXX:         #status = self.get_status()
-        #XXX:         #if (status & STATUS_READ_ACK_N) > 0:
-        #XXX:         #  raise I2CError("Did not receive an ACK while writing data")
-        #XXX: 
-        #XXX:        value = yield self.read_register(RECEIVE)
-        #XXX:         if self.debug:
-        #XXX:           print "value: %d" % value
-        #XXX:         read_data.append(value & 0xFF)
-        #XXX: else:
-        #XXX:     raise I2CError("Timed out while waiting for interrupt while reading the last byte")
+
+        #wait 1 second for interrupt
+        if self.debug: print "Wait for interrupts..."
+        yield Timer(CLK_PERIOD * 1000)
+        d = self.is_interrupt_set(INT_TRANSFER_FINISHED)
+        if (d):
+            self.dut.log.info("Interrupt Detected")
+        yield self.acknowledge_interrupt(INT_TRANSFER_FINISHED)
 
         #self.debug = False
         raise ReturnValue(read_data)
