@@ -101,31 +101,45 @@ module axi_lite_i2c #(
 
 
 //local parameters
-localparam CLK_DIVIDE_100KHZ      = (CLOCK_RATE/(5 * 100000) - 1);
-localparam CLK_DIVIDE_400KHZ      = (CLOCK_RATE/(5 * 400000) - 1);
-
-//Address Map
-localparam    REG_CONTROL         = 0;
-localparam    REG_STATUS          = 1;
-localparam    REG_INTERRUPT       = 2;
-localparam    REG_INTERRUPT_EN    = 3;
-localparam    REG_CLOCK_RATE      = 4;
-localparam    REG_CLOCK_DIVIDER   = 5;
-localparam    REG_COMMAND         = 6;
-localparam    REG_TRANSMIT        = 7;
-localparam    REG_RECEIVE         = 8;
-localparam    REG_VERSION         = 9;
+localparam CLK_DIVIDE_100KHZ        = (CLOCK_RATE/(5 * 100000) - 1);
+localparam CLK_DIVIDE_400KHZ        = (CLOCK_RATE/(5 * 400000) - 1);
+                                    
+//Address Map                       
+localparam    REG_CONTROL           = 0;
+localparam    REG_STATUS            = 1;
+localparam    REG_INTERRUPT         = 2;
+localparam    REG_INTERRUPT_EN      = 3;
+localparam    REG_CLOCK_RATE        = 4;
+localparam    REG_CLOCK_DIVIDER     = 5;
+localparam    REG_COMMAND           = 6;
+localparam    REG_TRANSMIT          = 7;
+localparam    REG_RECEIVE           = 8;
+localparam    REG_VERSION           = 9;
 
 localparam    INT_TRANSFER_FINISHED = 0;
 localparam    INT_ARBITRATION_LOST  = 1;
 localparam    INT_RXACK             = 2;
 
+
+localparam    CMD_START_BIT         = 0;
+localparam    CMD_STOP_BIT          = 1;
+localparam    CMD_READ_BIT          = 2;
+localparam    CMD_WRITE_BIT         = 3;
+localparam    CMD_ACK_BIT           = 4;
+
+
+localparam    CTRL_CORE_EN_BIT      = 0;
+localparam    CTRL_IEN_BIT          = 1;
+localparam    CTRL_400KHZ_BIT       = 2;
+localparam    CTRL_100KHZ_BIT       = 3;
+localparam    CTRL_RST_BIT          = 7;
+
+
+
 //Register/Wire
 reg   [15:0]                        clock_divider;
-reg   [7:0]                         control;
 reg   [7:0]                         transmit;
 wire  [7:0]                         receive;
-reg   [7:0]                         command;
 wire  [7:0]                         status;
 reg   [7:0]                         r_interrupt_enable;
 reg   [7:0]                         r_interrupt;
@@ -145,18 +159,18 @@ wire                                i_sda_in;
 
 
 //core enable signal
-wire                                core_en;
-wire                                ien;
-wire                                set_100khz;
-wire                                set_400khz;
-
-//Control Register bits
-wire                                start;
-wire                                stop;
-wire                                read;
-wire                                write;
-wire                                ack;
-wire                                core_reset;
+reg                                 core_en;
+reg                                 ien;
+reg                                 set_100khz;
+reg                                 set_400khz;
+                                    
+//Control Register bits             
+reg                                 start;
+reg                                 stop;
+reg                                 read;
+reg                                 write;
+reg                                 ack;
+reg                                 core_reset;
 
 
 //Status Register
@@ -231,8 +245,10 @@ axi_lite_slave #(
 
 i2c_master_byte_ctrl byte_controller (
   .clk                (clk                  ),
-  .rst                (w_axi_rst | core_reset ),
-  .nReset             (1'b1                 ),
+  .rst                (core_reset           ),
+  //.nReset             (1'b1                 ),
+  .nReset             (~w_axi_rst           ),
+  //.nReset             (~core_reset          ),
   .ena                (core_en              ),
   .clk_cnt            (clock_divider        ),
   .start              (start                ),
@@ -261,20 +277,6 @@ i2c_master_byte_ctrl byte_controller (
 assign        w_axi_rst               = (INVERT_AXI_RESET)   ? ~rst         : rst;
 assign        w_reg_32bit_address     = w_reg_address[(ADDR_WIDTH - 1): 2];
 
-//Command
-assign  start                         = command[0];
-assign  stop                          = command[1];
-assign  read                          = command[2];
-assign  write                         = command[3];
-assign  ack                           = command[4];
-
-// Control
-assign  core_en                       = control[0];
-assign  ien                           = control[1];
-assign  set_100khz                    = control[2];
-assign  set_400khz                    = control[3];
-assign  core_reset                    = control[7];
-
 // assign status register bits
 assign status[7]                      = rxack;
 assign status[6]                      = i2c_busy;
@@ -295,15 +297,15 @@ always @ (posedge clk) begin
   r_reg_in_ack_stb                        <=  0;
   r_reg_out_rdy_stb                       <=  0;
   r_reg_invalid_addr                      <=  0;
+  set_400khz                              <=  0;
+  set_100khz                              <=  0;
+  core_reset                              <=  0;
 
   if (w_axi_rst) begin
-    control                               <=  0;
     r_reg_out_data                        <=  0;
 
     clock_divider                         <=  CLK_DIVIDE_100KHZ;
-    control                               <=  8'h01;
     transmit                              <=  8'h00;
-    command                               <=  8'h00;
 
     al                                    <=  0;
     rxack                                 <=  0;
@@ -311,14 +313,16 @@ always @ (posedge clk) begin
     
     r_interrupt_enable                    <=  0;
     r_interrupt                           <=  0;
+    core_en                               <=  1;
+    ien                                   <=  1;
+
+    start                                 <=  0;
+    stop                                  <=  0;
+    read                                  <=  0;
+    write                                 <=  0;
+    ack                                   <=  0;
   end
   else begin
-    /*
-    if (!w_reg_in_rdy && !r_reg_in_ack_stb) begin
-      command[0]                          <= 0;
-    end
-    */
-
     if (done) begin
       r_interrupt[INT_TRANSFER_FINISHED]  <=  1;
     end
@@ -333,7 +337,11 @@ always @ (posedge clk) begin
       //From master
       case (w_reg_32bit_address)
         REG_CONTROL: begin
-          control                         <= w_reg_in_data[7:0];
+          core_en                         <= w_reg_in_data[CTRL_CORE_EN_BIT];
+          ien                             <= w_reg_in_data[CTRL_IEN_BIT];
+          set_100khz                      <= w_reg_in_data[CTRL_400KHZ_BIT];
+          set_400khz                      <= w_reg_in_data[CTRL_100KHZ_BIT];
+          core_reset                      <= w_reg_in_data[CTRL_RST_BIT];
         end
         REG_INTERRUPT: begin
           r_interrupt                     <= r_interrupt & (~w_reg_in_data[7:0]);
@@ -345,7 +353,11 @@ always @ (posedge clk) begin
           clock_divider                   <= w_reg_in_data[7:0];
         end
         REG_COMMAND: begin
-          command                         <= w_reg_in_data[7:0];
+          start                           <= w_reg_in_data[CMD_START_BIT];
+          stop                            <= w_reg_in_data[CMD_STOP_BIT];
+          read                            <= w_reg_in_data[CMD_READ_BIT];
+          write                           <= w_reg_in_data[CMD_WRITE_BIT];
+          ack                             <= w_reg_in_data[CMD_ACK_BIT];
         end
         REG_TRANSMIT: begin
           transmit                        <= w_reg_in_data[7:0];
@@ -362,7 +374,12 @@ always @ (posedge clk) begin
       //To master
       case (w_reg_32bit_address)
         REG_CONTROL: begin
-          r_reg_out_data                  <= {24'h000000, control};
+          r_reg_out_data                  <= {32'h000000};
+          r_reg_out_data[CTRL_CORE_EN_BIT]<=  core_en;
+          r_reg_out_data[CTRL_IEN_BIT]    <=  ien;
+          r_reg_out_data[CTRL_400KHZ_BIT] <=  set_400khz;
+          r_reg_out_data[CTRL_100KHZ_BIT] <=  set_100khz;
+          r_reg_out_data[CTRL_RST_BIT]    <=  core_reset;
         end
         REG_STATUS: begin
           r_reg_out_data                  <= {24'h000000, status};
@@ -380,7 +397,13 @@ always @ (posedge clk) begin
           r_reg_out_data                  <= {16'h0000, clock_divider};
         end
         REG_COMMAND: begin
-          r_reg_out_data                  <= {24'h000000, command};
+          //r_reg_out_data                  <= {24'h000000, control};
+          r_reg_out_data                  <= {32'h00000000};
+          r_reg_out_data[CMD_START_BIT]   <=  start;
+          r_reg_out_data[CMD_STOP_BIT]    <=  stop;
+          r_reg_out_data[CMD_READ_BIT]    <=  read;
+          r_reg_out_data[CMD_WRITE_BIT]   <=  write;
+          r_reg_out_data[CMD_ACK_BIT]     <=  ack;
         end
         REG_TRANSMIT: begin
           r_reg_out_data                  <= {24'h000000, transmit};
@@ -404,36 +427,22 @@ always @ (posedge clk) begin
       r_reg_out_rdy_stb                   <= 1;
     end
 
-    //clear the reserved bits
-    command[7:5]                          <=  2'b00;
-
     if (set_100khz) begin
       clock_divider                       <= CLK_DIVIDE_100KHZ;
-      //reset the control so they don't keep firing off
-      control[2]                          <=  0;
-      control[3]                          <=  0;
     end
     if (set_400khz) begin
-      //reset the control so they don't keep firing off
       clock_divider                       <= CLK_DIVIDE_400KHZ;
-      control[2]                          <=  0;
-      control[3]                          <=  0;
     end
-    if (core_reset) begin
-      control[7]                          <=  0;
-    end
-
-    //if (done | i2c_al) begin
-    //  command[3:0]                        <=  4'h0;
-    //end
-
    
     al                                    <=  i2c_al | (al & ~start);
     rxack                                 <=  irxack;
     tip                                   <=  (read | write);
 
     if (i2c_busy) begin
-      command[3:0]                        <=  4'h0;
+      start                               <=  0;
+      stop                                <=  0;
+      read                                <=  0;
+      write                               <=  0;
     end
  
   end
