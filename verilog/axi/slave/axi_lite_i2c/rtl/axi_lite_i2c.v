@@ -445,10 +445,12 @@ always @ (posedge clk) begin
     al                                    <=  i2c_al | (al & ~start);
     rxack                                 <=  irxack;
     tip                                   <=  (read | write | stop);
+    if (i2c_busy) begin
+      start                               <=  0;
+    end
     if (done | i2c_al) begin
       tip                                 <=  0;
       stop                                <=  0;
-      start                               <=  0;
       nack                                <=  0;
       read                                <=  0;
       write                               <=  0;
