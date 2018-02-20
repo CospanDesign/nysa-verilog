@@ -514,9 +514,8 @@ class I2C(Driver):
         self.print_control(self.get_control())
         #send the write command / i2c identification
         yield self.write_register(TRANSMIT, 0xFF)
-        yield self.write_register(COMMAND, COMMAND_WRITE | COMMAND_STOP)
-        yield self.write_register(TRANSMIT, 0xFF)
-        yield self.write_register(COMMAND, COMMAND_WRITE | COMMAND_STOP)
+        yield self.write_register(COMMAND, COMMAND_WRITE)
+        yield self.write_register(COMMAND, COMMAND_STOP)
 
         if self.debug:
             status = yield self.get_status()
@@ -669,7 +668,7 @@ class I2C(Driver):
                 count = count + 1
 
         #read the last peice of data
-        yield self.write_register(COMMAND, COMMAND_READ | COMMAND_NACK | COMMAND_STOP)
+        yield self.write_register(COMMAND, COMMAND_READ | COMMAND_NACK)
 
         #wait 1 second for interrupt
         if self.debug: print "Wait for interrupts..."
@@ -678,6 +677,8 @@ class I2C(Driver):
         if (d):
             self.dut.log.info("Interrupt Detected")
         yield self.acknowledge_interrupt(INT_TRANSFER_FINISHED)
+        yield self.write_register(COMMAND, COMMAND_STOP)
+        yield Timer(CLK_PERIOD * 1000)
 
         #self.debug = False
         raise ReturnValue(read_data)

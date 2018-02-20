@@ -246,9 +246,7 @@ axi_lite_slave #(
 i2c_master_byte_ctrl byte_controller (
   .clk                (clk                  ),
   .rst                (core_reset           ),
-  //.nReset             (1'b1                 ),
   .nReset             (~w_axi_rst           ),
-  //.nReset             (~core_reset          ),
   .ena                (core_en              ),
   .clk_cnt            (clock_divider        ),
   .start              (start                ),
@@ -446,23 +444,16 @@ always @ (posedge clk) begin
 
     al                                    <=  i2c_al | (al & ~start);
     rxack                                 <=  irxack;
-    if (read | write) begin
-      tip                                 <=  1;
-      read                                <=  0;
-      write                               <=  0;
-    end
-    else if (done) begin
+    tip                                   <=  (read | write | stop);
+    if (done | i2c_al) begin
       tip                                 <=  0;
       stop                                <=  0;
       start                               <=  0;
       nack                                <=  0;
+      read                                <=  0;
+      write                               <=  0;
     end
-
   end
 end
-
-
-
-
 
 endmodule

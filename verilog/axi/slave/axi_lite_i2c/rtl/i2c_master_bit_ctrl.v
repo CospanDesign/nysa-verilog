@@ -363,24 +363,24 @@ module i2c_master_bit_ctrl (
     // generate statemachine
 
     // nxt_state decoder
-    parameter [17:0] idle    = 18'b0_0000_0000_0000_0000;
-    parameter [17:0] start_a = 18'b0_0000_0000_0000_0001;
-    parameter [17:0] start_b = 18'b0_0000_0000_0000_0010;
-    parameter [17:0] start_c = 18'b0_0000_0000_0000_0100;
-    parameter [17:0] start_d = 18'b0_0000_0000_0000_1000;
-    parameter [17:0] start_e = 18'b0_0000_0000_0001_0000;
-    parameter [17:0] stop_a  = 18'b0_0000_0000_0010_0000;
-    parameter [17:0] stop_b  = 18'b0_0000_0000_0100_0000;
-    parameter [17:0] stop_c  = 18'b0_0000_0000_1000_0000;
-    parameter [17:0] stop_d  = 18'b0_0000_0001_0000_0000;
-    parameter [17:0] rd_a    = 18'b0_0000_0010_0000_0000;
-    parameter [17:0] rd_b    = 18'b0_0000_0100_0000_0000;
-    parameter [17:0] rd_c    = 18'b0_0000_1000_0000_0000;
-    parameter [17:0] rd_d    = 18'b0_0001_0000_0000_0000;
-    parameter [17:0] wr_a    = 18'b0_0010_0000_0000_0000;
-    parameter [17:0] wr_b    = 18'b0_0100_0000_0000_0000;
-    parameter [17:0] wr_c    = 18'b0_1000_0000_0000_0000;
-    parameter [17:0] wr_d    = 18'b1_0000_0000_0000_0000;
+    parameter [17:0] idle    = 18'b0_0000_0000_0000_0000; // 0
+    parameter [17:0] start_a = 18'b0_0000_0000_0000_0001; // 1
+    parameter [17:0] start_b = 18'b0_0000_0000_0000_0010; // 2
+    parameter [17:0] start_c = 18'b0_0000_0000_0000_0100; // 3
+    parameter [17:0] start_d = 18'b0_0000_0000_0000_1000; // 4
+    parameter [17:0] start_e = 18'b0_0000_0000_0001_0000; // 5
+    parameter [17:0] stop_a  = 18'b0_0000_0000_0010_0000; // 6
+    parameter [17:0] stop_b  = 18'b0_0000_0000_0100_0000; // 7
+    parameter [17:0] stop_c  = 18'b0_0000_0000_1000_0000; // 8
+    parameter [17:0] stop_d  = 18'b0_0000_0001_0000_0000; // 9
+    parameter [17:0] rd_a    = 18'b0_0000_0010_0000_0000; // 10
+    parameter [17:0] rd_b    = 18'b0_0000_0100_0000_0000; // 11
+    parameter [17:0] rd_c    = 18'b0_0000_1000_0000_0000; // 12
+    parameter [17:0] rd_d    = 18'b0_0001_0000_0000_0000; // 13
+    parameter [17:0] wr_a    = 18'b0_0010_0000_0000_0000; // 14
+    parameter [17:0] wr_b    = 18'b0_0100_0000_0000_0000; // 15
+    parameter [17:0] wr_c    = 18'b0_1000_0000_0000_0000; // 16
+    parameter [17:0] wr_d    = 18'b1_0000_0000_0000_0000; // 17
 
     always @(posedge clk or negedge nReset)
       if (!nReset)
