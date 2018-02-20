@@ -119,12 +119,13 @@ module i2c_master_byte_ctrl (
 	//
 
 	// statemachine
-	parameter [4:0] ST_IDLE  = 5'b0_0000;
-	parameter [4:0] ST_START = 5'b0_0001;
-	parameter [4:0] ST_READ  = 5'b0_0010;
-	parameter [4:0] ST_WRITE = 5'b0_0100;
-	parameter [4:0] ST_ACK   = 5'b0_1000;
-	parameter [4:0] ST_STOP  = 5'b1_0000;
+	parameter [3:0] ST_IDLE  = 0;
+	parameter [3:0] ST_START = 1;
+	parameter [3:0] ST_READ  = 2;
+	parameter [3:0] ST_WRITE = 3;
+	parameter [3:0] ST_ACK   = 4;
+	parameter [3:0] ST_STOP  = 5;
+	parameter [3:0] ST_WAIT  = 6;
 
 	// signals for bit_controller
 	reg  [3:0] core_cmd;
@@ -316,7 +317,7 @@ module i2c_master_byte_ctrl (
 	                 end
 	               else
 	                 begin
-	                     c_state  <= #1 ST_IDLE;
+	                     c_state  <= #1 ST_WAIT;
 	                     core_cmd <= #1 `I2C_CMD_NOP;
 
 	                     // generate command acknowledge signal
@@ -334,13 +335,17 @@ module i2c_master_byte_ctrl (
 	        ST_STOP:
 	          if (core_ack)
 	            begin
-	                c_state  <= #1 ST_IDLE;
+	                c_state  <= #1 ST_WAIT;
 	                core_cmd <= #1 `I2C_CMD_NOP;
 
 	                // generate command acknowledge signal
 	                cmd_ack  <= #1 1'b1;
 	            end
 
+          ST_WAIT: begin
+	            c_state  <= #1 ST_IDLE;
+	            core_cmd <= #1 `I2C_CMD_NOP;
+          end
 	      endcase
 	  end
 endmodule
