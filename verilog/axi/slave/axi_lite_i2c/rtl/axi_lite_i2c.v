@@ -165,10 +165,10 @@ reg                                 set_100khz;
 reg                                 set_400khz;
 
 //Control Register bits
-reg                                 start;
-reg                                 stop;
-reg                                 read;
-reg                                 write;
+(* KEEP *) reg                      start;
+(* KEEP *) reg                      stop;
+(* KEEP *) reg                      read;
+(* KEEP *) reg                      write;
 reg                                 nack;
 reg                                 core_reset;
 
@@ -445,10 +445,11 @@ always @ (posedge clk) begin
     al                                    <=  i2c_al | (al & ~start);
     rxack                                 <=  irxack;
     tip                                   <=  (read | write | stop);
-    if (i2c_busy) begin
-      start                               <=  0;
-    end
+    //if (i2c_busy) begin
+    //  start                               <=  0;
+    //end
     if (done | i2c_al) begin
+      start                               <=  0;
       tip                                 <=  0;
       stop                                <=  0;
       nack                                <=  0;

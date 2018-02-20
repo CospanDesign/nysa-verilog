@@ -114,7 +114,6 @@ class I2C(Driver):
     def get_abi_minor():
         return COSPAN_DESIGN_I2C_MODULE
 
-    #def __init__(self, nysa, urn, debug = False):
     def __init__(self, dut, debug = False):
         super(I2C, self).__init__(dut, dut.clk, debug=debug)
 

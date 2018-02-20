@@ -137,6 +137,7 @@
 //// synopsys translate_off
 //`include "timescale.v"
 //// synopsys translate_on
+//`timescale 1ns / 10ps
 `timescale 1ps / 1ps
 
 `include "i2c_master_defines.v"
@@ -183,7 +184,7 @@ module i2c_master_bit_ctrl (
 
 
     // state machine variable
-    reg [17:0] c_state; // synopsys enum_state
+    reg [5:0] c_state; // synopsys enum_state
 
     //
     // module body
@@ -220,7 +221,7 @@ module i2c_master_bit_ctrl (
       else if (slave_wait)
       begin
           cnt    <= #1 cnt;
-          clk_en <= #1 1'b0;    
+          clk_en <= #1 1'b0;
       end
       else
       begin
@@ -363,24 +364,24 @@ module i2c_master_bit_ctrl (
     // generate statemachine
 
     // nxt_state decoder
-    parameter [17:0] idle    = 18'b0_0000_0000_0000_0000; // 0
-    parameter [17:0] start_a = 18'b0_0000_0000_0000_0001; // 1
-    parameter [17:0] start_b = 18'b0_0000_0000_0000_0010; // 2
-    parameter [17:0] start_c = 18'b0_0000_0000_0000_0100; // 3
-    parameter [17:0] start_d = 18'b0_0000_0000_0000_1000; // 4
-    parameter [17:0] start_e = 18'b0_0000_0000_0001_0000; // 5
-    parameter [17:0] stop_a  = 18'b0_0000_0000_0010_0000; // 6
-    parameter [17:0] stop_b  = 18'b0_0000_0000_0100_0000; // 7
-    parameter [17:0] stop_c  = 18'b0_0000_0000_1000_0000; // 8
-    parameter [17:0] stop_d  = 18'b0_0000_0001_0000_0000; // 9
-    parameter [17:0] rd_a    = 18'b0_0000_0010_0000_0000; // 10
-    parameter [17:0] rd_b    = 18'b0_0000_0100_0000_0000; // 11
-    parameter [17:0] rd_c    = 18'b0_0000_1000_0000_0000; // 12
-    parameter [17:0] rd_d    = 18'b0_0001_0000_0000_0000; // 13
-    parameter [17:0] wr_a    = 18'b0_0010_0000_0000_0000; // 14
-    parameter [17:0] wr_b    = 18'b0_0100_0000_0000_0000; // 15
-    parameter [17:0] wr_c    = 18'b0_1000_0000_0000_0000; // 16
-    parameter [17:0] wr_d    = 18'b1_0000_0000_0000_0000; // 17
+    parameter    idle    = 0;
+    parameter    start_a = 1;
+    parameter    start_b = 2;
+    parameter    start_c = 3;
+    parameter    start_d = 4;
+    parameter    start_e = 5;
+    parameter    stop_a  = 6;
+    parameter    stop_b  = 7;
+    parameter    stop_c  = 8;
+    parameter    stop_d  = 9;
+    parameter    rd_a    = 10;
+    parameter    rd_b    = 11;
+    parameter    rd_c    = 12;
+    parameter    rd_d    = 13;
+    parameter    wr_a    = 14;
+    parameter    wr_b    = 15;
+    parameter    wr_c    = 16;
+    parameter    wr_d    = 17;
 
     always @(posedge clk or negedge nReset)
       if (!nReset)

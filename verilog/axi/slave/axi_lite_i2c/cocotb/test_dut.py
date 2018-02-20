@@ -43,7 +43,7 @@ def first_test(dut):
 
 
 
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def send_data(dut):
     """
     Description:
@@ -79,14 +79,14 @@ def send_data(dut):
     yield i2c.set_custom_speed(1000000)
     yield i2c.enable_i2c(True)
     yield i2c.reset_i2c_core()
-    yield Timer(CLK_PERIOD * 100)
+    yield Timer(CLK_PERIOD * 1000)
     yield i2c.write_to_i2c(0x30, [2, 0x55])
     yield Timer(CLK_PERIOD * 1000)
 
     
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def read_data(dut):
     """
     Description:
