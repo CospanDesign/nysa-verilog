@@ -169,7 +169,7 @@ reg                                 start;
 reg                                 stop;
 reg                                 read;
 reg                                 write;
-reg                                 ack;
+reg                                 nack;
 reg                                 core_reset;
 
 
@@ -255,10 +255,10 @@ i2c_master_byte_ctrl byte_controller (
   .stop               (stop                 ),
   .read               (read                 ),
   .write              (write                ),
-  .ack_in             (ack                  ),
   .din                (transmit             ),
   .cmd_ack            (done                 ),
   .ack_out            (irxack               ),
+  .ack_in             (nack                 ),
   .dout               (receive              ),
   .i2c_busy           (i2c_busy             ),
   .i2c_al             (i2c_al               ),
@@ -313,27 +313,20 @@ always @ (posedge clk) begin
 
     r_interrupt_enable                    <=  0;
     r_interrupt                           <=  0;
+
     core_en                               <=  1;
-    ien                                   <=  1;
+    core_reset                            <=  1;
+    ien                                   <=  0;
 
     start                                 <=  0;
     stop                                  <=  0;
     read                                  <=  0;
     write                                 <=  0;
-    ack                                   <=  0;
-    core_reset                            <=  1;
+    nack                                  <=  0;
   end
   else begin
-    if (done) begin
-      r_interrupt[INT_TRANSFER_FINISHED]  <=  1;
-    end
-    if (al) begin
-      r_interrupt[INT_ARBITRATION_LOST]   <=  1;
-    end
-    if (irxack & !rxack) begin
-      r_interrupt[INT_RXACK]              <=  1;
-    end
 
+    //Communication with master
     if (w_reg_in_rdy && !r_reg_in_ack_stb) begin
       //From master
       case (w_reg_32bit_address)
@@ -358,7 +351,7 @@ always @ (posedge clk) begin
           stop                            <= w_reg_in_data[CMD_STOP_BIT];
           read                            <= w_reg_in_data[CMD_READ_BIT];
           write                           <= w_reg_in_data[CMD_WRITE_BIT];
-          ack                             <= w_reg_in_data[CMD_ACK_BIT];
+          nack                            <= w_reg_in_data[CMD_ACK_BIT];
         end
         REG_TRANSMIT: begin
           transmit                        <= w_reg_in_data[7:0];
@@ -404,7 +397,7 @@ always @ (posedge clk) begin
           r_reg_out_data[CMD_STOP_BIT]    <=  stop;
           r_reg_out_data[CMD_READ_BIT]    <=  read;
           r_reg_out_data[CMD_WRITE_BIT]   <=  write;
-          r_reg_out_data[CMD_ACK_BIT]     <=  ack;
+          r_reg_out_data[CMD_ACK_BIT]     <=  nack;
         end
         REG_TRANSMIT: begin
           r_reg_out_data                  <= {24'h000000, transmit};
@@ -428,6 +421,22 @@ always @ (posedge clk) begin
       r_reg_out_rdy_stb                   <= 1;
     end
 
+
+    //Interrupts
+    if (ien) begin
+      if (done) begin
+        r_interrupt[INT_TRANSFER_FINISHED]<=  1;
+      end
+      if (al) begin
+        r_interrupt[INT_ARBITRATION_LOST] <=  1;
+      end
+      if (irxack & !rxack) begin
+        r_interrupt[INT_RXACK]            <=  1;
+      end
+    end
+
+
+    //Set Bus Speed
     if (set_100khz) begin
       clock_divider                       <= CLK_DIVIDE_100KHZ;
     end
@@ -442,11 +451,11 @@ always @ (posedge clk) begin
       read                                <=  0;
       write                               <=  0;
     end
-    if (done) begin
+    else if (done) begin
       tip                                 <=  0;
       stop                                <=  0;
       start                               <=  0;
-      ack                                 <=  0;
+      nack                                <=  0;
     end
 
   end

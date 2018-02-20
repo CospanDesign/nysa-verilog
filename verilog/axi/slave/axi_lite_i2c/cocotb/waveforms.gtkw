@@ -1,66 +1,105 @@
 [*]
 [*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
-[*] Mon Feb 12 00:20:41 2018
+[*] Mon Feb 19 21:52:35 2018
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_lite_i2c/cocotb/design.vcd"
-[dumpfile_mtime] "Sun Feb 11 17:36:13 2018"
-[dumpfile_size] 17330
+[dumpfile_mtime] "Mon Feb 19 21:05:42 2018"
+[dumpfile_size] 169206
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_lite_i2c/cocotb/waveforms.gtkw"
 [timestart] 0
-[size] 1443 699
-[pos] 1823 -75
-*-8.944359 44 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[size] 1461 699
+[pos] -1 -1
+*-13.834381 36960 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.dut.
+[treeopen] tb_cocotb.dut.byte_controller.
 [sst_width] 213
-[signals_width] 174
+[signals_width] 180
 [sst_expanded] 1
 [sst_vpaned_height] 190
 @28
 tb_cocotb.clk
 tb_cocotb.rst
+@22
+tb_cocotb.test_id[3:0]
+tb_cocotb.i2c_clock_count[7:0]
 @200
 -
-@800200
--AXI4 Master Lite
-@22
-tb_cocotb.AXIML_ARADDR[31:0]
 @28
-tb_cocotb.AXIML_ARREADY
-tb_cocotb.AXIML_ARVALID
+tb_cocotb.dut.w_reg_in_rdy
 @22
-tb_cocotb.AXIML_AWADDR[31:0]
-@28
-tb_cocotb.AXIML_AWREADY
-tb_cocotb.AXIML_AWVALID
-tb_cocotb.AXIML_BREADY
-tb_cocotb.AXIML_BRESP[1:0]
-tb_cocotb.AXIML_BVALID
-@22
-tb_cocotb.AXIML_RDATA[31:0]
-@28
-tb_cocotb.AXIML_RREADY
-tb_cocotb.AXIML_RRESP[1:0]
-tb_cocotb.AXIML_RVALID
-@22
-tb_cocotb.AXIML_WDATA[31:0]
-@28
-tb_cocotb.AXIML_WREADY
-@22
-tb_cocotb.AXIML_WSTRB[3:0]
-@28
-tb_cocotb.AXIML_WVALID
-@1000200
--AXI4 Master Lite
+tb_cocotb.dut.w_reg_32bit_address[29:0]
 @200
 -
-@22
-tb_cocotb.dut.control[7:0]
+@28
+tb_cocotb.I_SCL_IN
+tb_cocotb.O_SCL_TRI
+tb_cocotb.O_SCL_OUT
+@200
+-
+@28
+tb_cocotb.I_SDA_IN
+tb_cocotb.O_SDA_TRI
+@200
+-
 @28
 tb_cocotb.dut.o_interrupt
 @22
 tb_cocotb.dut.r_interrupt[7:0]
-@23
 tb_cocotb.dut.r_interrupt_enable[7:0]
+tb_cocotb.dut.byte_controller.c_state[4:0]
+@200
+-
+-
+@28
+tb_cocotb.dut.i2c_busy
+tb_cocotb.dut.core_en
+tb_cocotb.dut.core_reset
+@29
+tb_cocotb.dut.done
+@28
+tb_cocotb.dut.tip
+@200
+-
+@28
+tb_cocotb.dut.start
+tb_cocotb.dut.stop
+tb_cocotb.dut.read
+tb_cocotb.dut.write
+tb_cocotb.dut.ack
+@200
+-
+@22
+tb_cocotb.dut.byte_controller.core_cmd[3:0]
+@200
+-
+@22
+tb_cocotb.dut.receive[7:0]
+tb_cocotb.dut.byte_controller.dout[7:0]
+tb_cocotb.dut.byte_controller.sr[7:0]
+@28
+tb_cocotb.dut.tip
+@200
+-
+@28
+tb_cocotb.dut.byte_controller.bit_controller.clk
+@200
+-
+@28
+tb_cocotb.dut.byte_controller.bit_controller.rst
+tb_cocotb.dut.byte_controller.bit_controller.nReset
+tb_cocotb.dut.byte_controller.bit_controller.busy
+@200
+-
+@28
+tb_cocotb.dut.byte_controller.bit_controller.sto_condition
+tb_cocotb.dut.byte_controller.bit_controller.sta_condition
+@200
+-
+@28
+tb_cocotb.dut.byte_controller.bit_controller.sSCL
+tb_cocotb.dut.byte_controller.bit_controller.sSDA
+@200
+-
 [pattern_trace] 1
 [pattern_trace] 0
