@@ -132,6 +132,8 @@ localparam                  REG_TRIGGER_PULSE_WIDTH = 3;
 localparam                  REG_TRIGGER_PERIOD      = 4;
 localparam                  REG_CAMERA_COUNT        = 5;
 localparam                  REG_LANE_WIDTH          = 6;
+localparam                  REG_ALIGNED_FLAG_LOW    = 12;
+localparam                  REG_ALIGNED_FLAG_HIGH   = 13;
 
 
 localparam                  REG_TAP_DELAY_START     = 16;
@@ -176,7 +178,13 @@ reg   [DATA_WIDTH - 1: 0]           r_reg_out_data;
 wire                                w_axi_rst;
 
 reg                                 r_trigger_en;
-reg                                 r_cam_xclear;
+wire                                w_cam_xclear;
+wire  [(3 * 16) - 1: 0]             w_align_flag;
+wire                                w_align_flag_md[0: CAMERA_COUNT - 1][0: LANE_WIDTH - 1];
+
+if (CAMERA_COUNT * LANE_WIDTH < 3 * 16) begin
+  assign  w_align_flag[(3 * 16) - 1: (CAMERA_COUNT * LANE_WIDTH)] = 0;
+end
 
 
 
@@ -184,12 +192,12 @@ reg                                 r_cam_xclear;
 wire  [LANE_WIDTH - 1: 0]           w_cam_0_aligned;
 wire  [LANE_WIDTH - 1: 0]           w_cam_1_aligned;
 wire  [LANE_WIDTH - 1: 0]           w_cam_2_aligned;
+
 wire  [2: 0]         w_hsync;
 assign  w_hsync[0]     = i_cam_0_imx_hs;
 assign  w_hsync[1]     = i_cam_1_imx_hs;
 assign  w_hsync[2]     = i_cam_2_imx_hs;
 
-wire  w_aligned_flag[0: CAMERA_COUNT - 1][0: LANE_WIDTH - 1];
 
 
 //Put the aligned and unaligned data in a format that can be used by the generate block
@@ -241,19 +249,21 @@ for (cam_i = 0; cam_i < CAMERA_COUNT; cam_i = cam_i + 1) begin : ALIGNER
   //Go through the lanes
   for (lane_i = 0; lane_i < LANE_WIDTH; lane_i = lane_i + 1) begin : LANES
 
-  //Map parts of the large camera blocks to multi dimensional arrays
-  assign w_unaligned_data[cam_i][lane_i] = w_cam_unaligned[cam_i][(lane_i * 8) + 7:(lane_i * 8)];
-  assign w_cam_aligned   [cam_i][(lane_i * 8) + 7:(lane_i * 8)] = w_aligned_data[cam_i][lane_i];
-  assign w_tap_lane_value[cam_i][(lane_i * 5) + 4:(lane_i * 5)] = r_tap_value[cam_i][lane_i];
+    //Map parts of the large camera blocks to multi dimensional arrays
+    assign w_unaligned_data[cam_i][lane_i] = w_cam_unaligned[cam_i][(lane_i * 8) + 7:(lane_i * 8)];
+    assign w_cam_aligned   [cam_i][(lane_i * 8) + 7:(lane_i * 8)] = w_aligned_data[cam_i][lane_i];
+    assign w_tap_lane_value[cam_i][(lane_i * 5) + 4:(lane_i * 5)] = r_tap_value[cam_i][lane_i];
 
-  rxd_aligner rxa(
-    .clk            (clk                              ),
-    .rst            (w_axi_rst                        ),
-    .i_hflag        (w_hsync[cam_i]                   ),
-    .o_aligned      (w_aligned_flag[cam_i][lane_i]    ),
-    .i_lvds         (w_unaligned_data[cam_i][lane_i]  ),
-    .o_lvds_aligned (w_aligned_data[cam_i][lane_i]    )
-  );
+    assign w_align_flag[(cam_i * LANE_WIDTH) + lane_i] = w_align_flag_md[cam_i][lane_i];
+
+    rxd_aligner rxa(
+      .clk            (clk                              ),
+      .rst            (w_axi_rst                        ),
+      .i_hflag        (w_hsync[cam_i]                   ),
+      .o_aligned      (w_align_flag_md[cam_i][lane_i]   ),
+      .i_lvds         (w_unaligned_data[cam_i][lane_i]  ),
+      .o_lvds_aligned (w_aligned_data[cam_i][lane_i]    )
+    );
 
   end
 end
@@ -308,7 +318,8 @@ axi_lite_slave #(
 assign        w_axi_rst               = (INVERT_AXI_RESET)   ? ~rst         : rst;
 assign        w_reg_32bit_address     = w_reg_address[(ADDR_WIDTH - 1): 2];
 assign        o_imx_trigger           = (r_trigger_pulse_count < r_trigger_pulse_width);
-assign        o_cam_xclear_n          = !r_cam_xclear;
+assign        o_cam_xclear_n          = !w_cam_xclear;
+assign        w_cam_xclear            = (r_clear_pulse_count < r_clear_pulse_width);
 
 
 integer i;
@@ -333,7 +344,6 @@ always @ (posedge clk) begin
     r_trigger_period                      <= DEFAULT_TRIGGER_PERIOD;
     r_trigger_period_count                <= DEFAULT_TRIGGER_PERIOD;
 
-    r_cam_xclear                          <= 0;
     o_cam0_master_mode                    <= 0;
     o_cam1_master_mode                    <= 0;
     o_cam2_master_mode                    <= 0;
@@ -350,7 +360,6 @@ always @ (posedge clk) begin
       //From master
       case (w_reg_32bit_address)
         REG_CONTROL: begin
-          r_cam_xclear                    <= w_reg_in_data[CTRL_BIT_CLEAR];
           o_tap_delay_rst                 <= w_reg_in_data[CTRL_BIT_RESET_TAP_DELAY];
           o_cam0_master_mode              <= w_reg_in_data[CTRL_BIT_MASTER_MODE0];
           o_cam1_master_mode              <= w_reg_in_data[CTRL_BIT_MASTER_MODE1];
@@ -392,7 +401,7 @@ always @ (posedge clk) begin
       //To master
       case (w_reg_32bit_address)
         REG_CONTROL: begin
-          r_reg_out_data[CTRL_BIT_CLEAR]           <=      r_cam_xclear;
+          r_reg_out_data[CTRL_BIT_CLEAR]           <=      w_cam_xclear;
           r_reg_out_data[CTRL_BIT_RESET_TAP_DELAY] <=      o_tap_delay_rst;
           r_reg_out_data[CTRL_BIT_MASTER_MODE0]    <=      o_cam0_master_mode;
           r_reg_out_data[CTRL_BIT_MASTER_MODE1]    <=      o_cam1_master_mode;
@@ -416,6 +425,12 @@ always @ (posedge clk) begin
         end
         REG_LANE_WIDTH: begin
           r_reg_out_data                  <=  LANE_WIDTH;
+        end
+        REG_ALIGNED_FLAG_LOW: begin
+          r_reg_out_data                  <=  w_align_flag[31:0];
+        end
+        REG_ALIGNED_FLAG_HIGH: begin
+          r_reg_out_data                  <=  {16'h0000, w_align_flag[47:32]};
         end
         REG_VERSION: begin
           r_reg_out_data                  <= 32'h00;
@@ -455,14 +470,9 @@ always @ (posedge clk) begin
       end
     end
 
-
     //If the user has requrested xclear to be pulsed, raise it back after appropriate timeout
     if (r_clear_pulse_count < r_clear_pulse_width) begin
       r_clear_pulse_count                 <=  r_clear_pulse_count + 1;
-    end
-    else begin
-      //Deassert after the pulse width has expired
-      r_cam_xclear                        <=  0;
     end
 
   end
