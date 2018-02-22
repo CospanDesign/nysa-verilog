@@ -39,7 +39,6 @@ SOFTWARE.
 `define REVISION_RANGE            19:16
 
 module axi_sony_imx_control #(
-  parameter DEFAULT_CLEAR_LEN   = 100,
   parameter DEFAULT_TRIGGER_LEN = 100,
   parameter DEFAULT_TRIGGER_PERIOD = 370000, //200 hertz at 74MHz
   parameter CAMERA_COUNT        = 1,
