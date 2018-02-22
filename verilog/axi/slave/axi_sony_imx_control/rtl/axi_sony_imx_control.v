@@ -104,8 +104,12 @@ module axi_sony_imx_control #(
 
 
   //Interface Directly to Camera
-  output      [2:0]                   o_imx_trigger,
-  output  reg                         o_cam_xclear_n,
+  output                              o_cam_0_trigger,
+  output                              o_cam_1_trigger,
+  output                              o_cam_2_trigger,
+  output                              o_cam_0_xclear_n,
+  output                              o_cam_1_xclear_n,
+  output                              o_cam_2_xclear_n,
   output  reg                         o_cam_0_master_mode,
   output  reg                         o_cam_1_master_mode,
   output  reg                         o_cam_2_master_mode,
@@ -170,6 +174,7 @@ wire                                w_cam_clk[0:2];
 wire                                w_cam_rst_stb[0:2];
 
 reg                                 r_axi_cam_rst_stb;
+reg                                 r_cam_xclear;
 
 //AXI Signals
 wire        [31:0]                  status;
@@ -235,6 +240,10 @@ assign  w_hsync[0]             = i_cam_0_imx_hs;
 assign  w_hsync[1]             = i_cam_1_imx_hs;
 assign  w_hsync[2]             = i_cam_2_imx_hs;
 
+assign  o_cam_0_xclear_n        = !r_cam_xclear;
+assign  o_cam_1_xclear_n        = !r_cam_xclear;
+assign  o_cam_2_xclear_n        = !r_cam_xclear;
+
 //Submodules
 genvar cam_i;
 genvar lane_i;
@@ -247,25 +256,28 @@ for (cam_i = 0; cam_i < CAMERA_COUNT; cam_i = cam_i + 1) begin : ALIGNER
   //Map the statically named 'cam_0, cam_1, cam_2' to the mult dimensional arrays
   case (cam_i)
     0: begin
-      assign w_cam_clk[cam_i]   = i_cam_0_clk;
+      assign w_cam_clk[0]       = i_cam_0_clk;
       assign w_cam_unaligned[0] = i_cam_0_raw_data;
       assign o_cam_0_sync_data  = w_cam_aligned[0];
       assign o_cam_0_tap_data   = w_tap_lane_value[0];
       assign o_serdes_0_io_rst  = w_cam_rst_stb[0];
+      assign o_cam_0_trigger    = ((r_trigger_en) & (r_trigger_pulse_count[0] < r_trigger_pulse_width));
     end
     1: begin
-      assign w_cam_clk[cam_i]   = i_cam_1_clk;
+      assign w_cam_clk[1]       = i_cam_1_clk;
       assign w_cam_unaligned[1] = i_cam_1_raw_data;
       assign o_cam_1_sync_data  = w_cam_aligned[1];
       assign o_cam_1_tap_data   = w_tap_lane_value[1];
       assign o_serdes_1_io_rst  = w_cam_rst_stb[1];
+      assign o_cam_1_trigger    = ((r_trigger_en) & (r_trigger_pulse_count[1] < r_trigger_pulse_width));
     end
     2: begin
-      assign w_cam_clk[cam_i]   = i_cam_2_clk;
+      assign w_cam_clk[2]       = i_cam_2_clk;
       assign w_cam_unaligned[2] = i_cam_2_raw_data;
       assign o_cam_2_sync_data  = w_cam_aligned[2];
       assign o_cam_2_tap_data   = w_tap_lane_value[2];
       assign o_serdes_2_io_rst  = w_cam_rst_stb[2];
+      assign o_cam_2_trigger    = ((r_trigger_en) & (r_trigger_pulse_count[2] < r_trigger_pulse_width));
     end
   endcase
 
@@ -313,7 +325,6 @@ for (cam_i = 0; cam_i < CAMERA_COUNT; cam_i = cam_i + 1) begin : ALIGNER
     assign w_tap_lane_value[cam_i][(lane_i * 5) + 4:(lane_i * 5)] = r_tap_value[cam_i][lane_i];
 
     assign w_align_flag[(cam_i * MAX_LANE_WIDTH) + lane_i]  = w_align_flag_md[cam_i][lane_i];
-    assign o_imx_trigger[cam_i]                         = ((r_trigger_en) & (r_trigger_pulse_count[cam_i] < r_trigger_pulse_width));
 
     rxd_aligner rxa(
       .clk            (w_cam_clk[cam_i]                 ),
@@ -391,7 +402,7 @@ always @ (posedge i_axi_clk) begin
 
   if (w_axi_rst) begin
     r_reg_out_data                        <=  0;
-    o_cam_xclear_n                        <=  1;
+    r_cam_xclear                          <=  0;
 
     r_trigger_pulse_width                 <= DEFAULT_TRIGGER_LEN;
     r_trigger_period                      <= DEFAULT_TRIGGER_PERIOD;
@@ -420,7 +431,7 @@ always @ (posedge i_axi_clk) begin
 
           o_serdes_clk_rst_stb            <= w_reg_in_data[CTRL_BIT_STROBE_CAM_CLK_RST];
           r_axi_cam_rst_stb               <= w_reg_in_data[CTRL_BIT_STROBE_CAM_RST];
-          o_cam_xclear_n                  <=!w_reg_in_data[CTRL_BIT_CLEAR];
+          r_cam_xclear                    <= w_reg_in_data[CTRL_BIT_CLEAR];
         end
         REG_TRIGGER_PULSE_WIDTH: begin
           r_trigger_pulse_width           <= w_reg_in_data;
@@ -450,7 +461,7 @@ always @ (posedge i_axi_clk) begin
       //To master
       case (w_reg_32bit_address)
         REG_CONTROL: begin
-          r_reg_out_data[CTRL_BIT_CLEAR]            <=      !o_cam_xclear_n;
+          r_reg_out_data[CTRL_BIT_CLEAR]            <=      r_cam_xclear;
           r_reg_out_data[CTRL_BIT_TAP_DELAY_RST]    <=      o_tap_delay_rst;
           r_reg_out_data[CTRL_BIT_MASTER_MODE0]     <=      o_cam_0_master_mode;
           r_reg_out_data[CTRL_BIT_MASTER_MODE1]     <=      o_cam_1_master_mode;

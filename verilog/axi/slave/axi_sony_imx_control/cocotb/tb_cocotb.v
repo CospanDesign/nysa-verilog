@@ -70,8 +70,12 @@ wire      [(5 * LANE_WIDTH) - 1: 0]     o_cam_2_tap_data;
 
 
 //Interface Directly to Camera
-wire       [2:0]                        o_imx_trigger;
-wire                                    o_cam_xclear_n;
+wire                                    o_cam_0_trigger;
+wire                                    o_cam_1_trigger;
+wire                                    o_cam_2_trigger;
+wire                                    o_cam_0_xclear_n;
+wire                                    o_cam_1_xclear_n;
+wire                                    o_cam_2_xclear_n;
 wire                                    o_cam_0_master_mode;
 wire                                    o_cam_1_master_mode;
 wire                                    o_cam_2_master_mode;
@@ -178,8 +182,12 @@ axi_sony_imx_control #(
 
 
   //Interface Directly to Camera
-  .o_imx_trigger          (o_imx_trigger       ),
-  .o_cam_xclear_n         (o_cam_xclear_n      ),
+  .o_cam_0_trigger        (o_cam_0_trigger     ),
+  .o_cam_1_trigger        (o_cam_1_trigger     ),
+  .o_cam_2_trigger        (o_cam_2_trigger     ),
+  .o_cam_0_xclear_n       (o_cam_0_xclear_n    ),
+  .o_cam_1_xclear_n       (o_cam_1_xclear_n    ),
+  .o_cam_2_xclear_n       (o_cam_2_xclear_n    ),
   .o_cam_0_master_mode    (o_cam_0_master_mode ),
   .o_cam_1_master_mode    (o_cam_1_master_mode ),
   .o_cam_2_master_mode    (o_cam_2_master_mode ),
