@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
-[*] Wed Feb 21 14:39:42 2018
+[*] Thu Feb 22 20:10:22 2018
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_sony_imx_control/cocotb/design.vcd"
-[dumpfile_mtime] "Wed Feb 21 14:38:59 2018"
-[dumpfile_size] 53570
+[dumpfile_mtime] "Thu Feb 22 20:09:40 2018"
+[dumpfile_size] 148779
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_sony_imx_control/cocotb/waveforms.gtkw"
 [timestart] 0
-[size] 1920 1147
+[size] 1920 1017
 [pos] -1 -1
-*-10.446332 3592 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-10.446332 2818 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.dut.
 [treeopen] tb_cocotb.dut.ALIGNER[0].
@@ -18,7 +18,7 @@
 [sst_width] 213
 [signals_width] 174
 [sst_expanded] 1
-[sst_vpaned_height] 343
+[sst_vpaned_height] 299
 @28
 tb_cocotb.clk
 tb_cocotb.rst
@@ -59,23 +59,13 @@ tb_cocotb.AXIML_WVALID
 -AXI4 Master Lite
 @200
 -
-@28
-tb_cocotb.o_cam0_master_mode
-tb_cocotb.o_cam1_master_mode
-tb_cocotb.o_cam2_master_mode
-@200
 -
 @28
 tb_cocotb.dut.r_trigger_en
 tb_cocotb.o_cam_xclear_n
-tb_cocotb.o_imx_trigger
 tb_cocotb.o_tap_delay_rst
 @200
 -
-@28
-tb_cocotb.vs
-tb_cocotb.hs
-@200
 -
 @22
 tb_cocotb.dut.ALIGNER[0].LANES[0].rxa.i_lvds[7:0]
@@ -94,8 +84,6 @@ tb_cocotb.dut.ALIGNER[0].LANES[0].rxa.r_lvds[39:0]
 -
 -
 -
-@28
-tb_cocotb.row_end
 @c00022
 tb_cocotb.i_cam_0_raw_data[63:0]
 @28
@@ -167,25 +155,86 @@ tb_cocotb.i_cam_0_raw_data[63:0]
 -group_end
 @200
 -
-@22
+@c00022
 tb_cocotb.o_cam_0_sync_data[63:0]
-tb_cocotb.row_start_delay[31:0]
+@28
+(0)tb_cocotb.o_cam_0_sync_data[63:0]
+(1)tb_cocotb.o_cam_0_sync_data[63:0]
+(2)tb_cocotb.o_cam_0_sync_data[63:0]
+(3)tb_cocotb.o_cam_0_sync_data[63:0]
+(4)tb_cocotb.o_cam_0_sync_data[63:0]
+(5)tb_cocotb.o_cam_0_sync_data[63:0]
+(6)tb_cocotb.o_cam_0_sync_data[63:0]
+(7)tb_cocotb.o_cam_0_sync_data[63:0]
+(8)tb_cocotb.o_cam_0_sync_data[63:0]
+(9)tb_cocotb.o_cam_0_sync_data[63:0]
+(10)tb_cocotb.o_cam_0_sync_data[63:0]
+(11)tb_cocotb.o_cam_0_sync_data[63:0]
+(12)tb_cocotb.o_cam_0_sync_data[63:0]
+(13)tb_cocotb.o_cam_0_sync_data[63:0]
+(14)tb_cocotb.o_cam_0_sync_data[63:0]
+(15)tb_cocotb.o_cam_0_sync_data[63:0]
+(16)tb_cocotb.o_cam_0_sync_data[63:0]
+(17)tb_cocotb.o_cam_0_sync_data[63:0]
+(18)tb_cocotb.o_cam_0_sync_data[63:0]
+(19)tb_cocotb.o_cam_0_sync_data[63:0]
+(20)tb_cocotb.o_cam_0_sync_data[63:0]
+(21)tb_cocotb.o_cam_0_sync_data[63:0]
+(22)tb_cocotb.o_cam_0_sync_data[63:0]
+(23)tb_cocotb.o_cam_0_sync_data[63:0]
+(24)tb_cocotb.o_cam_0_sync_data[63:0]
+(25)tb_cocotb.o_cam_0_sync_data[63:0]
+(26)tb_cocotb.o_cam_0_sync_data[63:0]
+(27)tb_cocotb.o_cam_0_sync_data[63:0]
+(28)tb_cocotb.o_cam_0_sync_data[63:0]
+(29)tb_cocotb.o_cam_0_sync_data[63:0]
+(30)tb_cocotb.o_cam_0_sync_data[63:0]
+(31)tb_cocotb.o_cam_0_sync_data[63:0]
+(32)tb_cocotb.o_cam_0_sync_data[63:0]
+(33)tb_cocotb.o_cam_0_sync_data[63:0]
+(34)tb_cocotb.o_cam_0_sync_data[63:0]
+(35)tb_cocotb.o_cam_0_sync_data[63:0]
+(36)tb_cocotb.o_cam_0_sync_data[63:0]
+(37)tb_cocotb.o_cam_0_sync_data[63:0]
+(38)tb_cocotb.o_cam_0_sync_data[63:0]
+(39)tb_cocotb.o_cam_0_sync_data[63:0]
+(40)tb_cocotb.o_cam_0_sync_data[63:0]
+(41)tb_cocotb.o_cam_0_sync_data[63:0]
+(42)tb_cocotb.o_cam_0_sync_data[63:0]
+(43)tb_cocotb.o_cam_0_sync_data[63:0]
+(44)tb_cocotb.o_cam_0_sync_data[63:0]
+(45)tb_cocotb.o_cam_0_sync_data[63:0]
+(46)tb_cocotb.o_cam_0_sync_data[63:0]
+(47)tb_cocotb.o_cam_0_sync_data[63:0]
+(48)tb_cocotb.o_cam_0_sync_data[63:0]
+(49)tb_cocotb.o_cam_0_sync_data[63:0]
+(50)tb_cocotb.o_cam_0_sync_data[63:0]
+(51)tb_cocotb.o_cam_0_sync_data[63:0]
+(52)tb_cocotb.o_cam_0_sync_data[63:0]
+(53)tb_cocotb.o_cam_0_sync_data[63:0]
+(54)tb_cocotb.o_cam_0_sync_data[63:0]
+(55)tb_cocotb.o_cam_0_sync_data[63:0]
+(56)tb_cocotb.o_cam_0_sync_data[63:0]
+(57)tb_cocotb.o_cam_0_sync_data[63:0]
+(58)tb_cocotb.o_cam_0_sync_data[63:0]
+(59)tb_cocotb.o_cam_0_sync_data[63:0]
+(60)tb_cocotb.o_cam_0_sync_data[63:0]
+(61)tb_cocotb.o_cam_0_sync_data[63:0]
+(62)tb_cocotb.o_cam_0_sync_data[63:0]
+(63)tb_cocotb.o_cam_0_sync_data[63:0]
+@1401200
+-group_end
 @200
 -
-@22
-tb_cocotb.vsync_high_count[31:0]
-@200
 -
 @22
-tb_cocotb.vsync_low_count[31:0]
-@23
 tb_cocotb.dut.w_align_flag[47:0]
 @200
 -
--
--
--
--
+@28
+tb_cocotb.dut.r_axi_cam_rst_stb
+tb_cocotb.w_serdes_0_io_rst
+@200
 -
 [pattern_trace] 1
 [pattern_trace] 0

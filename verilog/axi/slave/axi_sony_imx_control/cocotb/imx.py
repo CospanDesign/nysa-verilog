@@ -34,6 +34,9 @@ from cocotb.result import ReturnValue
 from cocotb.drivers.amba import AXI4LiteMaster
 from cocotb.triggers import Timer
 
+MAX_CAMERA_COUNT        = 3
+MAX_LANE_WIDTH          = 16
+
 CAMERA_COUNT            = 1
 LANE_WIDTH              = 8
 
@@ -44,10 +47,26 @@ REG_TRIGGER_PULSE_WIDTH = 3 << 2
 REG_TRIGGER_PERIOD      = 4 << 2
 REG_CAMERA_COUNT        = 5 << 2
 REG_LANE_WIDTH          = 6 << 2
+REG_ALIGNED_FLAG_LOW    = 7 << 2
+REG_ALIGNED_FLAG_HIGH   = 8 << 2
 
 REG_TAP_DELAY_START     = 16 << 2
-SIZE_TAP_DELAY          = LANE_WIDTH * CAMERA_COUNT
+SIZE_TAP_DELAY          = 3 * 16
 REG_VERSION             = REG_TAP_DELAY_START + (SIZE_TAP_DELAY << 2)
+
+CTRL_BIT_CLEAR              = 0
+CTRL_BIT_TAP_DELAY_RST      = 1
+CTRL_BIT_TRIGGER_EN         = 2
+
+CTRL_BIT_STROBE_CAM_CLK_RST = 4
+CTRL_BIT_STROBE_CAM_RST     = 5
+
+CTRL_BIT_MASTER_MODE0       = 12
+CTRL_BIT_MASTER_MODE1       = 13
+CTRL_BIT_MASTER_MODE2       = 14
+
+
+
 
 
 
@@ -63,6 +82,77 @@ class IMX (Driver):
         data = yield self.read_register(REG_VERSION)
         raise ReturnValue(data)
 
+    @cocotb.coroutine
+    def get_status(self):
+        status = yield self.read_register(REG_STATUS)
+        raise ReturnValue(status)
 
+    @cocotb.coroutine
+    def setup_trigger(self, period, pulse_width):
+        yield self.write_register(REG_TRIGGER_PERIOD, period)
+        yield self.sleep(10)
+        yield self.write_register(REG_TRIGGER_PULSE_WIDTH, pulse_width)
 
+    @cocotb.coroutine
+    def get_camera_count(self):
+        count = yield self.read_register(REG_CAMERA_COUNT)
+        raise ReturnValue(count)
+    
+    @cocotb.coroutine
+    def get_lane_width(self):
+        count = yield self.read_register(REG_LANE_WIDTH)
+        raise ReturnValue(count)
+
+    @cocotb.coroutine
+    def get_aligned_flags(self):
+        flags = 0
+        data_low = yield self.read_register(REG_ALIGNED_FLAG_LOW)
+        yield self.sleep(10)
+        data_high = yield self.read_register(REG_ALIGNED_FLAG_HIGH)
+        flags = (data_high << 32) | data_low
+        raise ReturnValue(flags)
+
+    @cocotb.coroutine
+    def reset_async_cam_clock(self):
+        #Self Clearing
+        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_STROBE_CAM_CLK_RST, True);
+
+    @cocotb.coroutine
+    def reset_sync_cam_clock_domain(self):
+        #Self Clearing
+        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_STROBE_CAM_RST, True);
+
+    @cocotb.coroutine
+    def reset_camera(self):
+        #Self Clearing
+        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_CLEAR, True);
+        yield self.sleep(10)
+        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_CLEAR, False);
+
+    @cocotb.coroutine
+    def reset_tap_delay(self):
+        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_TAP_DELAY_RST, True);
+        yield self.sleep(10)
+        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_TAP_DELAY_RST, False);
+
+    @cocotb.coroutine
+    def enable_camera_master_mode(self, cam_index, enable):
+        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_MASTER_MODE0 + cam_index, enable)
+
+    @cocotb.coroutine
+    def enable_cam_trigger(self, enable):
+        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_TRIGGER_EN, enable)
+
+    @cocotb.coroutine
+    def set_tap_delay(self, index, delay):
+        addr = REG_TAP_DELAY_START + (index << 2)
+        print ("Address: %d, 0x%02X" % (addr, addr))
+        yield self.write_register(addr, delay)
+
+    @cocotb.coroutine
+    def get_tap_delay(self, index):
+        addr = REG_TAP_DELAY_START + (index << 2)
+        print ("Address: %d, 0x%02X" % (addr, addr))
+        data = yield self.read_register(addr)
+        raise ReturnValue(data)
 

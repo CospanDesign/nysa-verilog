@@ -231,3 +231,8 @@ class Driver(object):
         value = value >> low_bit
         raise ReturnValue(value)
 
+
+    @cocotb.coroutine
+    def sleep(self, clock_count):
+        yield Timer(clock_count * CLK_PERIOD)
+
