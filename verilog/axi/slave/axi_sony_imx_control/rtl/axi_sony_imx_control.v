@@ -113,11 +113,15 @@ module axi_sony_imx_control #(
   output  reg                         o_cam_0_master_mode,
   output  reg                         o_cam_1_master_mode,
   output  reg                         o_cam_2_master_mode,
-  output  reg                         o_tap_delay_rst,
+  output                              o_cam_0_tap_delay_rst,
+  output                              o_cam_1_tap_delay_rst,
+  output                              o_cam_2_tap_delay_rst,
   output                              o_serdes_0_io_rst,
   output                              o_serdes_1_io_rst,
   output                              o_serdes_2_io_rst,
-  output  reg                         o_serdes_clk_rst_stb,
+  output                              o_serdes_0_clk_rst_stb,
+  output                              o_serdes_1_clk_rst_stb,
+  output                              o_serdes_2_clk_rst_stb,
 
   //Vsync and HSync only inputs for now
   input                               i_cam_0_imx_vs,
@@ -175,6 +179,16 @@ wire                                w_cam_rst_stb[0:2];
 
 reg                                 r_axi_cam_rst_stb;
 reg                                 r_cam_xclear;
+reg                                 r_cam_tap_delay_rst;
+reg                                 r_serdes_clk_rst_stb;
+
+assign  o_cam_0_tap_delay_rst     = r_cam_tap_delay_rst;
+assign  o_cam_1_tap_delay_rst     = r_cam_tap_delay_rst;
+assign  o_cam_2_tap_delay_rst     = r_cam_tap_delay_rst;
+
+assign  o_serdes_0_clk_rst_stb    = r_serdes_clk_rst_stb;
+assign  o_serdes_1_clk_rst_stb    = r_serdes_clk_rst_stb;
+assign  o_serdes_2_clk_rst_stb    = r_serdes_clk_rst_stb;
 
 //AXI Signals
 wire        [31:0]                  status;
@@ -397,8 +411,8 @@ always @ (posedge i_axi_clk) begin
   r_reg_out_rdy_stb                       <=  0;
   r_reg_invalid_addr                      <=  0;
   r_axi_cam_rst_stb                       <=  0;
-  o_serdes_clk_rst_stb                    <=  0;
-  o_tap_delay_rst                         <=  0;
+  r_serdes_clk_rst_stb                    <=  0;
+  r_cam_tap_delay_rst                     <=  0;
 
   if (w_axi_rst) begin
     r_reg_out_data                        <=  0;
@@ -423,13 +437,13 @@ always @ (posedge i_axi_clk) begin
       //From master
       case (w_reg_32bit_address)
         REG_CONTROL: begin
-          o_tap_delay_rst                 <= w_reg_in_data[CTRL_BIT_TAP_DELAY_RST];
+          r_cam_tap_delay_rst             <= w_reg_in_data[CTRL_BIT_TAP_DELAY_RST];
           o_cam_0_master_mode             <= w_reg_in_data[CTRL_BIT_MASTER_MODE0];
           o_cam_1_master_mode             <= w_reg_in_data[CTRL_BIT_MASTER_MODE1];
           o_cam_2_master_mode             <= w_reg_in_data[CTRL_BIT_MASTER_MODE2];
           r_trigger_en                    <= w_reg_in_data[CTRL_BIT_TRIGGER_EN];
 
-          o_serdes_clk_rst_stb            <= w_reg_in_data[CTRL_BIT_STROBE_CAM_CLK_RST];
+          r_serdes_clk_rst_stb            <= w_reg_in_data[CTRL_BIT_STROBE_CAM_CLK_RST];
           r_axi_cam_rst_stb               <= w_reg_in_data[CTRL_BIT_STROBE_CAM_RST];
           r_cam_xclear                    <= w_reg_in_data[CTRL_BIT_CLEAR];
         end
@@ -461,12 +475,12 @@ always @ (posedge i_axi_clk) begin
       //To master
       case (w_reg_32bit_address)
         REG_CONTROL: begin
-          r_reg_out_data[CTRL_BIT_CLEAR]            <=      r_cam_xclear;
-          r_reg_out_data[CTRL_BIT_TAP_DELAY_RST]    <=      o_tap_delay_rst;
-          r_reg_out_data[CTRL_BIT_MASTER_MODE0]     <=      o_cam_0_master_mode;
-          r_reg_out_data[CTRL_BIT_MASTER_MODE1]     <=      o_cam_1_master_mode;
-          r_reg_out_data[CTRL_BIT_MASTER_MODE2]     <=      o_cam_2_master_mode;
-          r_reg_out_data[CTRL_BIT_TRIGGER_EN]       <=      r_trigger_en;
+          r_reg_out_data[CTRL_BIT_CLEAR]            <=  r_cam_xclear;
+          r_reg_out_data[CTRL_BIT_TAP_DELAY_RST]    <=  r_cam_tap_delay_rst;
+          r_reg_out_data[CTRL_BIT_MASTER_MODE0]     <=  o_cam_0_master_mode;
+          r_reg_out_data[CTRL_BIT_MASTER_MODE1]     <=  o_cam_1_master_mode;
+          r_reg_out_data[CTRL_BIT_MASTER_MODE2]     <=  o_cam_2_master_mode;
+          r_reg_out_data[CTRL_BIT_TRIGGER_EN]       <=  r_trigger_en;
         end
         REG_STATUS: begin
           r_reg_out_data                  <=  status;

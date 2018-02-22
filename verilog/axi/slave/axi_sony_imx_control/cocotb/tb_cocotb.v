@@ -79,7 +79,9 @@ wire                                    o_cam_2_xclear_n;
 wire                                    o_cam_0_master_mode;
 wire                                    o_cam_1_master_mode;
 wire                                    o_cam_2_master_mode;
-wire                                    o_tap_delay_rst;
+wire                                    o_cam_0_tap_delay_rst;
+wire                                    o_cam_1_tap_delay_rst;
+wire                                    o_cam_2_tap_delay_rst;
 
 
 
@@ -117,7 +119,6 @@ parameter LANE_WIDTH    = 8;
 parameter CAMERA_COUNT  = 1;
 
 axi_sony_imx_control #(
-  .DEFAULT_CLEAR_LEN      (10                  ),
   .DEFAULT_TRIGGER_LEN    (10                  ),
   .DEFAULT_TRIGGER_PERIOD (100                 ),
   .CAMERA_COUNT           (CAMERA_COUNT        ),
@@ -185,13 +186,18 @@ axi_sony_imx_control #(
   .o_cam_0_trigger        (o_cam_0_trigger     ),
   .o_cam_1_trigger        (o_cam_1_trigger     ),
   .o_cam_2_trigger        (o_cam_2_trigger     ),
+
   .o_cam_0_xclear_n       (o_cam_0_xclear_n    ),
   .o_cam_1_xclear_n       (o_cam_1_xclear_n    ),
   .o_cam_2_xclear_n       (o_cam_2_xclear_n    ),
+
   .o_cam_0_master_mode    (o_cam_0_master_mode ),
   .o_cam_1_master_mode    (o_cam_1_master_mode ),
   .o_cam_2_master_mode    (o_cam_2_master_mode ),
-  .o_tap_delay_rst        (o_tap_delay_rst     ),
+
+  .o_cam_0_tap_delay_rst  (o_cam_0_tap_delay_rst  ),
+  .o_cam_1_tap_delay_rst  (o_cam_1_tap_delay_rst  ),
+  .o_cam_2_tap_delay_rst  (o_cam_2_tap_delay_rst  ),
 
   //Vsync and HSync only inputs for now
   .i_cam_0_imx_vs         (i_cam_0_imx_vs      ),
