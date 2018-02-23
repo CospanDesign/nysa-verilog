@@ -76,9 +76,9 @@ wire                                    o_cam_2_trigger;
 wire                                    o_cam_0_xclear_n;
 wire                                    o_cam_1_xclear_n;
 wire                                    o_cam_2_xclear_n;
-wire                                    o_cam_0_master_mode;
-wire                                    o_cam_1_master_mode;
-wire                                    o_cam_2_master_mode;
+wire                                    o_cam_0_power_en;
+wire                                    o_cam_1_power_en;
+wire                                    o_cam_2_power_en;
 wire                                    o_cam_0_tap_delay_rst;
 wire                                    o_cam_1_tap_delay_rst;
 wire                                    o_cam_2_tap_delay_rst;
@@ -191,9 +191,9 @@ axi_sony_imx_control #(
   .o_cam_1_xclear_n       (o_cam_1_xclear_n    ),
   .o_cam_2_xclear_n       (o_cam_2_xclear_n    ),
 
-  .o_cam_0_master_mode    (o_cam_0_master_mode ),
-  .o_cam_1_master_mode    (o_cam_1_master_mode ),
-  .o_cam_2_master_mode    (o_cam_2_master_mode ),
+  .o_cam_0_power_en       (o_cam_0_power_en    ),
+  .o_cam_1_power_en       (o_cam_1_power_en    ),
+  .o_cam_2_power_en       (o_cam_2_power_en    ),
 
   .o_cam_0_tap_delay_rst  (o_cam_0_tap_delay_rst  ),
   .o_cam_1_tap_delay_rst  (o_cam_1_tap_delay_rst  ),

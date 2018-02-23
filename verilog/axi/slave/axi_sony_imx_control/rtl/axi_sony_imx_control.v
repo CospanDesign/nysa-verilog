@@ -110,9 +110,9 @@ module axi_sony_imx_control #(
   output                              o_cam_0_xclear_n,
   output                              o_cam_1_xclear_n,
   output                              o_cam_2_xclear_n,
-  output  reg                         o_cam_0_master_mode,
-  output  reg                         o_cam_1_master_mode,
-  output  reg                         o_cam_2_master_mode,
+  output  reg                         o_cam_0_power_en,
+  output  reg                         o_cam_1_power_en,
+  output  reg                         o_cam_2_power_en,
   output                              o_cam_0_tap_delay_rst,
   output                              o_cam_1_tap_delay_rst,
   output                              o_cam_2_tap_delay_rst,
@@ -167,9 +167,9 @@ localparam                  CTRL_BIT_TRIGGER_EN         = 2;
 localparam                  CTRL_BIT_STROBE_CAM_CLK_RST = 4;
 localparam                  CTRL_BIT_STROBE_CAM_RST     = 5;
 
-localparam                  CTRL_BIT_MASTER_MODE0       = 12;
-localparam                  CTRL_BIT_MASTER_MODE1       = 13;
-localparam                  CTRL_BIT_MASTER_MODE2       = 14;
+localparam                  CTRL_BIT_POWER_EN0       = 12;
+localparam                  CTRL_BIT_POWER_EN1       = 13;
+localparam                  CTRL_BIT_POWER_EN2       = 14;
 
 
 
@@ -421,9 +421,9 @@ always @ (posedge i_axi_clk) begin
     r_trigger_pulse_width                 <= DEFAULT_TRIGGER_LEN;
     r_trigger_period                      <= DEFAULT_TRIGGER_PERIOD;
 
-    o_cam_0_master_mode                   <= 0;
-    o_cam_1_master_mode                   <= 0;
-    o_cam_2_master_mode                   <= 0;
+    o_cam_0_power_en                   <= 0;
+    o_cam_1_power_en                   <= 0;
+    o_cam_2_power_en                   <= 0;
     r_trigger_en                          <= 0;
 
     for (i = 0; i < MAX_CAMERA_COUNT; i = i + 1) begin
@@ -438,9 +438,9 @@ always @ (posedge i_axi_clk) begin
       case (w_reg_32bit_address)
         REG_CONTROL: begin
           r_cam_tap_delay_rst             <= w_reg_in_data[CTRL_BIT_TAP_DELAY_RST];
-          o_cam_0_master_mode             <= w_reg_in_data[CTRL_BIT_MASTER_MODE0];
-          o_cam_1_master_mode             <= w_reg_in_data[CTRL_BIT_MASTER_MODE1];
-          o_cam_2_master_mode             <= w_reg_in_data[CTRL_BIT_MASTER_MODE2];
+          o_cam_0_power_en                <= w_reg_in_data[CTRL_BIT_POWER_EN0];
+          o_cam_1_power_en                <= w_reg_in_data[CTRL_BIT_POWER_EN1];
+          o_cam_2_power_en                <= w_reg_in_data[CTRL_BIT_POWER_EN2];
           r_trigger_en                    <= w_reg_in_data[CTRL_BIT_TRIGGER_EN];
 
           r_serdes_clk_rst_stb            <= w_reg_in_data[CTRL_BIT_STROBE_CAM_CLK_RST];
@@ -472,14 +472,13 @@ always @ (posedge i_axi_clk) begin
       r_reg_in_ack_stb                    <= 1;
     end
     else if (w_reg_out_req && !r_reg_out_rdy_stb) begin
-      //To master
       case (w_reg_32bit_address)
         REG_CONTROL: begin
           r_reg_out_data[CTRL_BIT_CLEAR]            <=  r_cam_xclear;
           r_reg_out_data[CTRL_BIT_TAP_DELAY_RST]    <=  r_cam_tap_delay_rst;
-          r_reg_out_data[CTRL_BIT_MASTER_MODE0]     <=  o_cam_0_master_mode;
-          r_reg_out_data[CTRL_BIT_MASTER_MODE1]     <=  o_cam_1_master_mode;
-          r_reg_out_data[CTRL_BIT_MASTER_MODE2]     <=  o_cam_2_master_mode;
+          r_reg_out_data[CTRL_BIT_POWER_EN0]        <=  o_cam_0_power_en;
+          r_reg_out_data[CTRL_BIT_POWER_EN1]        <=  o_cam_1_power_en;
+          r_reg_out_data[CTRL_BIT_POWER_EN2]        <=  o_cam_2_power_en;
           r_reg_out_data[CTRL_BIT_TRIGGER_EN]       <=  r_trigger_en;
         end
         REG_STATUS: begin

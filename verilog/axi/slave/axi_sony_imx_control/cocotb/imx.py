@@ -61,9 +61,9 @@ CTRL_BIT_TRIGGER_EN         = 2
 CTRL_BIT_STROBE_CAM_CLK_RST = 4
 CTRL_BIT_STROBE_CAM_RST     = 5
 
-CTRL_BIT_MASTER_MODE0       = 12
-CTRL_BIT_MASTER_MODE1       = 13
-CTRL_BIT_MASTER_MODE2       = 14
+CTRL_BIT_POWER_EN0          = 12
+CTRL_BIT_POWER_EN1          = 13
+CTRL_BIT_POWER_EN2          = 14
 
 
 
@@ -136,8 +136,8 @@ class IMX (Driver):
         yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_TAP_DELAY_RST, False);
 
     @cocotb.coroutine
-    def enable_camera_master_mode(self, cam_index, enable):
-        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_MASTER_MODE0 + cam_index, enable)
+    def enable_camera_power(self, cam_index, enable):
+        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_POWER_EN0 + cam_index, enable)
 
     @cocotb.coroutine
     def enable_cam_trigger(self, enable):
