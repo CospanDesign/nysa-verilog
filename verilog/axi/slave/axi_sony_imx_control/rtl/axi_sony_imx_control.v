@@ -44,7 +44,7 @@ module axi_sony_imx_control #(
   //parameter CAMERA_COUNT        = 1,
   parameter LANE_WIDTH          = 8,
 
-  parameter ADDR_WIDTH          = 10,
+  parameter ADDR_WIDTH          = 9,
   parameter DATA_WIDTH          = 32,
   parameter STROBE_WIDTH        = (DATA_WIDTH / 8),
   parameter INVERT_AXI_RESET    = 1
