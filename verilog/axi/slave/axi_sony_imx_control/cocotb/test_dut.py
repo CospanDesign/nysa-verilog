@@ -68,9 +68,9 @@ def boilerplate_test(dut):
     yield imx.setup_trigger(512, 32)
 
     # Enable Master Mode
-    yield imx.enable_camera_master_mode(0, True)
-    yield imx.enable_camera_master_mode(1, True)
-    yield imx.enable_camera_master_mode(2, True)
+    yield imx.enable_camera_power(0, True)
+    yield imx.enable_camera_power(1, True)
+    yield imx.enable_camera_power(2, True)
 
     # Reset the TAP Delay controller
     yield imx.reset_tap_delay()

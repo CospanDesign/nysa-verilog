@@ -2,7 +2,7 @@
 
 
 module tb_cocotb #(
-  parameter ADDR_WIDTH          = 32,
+  parameter ADDR_WIDTH          = 10,
   parameter DATA_WIDTH          = 32,
   parameter STROBE_WIDTH        = (DATA_WIDTH / 8)
 )(
