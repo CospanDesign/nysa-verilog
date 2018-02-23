@@ -116,12 +116,12 @@ assign  w_serdes_2_io_rst = w_serdes_io_rst[2];
 
 //submodules
 parameter LANE_WIDTH    = 8;
-parameter CAMERA_COUNT  = 1;
+parameter CAMERA_COUNT  = 3;
 
 axi_sony_imx_control #(
   .DEFAULT_TRIGGER_LEN    (10                  ),
   .DEFAULT_TRIGGER_PERIOD (100                 ),
-  .CAMERA_COUNT           (CAMERA_COUNT        ),
+  //.CAMERA_COUNT           (CAMERA_COUNT        ),
   .LANE_WIDTH             (LANE_WIDTH          ),
                                                
   .ADDR_WIDTH             (ADDR_WIDTH          ),

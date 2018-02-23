@@ -14,7 +14,7 @@ from imx import IMX
 CLK_PERIOD = 20
 
 CAM_CLK_0_PERIOD = 10
-CAM_CLK_1_PERIOD = 10
+CAM_CLK_1_PERIOD = 12
 CAM_CLK_2_PERIOD = 10
 
 MODULE_PATH = os.path.join(os.path.dirname(__file__), os.pardir, "rtl")

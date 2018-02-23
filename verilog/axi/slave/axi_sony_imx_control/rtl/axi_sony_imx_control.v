@@ -41,10 +41,10 @@ SOFTWARE.
 module axi_sony_imx_control #(
   parameter DEFAULT_TRIGGER_LEN = 100,
   parameter DEFAULT_TRIGGER_PERIOD = 370000, //200 hertz at 74MHz
-  parameter CAMERA_COUNT        = 1,
+  //parameter CAMERA_COUNT        = 1,
   parameter LANE_WIDTH          = 8,
 
-  parameter ADDR_WIDTH          = 8,
+  parameter ADDR_WIDTH          = 9,
   parameter DATA_WIDTH          = 32,
   parameter STROBE_WIDTH        = (DATA_WIDTH / 8),
   parameter INVERT_AXI_RESET    = 1
@@ -210,7 +210,7 @@ wire                                w_axi_rst;
 
 reg                                 r_trigger_en;
 wire  [(MAX_CAMERA_COUNT * MAX_LANE_WIDTH) - 1: 0]             w_align_flag;
-wire                                w_align_flag_md[0: CAMERA_COUNT - 1][0: LANE_WIDTH - 1];
+wire                                w_align_flag_md[0: MAX_CAMERA_COUNT - 1][0: LANE_WIDTH - 1];
 
 
 
@@ -221,14 +221,14 @@ wire  [LANE_WIDTH - 1: 0]           w_cam_2_aligned;
 
 wire  [2: 0]                        w_hsync;
 //Put the aligned and unaligned data in a format that can be used by the generate block
-wire  [63:0]                        w_cam_unaligned [0: CAMERA_COUNT - 1];
-wire  [63:0]                        w_cam_aligned   [0: CAMERA_COUNT - 1];
+wire  [63:0]                        w_cam_unaligned [0: MAX_CAMERA_COUNT - 1];
+wire  [63:0]                        w_cam_aligned   [0: MAX_CAMERA_COUNT - 1];
 
 
-wire  [7:0]                         w_unaligned_data[0 : CAMERA_COUNT - 1][0:LANE_WIDTH - 1];
-wire  [7:0]                         w_aligned_data  [0 : CAMERA_COUNT - 1][0:LANE_WIDTH - 1];
+wire  [7:0]                         w_unaligned_data[0 : MAX_CAMERA_COUNT - 1][0:LANE_WIDTH - 1];
+wire  [7:0]                         w_aligned_data  [0 : MAX_CAMERA_COUNT - 1][0:LANE_WIDTH - 1];
 
-wire  [(5 * LANE_WIDTH) - 1:0]      w_tap_lane_value[0 : CAMERA_COUNT - 1];
+wire  [(5 * LANE_WIDTH) - 1:0]      w_tap_lane_value[0 : MAX_CAMERA_COUNT - 1];
 reg   [4:0]                         r_tap_value     [0 : MAX_CAMERA_COUNT - 1][0:MAX_LANE_WIDTH - 1];
 
 reg   [31:0]                        r_trigger_pulse_width;
@@ -240,7 +240,7 @@ reg   [31:0]                        r_trigger_period_count[0:2];
 genvar cgv;
 generate
 for (cgv = 0; cgv < MAX_CAMERA_COUNT; cgv = cgv + 1) begin: ALIGNER_FIX
-  if (cgv >= CAMERA_COUNT) begin
+  if (cgv >= MAX_CAMERA_COUNT) begin
     assign w_align_flag[((cgv * MAX_LANE_WIDTH) + (MAX_LANE_WIDTH - 1)):(cgv * MAX_LANE_WIDTH)] = 0;
   end
   else if (LANE_WIDTH < MAX_LANE_WIDTH) begin
@@ -263,7 +263,7 @@ genvar cam_i;
 genvar lane_i;
 generate
 
-for (cam_i = 0; cam_i < CAMERA_COUNT; cam_i = cam_i + 1) begin : ALIGNER
+for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : ALIGNER
 
 
   //Take into consideration that we may not have all cameras declared
@@ -492,7 +492,7 @@ always @ (posedge i_axi_clk) begin
           r_reg_out_data                  <=  r_trigger_period;
         end
         REG_CAMERA_COUNT: begin
-          r_reg_out_data                  <=  CAMERA_COUNT;
+          r_reg_out_data                  <=  MAX_CAMERA_COUNT;
         end
         REG_LANE_WIDTH: begin
           r_reg_out_data                  <=  LANE_WIDTH;
