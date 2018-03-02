@@ -140,24 +140,7 @@ assign  read_data           = (r_pre_strobe) ? r_br_read_data : r_read_data;
 assign  write_ready         = (r_write_ready > 0);
 
 
-/*
 //Submodules
-blk_mem #(
-  .DATA_WIDTH(DATA_WIDTH),
-  .ADDRESS_WIDTH(ADDRESS_WIDTH + 1)
-) fifo0 (
-  //Write
-  .clka     (write_clock        ),
-  .wea      (write_enable       ), //This may just be replaced with write activate
-  .dina     (write_data         ),
-  .addra    (addr_in            ),
-
-  .clkb     (read_clock         ),
-  .doutb    (r_br_read_data        ),
-  .addrb    (addr_out           )
-);
-*/
-//BLOCK MEM INNARDS
 reg [DATA_WIDTH - 1:0] mem [0:2 ** (ADDRESS_WIDTH + 1)];
 always @ (posedge write_clock)
 begin
@@ -171,37 +154,6 @@ always @ (posedge read_clock)
 begin
      r_br_read_data    <= mem[addr_out];
 end
-
-//BLOCK MEM INNARDS DONE
-
-/*
-//W - R FIFO 0
-cross_clock_enable ccwf0 (
-  .rst      (reset              ),
-  .in_en    (wcc_read_ready[0]  ),
-
-  .out_clk  (read_clock         ),
-  .out_en   (rcc_read_ready[0]  )
-);
-//W - R FIFO 1
-cross_clock_enable ccwf1 (
-  .rst      (reset              ),
-  .in_en    (wcc_read_ready[1]  ),
-
-  .out_clk  (read_clock         ),
-  .out_en   (rcc_read_ready[1]  )
-
-);
-
-//W - R Tie Select
-cross_clock_enable ccts (
-  .rst      (reset              ),
-  .in_en    (wcc_tie_select     ),
-
-  .out_clk  (read_clock         ),
-  .out_en   (rcc_tie_select     )
-);
-*/
 
 //Cross Clock (Write -> Read)
 
@@ -246,35 +198,6 @@ always @ (posedge read_clock) begin
     ccts      <=  {ccts[1:0],  wcc_tie_select};
   end
 end
-
-/*
-
-//R - W FIFO 0
-cross_clock_enable ccrf0 (
-  .rst      (reset              ),
-  .in_en    (rcc_read_done[0]   ),
-
-  .out_clk  (read_clock         ),
-  .out_en   (wcc_read_done[0]   )
-);
-//R - W FIFO 1
-cross_clock_enable ccrf1 (
-  .rst      (reset              ),
-  .in_en    (rcc_read_done[1]   ),
-
-  .out_clk  (read_clock         ),
-  .out_en   (wcc_read_done[1]   )
-);
-
-//R - W Reset
-cross_clock_enable cc_starved(
-  .rst      (reset                         ),
-  .in_en    (!read_ready && !read_activate ),
-
-  .out_clk  (write_clock                   ),
-  .out_en   (starved                       )
-);
-*/
 
 reg         [2:0] ccrf0;  //R - W FIFO0 Read Done
 reg         [2:0] ccrf1;  //R - W FIFO2 Read Done
@@ -635,7 +558,6 @@ always @ (posedge read_clock) begin
       r_wait[1]                       <=  1;
     end
 
-
     //Check if the write side has sent over some data
     if (rcc_read_ready > 0) begin
       if ((r_wait == 2'b11) && (rcc_read_ready == 2'b11) && (w_count[0] > 0) && (w_count[1] > 0)) begin
@@ -645,10 +567,6 @@ always @ (posedge read_clock) begin
         //$display ("Combo breaker goes to: %h", rcc_tie_select);
         r_next_fifo         <= rcc_tie_select;
       end
-
-
-
-
       if (r_wait[0] && rcc_read_ready[0]) begin
         //$display ("write has send over data t othe 0 side");
         //Normally it would not be cool to transfer data over a clock domain
@@ -657,8 +575,8 @@ always @ (posedge read_clock) begin
         if (w_count[0] > 0) begin
           //Only enable when count > 0
           if ((r_activate == 0) && (!rcc_read_ready[1])) begin
-              //$display ("select 0");
-              r_next_fifo   <=  0;
+            //$display ("select 0");
+            r_next_fifo   <=  0;
           end
           r_size[0]         <=  w_count[0];
           r_ready[0]        <=  1;
@@ -671,9 +589,9 @@ always @ (posedge read_clock) begin
         //$display ("write has send over data t othe 1 side");
         //Write side has sent some data over
         if (w_count[1] > 0) begin
-         if ((r_activate == 0) && (!rcc_read_ready[0])) begin
-              //$display ("select 1");
-              r_next_fifo   <=  1;
+          if ((r_activate == 0) && (!rcc_read_ready[0])) begin
+            //$display ("select 1");
+            r_next_fifo   <=  1;
           end
           r_size[1]         <=  w_count[1];
           r_ready[1]        <=  1;
