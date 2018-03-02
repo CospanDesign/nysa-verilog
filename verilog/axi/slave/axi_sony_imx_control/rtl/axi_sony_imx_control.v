@@ -102,21 +102,21 @@ module axi_sony_imx_control #(
 
   output      [0:0]                           o_vdma_0_axis_user,
   output      [AXIS_DATA_WIDTH - 1: 0]        o_vdma_0_axis_data,
-  output      [AXIS_STROBE_WIDTH - 1: 0]      o_vdma_0_axis_strobe,
+  //output      [AXIS_STROBE_WIDTH - 1: 0]      o_vdma_0_axis_strobe,
   output                                      o_vdma_0_axis_last,
   output                                      o_vdma_0_axis_valid,
   input                                       i_vdma_0_axis_ready,
 
   output      [0:0]                           o_vdma_1_axis_user,
   output      [AXIS_DATA_WIDTH - 1: 0]        o_vdma_1_axis_data,
-  output      [AXIS_STROBE_WIDTH - 1: 0]      o_vdma_1_axis_strobe,
+  //output      [AXIS_STROBE_WIDTH - 1: 0]      o_vdma_1_axis_strobe,
   output                                      o_vdma_1_axis_last,
   output                                      o_vdma_1_axis_valid,
   input                                       i_vdma_1_axis_ready,
 
   output      [0:0]                           o_vdma_2_axis_user,
   output      [AXIS_DATA_WIDTH - 1: 0]        o_vdma_2_axis_data,
-  output      [AXIS_STROBE_WIDTH - 1: 0]      o_vdma_2_axis_strobe,
+  //output      [AXIS_STROBE_WIDTH - 1: 0]      o_vdma_2_axis_strobe,
   output                                      o_vdma_2_axis_last,
   output                                      o_vdma_2_axis_valid,
   input                                       i_vdma_2_axis_ready,
@@ -272,7 +272,7 @@ wire  [BRAM_DATA_DEPTH - 1: 0]      w_vdma_2_addr;
 reg                                 r_vdma_axis_user    [0: MAX_CAMERA_COUNT - 1];
 wire                                w_vdma_axis_user    [0: MAX_CAMERA_COUNT - 1];
 wire  [AXIS_DATA_WIDTH - 1: 0]      w_vdma_axis_data    [0: MAX_CAMERA_COUNT - 1];
-wire  [AXIS_STROBE_WIDTH - 1: 0]    w_vdma_axis_strobe  [0: MAX_CAMERA_COUNT - 1];
+//wire  [AXIS_STROBE_WIDTH - 1: 0]    w_vdma_axis_strobe  [0: MAX_CAMERA_COUNT - 1];
 wire                                w_vdma_axis_last    [0: MAX_CAMERA_COUNT - 1];
 wire                                w_vdma_axis_valid   [0: MAX_CAMERA_COUNT - 1];
 wire                                w_vdma_axis_ready   [0: MAX_CAMERA_COUNT - 1];
@@ -353,7 +353,7 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
 
       assign  o_vdma_0_axis_user[0] = w_vdma_axis_user[0];
       assign  o_vdma_0_axis_data    = w_vdma_axis_data[0];
-      assign  o_vdma_0_axis_strobe  = w_vdma_axis_strobe[0];
+//      assign  o_vdma_0_axis_strobe  = w_vdma_axis_strobe[0];
       assign  o_vdma_0_axis_last    = w_vdma_axis_last[0];
       assign  o_vdma_0_axis_valid   = w_vdma_axis_valid[0];
       assign  w_vdma_axis_ready[0]  = i_vdma_0_axis_ready;
@@ -367,7 +367,7 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
 
       assign  o_vdma_1_axis_user[0] = w_vdma_axis_user[1];
       assign  o_vdma_1_axis_data    = w_vdma_axis_data[1];
-      assign  o_vdma_1_axis_strobe  = w_vdma_axis_strobe[1];
+//      assign  o_vdma_1_axis_strobe  = w_vdma_axis_strobe[1];
       assign  o_vdma_1_axis_last    = w_vdma_axis_last[1];
       assign  o_vdma_1_axis_valid   = w_vdma_axis_valid[1];
       assign  w_vdma_axis_ready[1]  = i_vdma_1_axis_ready;
@@ -381,7 +381,7 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
 
       assign  o_vdma_2_axis_user[0] = w_vdma_axis_user[2];
       assign  o_vdma_2_axis_data    = w_vdma_axis_data[2];
-      assign  o_vdma_2_axis_strobe  = w_vdma_axis_strobe[2];
+//      assign  o_vdma_2_axis_strobe  = w_vdma_axis_strobe[2];
       assign  o_vdma_2_axis_last    = w_vdma_axis_last[2];
       assign  o_vdma_2_axis_valid   = w_vdma_axis_valid[2];
       assign  w_vdma_axis_ready[2]  = i_vdma_2_axis_ready;
@@ -454,7 +454,7 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
 //  assign w_vdma_axis_valid[cam_i]   = (w_align_valid[cam_i] == ((1 << LANE_WIDTH) - 1) && (w_bram_addr[cam_i] < w_bram_count[cam_i][0]));
   assign w_align_cam_valid[cam_i]   = (w_align_valid[cam_i] == ((1 << LANE_WIDTH) - 1));
   assign w_vdma_active[cam_i]       = (w_vdma_axis_valid[cam_i] && w_vdma_axis_ready[cam_i]);
-  assign w_vdma_axis_strobe[cam_i]  = 16'hFFFF;
+//  assign w_vdma_axis_strobe[cam_i]  = 16'hFFFF;
 
   always @(posedge i_vdma_clk) begin
     //Reset all strobe signals
