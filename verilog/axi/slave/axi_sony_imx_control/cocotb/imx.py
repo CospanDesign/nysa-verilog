@@ -42,7 +42,8 @@ LANE_WIDTH              = 8
 
 REG_CONTROL             = 0 << 2
 REG_STATUS              = 1 << 2
-REG_CLEAR_PULSE_WIDTH   = 2 << 2
+#REG_IMAGE_WIDTH         = 2 << 2
+#REG_IMAGE_HEIGHT        = 3 << 2
 REG_TRIGGER_PULSE_WIDTH = 3 << 2
 REG_TRIGGER_PERIOD      = 4 << 2
 REG_CAMERA_COUNT        = 5 << 2
@@ -86,6 +87,26 @@ class IMX (Driver):
     def get_status(self):
         status = yield self.read_register(REG_STATUS)
         raise ReturnValue(status)
+
+    '''
+    @cocotb.coroutine
+    def set_image_width(self, width):
+        yield self.write_register(REG_IMAGE_WIDTH, width)
+
+    @cocotb.coroutine
+    def get_image_width(self):
+        data = yield self.read_register(REG_IMAGE_WIDTH)
+        raise ReturnValue(data)
+    
+    @cocotb.coroutine
+    def set_image_height(self, height):
+        yield self.write_register(REG_IMAGE_HEIGHT, height)
+ 
+    @cocotb.coroutine
+    def get_image_height(self):
+        data = yield self.read_register(REG_IMAGE_HEIGHT)
+        raise ReturnValue(data)
+    '''
 
     @cocotb.coroutine
     def setup_trigger(self, period, pulse_width):
