@@ -38,7 +38,8 @@ SOFTWARE.
 module adapter_block_fifo_2_axi_stream #(
   parameter                                     DATA_WIDTH          = 24,
   parameter                                     STROBE_WIDTH        = DATA_WIDTH / 8,
-  parameter                                     USE_KEEP            = 0
+  parameter                                     USE_KEEP            = 0,
+  parameter                                     USER_IN_DATA   = 1
 )(
   input                                         rst,
 
@@ -48,6 +49,7 @@ module adapter_block_fifo_2_axi_stream #(
   input       [23:0]                            i_block_fifo_size,
   input       [(DATA_WIDTH + 1) - 1:0]          i_block_fifo_data,
   output                                        o_block_fifo_stb,
+  input       [3:0]                             i_axi_user,
 
   //AXI Stream Output
 
@@ -75,8 +77,13 @@ reg     [23:0]              r_count;
 assign  o_axi_data      = i_block_fifo_data[DATA_WIDTH - 1: 0];
 assign  o_block_fifo_stb= (i_axi_ready & o_axi_valid);
 
-assign  o_axi_user[0]   = (r_count < i_block_fifo_size) ? i_block_fifo_data[DATA_WIDTH] : 1'b0;
-assign  o_axi_user[3:1] = 3'h0;
+if (USER_IN_DATA) begin
+  assign  o_axi_user[0]   = (r_count < i_block_fifo_size) ? i_block_fifo_data[DATA_WIDTH] : 1'b0;
+  assign  o_axi_user[3:1] = 3'h0;
+end
+else begin
+  assign  o_axi_user      = i_axi_user;
+end
 
 assign  o_axi_last      = ((r_count + 1) >= i_block_fifo_size) & o_block_fifo_act  & o_axi_valid;
 //synchronous logic
