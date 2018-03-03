@@ -260,7 +260,8 @@ wire                                w_axi_rst;
 wire                                w_vdma_rst;
 
 reg                                 r_trigger_en;
-wire  [(MAX_CAMERA_COUNT * MAX_LANE_WIDTH) - 1: 0]             w_align_valid_array;
+wire  [0: LANE_WIDTH - 1]           w_report_align       [0: MAX_CAMERA_COUNT - 1];
+wire  [(MAX_CAMERA_COUNT * MAX_LANE_WIDTH) - 1: 0]             w_report_align_array;
 wire  [0: LANE_WIDTH - 1]           w_align_valid        [0: MAX_CAMERA_COUNT - 1];
 wire  [0: MAX_CAMERA_COUNT - 1]     w_align_cam_valid;
 
@@ -337,7 +338,7 @@ generate
 for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
 
   if (LANE_WIDTH < MAX_LANE_WIDTH) begin
-    assign w_align_valid_array[((cam_i * MAX_LANE_WIDTH) + (MAX_LANE_WIDTH - 1)):(cam_i * MAX_LANE_WIDTH) + LANE_WIDTH] = 0;
+    assign w_report_align_array[((cam_i * MAX_LANE_WIDTH) + (MAX_LANE_WIDTH - 1)):(cam_i * MAX_LANE_WIDTH) + LANE_WIDTH] = 0;
   end
 
 
@@ -496,7 +497,7 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
     assign w_tap_lane_value[cam_i][(lane_i * 5) + 4:(lane_i * 5)] = r_tap_value[cam_i][lane_i];
 
     //Map the data valid signals to an array
-    assign w_align_valid_array[(cam_i * MAX_LANE_WIDTH) + lane_i]  = w_align_valid[cam_i][lane_i];
+    assign w_report_align_array[(cam_i * MAX_LANE_WIDTH) + lane_i]  = w_report_align[cam_i][lane_i];
 
     //Map the aligned data to the VDMA data bus
     assign w_bram_cam_data[cam_i][(AXIS_DATA_WIDTH - 1) - (BRAM_DATA_WIDTH * lane_i): (AXIS_DATA_WIDTH - 1) - ((BRAM_DATA_WIDTH * (lane_i + 1)) - 1)] = w_bram_data[cam_i][lane_i];
@@ -512,8 +513,10 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
       .vdma_clk         (i_vdma_clk                     ),
 
       .i_xhs            (w_hsync[cam_i]                 ),
+      .i_xvs            (w_vsync[cam_i]                 ),
       .i_lvds           (w_unaligned_data[cam_i][lane_i]),
 //      .o_mode           (), //XXX
+      .o_report_align   (w_report_align[cam_i][lane_i]  ),
       .o_data_valid     (w_align_valid[cam_i][lane_i]   ),
       .o_data_count     (w_bram_count[cam_i][lane_i]    ),
       .i_rbuf_addrb     (w_bram_addr[cam_i]             ),  //XXX
@@ -668,10 +671,10 @@ always @ (posedge i_axi_clk) begin
           r_reg_out_data                  <=  LANE_WIDTH;
         end
         REG_ALIGNED_FLAG_LOW: begin
-          r_reg_out_data                  <=  w_align_valid_array[31:0];
+          r_reg_out_data                  <=  w_report_align_array[31:0];
         end
         REG_ALIGNED_FLAG_HIGH: begin
-          r_reg_out_data                  <=  {16'h0000, w_align_valid_array[47:32]};
+          r_reg_out_data                  <=  {16'h0000, w_report_align_array[47:32]};
         end
         REG_VERSION: begin
           r_reg_out_data                  <= 32'h00;
@@ -697,6 +700,10 @@ always @ (posedge i_axi_clk) begin
       end
       r_reg_out_rdy_stb                   <= 1;
     end
+
+
+  
+
   end
 end
 

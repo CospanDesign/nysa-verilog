@@ -12,10 +12,12 @@ parameter DATA_WIDTH = 16
   input                           camera_clk,
   input                           rst,
   input                           i_xhs,
+  input                           i_xvs,
   input       [7:0]               i_lvds,
   output reg  [7:0]               o_mode,
 
   //Output Signal
+  output reg                      o_report_align,
   input                           vdma_clk,
   output reg                      o_data_valid,
   output reg  [ADDR_WIDTH - 1:0]  o_data_count,
@@ -79,6 +81,8 @@ localparam EAV12_INVALID = {12'hFFF, 12'h000, 12'h000, 12'hB60};
 
 reg [55:0]               r_lvds_sr;
 reg  [2:0]               r_xhs_sr;
+reg  [2:0]               r_xvs_sr;
+reg                      r_report_align;
 reg  [7:0]               r_mode;
 reg  [ADDR_WIDTH - 1:0]  r_count;
 reg  [ADDR_WIDTH - 1:0]  r_temp_addra;
@@ -99,6 +103,9 @@ always @(posedge camera_clk)
   if (rst) begin
     r_lvds_sr     <= 0;
     r_xhs_sr      <= 0;
+    r_xvs_sr      <= 0;
+    r_report_align<= 0;
+    o_report_align<= 0;
     r_mode        <= NO_SYNC;
     o_mode        <= NO_SYNC;
     o_data_valid  <= 0;
@@ -118,6 +125,13 @@ always @(posedge camera_clk)
   else begin
     r_lvds_sr <= {r_lvds_sr[47:0],i_lvds};
     r_xhs_sr  <= {r_xhs_sr[1:0],i_xhs};
+    r_xvs_sr  <= {r_xvs_sr[1:0],i_xvs};
+
+    if (r_xvs_sr == 3'b100) begin
+      //At the negative edge of vsync reset the report align register
+      o_report_align  <=  r_report_align;
+      r_report_align  <= 0;
+    end
     case (r_state)
       ST_IDLE: begin // 00
         r_mode        <= NO_SYNC;
@@ -321,6 +335,7 @@ always @(posedge camera_clk)
         if (r_temp_data[31:0] == EAV8_VALID) begin
           r_data_count <= r_wbuf_addra - 4;
           r_data_valid <= 1;
+          r_report_align  <=  1;
           o_data_valid <= 0;
           r_state <= ST_NEXT_ROW;
         end else
@@ -400,6 +415,7 @@ always @(posedge camera_clk)
         if (r_temp_data[39:0] == EAV10_VALID) begin
           r_data_count  <= r_wbuf_addra - 4;
           r_data_valid  <= 1;
+          r_report_align  <= 1;
           o_data_valid  <= 0;
           r_state       <= ST_NEXT_ROW;
         end else
@@ -480,6 +496,7 @@ always @(posedge camera_clk)
         if (r_temp_data == EAV12_VALID) begin
           r_data_count <= r_wbuf_addra - 4;
           r_data_valid <= 1;
+          r_report_align  <= 1;
           o_data_valid <= 0;
           r_state <= ST_NEXT_ROW;
         end else

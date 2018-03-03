@@ -128,7 +128,6 @@ def boilerplate_test(dut):
 
     yield Timer(CLK_PERIOD * 4000)
 
-
     dut.log.info("Length of read data (1 Row Length): %d" % len(vdma0_slave.data))
     data = yield imx.get_version();
     dut.log.info("Version: 0x%08X" % data)
