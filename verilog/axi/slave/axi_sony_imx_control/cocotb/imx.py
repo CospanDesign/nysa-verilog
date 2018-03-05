@@ -135,8 +135,9 @@ class IMX (Driver):
 
     @cocotb.coroutine
     def reset_async_cam_clock(self):
-        #Self Clearing
         yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_STROBE_CAM_CLK_RST, True);
+        yield self.sleep(10)
+        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_STROBE_CAM_CLK_RST, False);
 
     @cocotb.coroutine
     def reset_sync_cam_clock_domain(self):

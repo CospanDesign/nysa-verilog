@@ -586,7 +586,6 @@ always @ (posedge i_axi_clk) begin
   r_reg_out_rdy_stb                       <=  0;
   r_reg_invalid_addr                      <=  0;
   r_axi_cam_rst_stb                       <=  0;
-  r_serdes_clk_rst_stb                    <=  0;
   r_cam_tap_delay_rst                     <=  0;
 
   if (w_axi_rst) begin
