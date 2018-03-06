@@ -20,12 +20,12 @@ const u32 REG_TAP_DELAY_START         = 16 << 2;
 const u32 SIZE_TAP_DELAY              = 3 * 16;
 const u32 REG_VERSION                 = (16 << 2) + ((3 * 16) << 2);
 
-const u32 CTRL_BIT_CLEAR              = 0;
-const u32 CTRL_BIT_TAP_DELAY_RST      = 1;
+const u32 CTRL_BIT_CLEAR_EN           = 0;
+const u32 CTRL_BIT_TAP_DELAY_RST_EN   = 1;
 const u32 CTRL_BIT_TRIGGER_EN         = 2;
 
-const u32 CTRL_BIT_STROBE_CAM_CLK_RST = 4;
-const u32 CTRL_BIT_STROBE_CAM_RST     = 5;
+const u32 CTRL_BIT_CAM_CLK_RST_EN     = 4;
+const u32 CTRL_BIT_CAM_RST_STROBE     = 5;
 
 const u32 CTRL_BIT_POWER_EN0          = 12;
 const u32 CTRL_BIT_POWER_EN1          = 13;
@@ -35,7 +35,7 @@ const u32 CTRL_BIT_POWER_EN2          = 14;
 //Private Function Prototypes
 u32 imxc_read_register(imx_control_t *ic, u32 address);
 void imxc_write_register(imx_control_t *ic, u32 address, u32 value);
-void imxc_enable_register_bit(imx_control_t *ic, u32 address, u32 bit_index, int enable);
+void imxc_enable_register_bit(imx_control_t *ic, u32 address, u32 bit_index, u8 enable);
 void imxc_set_register_bit(imx_control_t *ic, u32 address, u32 bit_index);
 void imxc_clear_register_bit(imx_control_t *ic, u32 address, u32 bit_index);
 u32 imxc_is_register_bit_set(imx_control_t *ic, u32 address, u32 bit_index);
@@ -83,29 +83,26 @@ int imx_control_is_all_camera_lanes_aligned(imx_control_t *ic, u8 cam_index){
     return 0;
   return (flags == mask);
 }
-void imx_control_reset_async_cam_clock(imx_control_t * ic){
-  imxc_enable_register_bit(ic, REG_CONTROL, CTRL_BIT_STROBE_CAM_CLK_RST, 1);
+void imx_control_reset_async_cam_clock_enable(imx_control_t * ic, u8 enable){
+  imxc_enable_register_bit(ic, REG_CONTROL, CTRL_BIT_CAM_CLK_RST_EN, enable);
 }
+//This needs to be strobed
 void imx_control_reset_sync_cam_clock_domain(imx_control_t *ic){
-  imxc_enable_register_bit(ic, REG_CONTROL, CTRL_BIT_STROBE_CAM_RST, 1);
+  imxc_enable_register_bit(ic, REG_CONTROL, CTRL_BIT_CAM_RST_STROBE, 1);
 }
-void imx_control_enable_cam_register_clear(imx_control_t *ic, int enable){
-  //Flip the bit
-  enable = (enable) ? 0: 1;
-  imxc_enable_register_bit(ic, REG_CONTROL, CTRL_BIT_CLEAR, enable);
+void imx_control_cam_register_clear_enable(imx_control_t *ic, u8 enable){
+  imxc_enable_register_bit(ic, REG_CONTROL, CTRL_BIT_CLEAR_EN, enable);
 }
-void imx_control_reset_tap_delay(imx_control_t *ic){
-  imxc_enable_register_bit(ic, REG_CONTROL, CTRL_BIT_TAP_DELAY_RST, 1);
-  usleep(1000); //Sleep for 1msec
-  imxc_enable_register_bit(ic, REG_CONTROL, CTRL_BIT_TAP_DELAY_RST, 0);
+void imx_control_reset_tap_delay_enable(imx_control_t *ic, u8 enable){
+  imxc_enable_register_bit(ic, REG_CONTROL, CTRL_BIT_TAP_DELAY_RST_EN, enable);
 }
-int imx_control_enable_camera_power(imx_control_t *ic, u8 index,  int enable){
-  if (index >= MAX_CAMERA_COUNT)
+int imx_control_camera_power_enable(imx_control_t *ic, u8 cam_index,  u8 enable){
+  if (cam_index >= MAX_CAMERA_COUNT)
     return XST_FAILURE;
-  imxc_enable_register_bit(ic, REG_CONTROL, CTRL_BIT_POWER_EN0 + index, enable);
+  imxc_enable_register_bit(ic, REG_CONTROL, CTRL_BIT_POWER_EN0 + cam_index, enable);
   return XST_SUCCESS;
 }
-void imx_control_enable_camera_trigger(imx_control_t *ic, int enable){ 
+void imx_control_camera_trigger_enable(imx_control_t *ic, u8 enable){ 
   imxc_enable_register_bit(ic, REG_CONTROL, CTRL_BIT_TRIGGER_EN, enable);
 }
 int imx_control_set_tap_delay(imx_control_t *ic, u8 cam_index, u8 lane_index, u32 delay){
@@ -131,7 +128,7 @@ u32 imxc_read_register(imx_control_t *ic, u32 address){
 void imxc_write_register(imx_control_t *ic, u32 address, u32 value){
   Xil_Out32(ic->base_address + address, value);
 }
-void imxc_enable_register_bit(imx_control_t *ic, u32 address, u32 bit_index, int enable){
+void imxc_enable_register_bit(imx_control_t *ic, u32 address, u32 bit_index, u8 enable){
   if (enable)
     imxc_set_register_bit(ic, address, bit_index);
   else
