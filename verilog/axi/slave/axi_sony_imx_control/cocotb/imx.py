@@ -40,27 +40,32 @@ MAX_LANE_WIDTH          = 16
 CAMERA_COUNT            = 1
 LANE_WIDTH              = 8
 
-REG_CONTROL             = 0 << 2
-REG_STATUS              = 1 << 2
-#REG_IMAGE_WIDTH         = 2 << 2
-#REG_IMAGE_HEIGHT        = 3 << 2
-REG_TRIGGER_PULSE_WIDTH = 3 << 2
-REG_TRIGGER_PERIOD      = 4 << 2
-REG_CAMERA_COUNT        = 5 << 2
-REG_LANE_WIDTH          = 6 << 2
-REG_ALIGNED_FLAG_LOW    = 7 << 2
-REG_ALIGNED_FLAG_HIGH   = 8 << 2
+REG_CONTROL               = 0  << 2
+REG_STATUS                = 1  << 2
+REG_TRIGGER_PULSE_WIDTH   = 2  << 2
+REG_TRIGGER_PERIOD        = 3  << 2
+REG_CAMERA_COUNT          = 4  << 2
+REG_LANE_WIDTH            = 5  << 2
+REG_ALIGNED_FLAG_LOW      = 6  << 2
+REG_ALIGNED_FLAG_HIGH     = 7  << 2
+REG_FRAME_WIDTH           = 8  << 2
+REG_FRAME_HEIGHT          = 9  << 2
+REG_PRE_VERTICAL_BLANK    = 10 << 2
+REG_PRE_HORIZONTAL_BLANK  = 11 << 2
+REG_POST_VERTICAL_BLANK   = 12 << 2
+REG_POST_HORIZONTAL_BLANK = 13 << 2
 
-REG_TAP_DELAY_START     = 16 << 2
-SIZE_TAP_DELAY          = 3 * 16
-REG_VERSION             = REG_TAP_DELAY_START + (SIZE_TAP_DELAY << 2)
+REG_TAP_DELAY_START       = 16 << 2
+SIZE_TAP_DELAY            = 3 * 16
+REG_VERSION               = REG_TAP_DELAY_START + (SIZE_TAP_DELAY << 2)
 
-CTRL_BIT_CLEAR              = 0
-CTRL_BIT_TAP_DELAY_RST      = 1
-CTRL_BIT_TRIGGER_EN         = 2
 
-CTRL_BIT_STROBE_CAM_CLK_RST = 4
-CTRL_BIT_STROBE_CAM_RST     = 5
+
+
+CTRL_BIT_CLEAR_EN           = 0;
+CTRL_BIT_TRIGGER_EN         = 1;
+CTRL_BIT_CAM_ASYNC_RST_EN   = 2;
+CTRL_BIT_CAM_SYNC_RST_EN    = 3;
 
 CTRL_BIT_POWER_EN0          = 12
 CTRL_BIT_POWER_EN1          = 13
@@ -88,25 +93,39 @@ class IMX (Driver):
         status = yield self.read_register(REG_STATUS)
         raise ReturnValue(status)
 
-    '''
     @cocotb.coroutine
     def set_image_width(self, width):
-        yield self.write_register(REG_IMAGE_WIDTH, width)
+        yield self.write_register(REG_FRAME_WIDTH, width)
 
     @cocotb.coroutine
     def get_image_width(self):
-        data = yield self.read_register(REG_IMAGE_WIDTH)
+        data = yield self.read_register(REG_FRAME_WIDTH)
         raise ReturnValue(data)
-    
+
     @cocotb.coroutine
     def set_image_height(self, height):
-        yield self.write_register(REG_IMAGE_HEIGHT, height)
- 
+        yield self.write_register(REG_FRAME_HEIGHT, height)
+
     @cocotb.coroutine
     def get_image_height(self):
-        data = yield self.read_register(REG_IMAGE_HEIGHT)
+        data = yield self.read_register(REG_FRAME_HEIGHT)
         raise ReturnValue(data)
-    '''
+
+    @cocotb.coroutine
+    def set_pre_vblank(self, pre_vblank):
+        yield self.write_register(REG_PRE_VERTICAL_BLANK, pre_vblank) 
+
+    @cocotb.coroutine
+    def set_pre_hblank(self, pre_hblank):
+        yield self.write_register(REG_PRE_HORIZONTAL_BLANK, pre_hblank) 
+
+    @cocotb.coroutine
+    def set_post_vblank(self, post_vblank):
+        yield self.write_register(REG_POST_VERTICAL_BLANK, post_vblank) 
+
+    @cocotb.coroutine
+    def set_post_hblank(self, post_hblank):
+        yield self.write_register(REG_POST_HORIZONTAL_BLANK, post_hblank) 
 
     @cocotb.coroutine
     def setup_trigger(self, period, pulse_width):
@@ -118,7 +137,7 @@ class IMX (Driver):
     def get_camera_count(self):
         count = yield self.read_register(REG_CAMERA_COUNT)
         raise ReturnValue(count)
-    
+
     @cocotb.coroutine
     def get_lane_width(self):
         count = yield self.read_register(REG_LANE_WIDTH)
@@ -134,28 +153,18 @@ class IMX (Driver):
         raise ReturnValue(flags)
 
     @cocotb.coroutine
-    def reset_async_cam_clock(self):
-        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_STROBE_CAM_CLK_RST, True);
-        yield self.sleep(10)
-        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_STROBE_CAM_CLK_RST, False);
+    def async_reset_enable(self, enable):
+        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_CAM_ASYNC_RST_EN, enable);
 
     @cocotb.coroutine
-    def reset_sync_cam_clock_domain(self):
+    def sync_reset_enable(self, enable):
         #Self Clearing
-        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_STROBE_CAM_RST, True);
+        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_CAM_SYNC_RST_EN, enable);
 
     @cocotb.coroutine
-    def reset_camera(self):
+    def reset_camera_enable(self, enable):
         #Self Clearing
-        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_CLEAR, True);
-        yield self.sleep(10)
-        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_CLEAR, False);
-
-    @cocotb.coroutine
-    def reset_tap_delay(self):
-        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_TAP_DELAY_RST, True);
-        yield self.sleep(10)
-        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_TAP_DELAY_RST, False);
+        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_CLEAR_EN, enable);
 
     @cocotb.coroutine
     def enable_camera_power(self, cam_index, enable):

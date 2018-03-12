@@ -5,7 +5,7 @@ module tb_cocotb #(
   parameter AXI_ADDR_WIDTH      = 10,
   parameter AXI_DATA_WIDTH      = 32,
   parameter STROBE_WIDTH        = (AXI_DATA_WIDTH / 8),
-  parameter AXIS_DATA_WIDTH     = 128,
+  parameter AXIS_DATA_WIDTH     = 64,
   parameter AXIS_STROBE_WIDTH   = (AXIS_DATA_WIDTH / 8)
 )(
 
@@ -76,8 +76,11 @@ reg   [3:0]       test_id         = 0;
 
 //Raw unsynchronized data
 wire       [(8 * LANE_WIDTH) - 1: 0]     i_cam_0_raw_data;
+wire       [(8 * LANE_WIDTH) - 1: 0]     i_cam_0_raw_data_scramble;
 wire       [(8 * LANE_WIDTH) - 1: 0]     i_cam_1_raw_data;
+wire       [(8 * LANE_WIDTH) - 1: 0]     i_cam_1_raw_data_scramble;
 wire       [(8 * LANE_WIDTH) - 1: 0]     i_cam_2_raw_data;
+wire       [(8 * LANE_WIDTH) - 1: 0]     i_cam_2_raw_data_scramble;
 
 wire      [7:0]                         w_cam_raw_data[0: 2][0:LANE_WIDTH - 1];
 
@@ -97,15 +100,12 @@ wire                                    o_cam_2_xclear_n;
 wire                                    o_cam_0_power_en;
 wire                                    o_cam_1_power_en;
 wire                                    o_cam_2_power_en;
-wire                                    o_cam_0_tap_delay_rst;
-wire                                    o_cam_1_tap_delay_rst;
-wire                                    o_cam_2_tap_delay_rst;
 
 //Vsync and HSync only regs for now
-wire       [2:0]                        w_serdes_io_rst;
-wire                                    w_serdes_0_io_rst;
-wire                                    w_serdes_1_io_rst;
-wire                                    w_serdes_2_io_rst;
+wire       [2:0]                        w_serdes_sync_rst;
+wire                                    w_serdes_0_sync_rst;
+wire                                    w_serdes_1_sync_rst;
+wire                                    w_serdes_2_sync_rst;
 
 wire                                    i_cam_0_imx_vs;
 wire                                    i_cam_0_imx_hs;
@@ -130,9 +130,9 @@ assign  i_cam_0_imx_hs = hs[0];
 assign  i_cam_1_imx_hs = hs[1];
 assign  i_cam_2_imx_hs = hs[2];
 
-assign  w_serdes_0_io_rst = w_serdes_io_rst[0];
-assign  w_serdes_1_io_rst = w_serdes_io_rst[1];
-assign  w_serdes_2_io_rst = w_serdes_io_rst[2];
+assign  w_serdes_0_sync_rst = w_serdes_sync_rst[0];
+assign  w_serdes_1_sync_rst = w_serdes_sync_rst[1];
+assign  w_serdes_2_sync_rst = w_serdes_sync_rst[2];
 
 
 //submodules
@@ -194,14 +194,14 @@ axi_sony_imx_control #(
 
 
   // ---- CAMERA INTERFACE -----
-  .o_serdes_0_io_rst      (w_serdes_io_rst[0]  ),
-  .o_serdes_1_io_rst      (w_serdes_io_rst[1]  ),
-  .o_serdes_2_io_rst      (w_serdes_io_rst[2]  ),
+  .o_serdes_0_sync_rst    (w_serdes_sync_rst[0]  ),
+  .o_serdes_1_sync_rst    (w_serdes_sync_rst[1]  ),
+  .o_serdes_2_sync_rst    (w_serdes_sync_rst[2]  ),
 
   //Raw unsynchronized data
-  .i_cam_0_raw_data       (i_cam_0_raw_data    ),
-  .i_cam_1_raw_data       (i_cam_1_raw_data    ),
-  .i_cam_2_raw_data       (i_cam_2_raw_data    ),
+  .i_cam_0_raw_data       (i_cam_0_raw_data_scramble    ),
+  .i_cam_1_raw_data       (i_cam_1_raw_data_scramble    ),
+  .i_cam_2_raw_data       (i_cam_2_raw_data_scramble    ),
 
   //TAP Delay for incomming data
   .o_cam_0_tap_data       (o_cam_0_tap_data    ),
@@ -221,10 +221,6 @@ axi_sony_imx_control #(
   .o_cam_0_power_en       (o_cam_0_power_en    ),
   .o_cam_1_power_en       (o_cam_1_power_en    ),
   .o_cam_2_power_en       (o_cam_2_power_en    ),
-
-  .o_cam_0_tap_delay_rst  (o_cam_0_tap_delay_rst),
-  .o_cam_1_tap_delay_rst  (o_cam_1_tap_delay_rst),
-  .o_cam_2_tap_delay_rst  (o_cam_2_tap_delay_rst),
 
   //Vsync and HSync only inputs for now
   .i_cam_0_imx_vs         (i_cam_0_imx_vs       ),
@@ -257,12 +253,27 @@ axi_sony_imx_control #(
 //  .o_vdma_2_axis_strobe   (VDMA2_AXISS_TSTROBE   ),
   .o_vdma_2_axis_last     (VDMA2_AXISS_TLAST     ),
   .o_vdma_2_axis_valid    (VDMA2_AXISS_TVALID    ),
-  .i_vdma_2_axis_ready    (VDMA2_AXISS_TREADY    ),
+  .i_vdma_2_axis_ready    (VDMA2_AXISS_TREADY    )
 
-  .o_serdes_0_clk_rst_stb (cam_0_clk_rst         ),
-  .o_serdes_1_clk_rst_stb (cam_1_clk_rst         ),
-  .o_serdes_2_clk_rst_stb (cam_2_clk_rst         )
 );
+
+serdes_scrambler ss0 (
+  .i_lvds                 (i_cam_0_raw_data         ),
+  .o_lvds                 (i_cam_0_raw_data_scramble)
+);
+
+serdes_scrambler ss1 (
+  .i_lvds                 (i_cam_1_raw_data         ),
+  .o_lvds                 (i_cam_1_raw_data_scramble)
+);
+
+serdes_scrambler ss2 (
+  .i_lvds                 (i_cam_2_raw_data         ),
+  .o_lvds                 (i_cam_2_raw_data_scramble)
+);
+
+
+
 
 
 //asynchronus logic
@@ -331,7 +342,7 @@ for (gv = 0; gv < CAMERA_COUNT; gv = gv + 1) begin: GEN_BLOCK
     12: begin
       rxd_to_rbuf_12test rtr12t (
         .camera_clk     (cam_clk[gv]           ),
-        .rst            (w_serdes_io_rst[gv]   ),
+        .rst            (w_serdes_sync_rst[gv]   ),
         .o_xvs          (vs[gv]                ),
         .o_xhs          (hs[gv]                ),
         .o_lvds8_0      (w_cam_raw_data[gv][0] ),
@@ -347,7 +358,7 @@ for (gv = 0; gv < CAMERA_COUNT; gv = gv + 1) begin: GEN_BLOCK
     10: begin
       rxd_to_rbuf_10test rtr10t (
         .camera_clk     (cam_clk[gv]           ),
-        .rst            (w_serdes_io_rst[gv]   ),
+        .rst            (w_serdes_sync_rst[gv]   ),
         .o_xvs          (vs[gv]                ),
         .o_xhs          (hs[gv]                ),
         .o_lvds8_0      (w_cam_raw_data[gv][0] ),
@@ -361,9 +372,13 @@ for (gv = 0; gv < CAMERA_COUNT; gv = gv + 1) begin: GEN_BLOCK
       );
     end
     default : begin
-      rxd_to_rbuf_8test rtr8t (
+      rxd_to_rbuf_8test #(
+        .VSYNC_START    (2                     ),
+        .PRE_VBLANK_COUNT (2                   ),
+        .VALID_ROWS       (4                   )
+      )rtr8t (
         .camera_clk     (cam_clk[gv]           ),
-        .rst            (w_serdes_io_rst[gv]   ),
+        .rst            (w_serdes_sync_rst[gv] ),
         .o_xvs          (vs[gv]                ),
         .o_xhs          (hs[gv]                ),
         .o_lvds8_0      (w_cam_raw_data[gv][0] ),

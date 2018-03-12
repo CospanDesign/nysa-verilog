@@ -4,8 +4,11 @@
 /* STYLE_NOTES begin
 *
 * */
-module rxd_to_rbuf_8test
-(
+module rxd_to_rbuf_8test #(
+  parameter       VSYNC_START = 2,
+  parameter       PRE_VBLANK_COUNT = 2,
+  parameter       VALID_ROWS = 4
+)(
 input             camera_clk,
 output reg        o_xvs,
 output reg        o_xhs,
@@ -88,7 +91,7 @@ always @(posedge camera_clk)
       end
       ST_001: begin //01
         r_dout0 <= 12'h001;
-        if (r_row_count == 4) begin
+        if (r_row_count == VSYNC_START) begin
           if (r_count == 7) begin
             o_xvs   <= 0;
           end
@@ -116,14 +119,10 @@ always @(posedge camera_clk)
       end
       ST_SAV_SYNC2: begin //04
         r_dout0 <= SYNC2; //8'h00
-        if (r_row_count == 12) begin //introduce a format error
-          r_state <= ST_DATA;
-        end else begin
-          r_state <= ST_SAV_SYNC3;
-        end
+        r_state <= ST_SAV_SYNC3;
       end
       ST_SAV_SYNC3: begin //05
-        if (r_row_count < 8) begin
+        if (r_row_count < (VSYNC_START + PRE_VBLANK_COUNT)) begin
           r_dout0 <= SAV8_INVALID; //8'hAB
         end else begin
           r_dout0 <= SAV8_VALID;   //8'h80
@@ -143,24 +142,20 @@ always @(posedge camera_clk)
       end
       ST_EAV_SYNC1: begin //08
         r_dout0 <= SYNC1; //8'h00;
-        if (r_row_count == 6) begin //introduce a format error
-          r_state <= ST_EAV_SYNC3;
-        end else begin
-          r_state <= ST_EAV_SYNC2;
-        end
+        r_state <= ST_EAV_SYNC2;
       end
       ST_EAV_SYNC2: begin //09
         r_dout0 <= SYNC2; //8'h000;
         r_state <= ST_EAV_SYNC3;
       end
       ST_EAV_SYNC3: begin //0A
-        if (r_row_count < 8) begin
+        if (r_row_count < (VSYNC_START + PRE_VBLANK_COUNT)) begin
           r_dout0 <= EAV8_INVALID; //8'hB6;
         end else begin
           r_dout0 <= EAV8_VALID;   //8'h9D;   
         end
         r_count <= 0;
-        if (r_row_count == 19) begin
+        if (r_row_count == (VSYNC_START + PRE_VBLANK_COUNT + VALID_ROWS)) begin
           r_row_count <= 0;
           r_state     <= ST_IDLE;
         end else begin

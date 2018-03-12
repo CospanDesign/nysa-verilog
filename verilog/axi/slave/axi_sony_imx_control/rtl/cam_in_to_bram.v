@@ -4,7 +4,7 @@
 /* STYLE_NOTES begin
 *
 * */
-module rxd_to_rbuf #(
+module cam_in_to_bram #(
 parameter ADDR_WIDTH = 9,
 parameter DATA_WIDTH = 16
 )
@@ -14,13 +14,13 @@ parameter DATA_WIDTH = 16
   input                           i_xhs,
   input                           i_xvs,
   input       [7:0]               i_lvds,
-  output reg  [7:0]               o_mode,
+  (* KEEP *) output reg  [7:0]    o_mode,
 
   //Output Signal
-  output reg                      o_report_align,
+  (* KEEP *) output reg           o_report_align,
   input                           vdma_clk,
-  output reg                      o_data_valid,
-  output reg  [ADDR_WIDTH - 1:0]  o_data_count,
+  (* KEEP *) output reg           o_data_valid,
+  (* KEEP *) output reg  [ADDR_WIDTH - 1:0]  o_data_count,
   input       [ADDR_WIDTH - 1:0]  i_rbuf_addrb,
   output      [DATA_WIDTH - 1:0]  o_rbuf_doutb
 );
@@ -89,14 +89,15 @@ reg  [ADDR_WIDTH - 1:0]  r_temp_addra;
 reg  [ADDR_WIDTH - 1:0]  r_wbuf_addra;
 reg [47:0]               r_temp_dina;
 reg [47:0]               r_temp_data;
-reg [(DATA_WIDTH - 1):0] r_wbuf_data;
+(* KEEP *) reg [(DATA_WIDTH - 1):0] r_wbuf_data;
 reg                      r_wbuf_wea;
 reg                      r_rbuf_bank;
 reg  [ADDR_WIDTH - 1:0]  r_data_count;
 reg                      r_data_valid;
-reg  [3:0]               r_state;
+(* KEEP *) reg  [3:0]    r_state;
 wire [9:0]               w_data;  //Only for simulation visualization top ten bits
 assign w_data = r_wbuf_data[(DATA_WIDTH - 1):(DATA_WIDTH - 10)];
+
 
 always @(posedge camera_clk)
   //De-assert Strobes
@@ -121,6 +122,7 @@ always @(posedge camera_clk)
     r_wbuf_wea    <= 0;
     r_state       <= 0;
     r_rbuf_bank   <= 0;
+
   end
   else begin
     r_lvds_sr <= {r_lvds_sr[47:0],i_lvds};
@@ -137,7 +139,7 @@ always @(posedge camera_clk)
         r_mode        <= NO_SYNC;
         r_temp_addra  <= 0;
         r_wbuf_addra  <= 0;
-        r_wbuf_data  <= 0;
+        r_wbuf_data   <= 0;
         r_wbuf_wea    <= 0;
         r_data_valid  <= 0;
         r_data_count  <= 0;
