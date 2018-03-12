@@ -5,13 +5,13 @@ module cross_clock_enable (
   input         in_en,
 
   input         out_clk,
-  output  reg   out_en
+  output  reg   out_en = 0
 
 );
 
 //Parameters
 //Registers/Wires
-reg       [2:0]  out_en_sync;
+reg       [2:0]  out_en_sync = 3'b000;
 //Submodules
 //Asynchronous Logic
 //Synchronous Logic
