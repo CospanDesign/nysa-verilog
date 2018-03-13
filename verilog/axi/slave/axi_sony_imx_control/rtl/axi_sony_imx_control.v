@@ -471,6 +471,7 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
       .rst              (w_cam_sync_rst[cam_i]          ),
       .vdma_clk         (i_vdma_clk                     ),
 
+      .i_xvs            (w_vsync[cam_i]                 ),
       .i_xhs            (w_hsync[cam_i]                 ),
       .i_lvds           (w_unaligned_data[cam_i][lane_i]),
 //      .o_mode           (), //XXX
