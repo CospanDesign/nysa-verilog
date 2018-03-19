@@ -38,7 +38,6 @@ SOFTWARE.
 `define BIT_STATUS_BAD_TXRX_WIDTH 5
 `define BIT_BUS_STATUS_RANGE      9:8
 
-
 `define CLOG2(x) \
    (x <= 2)     ? 1 :  \
    (x <= 4)     ? 2 :  \
@@ -53,7 +52,6 @@ SOFTWARE.
    (x <= 2048)  ? 11 : \
    (x <= 4096)  ? 12 : \
    -1
-
 
 module axi_master #(
   //Parameters
