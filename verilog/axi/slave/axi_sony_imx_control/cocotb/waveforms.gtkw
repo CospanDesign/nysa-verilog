@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
-[*] Mon Mar 12 18:00:50 2018
+[*] Tue Mar 20 19:11:50 2018
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_sony_imx_control/cocotb/design.vcd"
-[dumpfile_mtime] "Mon Mar 12 18:00:32 2018"
-[dumpfile_size] 40217445
+[dumpfile_mtime] "Tue Mar 20 19:10:40 2018"
+[dumpfile_size] 34084131
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_sony_imx_control/cocotb/waveforms.gtkw"
-[timestart] 46746
+[timestart] 46635
 [size] 1920 1137
 [pos] -1 -1
-*-5.023547 46746 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-6.023547 46817 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.dut.
 [treeopen] tb_cocotb.dut.CAMERA[0].
@@ -197,7 +197,7 @@ tb_cocotb.dut.CAMERA[0].LANES[0].rtrbuf.i_lvds[7:0]
 -BRAM_TO_FRAME_FIFO
 @2022
 [color] 5
-^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_sony_imx_control/cocotb/b2ff_states.txt
+^1 /home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_sony_imx_control/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_sony_imx_control/cocotb/b2ff_states.txt
 tb_cocotb.dut.CAMERA[0].bram2ff.state[3:0]
 @28
 tb_cocotb.dut.CAMERA[0].bram2ff.i_vsync
@@ -217,7 +217,6 @@ tb_cocotb.dut.CAMERA[0].bram2ff.dalmost_full
 tb_cocotb.dut.CAMERA[0].bram2ff.dempty
 tb_cocotb.dut.CAMERA[0].bram2ff.dend[1:0]
 tb_cocotb.dut.CAMERA[0].bram2ff.dfull
-@29
 tb_cocotb.dut.CAMERA[0].bram2ff.dlast
 @22
 tb_cocotb.dut.CAMERA[0].bram2ff.dcurrent_data[63:0]
@@ -256,6 +255,7 @@ tb_cocotb.dut.CAMERA[0].bram2ff.o_frame_fifo_sof
 tb_cocotb.dut.CAMERA[0].bram2ff.r_frame_fifo_enable
 tb_cocotb.dut.CAMERA[0].bram2ff.o_frame_fifo_ready
 tb_cocotb.dut.CAMERA[0].bram2ff.i_frame_fifo_next_stb
+@29
 tb_cocotb.dut.CAMERA[0].bram2ff.o_frame_fifo_last
 @22
 tb_cocotb.dut.CAMERA[0].bram2ff.r_prev_data[63:0]

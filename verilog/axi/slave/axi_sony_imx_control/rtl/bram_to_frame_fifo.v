@@ -188,17 +188,18 @@ always @ (posedge clk) begin
         if (dfull) begin
           r_frame_fifo_enable <=  1;
         end
-        if (w_pre_hpad) begin
-          //Definetly not full
-          r_prev_data   <=  i_bram_data;
-          o_bram_addr   <=  o_bram_addr + 1;
-          r_hcount      <=  r_hcount + 8;
-          state         <=  BRAM_DELAY;
-        end
-        else if (w_post_hpad) begin
-          state         <=  BRAM_FIN;
-        end
-        else if (!dfull) begin
+        //else if (!dfull) begin
+        else begin
+          if (w_pre_hpad) begin
+            //Definetly not full
+            r_prev_data   <=  i_bram_data;
+            o_bram_addr   <=  o_bram_addr + 1;
+            r_hcount      <=  r_hcount + 8;
+            state         <=  BRAM_DELAY;
+          end
+          else if (w_post_hpad) begin
+            state         <=  BRAM_FIN;
+          end
           r_prev_data   <=  i_bram_data;
           if (w_half_pad) begin
             dframe_fifo[dend] <=  {i_bram_data[31:0], r_prev_data[63:32]};

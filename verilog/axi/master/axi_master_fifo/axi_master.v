@@ -454,7 +454,7 @@ always @ (posedge clk) begin
             state             <=  READ_CMD;
           end
         end
-        else if (((!r_prev_int) & i_interrupts) > 0) begin
+        else if (((~r_prev_int) & i_interrupts) > 0) begin
           //Something new from interrupts
           state               <=  SEND_INTERRUPT;
           r_interrupts        <=  0;

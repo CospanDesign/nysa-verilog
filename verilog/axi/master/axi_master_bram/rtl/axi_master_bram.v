@@ -56,18 +56,18 @@ SOFTWARE.
 module axi_master_bram #(
   //Parameters
   parameter           INVERT_AXI_RESET        = 1,
-  parameter           MAX_PACKET_SIZE         = 4096,
-  parameter           MAX_PACKET_WIDTH        = `CLOG2(MAX_PACKET_SIZE),
-  parameter           AXI_AXI_DATA_WIDTH      = 32,
+  parameter           INTERNAL_BRAM           = 1,
+  parameter           AXI_MAX_BURST_LENGTH    = 4096,
+  parameter           AXI_DATA_COUNT          = `CLOG2(AXI_MAX_BURST_LENGTH),
+  parameter           AXI_DATA_WIDTH          = 32,
+  parameter           AXI_STROBE_WIDTH        = (AXI_DATA_WIDTH >> 3),
   parameter           AXI_ADDR_WIDTH          = 32,
-  parameter           BRAM_AXI_ADDR_WIDTH     = 10,
-  parameter           BRAM_AXI_AXI_DATA_WIDTH = 32,
+  parameter           BRAM_ADDR_WIDTH         = 10,
+  parameter           BRAM_DATA_WIDTH         = 32,
   parameter           DEFAULT_TIMEOUT         = 32'd100000000,  //1 Second at 100MHz
   parameter           ENABLE_NACK             = 0, //Enable timeout
 //  parameter           USE_IDS               = 0,
   parameter           INTERRUPT_WIDTH         = 32
-
-
 )(
 input                                     i_axi_clk,
 input                                     i_axi_rst,
@@ -76,27 +76,36 @@ input                                     i_axi_rst,
 //User Facing Interface end
 //indicate to the input that we are ready
 output      [31:0]                        o_cmd_status,
-output  reg                               o_cmd_interrupt,
+output  reg [INTERRUPT_WIDTH - 1: 0]      o_cmd_interrupts,
 
 input                                     i_cmd_en,
 output  reg                               o_cmd_error,
 output  reg                               o_cmd_ack,
 
-
 //Modifier flags, these will be used to change the way address are modified when reading/writing
 input       [AXI_ADDR_WIDTH - 1:0]        i_cmd_addr,
 input                                     i_cmd_wr_rd,        //1 = Write, 0 = Read
-input       [MAX_PACKET_WIDTH - 1: 0]     i_cmd_data_byte_count,
-
+input       [AXI_DATA_COUNT - 1: 0]       i_cmd_data_byte_count,
 
 //BRAM Interface
-output      [BRAM_AXI_ADDR_WIDTH - 1: 0]  o_bram_ingress_addr,
-input       [BRAM_AXI_AXI_DATA_WIDTH - 1: 0]  i_bram_ingress_data,
+input                                     i_int_bram_ingress_clk,
+input                                     i_int_bram_ingress_wea,
+input       [BRAM_ADDR_WIDTH - 1: 0]      i_int_bram_ingress_addr,
+input       [BRAM_DATA_WIDTH - 1: 0]      i_int_bram_ingress_data,
+
+input                                     i_int_bram_egress_clk,
+input       [BRAM_ADDR_WIDTH - 1: 0]      i_int_bram_egress_addr,
+output      [BRAM_DATA_WIDTH - 1: 0]      o_int_bram_egress_data,
 
 
-output                                    o_bram_egress_wea,
-output      [BRAM_AXI_ADDR_WIDTH - 1: 0]  o_bram_egress_addr,
-output      [BRAM_AXI_AXI_DATA_WIDTH - 1: 0]  o_bram_egress_data,
+output      [BRAM_ADDR_WIDTH - 1: 0]      o_ext_bram_ingress_addr,
+input       [BRAM_DATA_WIDTH - 1: 0]      i_ext_bram_ingress_data,
+
+output                                    o_ext_bram_egress_wea,
+output      [BRAM_ADDR_WIDTH - 1: 0]      o_ext_bram_egress_addr,
+output      [BRAM_DATA_WIDTH - 1: 0]      o_ext_bram_egress_data,
+
+
 
 
   //NOT IMPLEMENTED YET
@@ -114,7 +123,7 @@ output      [BRAM_AXI_AXI_DATA_WIDTH - 1: 0]  o_bram_egress_data,
 //bus write addr path
 output  reg [3:0]                   o_awid,         //Write ID
 output      [AXI_ADDR_WIDTH - 1:0]  o_awaddr,       //Write Addr Path Address
-output  reg [7:0]                   o_awlen,        //Write Addr Path Burst Length
+output      [7:0]                   o_awlen,        //Write Addr Path Burst Length
 output      [2:0]                   o_awsize,       //Write Addr Path Burst Size (Byte with (00 = 8 bits wide, 01 = 16 bits wide)
 output      [1:0]                   o_awburst,      //Write Addr Path Burst Type
                                                         //  0 = Fixed
@@ -133,9 +142,9 @@ input                               i_awready,      //Write Addr Path Slave Read
 
 //bus write data
 output  reg [3:0]                   o_wid,          //Write ID
-output      [AXI_AXI_DATA_WIDTH - 1: 0] o_wdata,        //Write Data (this size is set with the AXI_AXI_DATA_WIDTH Parameter
+output      [AXI_DATA_WIDTH - 1: 0] o_wdata,        //Write Data (this size is set with the AXI_DATA_WIDTH Parameter
                                                       //Valid values are: 8, 16, 32, 64, 128, 256, 512, 1024
-output  reg [AXI_AXI_DATA_WIDTH >> 3:0] o_wstrobe,      //Write Strobe (a 1 in the write is associated with the byte to write)
+output      [AXI_STROBE_WIDTH - 1:0]o_wstrobe,      //Write Strobe (a 1 in the write is associated with the byte to write)
 output                              o_wlast,        //Write Last transfer in a write burst
 output                              o_wvalid,       //Data through this bus is valid
 input                               i_wready,       //Slave is ready for data
@@ -155,7 +164,7 @@ output  reg                         o_bready,       //WBM Ready
 //bus read addr path
 output  reg  [3:0]                  o_arid,         //Read ID
 output       [AXI_ADDR_WIDTH - 1:0] o_araddr,       //Read Addr Path Address
-output  reg  [7:0]                  o_arlen,        //Read Addr Path Burst Length
+output       [7:0]                  o_arlen,        //Read Addr Path Burst Length
 output  reg  [2:0]                  o_arsize,       //Read Addr Path Burst Size (Byte with (00 = 8 bits wide, 01 = 16 bits wide)
 output       [1:0]                  o_arburst,      //Read Addr Path Burst Type
 output       [1:0]                  o_arlock,       //Read Addr Path Lock (atomic) information
@@ -167,14 +176,14 @@ input                               i_arready,      //Read Addr Path Slave Ready
                                                         //  0 = Slave Not Ready
 //bus read data
 input       [3:0]                   i_rid,          //Write ID
-input       [AXI_AXI_DATA_WIDTH - 1: 0] i_rdata,        //Read Data (this size is set with the AXI_AXI_DATA_WIDTH Parameter
+input       [AXI_DATA_WIDTH - 1: 0] i_rdata,        //Read Data (this size is set with the AXI_DATA_WIDTH Parameter
                                                     //Valid values are: 8, 16, 32, 64, 128, 256, 512, 1024
 input       [1:0]                   i_rresp,        //Read Response
                                                         //  0 = OKAY
                                                         //  1 = EXOKAY
                                                         //  2 = SLVERR
                                                         //  3 = DECERR
-input       [AXI_AXI_DATA_WIDTH >> 3:0] i_rstrobe,      //Read Strobe (a 1 in the write is associated with the byte to write)
+input       [AXI_STROBE_WIDTH - 1:0]i_rstrobe,      //Read Strobe (a 1 in the write is associated with the byte to write)
 input                               i_rlast,        //Read Last transfer in a write burst
 input                               i_rvalid,       //Data through this bus is valid
 //output  reg                         o_rready,       //WBM is ready for data
@@ -206,11 +215,79 @@ localparam        SEND_INTERRUPT        = 5'h8;
 wire                            w_axi_rst;
 reg   [3:0]                     state = IDLE;
 wire  [15:0]                    w_flags;
-reg   [MAX_PACKET_WIDTH - 1: 0] r_data_count;
+reg   [AXI_DATA_COUNT - 1: 0]   r_data_count;
 reg   [AXI_ADDR_WIDTH - 1:0]    r_addr;
-reg   [7:0]                     r_byte_data_len; 
+reg   [7:0]                     r_byte_data_len;
+reg                             r_data_wr_en;
+reg                             r_data_rd_en;
+wire                            w_a2b_ack;
+wire                            w_b2a_ack;
+
+wire  [BRAM_DATA_WIDTH - 1:0]   w_bram_ingress_data;
+wire  [BRAM_ADDR_WIDTH - 1:0]   w_bram_ingress_addr;
+wire                            w_bram_ingress_wea;
+
+wire                            w_bram_egress_wea;
+wire  [BRAM_DATA_WIDTH - 1:0]   w_bram_egress_data;
+wire  [BRAM_ADDR_WIDTH - 1:0]   w_bram_egress_addr;
+
+reg   [INTERRUPT_WIDTH - 1:0]   r_prev_int = 0;
+reg                             r_bad_command = 0;
+reg                             r_bus_status;
+reg                             r_bad_txrx_width;
+
 
 //submodules
+bram_to_axis #(
+  .BRAM_DATA_WIDTH       (BRAM_DATA_WIDTH         ),
+  .BRAM_ADDR_WIDTH       (BRAM_ADDR_WIDTH         ),
+  .AXI_DATA_WIDTH        (AXI_DATA_WIDTH          ),
+  .AXI_MAX_BURST_LENGTH  (AXI_MAX_BURST_LENGTH    )
+) b2a (
+  .clk                   (i_axi_clk               ),
+  .rst                   (i_axi_rst               ),
+
+  .i_byte_write_size     (i_cmd_data_byte_count   ),
+  .i_en                  (r_data_wr_en            ),
+  .o_ack                 (w_b2a_ack               ),
+
+//  .i_bram_data_valid     (i_bram_data_valid       ),
+  .i_bram_data           (w_bram_ingress_data     ),
+  .o_bram_addr           (w_bram_ingress_addr     ),
+//  .i_bram_size           (i_bram_size             ),
+
+  .o_axis_valid          (o_wvalid                ),
+  .i_axis_ready          (i_wready                ),
+  .o_axis_data           (o_wdata                 ),
+  .o_axis_strobe         (o_wstrobe               )
+);
+
+axis_to_bram #(
+  .BRAM_DATA_WIDTH       (BRAM_DATA_WIDTH         ),
+  .BRAM_ADDR_WIDTH       (BRAM_ADDR_WIDTH         ),
+  .AXI_DATA_WIDTH        (AXI_DATA_WIDTH          ),
+  .AXI_STROBE_WIDTH      (AXI_STROBE_WIDTH        ),
+  .AXI_MAX_BURST_LENGTH  (AXI_MAX_BURST_LENGTH    )
+) a2b (
+  .clk                   (i_axi_clk               ),
+  .rst                   (i_axi_clk               ),
+
+  .i_byte_read_size      (i_cmd_data_byte_count   ),
+  .i_en                  (r_data_rd_en            ),
+  .o_ack                 (w_a2b_ack               ),
+
+//  .i_bram_size           (i_bram_size             ),
+  .o_bram_data           (w_bram_egress_data      ),
+  .o_bram_addr           (w_bram_egress_addr      ),
+  .o_bram_wea            (w_bram_egress_wea       ),
+
+  .i_axis_valid          (i_rvalid                ),
+  .o_axis_ready          (o_rready                ),
+  .i_axis_data           (i_rdata                 ),
+  .i_axis_strobe         (i_rstrobe               )
+
+);
+
 //asynchronous logic
 assign  w_axi_rst = (INVERT_AXI_RESET) ? !i_axi_rst : i_axi_rst;
 
@@ -246,6 +323,46 @@ assign  o_araddr  = r_addr;
 assign  o_awlen   = r_byte_data_len;
 assign  o_arlen   = r_byte_data_len;
 
+if (INTERNAL_BRAM) begin
+blk_mem #(
+  .DATA_WIDTH                  (BRAM_DATA_WIDTH             ),
+  .ADDRESS_WIDTH               (BRAM_ADDR_WIDTH             )
+) ingress_bram (
+  .clka                        (i_int_bram_ingress_clk      ),
+  .addra                       (i_int_bram_ingress_addr     ),
+  .dina                        (i_int_bram_ingress_data     ),
+  .wea                         (i_int_bram_ingress_wea      ),
+
+  .clkb                        (i_axi_clk                   ),
+  .addrb                       (w_bram_ingress_addr         ),
+  .doutb                       (w_bram_ingress_data         )
+);
+
+blk_mem #(
+  .DATA_WIDTH                  (BRAM_DATA_WIDTH             ),
+  .ADDRESS_WIDTH               (BRAM_ADDR_WIDTH             )
+) egress_bram (
+  .clka                        (i_axi_clk                   ),
+  .addra                       (w_bram_egress_addr          ),
+  .dina                        (w_bram_egress_data          ),
+  .wea                         (w_bram_egress_wea           ),
+
+  .clkb                        (i_int_bram_egress_clk       ),
+  .addrb                       (i_int_bram_egress_addr      ),
+  .doutb                       (o_int_bram_egress_data      )
+);
+end
+else begin
+
+assign  w_bram_ingress_data     = i_ext_bram_ingress_data;
+assign  o_ext_bram_ingress_addr = w_bram_ingress_addr;
+
+assign  o_ext_bram_egress_wea   = w_bram_egress_wea;
+assign  o_ext_bram_egress_addr  = w_bram_egress_addr;
+assign  o_ext_bram_egress_data  = w_bram_egress_data;
+
+end
+
 //synchronous logic
 always @ (posedge i_axi_clk) begin
   o_cmd_ack             <=  0;
@@ -253,6 +370,14 @@ always @ (posedge i_axi_clk) begin
     r_data_count        <=  0;
     r_addr              <=  0;
     r_byte_data_len     <=  0;
+    r_data_wr_en        <=  0;
+    r_data_rd_en        <=  0;
+    r_bad_command       <=  0;
+    r_bus_status        <=  0;
+    r_bad_txrx_width    <=  0;
+    r_prev_int          <=  0;
+    o_cmd_interrupts    <=  0;
+    o_cmd_error         <=  0;
   end
   else begin
     case (state)
@@ -269,9 +394,9 @@ always @ (posedge i_axi_clk) begin
             state           <=  READ_CMD;
           end
         end
-        else if ((!r_pref_int & i_interrupts) > 0) begin
+        else if ((~r_prev_int & i_interrupts) > 0) begin
           state             <=  SEND_INTERRUPT;
-          r_interrupts      <=  0;
+          o_cmd_interrupts  <=  0;
         end
       end
 
@@ -286,7 +411,11 @@ always @ (posedge i_axi_clk) begin
         end
       end
       WRITE_DATA: begin
-        //XXX: Write Data
+        r_data_wr_en        <=  1;
+        if (w_b2a_ack) begin
+          r_data_wr_en      <=  0;
+          state             <=  WRITE_RESP;
+        end
       end
       WRITE_RESP: begin
         o_bready            <=  1;
@@ -295,7 +424,7 @@ always @ (posedge i_axi_clk) begin
           if (r_bus_status != 0) begin
             o_cmd_error     <=  1;
           end
-          state             <=  IDLE;
+          state             <=  COMMAND_FINISHED;
         end
       end
 
@@ -310,6 +439,11 @@ always @ (posedge i_axi_clk) begin
       end
       READ_DATA: begin
         if (i_rid == o_arid) begin
+          r_data_rd_en      <=  1;
+          if (w_a2b_ack) begin
+            r_data_rd_en    <=  0;
+            state           <=  COMMAND_FINISHED;
+          end
         end
       end
 
@@ -322,8 +456,11 @@ always @ (posedge i_axi_clk) begin
       SEND_INTERRUPT: begin
       end
       default: begin
+        state               <=  IDLE;
       end
     endcase
+
+    r_prev_int  <=  i_interrupts;
   end
 end
 

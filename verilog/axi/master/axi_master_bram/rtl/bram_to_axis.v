@@ -59,46 +59,45 @@ SOFTWARE.
 module bram_to_axis #(
   parameter     BRAM_DATA_WIDTH       = 32,
   parameter     BRAM_ADDR_WIDTH       = 10,
-  parameter     AXIS_DATA_WIDTH       = 32,
-  parameter     AXIS_STROBE_WIDTH     = (AXIS_DATA_WIDTH >> 3),
-  parameter     AXIS_MAX_BURST_LENGTH = 256,
-  parameter     AXIS_BRAM_BYTE_DEPTH  = CLOG2(AXIS_MAX_BURST_LENGTH),
+  parameter     AXI_DATA_WIDTH        = 32,
+  parameter     AXI_STROBE_WIDTH      = (AXI_DATA_WIDTH >> 3),
+  parameter     AXI_MAX_BURST_LENGTH  = 256,
+  parameter     AXI_BRAM_BYTE_DEPTH   = `CLOG2(AXI_MAX_BURST_LENGTH),
   parameter     DECOUPLE_DEPTH        = 4,
   parameter     DECOUPLE_COUNT_SIZE   = 2
 )(
-  input                                       clk,
-  input                                       rst,
+  input                                      clk,
+  input                                      rst,
   //Command
-  input       [AXIS_BRAM_BYTE_DEPTH - 1: 0]   i_byte_write_size,
-  input                                       i_en,
-  output  reg                                 o_ack,
+  input       [AXI_BRAM_BYTE_DEPTH - 1: 0]   i_byte_write_size,
+  input                                      i_en,
+  output  reg                                o_ack,
 
   //BRAM Interface
-  input                                       i_bram_data_valid,
-  input       [BRAM_DATA_WIDTH - 1: 0]        i_bram_data,
-  input       [BRAM_ADDR_WIDTH - 1: 0]        i_bram_size,
-  output  reg [BRAM_ADDR_WIDTH - 1: 0]        o_bram_addr,
+  input                                      i_bram_data_valid,
+  input       [BRAM_DATA_WIDTH - 1: 0]       i_bram_data,
+  input       [BRAM_ADDR_WIDTH - 1: 0]       i_bram_size,
+  output  reg [BRAM_ADDR_WIDTH - 1: 0]       o_bram_addr,
 
   //AXIS Interface
-  output                                      o_axis_valid,
-  input                                       i_axis_ready,
-  output      [AXIS_DATA_WIDTH - 1: 0]        o_axis_data,
-  output      [AXIS_STROBE_WIDTH - 1: 0]      o_axis_strobe
+  output                                     o_axis_valid,
+  input                                      i_axis_ready,
+  output      [AXI_DATA_WIDTH - 1: 0]        o_axis_data,
+  output      [AXI_STROBE_WIDTH - 1: 0]      o_axis_strobe
 );
 
-localparam                        AXIS_BYTE_WIDTH = CLOG2(AXIS_DATA_WIDTH);
-localparam                        BRAM_BYTE_WIDTH = CLOG2(BRAM_DATA_WIDTH);
 //local parameters
-localparam                        IDLE        = 0;
-localparam                        BRAM_START  = 1;
-localparam                        BRAM_DELAY  = 2;
-localparam                        BRAM_READ   = 3;
-localparam                        BRAM_FIN    = 4;
+localparam                          AXI_BYTE_WIDTH  = `CLOG2(AXI_DATA_WIDTH);
+localparam                          BRAM_BYTE_WIDTH = `CLOG2(BRAM_DATA_WIDTH);
+localparam                          IDLE        = 0;
+localparam                          BRAM_START  = 1;
+localparam                          BRAM_DELAY  = 2;
+localparam                          BRAM_READ   = 3;
+localparam                          BRAM_FIN    = 4;
 //registes/wires
-reg [3:0]                         state;
+reg [3:0]                           state;
 
-reg   [AXIS_BRAM_BYTE_DEPTH - 1: 0] r_byte_count;
-wire  [AXIS_BRAM_BYTE_DEPTH - 1: 0] w_byte_count_next;
+reg   [AXI_BRAM_BYTE_DEPTH - 1: 0] r_byte_count;
 //Account for byte sizes for 4096
 wire  [9: 0]                        w_bram_inc;
 wire  [9: 0]                        w_axis_inc;
@@ -106,41 +105,40 @@ wire  [9: 0]                        w_axis_inc;
 //submodules
 //asynchronous logic
 assign  w_bram_inc    = BRAM_BYTE_WIDTH;
-assign  w_axis_inc    = AXIS_BYTE_WIDTH;
-assign  w_fifo_enable = (state != IDLE) && (w_full || (state == BRAM_FIN)); //XXX: Not sure if this is going to work
-//assign  w_byte_count_next = (r_byte_count + w_axis_inc);
+assign  w_axis_inc    = AXI_BYTE_WIDTH;
 //synchronous logic
 
 integer i;
 integer j;
 
-`define FIFO_DATA_SECTION   AXIS_STROBE_WIDTH + AXIS_DATA_WIDTH -1: AXIS_STROBE_WIDTH
-`define FIFO_STROBE_SECTION AXIS_STROBE_WIDTH - 1: 0
+`define FIFO_DATA_SECTION   AXI_STROBE_WIDTH + AXI_DATA_WIDTH -1: AXI_STROBE_WIDTH
+`define FIFO_STROBE_SECTION AXI_STROBE_WIDTH - 1: 0
 
 /*****************************************************************************/
-if (BRAM_DATA_WIDTH == AXIS_DATA_WIDTH) begin
+if (BRAM_DATA_WIDTH == AXI_DATA_WIDTH) begin
 //Need a FIFO for the decoupled depth
 reg [DECOUPLE_COUNT_SIZE - 1: 0]    r_start;
 reg [DECOUPLE_COUNT_SIZE - 1: 0]    r_end;
-reg [(AXIS_DATA_WIDTH + BRAM_BYTE_WIDTH) - 1: 0]        r_axis_fifo[0:DECOUPLE_DEPTH - 1];
+reg [(AXI_DATA_WIDTH + BRAM_BYTE_WIDTH) - 1: 0]        r_axis_fifo[0:DECOUPLE_DEPTH - 1];
 wire                                w_empty;
 wire                                w_full;
 wire                                w_almost_full;
 wire                                w_last;
-wire  [AXIS_DATA_WIDTH - 1: 0]      w_current_data;
-
+wire  [AXI_DATA_WIDTH - 1: 0]       w_current_data;
+reg   [AXI_BYTE_WIDTH - 1: 0]       r_axis_strobe;
 wire                                w_fifo_enable;
-reg   [AXIS_BYTE_WIDTH - 1: 0]      r_axis_strobe;
 
-assign  w_empty       = (w_start == w_end);
-assign  w_full        = (w_end == (1 << DECOUPLE_COUNT_SIZE) - 1) ? (w_start == 0) : ((w_end + 1) == w_start);
-assign  w_almost_full = (w_end == (1 << DECOUPLE_COUNT_SIZE) - 2) ? (w_start == 0) : (w_end == (1 << DECOUPLE_COUNT_SIZE) - 1);
-assign  w_last        = (w_start == (1 << DECOUPLE_COUNT_SIZE) - 1) ? (w_end == 0) : ((w_start + 1) == w_end);
+assign  w_fifo_enable = (state != IDLE) && (w_full || (state == BRAM_FIN)); //XXX: Not sure if this is going to work
+assign  w_empty       = (r_start == r_end);
+assign  w_full        = (r_end == (1 << DECOUPLE_COUNT_SIZE) - 1) ? (r_start == 0) : ((r_end + 1) == r_start);
+assign  w_almost_full = (r_end == (1 << DECOUPLE_COUNT_SIZE) - 2) ? (r_start == 0) : (r_end == (1 << DECOUPLE_COUNT_SIZE) - 1);
+assign  w_last        = (r_start == (1 << DECOUPLE_COUNT_SIZE) - 1) ? (r_end == 0) : ((r_start + 1) == r_end);
 assign  o_axis_valid  = !w_empty && w_fifo_enable;
 
 
-assign  o_axis_data   = r_axis_fifo[w_start][FIFO_DATA_SECTION];
-assign  o_axis_strobe = r_axis_fifo[w_start][FIFO_STROBE_SECTION];
+assign  o_axis_data   = r_axis_fifo[r_start][`FIFO_DATA_SECTION];
+assign  o_axis_strobe = r_axis_fifo[r_start][`FIFO_STROBE_SECTION];
+
 always @ (posedge clk) begin
   o_ack               <=  0;
   if (rst) begin
@@ -150,7 +148,7 @@ always @ (posedge clk) begin
     r_byte_count      <=  0;
     o_bram_addr       <=  0;
     state             <=  IDLE;
-    r_axis_strobe     <=  (AXIS_BYTE_WIDTH - 1);
+    r_axis_strobe     <=  (AXI_BYTE_WIDTH - 1);
   end
   else begin
     case (state)
@@ -169,16 +167,16 @@ always @ (posedge clk) begin
           r_end         <=  r_end + 1;
           o_bram_addr   <=  o_bram_addr + 1;
           r_byte_count  <=  r_byte_count + w_axis_inc;
-          r_axis_fifo[w_end][FIFO_DATA_SECTION]   <=  i_bram_data;
-          r_axis_fifo[w_end][FIFO_STROBE_SECTION] <=  (AXIS_BYTE_WIDTH - 1);
+          r_axis_fifo[r_end][`FIFO_DATA_SECTION]   <=  i_bram_data;
+          r_axis_fifo[r_end][`FIFO_STROBE_SECTION] <=  (AXI_BYTE_WIDTH - 1);
           if ((r_byte_count + w_axis_inc) >= i_byte_write_size) begin
             state       <=  BRAM_FIN;
             if (r_byte_count + w_axis_inc > i_byte_write_size) begin
-              for (i = 0; i < AXIS_BYTE_WIDTH; i = i + 1) begin
+              for (i = 0; i < AXI_BYTE_WIDTH; i = i + 1) begin
                 if ((r_byte_count + w_axis_inc + i) > i_byte_write_size)
-                  r_axis_fifo[w_start][i] <= 0;
+                  r_axis_fifo[r_start][i] <= 0;
                 else
-                  r_axis_fifo[w_start][i] <= 1;
+                  r_axis_fifo[r_start][i] <= 1;
               end
             end
           end
@@ -217,61 +215,123 @@ always @ (posedge clk) begin
           if ((r_byte_count + w_axis_inc) == i_byte_write_size) begin
             state       <=  BRAM_FIN;
           end
-          else if ((r_byte_count + r_axis_inc) > i_byte_write_size) begin
-            for (j = 0; j < AXIS_BYTE_WIDTH; j = j + 1) begin
+          else if ((r_byte_count + w_axis_inc) > i_byte_write_size) begin
+            for (j = 0; j < AXI_BYTE_WIDTH; j = j + 1) begin
               if ((r_byte_count + w_axis_inc + j) > i_byte_write_size)
-                r_axis_fifo[w_start][j] <= 0;
+                r_axis_fifo[r_start][j] <= 0;
               else
-                r_axis_fifo[w_start][j] <= 1;
+                r_axis_fifo[r_start][j] <= 1;
             end
           end
 
-          r_axis_byte_count <=  r_axis_byte_count + w_axis_inc;
+          r_byte_count  <=  r_byte_count + w_axis_inc;
           o_bram_addr   <=  o_bram_addr + 1;
-          o_end         <=  o_end + 1;
-          r_axis_fifo[w_end][FIFO_DATA_SECTION]   <=  i_bram_data;
-          r_axis_fifo[w_end][FIFO_STROBE_SECTION] <=  (AXIS_BYTE_WIDTH - 1);
+          r_end         <=  r_end + 1;
+          r_axis_fifo[r_end][`FIFO_DATA_SECTION]   <=  i_bram_data;
+          r_axis_fifo[r_end][`FIFO_STROBE_SECTION] <=  (AXI_BYTE_WIDTH - 1);
         end
       end
       BRAM_FIN: begin
-        o_axk         <=  1;
-        if (!i_ack) begin
+        o_ack         <=  1;
+        if (!o_ack) begin
           state       <=  IDLE;
         end
       end
     endcase
   end
 end
-
 end
+
+
 /*****************************************************************************/
-else if (BRAM_DATA_WIDTH < AXIS_DATA_WIDTH) begin
-reg   [AXIS_DATA_WIDTH - 1: 0]        o_axis_data;
-reg   [AXIS_DATA_WIDTH - 1: 0]        r_axis_data;
+else if (BRAM_DATA_WIDTH < AXI_DATA_WIDTH) begin
+
+localparam  AXI_DIV           = AXI_DATA_WIDTH / BRAM_DATA_WIDTH;
+localparam  BRAM_STROBE_WIDTH = BRAM_DATA_WIDTH >> 3;
+
+reg   [AXI_DATA_WIDTH - 1: 0]        o_axis_data;
+reg   [AXI_STROBE_WIDTH - 1: 0]      o_axis_strobe;
+
+wire  [AXI_DATA_WIDTH - 1: 0]        w_axis_data;
+wire  [AXI_STROBE_WIDTH - 1: 0]      w_axis_strobe;
+
+reg   [AXI_DIV - 1: 0]               r_ab_count;
+reg   [BRAM_DATA_WIDTH - 1: 0]       r_ab_data[0:AXI_DIV];
+reg   [BRAM_STROBE_WIDTH - 1: 0]     r_ab_strobe[0:AXI_DIV];
+
+reg                                  o_axis_valid;
+
+
+genvar ge;
+for (ge = 0; ge < AXI_DIV; ge = ge + 1) begin : GV_AXIS_DATA
+  assign w_axis_data  [((ge + 1) * BRAM_DATA_WIDTH)   - 1:(ge * BRAM_DATA_WIDTH)  ] = r_ab_data[ge];
+  assign w_axis_strobe[((ge + 1) * BRAM_STROBE_WIDTH) - 1:(ge * BRAM_STROBE_WIDTH)] = r_ab_strobe[ge];
+end
 
 always @ (posedge clk) begin
   o_ack               <=  0;
   if (rst) begin
-    r_start           <=  0;
-    r_end             <=  0;
-
-    r_byte_count      <=  0;
-    o_bram_addr       <=  0;
     state             <=  IDLE;
+    r_byte_count      <=  0;
+    r_ab_count        <=  0;
+    o_bram_addr       <=  0;
 
-    o_axis_data       <=  0;
-    r_axis_data       <=  0;  //Work In Progress Register
-    o_axis_strobe     <=  (AXIS_STROBE_WIDTH - 1);
+    o_axis_data       <=  0;  //Work In Progress Register
+    o_axis_strobe     <=  (AXI_STROBE_WIDTH - 1);
+    o_axis_valid      <=  0;
   end
   else begin
     case (state)
       IDLE: begin
+        if (i_en) begin
+          o_bram_addr <=  0;
+          r_byte_count<=  0;
+          r_ab_count  <=  0;
+          state       <=  BRAM_START;
+        end
       end
       BRAM_START: begin
+        if (r_byte_count >= i_byte_write_size) begin
+          state                   <= BRAM_FIN;
+        end
+        else if (!o_axis_valid || (r_ab_count < AXI_DIV)) begin
+          o_bram_addr             <= o_bram_addr + 1;
+          r_ab_count              <= r_ab_count + 1;
+          r_byte_count            <= r_byte_count + w_bram_inc;
+          r_ab_data[r_ab_count]   <= i_bram_data;
+          r_ab_strobe[r_ab_count] <= (BRAM_STROBE_WIDTH - 1);
+          if ((r_byte_count + r_bram_inc) >= i_byte_write_size) begin
+            state                 <= BRAM_FIN;
+          end
+          else begin
+            state                 <= BRAM_DELAY;
+          end
+        end
+      end
+      BRAM_DELAY: begin
+        state                   <= BRAM_READ;
+      end
+      BRAM_READ: begin
+        if (r_byte_count >= i_byte_write_size) begin
+          state                   <= BRAM_FIN;
+        end
+        else if (!o_axis_valid || (r_ab_count < AXI_DIV)) begin
+          o_bram_addr             <= o_bram_addr + 1;
+          r_ab_count              <= r_ab_count + 1;
+          r_byte_count            <= r_byte_count + w_bram_inc;
+          r_ab_data[r_ab_count]   <= i_bram_data;
+          r_ab_strobe[r_ab_count] <= (BRAM_STROBE_WIDTH - 1);
+          if (r_byte_count + r_bram_inc >= i_byte_write_size) begin
+            state                 <= BRAM_FIN;
+          end
+          else if ((r_ab_count + 1) >= AXI_DIV) begin
+            state                 <= BRAM_START;
+          end
+        end
       end
       BRAM_FIN: begin
-        o_axk         <=  1;
-        if (!i_ack) begin
+        o_ack         <=  1;
+        if (!o_ack) begin
           state       <=  IDLE;
         end
       end
@@ -279,35 +339,47 @@ always @ (posedge clk) begin
         state         <=  IDLE;
       end
     endcase
+
+    if (i_axis_ready && o_axis_valid) begin
+      o_axis_valid    <=  0;
+    end
+
+    if (r_ab_count >= AXI_DIV) begin
+      r_ab_count      <=  0;
+      o_axis_data     <=  w_axis_data;
+      o_axis_strobe   <=  w_axis_strobe;
+      for (i = 0; i < AXI_DIV; i = i + 1) begin
+        r_ab_strobe[i]<=  0;
+      end
+      o_axis_valid    <=  1;
+    end
   end
 end
 
 end
 
 /*****************************************************************************/
-else begin //BRAM_DATA_WIDTH > AXIS_DATA_WIDTH
+else begin //BRAM_DATA_WIDTH > AXI_DATA_WIDTH
 /*
  Because the AXIS pipe is smaller than the BRAM pipe I don't
  Need to be worried about BRAM delay
  */
-localparam                            BRAM_DIV = (BRAM_DATA_WIDTH / AXIS_DATA_WIDTH);
-reg   [AXIS_DATA_WIDTH - 1: 0]        o_axis_data;
+localparam                            BRAM_DIV = (BRAM_DATA_WIDTH / AXI_DATA_WIDTH);
+reg   [AXI_DATA_WIDTH - 1: 0]        o_axis_data;
 reg                                   o_axis_valid;
 reg   [9:0]                           r_b2a_count;
-wire  [AXIS_DATA_WIDTH - 1: 0]        w_bram_block_data[0: BRAM_DIV - 1];
+wire  [AXI_DATA_WIDTH - 1: 0]        w_bram_block_data[0: BRAM_DIV - 1];
 wire                                  w_axis_active;
-reg   [AXIS_DATA_WIDTH - 1: 0]        r_axis_data;
+reg   [AXI_DATA_WIDTH - 1: 0]        r_axis_data;
 
 
 assign                                w_axis_active = (i_axis_ready && o_axis_valid);
 
 //This will make it easier to select blocks out of
 genvar gv;
-generate
 for (gv = 0; gv < BRAM_DIV; gv = gv + 1) begin : BRAM_DIV_LOOP
-assign  w_bram_block_data[gv] = i_bram_data[(gv * AXIS_DATA_WIDTH) + (AXIS_DATA_WIDTH) - 1 : (gv * AXIS_DATA_WIDTH)];
+assign  w_bram_block_data[gv] = i_bram_data[(gv * AXI_DATA_WIDTH) + (AXI_DATA_WIDTH) - 1 : (gv * AXI_DATA_WIDTH)];
 end
-endgenerate
 
 reg r_axis_strobe;
 
@@ -326,7 +398,7 @@ always @ (posedge clk) begin
     o_axis_data       <=  0;
     r_b2a_count       <=  0;
     r_axis_data       <=  0;
-    r_axis_strobe     <=  (AXIS_STROBE_WIDTH - 1);
+    r_axis_strobe     <=  (AXI_STROBE_WIDTH - 1);
   end
   else begin
     if (w_axis_active) begin
@@ -337,7 +409,7 @@ always @ (posedge clk) begin
         r_byte_count  <=  0;
         r_b2a_count   <=  0;
         o_bram_addr   <=  0;
-        r_axis_strobe  <=  (AXIS_STROBE_WIDTH - 1);
+        r_axis_strobe  <=  (AXI_STROBE_WIDTH - 1);
         if (i_en && (i_byte_write_size > 0)) begin
           state       <=  BRAM_READ;
         end
@@ -355,10 +427,10 @@ always @ (posedge clk) begin
           if ((r_byte_count + w_axis_inc) > i_byte_write_size) begin
             //Unaligned transfer
             //Modify the strobes
-            for (i = 0; i < AXIS_BYTE_WIDTH; i = i + 1) begin 
+            for (i = 0; i < AXI_BYTE_WIDTH; i = i + 1) begin 
               if ((r_byte_count + w_axis_inc + i) > i_byte_write_size)
                 r_axis_strobe[i]  <=  0;
-              else begin
+              else
                 r_axis_strobe[i]  <=  1;
             end
             state       <=  BRAM_FIN;
@@ -371,7 +443,7 @@ always @ (posedge clk) begin
               //We are at the last element of the BRAM data
               state       <=  BRAM_DELAY;
               o_bram_addr <=  o_bram_addr + 1;
-              r_b2a_count <=  r_b2a_count = 0;
+              r_b2a_count <=  0;
             end
             else begin
               r_b2a_count <=  r_b2a_count + 1;
@@ -380,8 +452,8 @@ always @ (posedge clk) begin
         end
       end
       BRAM_FIN: begin
-        o_axk         <=  1;
-        if (!i_ack) begin
+        o_ack         <=  1;
+        if (!o_ack) begin
           state       <=  IDLE;
         end
       end
