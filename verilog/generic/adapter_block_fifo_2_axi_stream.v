@@ -39,7 +39,8 @@ module adapter_block_fifo_2_axi_stream #(
   parameter                                     DATA_WIDTH          = 24,
   parameter                                     STROBE_WIDTH        = DATA_WIDTH / 8,
   parameter                                     USE_KEEP            = 0,
-  parameter                                     USER_IN_DATA   = 1
+  parameter                                     USER_IN_DATA        = 1,
+  parameter                                     USER_DATA_WIDTH     = 4
 )(
   input                                         rst,
 
@@ -49,12 +50,12 @@ module adapter_block_fifo_2_axi_stream #(
   input       [23:0]                            i_block_fifo_size,
   input       [(DATA_WIDTH + 1) - 1:0]          i_block_fifo_data,
   output                                        o_block_fifo_stb,
-  input       [3:0]                             i_axi_user,
+  input       [USER_DATA_WIDTH - 1:0]           i_axi_user,
 
   //AXI Stream Output
 
   input                                         i_axi_clk,
-  output      [3:0]                             o_axi_user,
+  output      [USER_DATA_WIDTH - 1:0]           o_axi_user,
   input                                         i_axi_ready,
   output      [DATA_WIDTH - 1:0]                o_axi_data,
   output                                        o_axi_last,
@@ -79,7 +80,9 @@ assign  o_block_fifo_stb= (i_axi_ready & o_axi_valid);
 
 if (USER_IN_DATA) begin
   assign  o_axi_user[0]   = (r_count < i_block_fifo_size) ? i_block_fifo_data[DATA_WIDTH] : 1'b0;
-  assign  o_axi_user[3:1] = 3'h0;
+  if (USER_DATA_WIDTH > 1) begin
+    assign  o_axi_user[USER_DATA_WIDTH - 1:1] = 0;
+  end
 end
 else begin
   assign  o_axi_user      = i_axi_user;
