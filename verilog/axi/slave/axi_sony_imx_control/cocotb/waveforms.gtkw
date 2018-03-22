@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
-[*] Tue Mar 20 19:11:50 2018
+[*] Thu Mar 22 07:52:21 2018
 [*]
 [dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_sony_imx_control/cocotb/design.vcd"
-[dumpfile_mtime] "Tue Mar 20 19:10:40 2018"
-[dumpfile_size] 34084131
+[dumpfile_mtime] "Thu Mar 22 07:49:49 2018"
+[dumpfile_size] 34070416
 [savefile] "/home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_sony_imx_control/cocotb/waveforms.gtkw"
-[timestart] 46635
-[size] 1920 1137
+[timestart] 46731
+[size] 1920 1027
 [pos] -1 -1
-*-6.023547 46817 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-5.760088 46985 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_cocotb.
 [treeopen] tb_cocotb.dut.
 [treeopen] tb_cocotb.dut.CAMERA[0].
@@ -21,7 +21,7 @@
 [sst_width] 299
 [signals_width] 334
 [sst_expanded] 1
-[sst_vpaned_height] 341
+[sst_vpaned_height] 303
 @28
 [color] 3
 tb_cocotb.clk
@@ -197,7 +197,7 @@ tb_cocotb.dut.CAMERA[0].LANES[0].rtrbuf.i_lvds[7:0]
 -BRAM_TO_FRAME_FIFO
 @2022
 [color] 5
-^1 /home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_sony_imx_control/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_sony_imx_control/cocotb/b2ff_states.txt
+^1 /tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_sony_imx_control/cocotb/../../../../../../../../../tmp/../home/cospan/Projects/nysa-verilog/verilog/axi/slave/axi_sony_imx_control/cocotb/b2ff_states.txt
 tb_cocotb.dut.CAMERA[0].bram2ff.state[3:0]
 @28
 tb_cocotb.dut.CAMERA[0].bram2ff.i_vsync
@@ -211,11 +211,13 @@ tb_cocotb.dut.CAMERA[0].bram2ff.i_bram_size[8:0]
 tb_cocotb.dut.CAMERA[0].bram2ff.i_bram_data_valid
 @200
 -
+@22
+tb_cocotb.dut.CAMERA[0].bram2ff.dstart[2:0]
+@23
+tb_cocotb.dut.CAMERA[0].bram2ff.dend[2:0]
 @28
-tb_cocotb.dut.CAMERA[0].bram2ff.dstart[1:0]
 tb_cocotb.dut.CAMERA[0].bram2ff.dalmost_full
 tb_cocotb.dut.CAMERA[0].bram2ff.dempty
-tb_cocotb.dut.CAMERA[0].bram2ff.dend[1:0]
 tb_cocotb.dut.CAMERA[0].bram2ff.dfull
 tb_cocotb.dut.CAMERA[0].bram2ff.dlast
 @22
@@ -255,11 +257,47 @@ tb_cocotb.dut.CAMERA[0].bram2ff.o_frame_fifo_sof
 tb_cocotb.dut.CAMERA[0].bram2ff.r_frame_fifo_enable
 tb_cocotb.dut.CAMERA[0].bram2ff.o_frame_fifo_ready
 tb_cocotb.dut.CAMERA[0].bram2ff.i_frame_fifo_next_stb
-@29
 tb_cocotb.dut.CAMERA[0].bram2ff.o_frame_fifo_last
 @22
 tb_cocotb.dut.CAMERA[0].bram2ff.r_prev_data[63:0]
 tb_cocotb.dut.CAMERA[0].bram2ff.o_frame_fifo_data[63:0]
+@200
+-
+-
+@22
+tb_cocotb.dut.CAMERA[0].bram2ff.r_hcount[15:0]
+@28
+tb_cocotb.dut.CAMERA[0].bram2ff.i_frame_fifo_next_stb
+@22
+tb_cocotb.dut.CAMERA[0].bram2ff.i_frame_height[15:0]
+tb_cocotb.dut.CAMERA[0].bram2ff.i_frame_width[15:0]
+tb_cocotb.dut.CAMERA[0].bram2ff.i_post_hblank[7:0]
+tb_cocotb.dut.CAMERA[0].bram2ff.i_post_vblank[7:0]
+tb_cocotb.dut.CAMERA[0].bram2ff.i_pre_hblank[7:0]
+tb_cocotb.dut.CAMERA[0].bram2ff.i_pre_vblank[7:0]
+@200
+-
+@22
+tb_cocotb.dut.CAMERA[0].bram2ff.state[3:0]
+@200
+-
+@28
+tb_cocotb.dut.CAMERA[0].bram2ff.w_frame_finished
+tb_cocotb.dut.CAMERA[0].bram2ff.w_hvalid
+tb_cocotb.dut.CAMERA[0].bram2ff.w_vvalid
+@200
+-
+@28
+tb_cocotb.dut.CAMERA[0].bram2ff.w_half_pad
+tb_cocotb.dut.CAMERA[0].bram2ff.w_posedge_vsync
+tb_cocotb.dut.CAMERA[0].bram2ff.w_pre_vpad
+@200
+-
+@28
+tb_cocotb.dut.CAMERA[0].bram2ff.w_pre_hpad
+tb_cocotb.dut.CAMERA[0].bram2ff.w_post_hpad
+@200
+-
 @1000200
 -BRAM_TO_FRAME_FIFO
 @200

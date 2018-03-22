@@ -22,7 +22,8 @@ parameter DATA_WIDTH = 16
   (* KEEP *) output reg           o_data_valid,
   (* KEEP *) output reg  [ADDR_WIDTH - 1:0]  o_data_count,
   input       [ADDR_WIDTH - 1:0]  i_rbuf_addrb,
-  output      [DATA_WIDTH - 1:0]  o_rbuf_doutb
+  output      [DATA_WIDTH - 1:0]  o_rbuf_doutb,
+  output                          o_frame_start
 );
 
 //Local Parameters
@@ -79,24 +80,31 @@ localparam EAV12_VALID   = {12'hFFF, 12'h000, 12'h000, 12'h9D0};
 localparam SAV12_INVALID = {12'hFFF, 12'h000, 12'h000, 12'hAB0};
 localparam EAV12_INVALID = {12'hFFF, 12'h000, 12'h000, 12'hB60};
 
-reg [55:0]               r_lvds_sr;
-reg  [2:0]               r_xhs_sr;
-reg  [2:0]               r_xvs_sr;
-reg                      r_report_align;
-reg  [7:0]               r_mode;
-reg  [ADDR_WIDTH - 1:0]  r_count;
-reg  [ADDR_WIDTH - 1:0]  r_temp_addra;
-reg  [ADDR_WIDTH - 1:0]  r_wbuf_addra;
-reg [47:0]               r_temp_dina;
-reg [47:0]               r_temp_data;
+reg [55:0]                r_lvds_sr;
+reg  [2:0]                r_xhs_sr;
+reg  [2:0]                r_xvs_sr;
+reg                       r_report_align;
+reg  [7:0]                r_mode;
+reg  [ADDR_WIDTH - 1:0]   r_count;
+reg  [ADDR_WIDTH - 1:0]   r_temp_addra;
+reg  [ADDR_WIDTH - 1:0]   r_wbuf_addra;
+reg [47:0]                r_temp_dina;
+reg [47:0]                r_temp_data;
 (* KEEP *) reg [(DATA_WIDTH - 1):0] r_wbuf_data;
-reg                      r_wbuf_wea;
-reg                      r_rbuf_bank;
-reg  [ADDR_WIDTH - 1:0]  r_data_count;
-reg                      r_data_valid;
-(* KEEP *) reg  [3:0]    r_state;
-wire [9:0]               w_data;  //Only for simulation visualization top ten bits
-assign w_data = r_wbuf_data[(DATA_WIDTH - 1):(DATA_WIDTH - 10)];
+reg                       r_wbuf_wea;
+reg                       r_rbuf_bank;
+reg  [ADDR_WIDTH - 1:0]   r_data_count;
+reg                       r_data_valid;
+(* KEEP *) reg  [3:0]     r_state;
+wire [9:0]                w_data;  //Only for simulation visualization top ten bits
+wire [DATA_WIDTH:0]       w_rbuf_doutb;
+reg                       r_frame_start;
+
+
+
+assign w_data         = r_wbuf_data[(DATA_WIDTH - 1):(DATA_WIDTH - 10)];
+assign o_rbuf_doutb   = w_rbuf_doutb[DATA_WIDTH - 1:0];
+assign o_frame_start  = w_rbuf_doutb[DATA_WIDTH];
 
 
 always @(posedge camera_clk)
@@ -122,6 +130,7 @@ always @(posedge camera_clk)
     r_wbuf_wea    <= 0;
     r_state       <= 0;
     r_rbuf_bank   <= 0;
+    r_frame_start <= 0;
 
   end
   else begin
@@ -134,6 +143,10 @@ always @(posedge camera_clk)
       o_report_align  <=  r_report_align;
       r_report_align  <= 0;
     end
+    if (r_xvs_sr == 3'b011) begin
+      r_frame_start   <= 1;
+    end
+
     case (r_state)
       ST_IDLE: begin // 00
         r_mode        <= NO_SYNC;
@@ -298,9 +311,10 @@ always @(posedge camera_clk)
         end
       end
       ST_DATA8_TO_RBUF: begin // 04
-        r_temp_addra     <= r_temp_addra + 1;
+        r_temp_addra      <= r_temp_addra + 1;
         r_wbuf_addra      <= r_temp_addra;
         r_wbuf_wea        <= 1;
+        r_frame_start     <= 0;
         r_wbuf_data[(DATA_WIDTH - (1 + 8)):0] <= 0;
         if (r_count == 0) begin
           r_wbuf_data[(DATA_WIDTH - 1):(DATA_WIDTH - 8)] <= r_temp_dina[31:24];
@@ -372,31 +386,32 @@ always @(posedge camera_clk)
         end
       end
       ST_DATA10_TO_RBUF: begin // 06
-        r_wbuf_wea         <= 1;
+        r_wbuf_wea          <= 1;
+        r_frame_start       <= 0;
         r_wbuf_data[(DATA_WIDTH - (1 + 10)):0] <= 0;
         if (r_count == 0) begin
           r_temp_addra      <= r_temp_addra + 1;
           r_wbuf_addra      <= r_temp_addra;
           r_wbuf_data[(DATA_WIDTH - 1):(DATA_WIDTH - 10)] <= r_temp_dina[39:30];
-          r_temp_data <= {r_temp_data[37:0],r_temp_dina[39:30]};
+          r_temp_data       <= {r_temp_data[37:0],r_temp_dina[39:30]};
         end
         if (r_count == 1) begin
           r_temp_addra      <= r_temp_addra + 1;
           r_wbuf_addra      <= r_temp_addra;
           r_wbuf_data[(DATA_WIDTH - 1):(DATA_WIDTH - 10)] <= r_temp_dina[29:20];
-          r_temp_data <= {r_temp_data[37:0],r_temp_dina[29:20]};
+          r_temp_data       <= {r_temp_data[37:0],r_temp_dina[29:20]};
         end
         if (r_count == 2) begin
           r_temp_addra      <= r_temp_addra + 1;
           r_wbuf_addra      <= r_temp_addra;
           r_wbuf_data[(DATA_WIDTH - 1):(DATA_WIDTH - 10)] <= r_temp_dina[19:10];
-          r_temp_data <= {r_temp_data[37:0],r_temp_dina[19:10]};
+          r_temp_data       <= {r_temp_data[37:0],r_temp_dina[19:10]};
         end
         if (r_count == 3) begin
           r_temp_addra      <= r_temp_addra + 1;
           r_wbuf_addra      <= r_temp_addra;
           r_wbuf_data[(DATA_WIDTH - 1):(DATA_WIDTH - 10)] <= r_temp_dina[9:0];
-          r_temp_data <= {r_temp_data[37:0],r_temp_dina[9:0]};
+          r_temp_data       <= {r_temp_data[37:0],r_temp_dina[9:0]};
         end
 
         if (r_count == 4) begin
@@ -453,6 +468,7 @@ always @(posedge camera_clk)
 
       ST_DATA12_TO_RBUF: begin // 08
         r_wbuf_wea        <= 1;
+        r_frame_start     <= 0;
         if (DATA_WIDTH > 12) begin
           r_wbuf_data[(DATA_WIDTH - (1 + 12)):0] <= 0;
         end
@@ -530,19 +546,19 @@ always @(posedge camera_clk)
 
   blk_mem #
   (
-    .DATA_WIDTH                    (DATA_WIDTH                  ),
+    .DATA_WIDTH                    (DATA_WIDTH + 1              ),
     .ADDRESS_WIDTH                 (ADDR_WIDTH + 1              )
   )
   u_rbuf_mem
   (
     .clka                        (camera_clk                  ),
     .addra                       ({ r_rbuf_bank,r_wbuf_addra} ),
-    .dina                        (r_wbuf_data                 ),
+    .dina                        ({r_frame_start, r_wbuf_data}),
     .wea                         (r_wbuf_wea                  ),
 
     .clkb                        (vdma_clk                    ),
     .addrb                       ({~r_rbuf_bank,i_rbuf_addrb} ),
-    .doutb                       (o_rbuf_doutb                )
+    .doutb                       (w_rbuf_doutb                )
   );
 
 endmodule

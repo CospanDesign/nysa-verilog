@@ -285,6 +285,7 @@ wire  [BRAM_DATA_DEPTH - 1: 0]      w_bram_count        [0: MAX_CAMERA_COUNT - 1
 wire  [BRAM_DATA_DEPTH - 1: 0]      w_bram_addr         [0: MAX_CAMERA_COUNT - 1];
 wire  [BRAM_DATA_WIDTH - 1: 0]      w_bram_data         [0: MAX_CAMERA_COUNT - 1][0: LANE_WIDTH - 1];
 wire  [AXIS_DATA_WIDTH - 1: 0]      w_bram_cam_data     [0: MAX_CAMERA_COUNT - 1];
+wire                                w_bram_frame_start  [0: MAX_CAMERA_COUNT - 1][0: LANE_WIDTH - 1];
 
 
 
@@ -310,6 +311,7 @@ reg   [31:0]                        r_trigger_pulse_count[0:2];
 
 reg   [31:0]                        r_trigger_period;
 reg   [31:0]                        r_trigger_period_count[0:2];
+wire                                w_frame_start;
 
 assign  w_vsync[0]                  = i_cam_0_imx_vs;
 assign  w_vsync[1]                  = i_cam_1_imx_vs;
@@ -434,14 +436,14 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
 
   serdes_descramble serdes_descramble_cam (
     .i_lvds   (w_cam_unaligned [cam_i]    ),
-    .o_lvds0  (w_unaligned_data[cam_i][3] ),
-    .o_lvds1  (w_unaligned_data[cam_i][4] ),
-    .o_lvds2  (w_unaligned_data[cam_i][2] ),
-    .o_lvds3  (w_unaligned_data[cam_i][5] ),
-    .o_lvds4  (w_unaligned_data[cam_i][1] ),
-    .o_lvds5  (w_unaligned_data[cam_i][6] ),
-    .o_lvds6  (w_unaligned_data[cam_i][0] ),
-    .o_lvds7  (w_unaligned_data[cam_i][7] )
+    .o_lvds0  (w_unaligned_data[cam_i][0] ),
+    .o_lvds1  (w_unaligned_data[cam_i][2] ),
+    .o_lvds2  (w_unaligned_data[cam_i][4] ),
+    .o_lvds3  (w_unaligned_data[cam_i][6] ),
+    .o_lvds4  (w_unaligned_data[cam_i][7] ),
+    .o_lvds5  (w_unaligned_data[cam_i][5] ),
+    .o_lvds6  (w_unaligned_data[cam_i][3] ),
+    .o_lvds7  (w_unaligned_data[cam_i][1] )
   );
 
   //LANES: Go through the lanes
@@ -453,6 +455,7 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
     //Map the data valid signals to an array
     assign w_report_align_array[(cam_i * MAX_LANE_WIDTH) + lane_i]  = w_report_align[cam_i][lane_i];
 
+    assign w_frame_start = w_bram_frame_start[0][0];
     //Map the aligned data to the VDMA data bus
     if (AXIS_DATA_WIDTH == 128) begin
       assign w_bram_cam_data[cam_i][(AXIS_DATA_WIDTH - 1) - (BRAM_DATA_WIDTH * lane_i): (AXIS_DATA_WIDTH - 1) - ((BRAM_DATA_WIDTH * (lane_i + 1)) - 1)] = w_bram_data[cam_i][lane_i];
@@ -462,28 +465,27 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
     end
 
     cam_in_to_bram #(
-      .ADDR_WIDTH       (BRAM_DATA_DEPTH                ),
-      .DATA_WIDTH       (BRAM_DATA_WIDTH                )
+      .ADDR_WIDTH       (BRAM_DATA_DEPTH                  ),
+      .DATA_WIDTH       (BRAM_DATA_WIDTH                  )
 
       ) rtrbuf (
 
-      .camera_clk       (w_cam_clk[cam_i]               ),
-      .rst              (w_cam_sync_rst[cam_i]          ),
-      .vdma_clk         (i_vdma_clk                     ),
+      .camera_clk       (w_cam_clk[cam_i]                 ),
+      .rst              (w_cam_sync_rst[cam_i]            ),
+      .vdma_clk         (i_vdma_clk                       ),
 
-      .i_xvs            (w_vsync[cam_i]                 ),
-      .i_xhs            (w_hsync[cam_i]                 ),
-      .i_lvds           (w_unaligned_data[cam_i][lane_i]),
+      .i_xvs            (w_vsync[cam_i]                   ),
+      .i_xhs            (w_hsync[cam_i]                   ),
+      .i_lvds           (w_unaligned_data[cam_i][lane_i]  ),
 //      .o_mode           (), //XXX
-      .o_report_align   (w_report_align[cam_i][lane_i]  ),
-      .o_data_valid     (w_lane_data_valid[cam_i][lane_i]   ),
-      .o_data_count     (w_bram_count[cam_i][lane_i]    ),
-      .i_rbuf_addrb     (w_bram_addr[cam_i]             ),  //XXX
-      .o_rbuf_doutb     (w_bram_data[cam_i][lane_i]     )
+      .o_report_align   (w_report_align[cam_i][lane_i]    ),
+      .o_data_valid     (w_lane_data_valid[cam_i][lane_i] ),
+      .o_data_count     (w_bram_count[cam_i][lane_i]      ),
+      .i_rbuf_addrb     (w_bram_addr[cam_i]               ),  //XXX
+      .o_rbuf_doutb     (w_bram_data[cam_i][lane_i]       ),
+      .o_frame_start    (w_bram_frame_start[cam_i][lane_i])
     );
-
   end
-
 
   bram_to_frame_fifo #(
     .AXIS_DATA_WIDTH  (AXIS_DATA_WIDTH                    ),
@@ -502,11 +504,12 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
 
     .i_vsync                (w_vsync[cam_i]               ),
 
+    .i_bram_frame_start     (w_frame_start                ),
     .i_bram_data_valid      (w_cam_data_valid[cam_i]      ),
     .i_bram_size            (w_bram_count[cam_i][0]       ),
     .o_bram_addr            (w_bram_addr[cam_i]           ),
     .i_bram_data            (w_bram_cam_data[cam_i]       ),
-                                                          
+
     .o_frame_fifo_ready     (w_frame_fifo_ready[cam_i]    ),
     .i_frame_fifo_next_stb  (w_frame_fifo_next_stb[cam_i] ),
     .o_frame_fifo_sof       (w_frame_fifo_sof[cam_i]      ),

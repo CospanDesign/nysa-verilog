@@ -55,14 +55,14 @@ end
 always @ (posedge clka)
 begin
   if ( wea ) begin
-     mem[addra] <= dina;
+     mem[addra] <= #1 dina;
   end
 end
 
 //read only on the b side
 always @ (posedge clkb)
 begin
-     dout <= mem[addrb];
+     dout <= #1 mem[addrb];
 end
 
 
