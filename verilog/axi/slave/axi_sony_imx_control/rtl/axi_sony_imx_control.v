@@ -62,7 +62,10 @@ module axi_sony_imx_control #(
 
   parameter AXI_STROBE_WIDTH    = (AXI_DATA_WIDTH / 8),
   parameter INVERT_AXI_RESET    = 1,
-  parameter INVERT_VDMA_RESET   = 1
+  parameter INVERT_VDMA_RESET   = 1,
+  parameter CAM0_LVDS_INVERT_MAP= 8'b00000000,
+  parameter CAM1_LVDS_INVERT_MAP= 8'b00001000,
+  parameter CAM2_LVDS_INVERT_MAP= 8'b00100000
 )(
   input                                       i_axi_clk,
   input                                       i_axi_rst,
@@ -433,18 +436,54 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
   //  assign w_vdma_axis_valid[cam_i]   = (w_lane_data_valid[cam_i] == ((1 << LANE_WIDTH) - 1) && (w_bram_addr[cam_i] < w_bram_count[cam_i][0]));
   assign w_cam_data_valid[cam_i]    = (w_lane_data_valid[cam_i] == ((1 << LANE_WIDTH) - 1));
   assign w_vdma_active[cam_i]       = (w_vdma_axis_valid[cam_i] && w_vdma_axis_ready[cam_i]);
+  if (cam_i == 0) begin
+    serdes_descramble #(
+      .INVERT_MAP (CAM0_LVDS_INVERT_MAP       )
+    )serdes_descramble_cam (
+      .i_lvds     (w_cam_unaligned [cam_i]    ),
+      .o_lvds0    (w_unaligned_data[cam_i][0] ),
+      .o_lvds1    (w_unaligned_data[cam_i][2] ),
+      .o_lvds2    (w_unaligned_data[cam_i][4] ),
+      .o_lvds3    (w_unaligned_data[cam_i][6] ),
+      .o_lvds4    (w_unaligned_data[cam_i][7] ),
+      .o_lvds5    (w_unaligned_data[cam_i][5] ),
+      .o_lvds6    (w_unaligned_data[cam_i][3] ),
+      .o_lvds7    (w_unaligned_data[cam_i][1] )
+    );
+  end
+  if (cam_i == 1) begin
+    serdes_descramble #(
+      .INVERT_MAP (CAM1_LVDS_INVERT_MAP       )
+    )serdes_descramble_cam (
+      .i_lvds     (w_cam_unaligned [cam_i]    ),
+      .o_lvds0    (w_unaligned_data[cam_i][0] ),
+      .o_lvds1    (w_unaligned_data[cam_i][2] ),
+      .o_lvds2    (w_unaligned_data[cam_i][4] ),
+      .o_lvds3    (w_unaligned_data[cam_i][6] ),
+      .o_lvds4    (w_unaligned_data[cam_i][7] ),
+      .o_lvds5    (w_unaligned_data[cam_i][5] ),
+      .o_lvds6    (w_unaligned_data[cam_i][3] ),
+      .o_lvds7    (w_unaligned_data[cam_i][1] )
+    );
+  end
+  if (cam_i == 2) begin
+    serdes_descramble #(
+      .INVERT_MAP (CAM2_LVDS_INVERT_MAP       )
+    )serdes_descramble_cam (
+      .i_lvds     (w_cam_unaligned [cam_i]    ),
+      .o_lvds0    (w_unaligned_data[cam_i][0] ),
+      .o_lvds1    (w_unaligned_data[cam_i][2] ),
+      .o_lvds2    (w_unaligned_data[cam_i][4] ),
+      .o_lvds3    (w_unaligned_data[cam_i][6] ),
+      .o_lvds4    (w_unaligned_data[cam_i][7] ),
+      .o_lvds5    (w_unaligned_data[cam_i][5] ),
+      .o_lvds6    (w_unaligned_data[cam_i][3] ),
+      .o_lvds7    (w_unaligned_data[cam_i][1] )
+    );
+  end
 
-  serdes_descramble serdes_descramble_cam (
-    .i_lvds   (w_cam_unaligned [cam_i]    ),
-    .o_lvds0  (w_unaligned_data[cam_i][0] ),
-    .o_lvds1  (w_unaligned_data[cam_i][2] ),
-    .o_lvds2  (w_unaligned_data[cam_i][4] ),
-    .o_lvds3  (w_unaligned_data[cam_i][6] ),
-    .o_lvds4  (w_unaligned_data[cam_i][7] ),
-    .o_lvds5  (w_unaligned_data[cam_i][5] ),
-    .o_lvds6  (w_unaligned_data[cam_i][3] ),
-    .o_lvds7  (w_unaligned_data[cam_i][1] )
-  );
+
+
 
   //LANES: Go through the lanes
   for (lane_i = 0; lane_i < LANE_WIDTH; lane_i = lane_i + 1) begin : LANES
