@@ -107,6 +107,9 @@ assign o_rbuf_doutb   = w_rbuf_doutb[DATA_WIDTH - 1:0];
 assign o_frame_start  = w_rbuf_doutb[DATA_WIDTH];
 
 
+
+
+
 always @(posedge camera_clk)
   //De-assert Strobes
   if (rst) begin
@@ -137,6 +140,9 @@ always @(posedge camera_clk)
     r_lvds_sr <= {r_lvds_sr[47:0],i_lvds};
     r_xhs_sr  <= {r_xhs_sr[1:0],i_xhs};
     r_xvs_sr  <= {r_xvs_sr[1:0],i_xvs};
+    if (r_wbuf_wea) begin
+      r_frame_start <=  0;
+    end
 
     if (r_xvs_sr == 3'b100) begin
       //At the negative edge of vsync reset the report align register
@@ -314,7 +320,6 @@ always @(posedge camera_clk)
         r_temp_addra      <= r_temp_addra + 1;
         r_wbuf_addra      <= r_temp_addra;
         r_wbuf_wea        <= 1;
-        r_frame_start     <= 0;
         r_wbuf_data[(DATA_WIDTH - (1 + 8)):0] <= 0;
         if (r_count == 0) begin
           r_wbuf_data[(DATA_WIDTH - 1):(DATA_WIDTH - 8)] <= r_temp_dina[31:24];
@@ -387,7 +392,6 @@ always @(posedge camera_clk)
       end
       ST_DATA10_TO_RBUF: begin // 06
         r_wbuf_wea          <= 1;
-        r_frame_start       <= 0;
         r_wbuf_data[(DATA_WIDTH - (1 + 10)):0] <= 0;
         if (r_count == 0) begin
           r_temp_addra      <= r_temp_addra + 1;
@@ -468,7 +472,6 @@ always @(posedge camera_clk)
 
       ST_DATA12_TO_RBUF: begin // 08
         r_wbuf_wea        <= 1;
-        r_frame_start     <= 0;
         if (DATA_WIDTH > 12) begin
           r_wbuf_data[(DATA_WIDTH - (1 + 12)):0] <= 0;
         end
@@ -536,7 +539,6 @@ always @(posedge camera_clk)
           r_rbuf_bank   <= ~r_rbuf_bank;
           r_state       <= ST_IDLE;
         end
-
       end
       default: begin
         r_state <= ST_IDLE;
@@ -552,12 +554,12 @@ always @(posedge camera_clk)
   u_rbuf_mem
   (
     .clka                        (camera_clk                  ),
-    .addra                       ({ r_rbuf_bank,r_wbuf_addra} ),
+    .addra                       ({r_rbuf_bank,r_wbuf_addra  }),
     .dina                        ({r_frame_start, r_wbuf_data}),
     .wea                         (r_wbuf_wea                  ),
 
     .clkb                        (vdma_clk                    ),
-    .addrb                       ({~r_rbuf_bank,i_rbuf_addrb} ),
+    .addrb                       ({~r_rbuf_bank,i_rbuf_addrb }),
     .doutb                       (w_rbuf_doutb                )
   );
 

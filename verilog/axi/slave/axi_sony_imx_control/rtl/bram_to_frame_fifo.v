@@ -106,6 +106,8 @@ wire                                w_frame_finished;
 wire                                w_pre_hpad;
 wire                                w_post_hpad;
 wire                                w_half_pad;
+wire                                w_data_valid;
+reg   [2:0]                         r_cc_data_valid;
 
 reg   [DECOUPLE_COUNT_SIZE - 1:0]   dstart;
 reg   [DECOUPLE_COUNT_SIZE - 1:0]   dend;
@@ -122,6 +124,7 @@ wire                                w_vvalid;
 
 //submodules
 //asynchronous logic
+assign  w_data_valid          = r_cc_data_valid == 3'b111;
 assign  w_pre_vpad            = (r_vcount < i_pre_vblank);
 assign  w_pre_hpad            = (r_hcount < (i_pre_hblank - 1));
 assign  w_post_hpad           = (w_half_pad) ? (r_hcount > (i_frame_width + 8)) : (r_hcount > (i_frame_width + i_pre_hblank - i_post_hblank + 8));
@@ -156,6 +159,7 @@ always @ (posedge clk) begin
     r_prev_data           <=  0;
     o_frame_fifo_sof      <=  0;
     r_frame_fifo_enable   <=  0;
+    r_cc_data_valid       <=  0;
     for (i = 0; i < DECOUPLE_DEPTH; i = i + 1) begin
       dframe_fifo[i]            <=  0;
     end
@@ -171,7 +175,7 @@ always @ (posedge clk) begin
         dend                <=  0;
         r_hcount            <=  0;
         r_frame_fifo_enable <=  0;
-        if (i_bram_data_valid) begin
+        if (w_data_valid) begin
           if (w_pre_vpad || (r_vcount >= (i_frame_height + i_pre_vblank + i_post_vblank) || w_frame_finished)) begin
             state     <=  BRAM_FIN;
           end
@@ -256,7 +260,7 @@ always @ (posedge clk) begin
         end
       end
       BRAM_FIN: begin
-        if (!i_bram_data_valid) begin
+        if (!w_data_valid) begin
           state         <=  IDLE;
           r_frame_fifo_enable <=  0;
           r_vcount      <= r_vcount + 1;
@@ -269,12 +273,13 @@ always @ (posedge clk) begin
       dstart              <=  dstart + 1;
     end
 
-    if (i_bram_frame_start) begin
+    if (i_bram_frame_start && w_data_valid) begin
       r_vcount            <=  0;
       o_frame_fifo_sof    <=  1;
     end
 
     r_sr_vsync            <=  {r_sr_vsync[2:0], i_vsync};
+    r_cc_data_valid       <=  {r_cc_data_valid[1:0], i_bram_data_valid};
   end
 end
 
