@@ -366,7 +366,7 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
       assign o_serdes_1_sync_rst    = w_cam_sync_rst[1];
       assign o_cam_1_trigger        = ((r_trigger_en) & (r_trigger_pulse_count[1] < r_trigger_pulse_width));
 
-      assign  o_vdma_1_axis_user[1] = w_vdma_axis_user[1];
+      assign  o_vdma_1_axis_user[0] = w_vdma_axis_user[1];
       assign  o_vdma_1_axis_data    = w_vdma_axis_data[1];
       assign  o_vdma_1_axis_last    = w_vdma_axis_last[1];
       assign  o_vdma_1_axis_valid   = w_vdma_axis_valid[1];
@@ -379,7 +379,7 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
       assign o_serdes_2_sync_rst    = w_cam_sync_rst[2];
       assign o_cam_2_trigger        = ((r_trigger_en) & (r_trigger_pulse_count[2] < r_trigger_pulse_width));
 
-      assign  o_vdma_2_axis_user[2] = w_vdma_axis_user[2];
+      assign  o_vdma_2_axis_user[0] = w_vdma_axis_user[2];
       assign  o_vdma_2_axis_data    = w_vdma_axis_data[2];
       assign  o_vdma_2_axis_last    = w_vdma_axis_last[2];
       assign  o_vdma_2_axis_valid   = w_vdma_axis_valid[2];
