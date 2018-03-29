@@ -106,21 +106,18 @@ module axi_sony_imx_control #(
 
   output      [0:0]                           o_vdma_0_axis_user,
   output      [AXIS_DATA_WIDTH - 1: 0]        o_vdma_0_axis_data,
-  //output      [AXIS_STROBE_WIDTH - 1: 0]      o_vdma_0_axis_strobe,
   output                                      o_vdma_0_axis_last,
   output                                      o_vdma_0_axis_valid,
   input                                       i_vdma_0_axis_ready,
 
   output      [0:0]                           o_vdma_1_axis_user,
   output      [AXIS_DATA_WIDTH - 1: 0]        o_vdma_1_axis_data,
-  //output      [AXIS_STROBE_WIDTH - 1: 0]      o_vdma_1_axis_strobe,
   output                                      o_vdma_1_axis_last,
   output                                      o_vdma_1_axis_valid,
   input                                       i_vdma_1_axis_ready,
 
   output      [0:0]                           o_vdma_2_axis_user,
   output      [AXIS_DATA_WIDTH - 1: 0]        o_vdma_2_axis_data,
-  //output      [AXIS_STROBE_WIDTH - 1: 0]      o_vdma_2_axis_strobe,
   output                                      o_vdma_2_axis_last,
   output                                      o_vdma_2_axis_valid,
   input                                       i_vdma_2_axis_ready,
@@ -358,7 +355,6 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
 
       assign  o_vdma_0_axis_user[0] = w_vdma_axis_user[0];
       assign  o_vdma_0_axis_data    = w_vdma_axis_data[0];
-//      assign  o_vdma_0_axis_strobe  = w_vdma_axis_strobe[0];
       assign  o_vdma_0_axis_last    = w_vdma_axis_last[0];
       assign  o_vdma_0_axis_valid   = w_vdma_axis_valid[0];
       assign  w_vdma_axis_ready[0]  = i_vdma_0_axis_ready;
@@ -370,9 +366,8 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
       assign o_serdes_1_sync_rst    = w_cam_sync_rst[1];
       assign o_cam_1_trigger        = ((r_trigger_en) & (r_trigger_pulse_count[1] < r_trigger_pulse_width));
 
-      assign  o_vdma_1_axis_user[0] = w_vdma_axis_user[1];
+      assign  o_vdma_1_axis_user[1] = w_vdma_axis_user[1];
       assign  o_vdma_1_axis_data    = w_vdma_axis_data[1];
-//      assign  o_vdma_1_axis_strobe  = w_vdma_axis_strobe[1];
       assign  o_vdma_1_axis_last    = w_vdma_axis_last[1];
       assign  o_vdma_1_axis_valid   = w_vdma_axis_valid[1];
       assign  w_vdma_axis_ready[1]  = i_vdma_1_axis_ready;
@@ -384,25 +379,13 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
       assign o_serdes_2_sync_rst    = w_cam_sync_rst[2];
       assign o_cam_2_trigger        = ((r_trigger_en) & (r_trigger_pulse_count[2] < r_trigger_pulse_width));
 
-      assign  o_vdma_2_axis_user[0] = w_vdma_axis_user[2];
+      assign  o_vdma_2_axis_user[2] = w_vdma_axis_user[2];
       assign  o_vdma_2_axis_data    = w_vdma_axis_data[2];
-//      assign  o_vdma_2_axis_strobe  = w_vdma_axis_strobe[2];
       assign  o_vdma_2_axis_last    = w_vdma_axis_last[2];
       assign  o_vdma_2_axis_valid   = w_vdma_axis_valid[2];
       assign  w_vdma_axis_ready[2]  = i_vdma_2_axis_ready;
     end
   endcase
-
-
-  /*
-  cross_clock_enable cc_sync_rst (
-    .rst      (i_axi_rst              ),
-    .in_en    (r_serdes_sync_rst_en   ),
-
-    .out_clk  (w_cam_clk[cam_i]       ),
-    .out_en   (w_cam_sync_rst[cam_i]  )
-  );
-  */
 
 	assign w_cam_sync_rst[cam_i] = r_serdes_sync_rst_en;
 
