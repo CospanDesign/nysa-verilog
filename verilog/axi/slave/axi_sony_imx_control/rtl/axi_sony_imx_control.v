@@ -311,7 +311,7 @@ reg   [31:0]                        r_trigger_pulse_count[0:2];
 
 reg   [31:0]                        r_trigger_period;
 reg   [31:0]                        r_trigger_period_count[0:2];
-wire                                w_frame_start;
+wire  [MAX_CAMERA_COUNT - 1:0]      w_frame_start;
 
 assign  w_vsync[0]                  = i_cam_0_imx_vs;
 assign  w_vsync[1]                  = i_cam_1_imx_vs;
@@ -468,6 +468,7 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
 
 
 
+  assign w_frame_start[cam_i] = w_bram_frame_start[cam_i][0];
   //LANES: Go through the lanes
   for (lane_i = 0; lane_i < LANE_WIDTH; lane_i = lane_i + 1) begin : LANES
 
@@ -477,7 +478,6 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
     //Map the data valid signals to an array
     assign w_report_align_array[(cam_i * MAX_LANE_WIDTH) + lane_i]  = w_report_align[cam_i][lane_i];
 
-    assign w_frame_start = w_bram_frame_start[0][0];
     //Map the aligned data to the VDMA data bus
     if (AXIS_DATA_WIDTH == 128) begin
       assign w_bram_cam_data[cam_i][(AXIS_DATA_WIDTH - 1) - (BRAM_DATA_WIDTH * lane_i): (AXIS_DATA_WIDTH - 1) - ((BRAM_DATA_WIDTH * (lane_i + 1)) - 1)] = w_bram_data[cam_i][lane_i];
@@ -526,7 +526,7 @@ for (cam_i = 0; cam_i < MAX_CAMERA_COUNT; cam_i = cam_i + 1) begin : CAMERA
 
     .i_vsync                (w_vsync[cam_i]               ),
 
-    .i_bram_frame_start     (w_frame_start                ),
+    .i_bram_frame_start     (w_frame_start[cam_i]         ),
     .i_bram_data_valid      (w_cam_data_valid[cam_i]      ),
     .i_bram_size            (w_bram_count[cam_i][0]       ),
     .o_bram_addr            (w_bram_addr[cam_i]           ),
