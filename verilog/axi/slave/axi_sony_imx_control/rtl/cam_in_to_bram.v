@@ -149,7 +149,7 @@ always @(posedge camera_clk)
       r_frame_start <=  0;
     end
 
-    if (r_detect_error_sr == 3'b100)begin
+    if (r_detect_error_sr == 3'b011)begin
       r_detect_error_en   <=  1;
     end
 
@@ -183,7 +183,7 @@ always @(posedge camera_clk)
           r_state       <= ST_FIND_SYNC_CODE;
         end
       end
-      ST_FIND_SYNC_CODE: begin // 01
+      ST_FIND_SYNC_CODE: begin // 02
         //find falling edge xhs, if so then quit
         r_count <= 0;
         if (r_xhs_sr[2:1] == 2'b10) begin
@@ -301,7 +301,7 @@ always @(posedge camera_clk)
         if (r_lvds_sr[53:6]  == EAV12_INVALID) begin r_state = ST_INVALID_OR_END_SYNC; end
         if (r_lvds_sr[54:7]  == EAV12_INVALID) begin r_state = ST_INVALID_OR_END_SYNC; end
       end
-      ST_INVALID_OR_END_SYNC: begin // 02
+      ST_INVALID_OR_END_SYNC: begin // 01
         o_mode       <= INVALID_OR_END_SYNC;
         r_data_valid <= 0;
         if (o_data_count == 0) begin
