@@ -56,8 +56,10 @@ REG_POST_VERTICAL_BLANK   = 12 << 2
 REG_POST_HORIZONTAL_BLANK = 13 << 2
 
 REG_TAP_DELAY_START       = 16 << 2
-SIZE_TAP_DELAY            = 3 * 16
-REG_VERSION               = REG_TAP_DELAY_START + (SIZE_TAP_DELAY << 2)
+SIZE_TAP_DELAY            = MAX_CAMERA_COUNT * MAX_LANE_WIDTH
+
+REG_TAP_ERROR_START       = REG_TAP_DELAY_START + SIZE_TAP_DELAY
+REG_VERSION               = REG_TAP_ERROR_START + (SIZE_TAP_DELAY << 2)
 
 
 
@@ -66,6 +68,7 @@ CTRL_BIT_CLEAR_EN           = 0;
 CTRL_BIT_TRIGGER_EN         = 1;
 CTRL_BIT_CAM_ASYNC_RST_EN   = 2;
 CTRL_BIT_CAM_SYNC_RST_EN    = 3;
+CTRL_BIT_DETECT_ERROR_EN    = 4;
 
 CTRL_BIT_POWER_EN0          = 12
 CTRL_BIT_POWER_EN1          = 13
@@ -154,7 +157,11 @@ class IMX (Driver):
 
     @cocotb.coroutine
     def async_reset_enable(self, enable):
-        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_CAM_ASYNC_RST_EN, enable);
+        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_CAM_ASYNC_RST_EN, enable)
+
+    @cocotb.coroutine
+    def enable_detect_errors(self, enable):
+        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_DETECT_ERROR_EN, enable)
 
     @cocotb.coroutine
     def sync_reset_enable(self, enable):
@@ -183,6 +190,13 @@ class IMX (Driver):
     @cocotb.coroutine
     def get_tap_delay(self, index):
         addr = REG_TAP_DELAY_START + (index << 2)
+        print ("Address: %d, 0x%02X" % (addr, addr))
+        data = yield self.read_register(addr)
+        raise ReturnValue(data)
+
+    @cocotb.coroutine
+    def get_tap_error(self, index):
+        addr = REG_TAP_ERROR_START + (index << 2)
         print ("Address: %d, 0x%02X" % (addr, addr))
         data = yield self.read_register(addr)
         raise ReturnValue(data)

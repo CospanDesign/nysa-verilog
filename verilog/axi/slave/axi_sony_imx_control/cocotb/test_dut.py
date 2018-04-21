@@ -113,6 +113,7 @@ def boilerplate_test(dut):
     yield imx.enable_camera_power(1, True)
     yield imx.enable_camera_power(2, True)
 
+    yield imx.enable_detect_errors(True)
     camera_count = yield imx.get_camera_count()
     dut.log.info("Number of cameras: %d" % camera_count);
 
@@ -136,6 +137,8 @@ def boilerplate_test(dut):
     yield Timer(CLK_PERIOD * 4000)
     #yield Timer(CLK_PERIOD * 1000)
     read_thread.join()
+
+    yield imx.enable_detect_errors(False)
 
     dut.log.info("Length of read data (1 Row Length): %d" % len(vdma0_slave.data))
     data = yield imx.get_version();

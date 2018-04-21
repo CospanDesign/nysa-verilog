@@ -15,6 +15,7 @@ parameter DATA_WIDTH = 16
   input                           i_xvs,
   input       [7:0]               i_lvds,
   (* KEEP *) output reg  [7:0]    o_mode,
+  input                           i_detect_errors,
 
   //Output Signal
   (* KEEP *) output reg           o_report_align,
@@ -23,7 +24,8 @@ parameter DATA_WIDTH = 16
   (* KEEP *) output reg  [ADDR_WIDTH - 1:0]  o_data_count,
   input       [ADDR_WIDTH - 1:0]  i_rbuf_addrb,
   output      [DATA_WIDTH - 1:0]  o_rbuf_doutb,
-  output                          o_frame_start
+  output                          o_frame_start,
+  output  reg [11:0]              o_tap_error_count
 );
 
 //Local Parameters
@@ -83,6 +85,8 @@ localparam EAV12_INVALID = {12'hFFF, 12'h000, 12'h000, 12'hB60};
 reg [55:0]                r_lvds_sr;
 reg  [2:0]                r_xhs_sr;
 reg  [2:0]                r_xvs_sr;
+reg  [2:0]                r_detect_error_sr;
+
 reg                       r_report_align;
 reg  [7:0]                r_mode;
 reg  [ADDR_WIDTH - 1:0]   r_count;
@@ -99,16 +103,12 @@ reg                       r_data_valid;
 wire [9:0]                w_data;  //Only for simulation visualization top ten bits
 wire [DATA_WIDTH:0]       w_rbuf_doutb;
 reg                       r_frame_start;
-
-
+reg                       r_detect_error_en;
+reg                       r_detect_error_frame;
 
 assign w_data         = r_wbuf_data[(DATA_WIDTH - 1):(DATA_WIDTH - 10)];
 assign o_rbuf_doutb   = w_rbuf_doutb[DATA_WIDTH - 1:0];
 assign o_frame_start  = w_rbuf_doutb[DATA_WIDTH];
-
-
-
-
 
 always @(posedge camera_clk)
   //De-assert Strobes
@@ -134,14 +134,23 @@ always @(posedge camera_clk)
     r_state       <= 0;
     r_rbuf_bank   <= 0;
     r_frame_start <= 0;
+    o_tap_error_count     <=  0;
+    r_detect_error_en     <=  0;
+    r_detect_error_sr     <=  0;
+    r_detect_error_frame  <=  0;
 
   end
   else begin
-    r_lvds_sr <= {r_lvds_sr[47:0],i_lvds};
-    r_xhs_sr  <= {r_xhs_sr[1:0],i_xhs};
-    r_xvs_sr  <= {r_xvs_sr[1:0],i_xvs};
+    r_lvds_sr         <= {r_lvds_sr[47:0],i_lvds};
+    r_xhs_sr          <= {r_xhs_sr[1:0],i_xhs};
+    r_xvs_sr          <= {r_xvs_sr[1:0],i_xvs};
+    r_detect_error_sr <= {r_detect_error_sr[1:0], i_detect_errors};
     if (r_wbuf_wea) begin
       r_frame_start <=  0;
+    end
+
+    if (r_detect_error_sr == 3'b100)begin
+      r_detect_error_en   <=  1;
     end
 
     if (r_xvs_sr == 3'b100) begin
@@ -151,6 +160,13 @@ always @(posedge camera_clk)
     end
     if (r_xvs_sr == 3'b011) begin
       r_frame_start   <= 1;
+      if (r_detect_error_en) begin
+        r_detect_error_frame  <=  1;
+        o_tap_error_count     <=  0;
+      end
+      else begin
+        r_detect_error_frame  <=  0;
+      end
     end
 
     case (r_state)
@@ -173,6 +189,9 @@ always @(posedge camera_clk)
         if (r_xhs_sr[2:1] == 2'b10) begin
           o_mode  <= NO_SYNC;
           r_state <= ST_IDLE;
+          if (r_detect_error_frame) begin
+            o_tap_error_count <=  o_tap_error_count + 1;
+          end
         end
         if (r_lvds_sr[31:0]  == SAV8_VALID)  begin r_mode <= SYNC8_SHIFT0;   r_state = ST_DATA8; end
         if (r_lvds_sr[32:1]  == SAV8_VALID)  begin r_mode <= SYNC8_SHIFT1;   r_state = ST_DATA8; end
