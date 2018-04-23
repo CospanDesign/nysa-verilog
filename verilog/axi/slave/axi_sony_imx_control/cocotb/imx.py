@@ -58,7 +58,7 @@ REG_POST_HORIZONTAL_BLANK = 13 << 2
 REG_TAP_DELAY_START       = 16 << 2
 SIZE_TAP_DELAY            = MAX_CAMERA_COUNT * MAX_LANE_WIDTH
 
-REG_TAP_ERROR_START       = REG_TAP_DELAY_START + SIZE_TAP_DELAY
+REG_TAP_ERROR_START       = REG_TAP_DELAY_START + (SIZE_TAP_DELAY << 2)
 REG_VERSION               = REG_TAP_ERROR_START + (SIZE_TAP_DELAY << 2)
 
 
@@ -196,8 +196,9 @@ class IMX (Driver):
 
     @cocotb.coroutine
     def get_tap_error(self, index):
+        print ("REG_TAP_ERROR_START: %d, 0x%04X" % (REG_TAP_ERROR_START, REG_TAP_ERROR_START))
         addr = REG_TAP_ERROR_START + (index << 2)
-        print ("Address: %d, 0x%02X" % (addr, addr))
+        print ("Address: %d, 0x%04X" % (addr, addr))
         data = yield self.read_register(addr)
         raise ReturnValue(data)
 

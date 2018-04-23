@@ -139,6 +139,14 @@ def boilerplate_test(dut):
     read_thread.join()
 
     yield imx.enable_detect_errors(False)
+    yield Timer(CLK_PERIOD * 100)
+    for i in range (0, 3):
+        for j in range (0, 7):
+            dut.log.info("Value: %d - %d" % (i, j))
+            yield Timer(CLK_PERIOD * 10)
+            value = yield imx.get_tap_error(i * 7 + j)
+            dut.log.info("Error: %d - %d: 0x%08X" % (i, j, value))
+            
 
     dut.log.info("Length of read data (1 Row Length): %d" % len(vdma0_slave.data))
     data = yield imx.get_version();
@@ -170,7 +178,7 @@ def boilerplate_test(dut):
 
     '''
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def standard_hblank_test(dut):
     """
     Description:

@@ -199,9 +199,7 @@ localparam                  REG_TAP_DELAY_START       = 16;
 
 localparam                  SIZE_TAP_DELAY            = MAX_LANE_WIDTH      * MAX_CAMERA_COUNT;
 localparam                  REG_TAP_ERROR_START       = REG_TAP_DELAY_START + SIZE_TAP_DELAY;
-
 localparam                  REG_VERSION               = REG_TAP_ERROR_START + SIZE_TAP_DELAY;  //Always Should be last
-
 
 
 
@@ -219,6 +217,10 @@ localparam                  CTRL_BIT_POWER_EN2          = 14;
 //Register/Wire
 wire                                w_cam_clk[0:2];
 wire                                w_cam_sync_rst[0:2];
+
+wire  [31:0]                        w_tap_delay_start = REG_TAP_DELAY_START;
+wire  [31:0]                        w_tap_error_start = REG_TAP_ERROR_START;
+wire  [31:0]                        w_version = REG_VERSION;
 
 reg                                 r_serdes_sync_rst_en;
 reg                                 r_cam_xclear;
@@ -287,7 +289,7 @@ wire  [BRAM_DATA_DEPTH - 1: 0]      w_bram_addr         [0: MAX_CAMERA_COUNT - 1
 wire  [BRAM_DATA_WIDTH - 1: 0]      w_bram_data         [0: MAX_CAMERA_COUNT - 1][0: LANE_WIDTH - 1];
 wire  [AXIS_DATA_WIDTH - 1: 0]      w_bram_cam_data     [0: MAX_CAMERA_COUNT - 1];
 wire                                w_bram_frame_start  [0: MAX_CAMERA_COUNT - 1][0: LANE_WIDTH - 1];
-wire  [11:0]                        w_tap_error_count   [0: MAX_CAMERA_COUNT - 1][0: LANE_WIDTH - 1];
+wire  [11:0]                        w_tap_error_count   [0: MAX_CAMERA_COUNT - 1][0: MAX_LANE_WIDTH - 1];
 
 
 
@@ -798,15 +800,21 @@ always @ (posedge i_axi_clk) begin
         end
         default: begin
           r_reg_out_data                            <= 32'h00;
+          $display ("Address: %h",  w_reg_32bit_address);
           for (i = 0; i < MAX_CAMERA_COUNT; i = i + 1) begin
             for (j = 0; j < MAX_LANE_WIDTH; j = j + 1) begin
               if (w_reg_32bit_address == (REG_TAP_DELAY_START + (i  * MAX_LANE_WIDTH) + j))  begin
-                $display("Register Address (Read): %h", w_reg_32bit_address);
-                r_reg_out_data            <=  r_tap_value[i][j];
+                $display("Tap Delay (Read)");
+                r_reg_out_data            <= {27'h0, r_tap_value[i][j]};
               end
               if (w_reg_32bit_address == (REG_TAP_ERROR_START + (i  * MAX_LANE_WIDTH) + j))  begin
-                $display("Register Address (Read): %h", w_reg_32bit_address);
-                r_reg_out_data            <= {20'h0, w_tap_error_count[i][j]};
+                $display("Tap Error Read (Read)");
+                if (j >= LANE_WIDTH) begin
+                  r_reg_out_data            <= 32'h0;
+                end
+                else begin
+                  r_reg_out_data            <= {20'h0, w_tap_error_count[i][j]};
+                end
               end
             end
           end

@@ -161,6 +161,7 @@ always @(posedge camera_clk)
     if (r_xvs_sr == 3'b011) begin
       r_frame_start   <= 1;
       if (r_detect_error_en) begin
+        r_detect_error_en     <=  0;
         r_detect_error_frame  <=  1;
         o_tap_error_count     <=  0;
       end
