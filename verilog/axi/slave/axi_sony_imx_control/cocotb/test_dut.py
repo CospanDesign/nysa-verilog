@@ -254,8 +254,11 @@ def standard_hblank_test(dut):
     lane_count = yield imx.get_lane_width()
     dut.log.info("Number of Lanes for each camera: %d" % lane_count)
 
-    yield imx.set_tap_delay(0, 4)
+    tap_delay_test = 4
+    yield imx.set_tap_delay(0, tap_delay_test)
     tap_delay = yield imx.get_tap_delay(0)
+    if tap_delay != tap_delay_test:
+        print ("Read Back Tap Delay Doesn't Match Set Tap Delay: (SET) %d != (GET) %d", (tap_delay_test, tap_delay))
 
     #if (tap_delay != 4):
     #    print ("Failed to set tap delay! Should have been 4, but got: %d" % tap_delay)

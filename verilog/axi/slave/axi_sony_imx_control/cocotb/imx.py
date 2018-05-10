@@ -69,6 +69,7 @@ CTRL_BIT_TRIGGER_EN         = 1;
 CTRL_BIT_CAM_ASYNC_RST_EN   = 2;
 CTRL_BIT_CAM_SYNC_RST_EN    = 3;
 CTRL_BIT_DETECT_ERROR_EN    = 4;
+CTRL_BIT_LOAD_TAP_EN        = 5;
 
 CTRL_BIT_POWER_EN0          = 12
 CTRL_BIT_POWER_EN1          = 13
@@ -184,13 +185,15 @@ class IMX (Driver):
     @cocotb.coroutine
     def set_tap_delay(self, index, delay):
         addr = REG_TAP_DELAY_START + (index << 2)
-        print ("Address: %d, 0x%02X" % (addr, addr))
+        #print ("Address: %d, 0x%02X" % (addr, addr))
         yield self.write_register(addr, delay)
+        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_LOAD_TAP_EN, 1);
+        yield self.enable_register_bit(REG_CONTROL, CTRL_BIT_LOAD_TAP_EN, 0);
 
     @cocotb.coroutine
     def get_tap_delay(self, index):
         addr = REG_TAP_DELAY_START + (index << 2)
-        print ("Address: %d, 0x%02X" % (addr, addr))
+        #print ("Address: %d, 0x%02X" % (addr, addr))
         data = yield self.read_register(addr)
         raise ReturnValue(data)
 

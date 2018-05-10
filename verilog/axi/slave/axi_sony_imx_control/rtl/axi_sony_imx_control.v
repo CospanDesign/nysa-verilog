@@ -136,6 +136,7 @@ module axi_sony_imx_control #(
   output      [(5 * LANE_WIDTH) - 1: 0]       o_cam_0_tap_data,
   output      [(5 * LANE_WIDTH) - 1: 0]       o_cam_1_tap_data,
   output      [(5 * LANE_WIDTH) - 1: 0]       o_cam_2_tap_data,
+  output  reg                                 o_load_tap_en,
 
 
   //Interface Directly to Camera
@@ -209,6 +210,7 @@ localparam                  CTRL_BIT_TRIGGER_EN         = 1;
 localparam                  CTRL_BIT_CAM_ASYNC_RST_EN   = 2;
 localparam                  CTRL_BIT_CAM_SYNC_RST_EN    = 3;
 localparam                  CTRL_BIT_DETECT_ERRORS_EN   = 4;
+localparam                  CTRL_BIT_LOAD_TAP_EN        = 5;
 
 localparam                  CTRL_BIT_POWER_EN0          = 12;
 localparam                  CTRL_BIT_POWER_EN1          = 13;
@@ -680,6 +682,7 @@ always @ (posedge i_axi_clk) begin
 
     r_detect_errors_en                    <= 0;
     r_reg_out_rdy_stb                     <= 0;
+    o_load_tap_en                         <= 0;
 
     for (i = 0; i < MAX_CAMERA_COUNT; i = i + 1) begin
       for (j = 0; j < MAX_LANE_WIDTH; j = j + 1) begin
@@ -704,6 +707,7 @@ always @ (posedge i_axi_clk) begin
           r_serdes_sync_rst_en                      <= w_reg_in_data[CTRL_BIT_CAM_SYNC_RST_EN];
           r_cam_xclear                              <= w_reg_in_data[CTRL_BIT_CLEAR_EN];
           r_detect_errors_en                        <= w_reg_in_data[CTRL_BIT_DETECT_ERRORS_EN];
+          o_load_tap_en                             <= w_reg_in_data[CTRL_BIT_LOAD_TAP_EN];
         end
         REG_TRIG_EXP_WIDTH: begin
           r_trig_exp_pulse_width                    <= w_reg_in_data;
@@ -733,8 +737,8 @@ always @ (posedge i_axi_clk) begin
           for (i = 0; i < MAX_CAMERA_COUNT; i = i + 1) begin
             for (j = 0; j < MAX_LANE_WIDTH; j = j + 1) begin
               if (w_reg_32bit_address == (REG_TAP_DELAY_START + (i  * MAX_LANE_WIDTH) + j))  begin
-                $display("Register Address (Write): %h", w_reg_32bit_address);
-                r_tap_value[i][j]         <= w_reg_in_data;
+                $display("Tap Delay Write to Addr: %h with Value: %h",  w_reg_32bit_address, w_reg_in_data[4:0]);
+                r_tap_value[i][j]         <= w_reg_in_data[4:0];
               end
             end
           end
@@ -756,6 +760,7 @@ always @ (posedge i_axi_clk) begin
           r_reg_out_data[CTRL_BIT_POWER_EN2]        <=  o_cam_2_power_en;
           r_reg_out_data[CTRL_BIT_TRIGGER_EN]       <=  r_trigger_en;
           r_reg_out_data[CTRL_BIT_DETECT_ERRORS_EN] <=  r_detect_errors_en;
+          r_reg_out_data[CTRL_BIT_LOAD_TAP_EN]      <=  o_load_tap_en;
         end
         REG_STATUS: begin
           r_reg_out_data                            <=  0;
