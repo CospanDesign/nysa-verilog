@@ -151,6 +151,10 @@ always @(posedge camera_clk)
 
     if (r_detect_error_sr == 3'b011)begin
       r_detect_error_en   <=  1;
+      o_tap_error_count   <=  0;
+    end
+    else if (r_detect_error_sr == 3'b100) begin
+      r_detect_error_en   <=  0;
     end
 
     if (r_xvs_sr == 3'b100) begin
@@ -160,6 +164,7 @@ always @(posedge camera_clk)
     end
     if (r_xvs_sr == 3'b011) begin
       r_frame_start   <= 1;
+/*
       if (r_detect_error_en) begin
         r_detect_error_en     <=  0;
         r_detect_error_frame  <=  1;
@@ -168,6 +173,7 @@ always @(posedge camera_clk)
       else begin
         r_detect_error_frame  <=  0;
       end
+*/
     end
 
     case (r_state)
@@ -190,7 +196,8 @@ always @(posedge camera_clk)
         if (r_xhs_sr[2:1] == 2'b10) begin
           o_mode  <= NO_SYNC;
           r_state <= ST_IDLE;
-          if (r_detect_error_frame) begin
+          //if (r_detect_error_frame) begin
+          if (r_detect_error_en) begin
             o_tap_error_count <=  o_tap_error_count + 1;
           end
         end
