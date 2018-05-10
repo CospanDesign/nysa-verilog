@@ -654,7 +654,7 @@ integer j;
 always @ (posedge i_axi_clk) begin
   //De-assert Strobes
   r_reg_in_ack_stb                        <= 0;
-  r_reg_out_rdy_stb                       <= 0;
+  //r_reg_out_rdy_stb                       <= 0;
   r_reg_invalid_addr                      <= 0;
 
   if (w_axi_rst) begin
@@ -679,6 +679,7 @@ always @ (posedge i_axi_clk) begin
     r_post_hblank                         <= 0;
 
     r_detect_errors_en                    <= 0;
+    r_reg_out_rdy_stb                     <= 0;
 
     for (i = 0; i < MAX_CAMERA_COUNT; i = i + 1) begin
       for (j = 0; j < MAX_LANE_WIDTH; j = j + 1) begin
@@ -687,6 +688,9 @@ always @ (posedge i_axi_clk) begin
     end
   end
   else begin
+    if (!w_reg_out_req) begin
+      r_reg_out_rdy_stb                             <= 0;
+    end
     if (w_reg_in_rdy && !r_reg_in_ack_stb) begin
       //From master
       case (w_reg_32bit_address)
@@ -800,7 +804,7 @@ always @ (posedge i_axi_clk) begin
         end
         default: begin
           r_reg_out_data                            <= 32'h00;
-          $display ("Address: %h",  w_reg_32bit_address);
+          //$display ("Address: %h",  w_reg_32bit_address);
           for (i = 0; i < MAX_CAMERA_COUNT; i = i + 1) begin
             for (j = 0; j < MAX_LANE_WIDTH; j = j + 1) begin
               if (w_reg_32bit_address == (REG_TAP_DELAY_START + (i  * MAX_LANE_WIDTH) + j))  begin
@@ -808,7 +812,7 @@ always @ (posedge i_axi_clk) begin
                 r_reg_out_data            <= {27'h0, r_tap_value[i][j]};
               end
               if (w_reg_32bit_address == (REG_TAP_ERROR_START + (i  * MAX_LANE_WIDTH) + j))  begin
-                $display("Tap Error Read (Read)");
+                $display("Tap Error Read (Read): %h", (REG_TAP_ERROR_START + (i  * MAX_LANE_WIDTH) + j));
                 if (j >= LANE_WIDTH) begin
                   r_reg_out_data            <= 32'h0;
                 end

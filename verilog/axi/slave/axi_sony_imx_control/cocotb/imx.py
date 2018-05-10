@@ -196,9 +196,9 @@ class IMX (Driver):
 
     @cocotb.coroutine
     def get_tap_error(self, index):
-        print ("REG_TAP_ERROR_START: %d, 0x%04X" % (REG_TAP_ERROR_START, REG_TAP_ERROR_START))
+        #print ("REG_TAP_ERROR_START: %d, 0x%04X" % (REG_TAP_ERROR_START, REG_TAP_ERROR_START))
         addr = REG_TAP_ERROR_START + (index << 2)
-        print ("Address: %d, 0x%04X" % (addr, addr))
+        print ("Start Address: 0x%04X Address: 0x%04X" % (REG_TAP_ERROR_START, addr))
         data = yield self.read_register(addr)
         raise ReturnValue(data)
 
