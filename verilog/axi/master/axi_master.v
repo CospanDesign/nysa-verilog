@@ -46,14 +46,13 @@ SOFTWARE.
 
 module axi_master #(
   //Parameters
-  parameter           FIFO_DEPTH            = 9,          //512
+  parameter           DATA_FIFO_DEPTH       = 9,              //512
   parameter           ADDR_WIDTH            = 32,
   parameter           DATA_BYTE_SIZE        = 4,
   parameter           INTERRUPT_WIDTH       = 32,
-  parameter           ENABLE_WRITE_RESP     = 0, //Don't send a response when writing (Faster)
-  parameter           ENABLE_NACK           = 0, //Enable timeout
+  parameter           ENABLE_WRITE_RESP     = 0,              //Don't send a response when writing (Faster)
+  parameter           ENABLE_NACK           = 0,              //Enable timeout
   parameter           DEFAULT_TIMEOUT       = 32'd100000000,  //1 Second at 100MHz
-  parameter           SDB_ADDRESS           = 64'h0000000000000000,
 
   parameter           DATA_WIDTH            = DATA_BYTE_SIZE * 8,
   parameter           INVERT_AXI_RESET      = 0
@@ -246,7 +245,7 @@ assign  w_rst               = INVERT_AXI_RESET ? ~rst : rst;
 //Submodules
 block_fifo #(
   .DATA_WIDTH       (DATA_WIDTH           ),
-  .ADDRESS_WIDTH    (FIFO_DEPTH           )
+  .ADDRESS_WIDTH    (DATA_FIFO_DEPTH      )
 ) ingress (
   .reset            (rst                  ),
 
@@ -271,7 +270,7 @@ block_fifo #(
 
 block_fifo #(
   .DATA_WIDTH       (DATA_WIDTH           ),
-  .ADDRESS_WIDTH    (FIFO_DEPTH           )
+  .ADDRESS_WIDTH    (DATA_FIFO_DEPTH      )
 ) egress (
   .reset           (rst                   ),
 
