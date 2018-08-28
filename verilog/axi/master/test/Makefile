@@ -1,17 +1,15 @@
 
 TOPLEVEL_LANG ?= verilog
 PWD=$(shell pwd)
-TOPDIR=$(PWD)/../..
-COCOTB 	:= $(shell $(python) nysa paths -c -s)
-NYSA 	:= $(shell $(python) nysa paths -s -v nysa-verilog)
+TOPDIR=$(PWD)/../../../..
+COCOTB 	:= $(TOPDIR)/cocotb
 PYTHONPATH := ./model:$(PYTHONPATH)
 export PYTHONPATH
 export PYTHONHOME=$(shell python -c "from distutils.sysconfig import get_config_var; print(get_config_var('prefix'))")
 
-EXTRA_ARGS+= -Wall -I$(NYSA)/verilog/axi
-
-VERILOG_SOURCES =   $(NYSA)/verilog/generic/ppfifo.v
-VERILOG_SOURCES +=  $(TOPDIR)/axi_master.v
+EXTRA_ARGS+= -Wall -I$(TOPDIR)/verilog/axi -I$(TOPDIR)/verilog/axi/master
+VERILOG_SOURCES =   $(TOPDIR)/verilog/generic/block_fifo.v
+VERILOG_SOURCES +=  $(TOPDIR)/verilog/axi/master/axi_master.v
 
 #Test Benches
 VERILOG_SOURCES += tb_cocotb.v

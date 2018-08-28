@@ -7,10 +7,10 @@ from cocotb.binary import BinaryValue
 import binascii
 import array
 
-class PPFIFOError(Exception):
+class BlockFIFOError(Exception):
     pass
 
-class PPFIFOWritePath(BusDriver):
+class BlockFIFOWritePath(BusDriver):
     _signals = ["RDY", "ACT", "STB", "SIZE", "DATA"]
     _optional_signals = ["STARVED"]
 
@@ -38,10 +38,8 @@ class PPFIFOWritePath(BusDriver):
                     break
                 yield RisingEdge(self.clock)
 
-            if (rdy & 0x01) > 0:
-                self.bus.ACT <= 0x01
-            else:
-                self.bus.ACT <= 0x02
+            if rdy:
+                self.bus.ACT <= 1
 
             yield RisingEdge(self.clock)
             length  = total_length
@@ -63,7 +61,7 @@ class PPFIFOWritePath(BusDriver):
 
         self.busy.release()
 
-class PPFIFOReadPath(BusDriver):
+class BlockFIFOReadPath(BusDriver):
     _signals = ["RDY", "ACT", "STB", "SIZE", "DATA"]
     _optional_signals = ["INACTIVE"]
 

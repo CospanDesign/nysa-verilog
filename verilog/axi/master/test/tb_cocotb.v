@@ -16,11 +16,12 @@
    -1
 
 module tb_cocotb #(
-  parameter DATA_WIDTH          = 32, //This is the output bus
+  parameter DATA_BYTE_SIZE      = 4, //This is the output bus
   parameter ADDR_WIDTH          = 32,
   parameter MAX_PACKET_SIZE     = 4096,
   parameter MAX_PACKET_WIDTH    = `CLOG2(MAX_PACKET_SIZE),
-  parameter INTERRUPT_WIDTH     = 32
+  parameter INTERRUPT_WIDTH     = 32,
+  parameter DATA_WIDTH          = DATA_BYTE_SIZE * 8
 )(
 
 //Virtual Host Interface Signals
@@ -41,14 +42,14 @@ input                               CMD_ADR_WRAP,
 input                               CMD_WR_RD,        //1 = wRITE, 0 = rEAD
 input       [MAX_PACKET_WIDTH - 1: 0]CMD_COUNT,
 
-output      [31:0]                  CMD_STATUS,
+output      [7:0]                   CMD_STATUS,
 output                              CMD_INTERRUPT,
 
 //Data FIFOs
 //write side
 input                               WR_CLK,
-output      [1:0]                   WR_RDY,
-input       [1:0]                   WR_ACT,
+output                              WR_RDY,
+input                               WR_ACT,
 output      [23:0]                  WR_SIZE,
 input                               WR_STB,
 input       [DATA_WIDTH - 1: 0]     WR_DATA,

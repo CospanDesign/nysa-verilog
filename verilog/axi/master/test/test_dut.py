@@ -165,7 +165,7 @@ def write_256_words_with_backpreassure_test(dut):
 
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def read_1_word_test(dut):
     """
     Description:
@@ -202,7 +202,7 @@ def read_1_word_test(dut):
     yield Timer(CLK_PERIOD * 1000)
 
 
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def read_512_word_test(dut):
     """
     Description:
