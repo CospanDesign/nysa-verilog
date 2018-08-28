@@ -54,12 +54,10 @@ SOFTWARE.
 `ifndef __COMMAND_DEFINES__
 `define __COMMAND_DEFINES__
 
-`define COMMAND_PING              16'h0000
-`define COMMAND_WRITE             16'h0001
-`define COMMAND_READ              16'h0002
-`define COMMAND_RESET             16'h0003
-`define COMMAND_MASTER_CFG_WRITE  16'h0004
-`define COMMAND_MASTER_CFG_READ   16'h0005
+`define COMMAND_WRITE             0
+`define COMMAND_READ              1
+`define COMMAND_MASTER_CFG_WRITE  2
+`define COMMAND_MASTER_CFG_READ   3
 
 `define STATUS_BIT_CMPLT          0
 `define STATUS_BIT_PING           1
@@ -73,24 +71,21 @@ SOFTWARE.
 `define STATUS_BIT_UNUSED         31:10
 
 //master address space
-`define MADDR_CTR_FLAGS         32'h00000000
-`define MADDR_NACK_TIMEOUT      32'h00000001
+`define MADDR_STATUS              0
+`define MADDR_CTR_FLAGS           1
+`define MADDR_NACK_TIMEOUT        2
+`define MADDR_PING                3
+`define MADDR_RESET               4
 
 //conditions
 `define PERIPH_INTERRUPT        32'h00000001
 `define NACK_TIMEOUT            32'h00000002
 
-//flags
-`define FLAG_BURST_MODE         5:4
-`define FLAG_MASTER_ADDR_SPACE  2
-
 //master control flags bit field location
-`define MASTER_FLAG_UNUSED      31:2
+`define MASTER_FLAG_UNUSED      7:4
 `define MASTER_FLAG_EN_WR_RESP  0
 `define MASTER_FLAG_EN_NACK     1
-
-
-
+`define MASTER_FLAG_BURST_MODE  3:2
 
 `define FLAG_RANGE              31:16
 `define COMMAND_RANGE           15:0

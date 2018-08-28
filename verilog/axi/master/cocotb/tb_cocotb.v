@@ -18,9 +18,9 @@
 module tb_cocotb #(
   parameter DATA_BYTE_SIZE      = 4, //This is the output bus
   parameter ADDR_WIDTH          = 32,
-  parameter MAX_PACKET_SIZE     = 4096,
-  parameter MAX_PACKET_WIDTH    = `CLOG2(MAX_PACKET_SIZE),
   parameter INTERRUPT_WIDTH     = 32,
+  parameter DATA_FIFO_SIZE     = 4096,
+  parameter DATA_FIFO_DEPTH    = `CLOG2(DATA_FIFO_SIZE),
   parameter DATA_WIDTH          = DATA_BYTE_SIZE * 8
 )(
 
@@ -36,11 +36,10 @@ output                              CMD_ERROR,
 output                              CMD_ACK,
 
 input       [ADDR_WIDTH - 1:0]      CMD_ADR,
-input                               CMD_ADR_FIXED,
-input                               CMD_ADR_WRAP,
 
 input                               CMD_WR_RD,        //1 = wRITE, 0 = rEAD
-input       [MAX_PACKET_WIDTH - 1: 0]CMD_COUNT,
+input                               CMD_MSTR_CFG,
+input       [DATA_FIFO_DEPTH - 1: 0]CMD_DATA_COUNT,
 
 output      [7:0]                   CMD_STATUS,
 output                              CMD_INTERRUPT,
@@ -162,7 +161,7 @@ wire      [INTERRUPT_WIDTH - 1:0] w_interrupts;
 //Submodules
 axi_master #(
   .INVERT_AXI_RESET     (INVERT_AXI_RESET        ),
-  .MAX_PACKET_SIZE      (MAX_PACKET_SIZE         ),
+  .DATA_FIFO_DEPTH      (DATA_FIFO_DEPTH         ),
   .ADDR_WIDTH           (ADDR_WIDTH              ),
   .DATA_WIDTH           (DATA_WIDTH              ),
   .INTERRUPT_WIDTH      (INTERRUPT_WIDTH         ),
@@ -181,11 +180,10 @@ axi_master #(
   .o_cmd_interrupt       (CMD_INTERRUPT          ),
 
   .i_cmd_addr            (CMD_ADR                ),
-  .i_cmd_adr_fixed_en    (CMD_ADR_FIXED          ),
-  .i_cmd_adr_wrap_en     (CMD_ADR_WRAP           ),
 
   .i_cmd_wr_rd           (CMD_WR_RD              ),
-  .i_cmd_data_count      (CMD_COUNT              ),
+  .i_cmd_master_cfg      (CMD_MSTR_CFG           ), //Access the AXI Master configuration space
+  .i_cmd_data_count      (CMD_DATA_COUNT         ),
 
   //Data FIFOs
   .i_ingress_clk         (WR_CLK                 ),

@@ -46,7 +46,7 @@ class BlockFIFOWritePath(BusDriver):
             if length > int(self.bus.SIZE):
                 length = self.bus.SIZE
 
-            print "Length: %d" % length
+            print ("Length: %d" % length)
 
             for d in data[pos:length]:
                 self.bus.STB    <=  1

@@ -9,13 +9,11 @@ from cocotb.clock import Clock
 import binascii
 import array
 
-from ppfifo_driver import PPFIFOWritePath
-from ppfifo_driver import PPFIFOReadPath
+from ppfifo_driver import BlockFIFOWritePath
+from ppfifo_driver import BlockFIFOReadPath
 
 class CommandMaster (BusDriver):
-    _signals = ["EN", "ERROR", "ACK", "STATUS", "INTERRUPT",
-                "ADR", "ADR_FIXED", "ADR_WRAP",
-                "WR_RD", "COUNT"]
+    _signals = ["EN", "ERROR", "ACK", "STATUS", "INTERRUPT", "MSTR_CFG", "ADR", "WR_RD", "DATA_COUNT"]
 
     def __init__(self,
                  entity,
@@ -35,30 +33,31 @@ class CommandMaster (BusDriver):
 
         self.bus.EN.setimmediatevalue(0)
         self.bus.ADR.setimmediatevalue(0)
-        self.bus.ADR_FIXED.setimmediatevalue(0)
-        self.bus.ADR_WRAP.setimmediatevalue(0)
         self.bus.WR_RD.setimmediatevalue(0)
-        self.bus.COUNT.setimmediatevalue(0)
+        self.bus.MSTR_CFG.setimmediatevalue(0)
+        self.bus.DATA_COUNT.setimmediatevalue(0)
 
         # Mutex for each channel that we master to prevent contention
         self.command_busy = Lock("%s_wabusy" % name)
         cocotb.fork(Clock(wr_fifo_clk, wr_fifo_clk_period).start())
         cocotb.fork(Clock(rd_fifo_clk, rd_fifo_clk_period).start())
 
-        self.write_fifo = PPFIFOWritePath(entity, wr_fifo_name, wr_fifo_clk)
-        self.read_fifo = PPFIFOReadPath(entity, rd_fifo_name, rd_fifo_clk)
+        self.write_fifo = BlockFIFOWritePath(entity, wr_fifo_name, wr_fifo_clk)
+        self.read_fifo = BlockFIFOReadPath(entity, rd_fifo_name, rd_fifo_clk)
+
 
     @cocotb.coroutine
     def write(self, address, data):
         count = 0
         yield self.command_busy.acquire()
         yield RisingEdge(self.clock)
-        self.bus.ADR    <= address
-        self.bus.COUNT  <=  len(data)
-        self.bus.WR_RD  <=  1
-        self.bus.EN     <=  1
+        self.bus.ADR        <= address
+        self.bus.DATA_COUNT      <=  len(data)
+        self.bus.WR_RD      <=  1
+        self.bus.MSTR_CFG   <=  0
+        self.bus.EN         <=  1
         yield RisingEdge(self.clock)
-        print "Length of data: %d" % len(data)
+        print ("Length of data: %d" % len(data))
 
         yield self.write_fifo.write(data)
 
@@ -72,8 +71,9 @@ class CommandMaster (BusDriver):
         data = []
         yield self.command_busy.acquire()
         self.bus.ADR <= address
-        self.bus.COUNT  <=  size
+        self.bus.DATA_COUNT  <=  size
         self.bus.EN <= 1
+        self.bus.MSTR_CFG   <=  0
         yield RisingEdge(self.clock)
 
         yield RisingEdge(self.clock)

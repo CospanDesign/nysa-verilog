@@ -161,7 +161,7 @@ def write_256_words_with_backpreassure_test(dut):
 
     for i in range(len(data_out)):
         if data_out[i] != data_in[i]:
-            print "[% 4d]: 0x%08X != 0x%08X" % (i, data_in[i], data_out[i])
+            print ("[% 4d]: 0x%08X != 0x%08X" % (i, data_in[i], data_out[i]))
 
 
 
