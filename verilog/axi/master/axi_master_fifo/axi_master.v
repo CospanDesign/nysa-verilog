@@ -38,7 +38,6 @@ SOFTWARE.
 `define BIT_STATUS_BAD_TXRX_WIDTH 5
 `define BIT_BUS_STATUS_RANGE      9:8
 
-
 `define CLOG2(x) \
    (x <= 2)     ? 1 :  \
    (x <= 4)     ? 2 :  \
@@ -53,7 +52,6 @@ SOFTWARE.
    (x <= 2048)  ? 11 : \
    (x <= 4096)  ? 12 : \
    -1
-
 
 module axi_master #(
   //Parameters
@@ -456,7 +454,7 @@ always @ (posedge clk) begin
             state             <=  READ_CMD;
           end
         end
-        else if (((!r_prev_int) & i_interrupts) > 0) begin
+        else if (((~r_prev_int) & i_interrupts) > 0) begin
           //Something new from interrupts
           state               <=  SEND_INTERRUPT;
           r_interrupts        <=  0;
