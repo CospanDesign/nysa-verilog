@@ -160,14 +160,17 @@ assign        w_reg_32bit_address     = w_reg_address[(ADDR_WIDTH - 1): 2];
 always @ (posedge clk) begin
   //De-assert Strobes
   r_reg_in_ack_stb                        <=  0;
-  r_reg_out_rdy_stb                       <=  0;
   r_reg_invalid_addr                      <=  0;
 
   if (w_axi_rst) begin
     control                               <=  0;
     r_reg_out_data                        <=  0;
+    r_reg_out_rdy_stb                     <=  0;
   end
   else begin
+    if (!w_reg_out_req) begin
+      r_reg_out_rdy_stb                   <= 0;
+    end
     if (w_reg_in_rdy && !r_reg_in_ack_stb) begin
       //From master
       case (w_reg_32bit_address)
