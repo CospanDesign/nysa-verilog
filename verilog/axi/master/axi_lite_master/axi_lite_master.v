@@ -61,6 +61,7 @@ output  reg                         o_cmd_ack,
 input       [ADDR_WIDTH - 1:0]      i_cmd_addr,
 input                               i_cmd_wr_rd,        //1 = Write, 0 = Read
 input       [3:0]                   i_cmd_byte_en,
+input       [31:0]                  i_cmd_data_count,
 input       [31:0]                  i_cmd_data,
 output  reg [31:0]                  o_cmd_data,
 
@@ -188,7 +189,12 @@ assign  o_arid                                    = 4'h0;
 assign  o_awid                                    = 4'h0;
 assign  o_wid                                     = 4'h0;
 
+
+
+
 //synchronous logic
+
+
 always @ (posedge clk) begin
   //De-assert Strobes
 
