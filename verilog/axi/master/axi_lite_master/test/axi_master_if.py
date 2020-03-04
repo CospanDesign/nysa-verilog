@@ -31,14 +31,18 @@ class CommandMaster (BusDriver):
         self.wr_busy = Lock("%s_rbusy" % name)
 
     @cocotb.coroutine
-    def write(self, address, data, count = 1, byte_en = 0xF):
+    def write(self, address, data, byte_en = 0xF):
+        assert not isinstance(data, int), "Data should be a list"
         yield self.wr_busy.acquire()
         yield RisingEdge(self.clock)
         self.bus.WR_RD      <=  1
         self.bus.EN         <=  1
         self.bus.ADR        <=  address
         self.bus.DATA_COUNT <=  1
-        self.bus.WR_DATA    <=  data
+        if (data is int):
+            self.bus.WR_DATA    <=  data
+        else:
+            self.bus.WR_DATA    <=  data[0]
         self.bus.BYTE_EN    <=  byte_en
 
         yield RisingEdge(self.clock)
@@ -77,5 +81,13 @@ class CommandMaster (BusDriver):
         yield RisingEdge(self.clock)
         self.bus.EN         <=  0
 
+        data.append(self.bus.RD_DATA)
+        raise ReturnValue(data)
 
+    @cocotb.coroutine
+    def get_read_status(self):
+        #print ("Status: %s" % str(self.bus.STATUS))
+        yield RisingEdge(self.clock)
+        command_status = (int(self.bus.STATUS) >> 8) & 0x03
+        raise ReturnValue(command_status)
 

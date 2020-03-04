@@ -172,8 +172,9 @@ assign  o_cmd_status[`BIT_STATUS_BAD_COMMAND]     = r_bad_command;
 assign  o_cmd_status[`BIT_STATUS_BAD_TXRX_WIDTH]  = r_bad_txrx_width;
 assign  o_cmd_status[7:6]                         = 0;
 assign  o_cmd_status[`BIT_BUS_STATUS_RANGE]       = r_bus_status;
-assign  o_cmd_status[9:8]                         = 0;
-assign  o_cmd_status[31:6]                        = 0;
+//assign  o_cmd_status[9:8]                         = 0;
+assign  o_cmd_status[10]                          = 0;
+assign  o_cmd_status[31:11]                       = 0;
 
 assign  o_awsize                                  = `AXI_BURST_SIZE_32BIT;
 assign  o_arsize                                  = `AXI_BURST_SIZE_32BIT;
@@ -190,11 +191,10 @@ assign  o_awid                                    = 4'h0;
 assign  o_wid                                     = 4'h0;
 
 
-
+always @ (state) begin
+end
 
 //synchronous logic
-
-
 always @ (posedge clk) begin
   //De-assert Strobes
 
@@ -248,7 +248,7 @@ always @ (posedge clk) begin
 
         //Strobe in a command
         if (i_cmd_en) begin
-          o_arlen             <=  1;
+          o_arlen             <=  0;
           r_bus_status        <=  0;
           //Something new from host
           r_data_count        <=  0;
@@ -302,10 +302,10 @@ always @ (posedge clk) begin
         if (i_arready && o_arvalid) begin
           o_arvalid               <=  0;
           state                   <=  READ_DATA;
+          o_rready                <=  1;
         end
       end
       READ_DATA: begin
-        o_rready                  <=  1;
         if (i_rvalid && o_rready) begin
           o_rready                <=  0;
           o_cmd_data              <=  i_rdata;

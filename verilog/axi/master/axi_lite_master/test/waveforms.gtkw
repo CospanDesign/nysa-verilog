@@ -1,0 +1,121 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Tue Mar  3 20:42:08 2020
+[*]
+[dumpfile] "/home/cospan/Projects/nysa-verilog/verilog/axi/master/axi_lite_master/test/design.vcd"
+[dumpfile_mtime] "Tue Mar  3 20:36:54 2020"
+[dumpfile_size] 8871
+[savefile] "/home/cospan/Projects/nysa-verilog/verilog/axi/master/axi_lite_master/test/waveforms.gtkw"
+[timestart] 60
+[size] 1920 1147
+[pos] -1 -1
+*-7.261378 807 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_cocotb.
+[sst_width] 213
+[signals_width] 180
+[sst_expanded] 1
+[sst_vpaned_height] 346
+@22
+tb_cocotb.test_id[31:0]
+@28
+tb_cocotb.clk
+tb_cocotb.rst
+@200
+-
+@22
+tb_cocotb.AXIS_RDATA[31:0]
+@200
+-
+-
+@800200
+-AXI Master
+@2022
+^1 /home/cospan/Projects/nysa-verilog/verilog/axi/master/axi_lite_master/test/am_state.txt
+tb_cocotb.am.state[3:0]
+@200
+-
+@c00200
+-Address Write Channel
+@22
+tb_cocotb.am.o_awaddr[31:0]
+tb_cocotb.am.o_awid[3:0]
+@28
+tb_cocotb.am.o_awsize[2:0]
+tb_cocotb.am.o_awvalid
+tb_cocotb.am.i_awready
+@1401200
+-Address Write Channel
+@200
+-
+@c00200
+-Write Channel
+@22
+tb_cocotb.am.o_wdata[31:0]
+tb_cocotb.am.o_wid[3:0]
+@28
+tb_cocotb.am.o_wvalid
+tb_cocotb.am.i_wready
+tb_cocotb.am.o_wlast
+@22
+tb_cocotb.am.o_wstrobe[3:0]
+@1401200
+-Write Channel
+@200
+-
+@800200
+-Write Response Channel
+@28
+tb_cocotb.am.i_bvalid
+tb_cocotb.am.o_bready
+tb_cocotb.am.i_bresp[1:0]
+@1000200
+-Write Response Channel
+@200
+-
+@800200
+-Address ReadChannel
+@28
+tb_cocotb.am.o_arvalid
+tb_cocotb.am.i_arready
+@22
+tb_cocotb.am.o_araddr[31:0]
+tb_cocotb.am.o_arid[3:0]
+tb_cocotb.am.o_arlen[7:0]
+@28
+tb_cocotb.am.o_arsize[2:0]
+@1000200
+-Address ReadChannel
+@200
+-
+@800201
+-Read Channel
+@29
+tb_cocotb.am.i_rvalid
+tb_cocotb.am.o_rready
+tb_cocotb.am.i_rlast
+@23
+tb_cocotb.am.i_rdata[31:0]
+tb_cocotb.am.i_rid[3:0]
+@29
+tb_cocotb.am.i_rresp[1:0]
+@23
+tb_cocotb.am.i_rstrobe[3:0]
+@1000201
+-Read Channel
+@200
+-
+@1000200
+-AXI Master
+@200
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+[pattern_trace] 1
+[pattern_trace] 0

@@ -172,7 +172,7 @@ axi_lite_master #(
   .i_rvalid               (AXIS_RVALID            ),
   .o_rready               (AXIS_RREADY            ),
 
-  //nterrupts
+  //interrupts
   .i_interrupts           (i_interrupts           )
 );
 
